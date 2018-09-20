@@ -4,8 +4,9 @@ library(cogsciutils)
 sourceCpp('mem.cpp')
 library(R6)
 library(Rsolnp)
+source("../../utils/classes/cognitiveModel.R", chdir = T)
 
-invisible(sapply(setdiff(list.files(path="../utils/", pattern="*.R$", full.names = TRUE), list.files(path="../utils/", pattern="_test.R$", full.names = TRUE)), source, .GlobalEnv))
+#invisible(sapply(setdiff(list.files(path="../../utils/", pattern="*.R$", full.names = TRUE), list.files(path="../utils/", pattern="_test.R$", full.names = TRUE)), source, .GlobalEnv))
 
 mem <- R6Class("mem",
   inherit = cognitiveModel,
@@ -16,32 +17,35 @@ mem <- R6Class("mem",
     learntrials = NULL,
     ndim = NULL,
     initialize = function(formula, data, fixed = NULL, type, learntrials, initialparm = NULL, discount = 1) {
+      data <- as.data.frame(data)
       ndim <- length(rhs.vars(formula)) - 1
       self$ndim <- ndim
 
       lastTerm <- paste("~", tail(rhs.vars(formula), 1))
-      self$criterion <- get_all_vars(lastTerm, d)[, 1]
-      if (ncol(get_all_vars(lastTerm, d)) == 2) {
-        self$cost <- get_all_vars(lastTerm, d)[, 2]
+      self$criterion <- get_all_vars(lastTerm, data)[, 1]
+      if (ncol(get_all_vars(lastTerm, data)) == 2) {
+        self$cost <- get_all_vars(lastTerm, data)[, 2]
       }
 
       self$inferType(data[, lhs.vars(formula)])
-      choicerule <- ifelse(self$type == "judgment", NULL, "softmax")
 
-      allowedparm <- matrix(c(rep(0.001, ndim), 0.001, 1,
-                              rep(1, ndim),        10, 2),
-                              dimnames = list(c(paste0("w", seq_len(ndim)), "lambda", "r"), c("ll", "ul")), ncol = 2)
-      allowedparm <- cbind(allowedparm, init = rowMeans(allowedparm))
-      allowedparm[grepl("w", rownames(allowedparm)), "init"] <- 1/ndim
-      allowedparm[names(initialparm), ] <- initialparm
+      allowedparm <- c(list(
+        lambda = c(0.001, 1, 0.5),
+        r = c(1, 2, 1.5)),
+        w = replicate(ndim, list(c(0.001, 1, 1/ndim))))
+      allowedparm <- matrix(unlist(allowedparm), ncol = 3, byrow = T, dimnames= list(names(allowedparm), c('ll', 'ul', 'init')))
+      
       if (self$type == "judgment") {
-        obs <- data[, lhs.var(formula)]
-        allowedparm <- rbind(allowedparm, c(sigma = c(0, max(obs) - min(obs))))
+        obs <- data[, lhs.vars(formula)]
+        rng <- max(obs) - min(obs)
+        allowedparm <- rbind(allowedparm, c(0, rng, rng / 2))
+        rownames(allowedparm)[nrow(allowedparm)] <- "sigma"
       }
+      allowedparm[names(initialparm), ] <- initialparm
 
-      formulaWithoutLast <- update(formula, as.formula(paste(". ~ ", head(rhs.vars(formula), -1))))
+      formulaWithoutLast <- update(formula, reformulate(attr(drop.terms(terms(formula), (ndim+1)), "term.labels")))
 
-      super$initialize(formula = formulaWithoutLast, data = data, fixedparm = fixed, allowedparm = allowedparm, choicerule = choicerule, discount = discount, model = paste0("Memory-based model [type: ", self$type, "]"))
+      super$initialize(formula = formulaWithoutLast, data = data, fixedparm = fixed, allowedparm = allowedparm, choicerule = self$choicerule, discount = discount, model = paste0("Memory-based model [type: ", self$type, "]"))
       self$formula <- formula
 
       if ( missing(learntrials) ) {
@@ -51,21 +55,24 @@ mem <- R6Class("mem",
     inferType = function(response) {
       if (!is.null(self$cost)) {
         self$type <- "valuebasedchoice"
+        self$choicerule <- "softmax"
       } else if (!is.factor(response) | any(floor(response) != response) | any(floor(self$criterion) != self$criterion) | length(unique(response)) > 2 | length(self$criterion) > 2) {
-        self$type <- "choice"
-      } else {
         self$type <- "judgment"
+        self$choicerule <- NULL
+      } else {
+        self$type <- "choice"
+        self$choicerule <- "softmax"
       }
     },
     logLik = function() {
       type <- self$type
       if (type == "judgment") {
-        pred <- cbind(self$pred, self$parm["sigma"])
-        return(gof(pred = pred, obs = self$obs, type = "logliklihood", pdf = "binomial"))
+        pred <- cbind(self$predict(), self$parm["sigma"])
+        return(gof(pred = pred, obs = self$obs, type = "loglik", response = "continuous"))
       } else if (type ==  "choice" || type == "valuebasedchoice") {
         pred <- self$predict()
 
-        return(gof(pred = pred, obs = self$obs, type = "loglik"))
+        return(gof(pred = pred, obs = self$obs, type = "loglik", response = "discrete"))
       }
       },
       fit = function(method) {
@@ -79,7 +86,8 @@ mem <- R6Class("mem",
             sumto = list(w = paste0("w", seq_len(self$ndim))))
 
           out <- sapply(seq_len(nrow(grid$ids)), function(z) {
-            self$setparm(GetParmFromGrid(id = z, grid = grid))
+            parm <- GetParmFromGrid(id = z, grid = grid)
+            self$setparm(parm)
             return(self$logLik())
           })
 
@@ -121,9 +129,10 @@ mem <- R6Class("mem",
 
         if (!missing(newdata)) {
           firstOutTrial <- nrow(self$input) + 1
-          features <- rbind(features, newdata[, names(self$input)])
-          criterion <- rbind(criterion, newdata[, names(self$criterion)])
-          if (type == "valuebasedchoice") {
+          features <- rbind(features, newdata[, colnames(self$input)])
+          lastTerm <- paste("~", tail(rhs.vars(self$formula), 1))
+          criterion <- c(criterion, get_all_vars(lastTerm, newdata)[, 1])
+          if (self$type == "valuebasedchoice") {
             cost <- rbind(cost, newdata[, names(self$cost)])
           }
         }
@@ -140,15 +149,18 @@ mem <- R6Class("mem",
           firstOutTrial = firstOutTrial)
 
         ans <- do.call(mem_cpp, args)
-
         out <- switch(self$type,
           judgment = ans,
           choice = ans,
           valuebasedchoice = ans - cost)
 
         out <- super$applychoicerule(out)
-        out[self$discount] <- NA
-        self$pred <- out
+        
+
+        if (missing(newdata)) {
+          out[self$discount] <- NA
+          self$pred <- out
+        }
 
         return(as.matrix(as.numeric(out)))
       },
