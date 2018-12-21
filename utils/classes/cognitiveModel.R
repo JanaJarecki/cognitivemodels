@@ -1,7 +1,8 @@
 # Work with reference classes
 library(R6)
 library(cogsciutils)
-library(formula.tools)
+# library(formula.tools)
+library(Formula)
 
 cognitiveModel <- R6Class("cognitiveModel",
   public = list(
@@ -19,15 +20,16 @@ cognitiveModel <- R6Class("cognitiveModel",
     discount = NA,
     initialize = function(formula, data, allowedparm, fixedparm = NULL, choicerule =  NULL, model = NULL, discount = NULL) {
       self$model <- model
-      self$formula <- formula
-      self$input <- as.matrix(data[, rhs.vars(formula)])
-      self$obs <- as.vector(data[, lhs.vars(formula)])
+      fml <- Formula(formula)
+      self$input <- model.part(fml, model.frame(fml, data), rhs = 1:length(fml)[2])
+      self$obs <- as.vector(model.response(model.frame(fml, data)))
+      self$formula <- fml
       
       if (!is.null(choicerule)) {
         choicerule <- match.arg(choicerule, c("luce", "argmax", "softmax", "epsilon"))
         if (choicerule == "softmax") {
-          allowedparm <- rbind(allowedparm, tau = c(0.001, 5, 0.5))
-        } else if (choicerule == "argmax") {
+          allowedparm <- rbind(allowedparm, tau = c(0.1, 10, 0.5))
+        } else if (choicerule == "epsilon") {
           allowedparm <- rbind(allowedparm, eps = c(0.001, 1, 0.2))
         }
       }
@@ -76,11 +78,15 @@ cognitiveModel <- R6Class("cognitiveModel",
         return(x)
       } else {
         args <- c(list(x = x, type = self$choicerule), as.list(self$parm[self$which.choiceruleparm()]))
-        return(do.call(cogsciutils::choicerule, args))
+        x[] <- do.call(cogsciutils::choicerule, args)
+        return(x)
       }
     },
     logLik = function(...) {
-      return(cogsciutils::gof(obs = self$obs, pred = self$predict(), type = "loglik", discount = self$discount, ...))
+      return(cogsciutils::gof(obs = self$obs, pred = self$predict(), type = "loglik", discount = self$discount, response = 'disc'))
+    },
+    AIC = function(k = 2) {
+     return(-2 * self$logLik() + k * length(self$freenames))
     },
     MSE = function(...) {
       return(cogsciutils::gof(obs = self$obs, pred = self$predict(), type = "mse", discount = self$discount, ...))
