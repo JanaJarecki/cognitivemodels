@@ -1,11 +1,11 @@
 # Work with reference classes
 library(R6)
 library(cogsciutils)
-# test test 3
 # library(formula.tools)
 library(Formula)
 
-cognitiveModel <- R6Class("cognitiveModel",
+cognitiveModel <- R6Class(
+  "cognitiveModel",
   public = list(
     model = "string",
     formula = "formula",

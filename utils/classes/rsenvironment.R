@@ -1,5 +1,4 @@
 library(R6)
-library(ggplot2)
 source("../../utils/functions/varG.R")
 Rsenvironment <- R6Class("rsenvironment",
     public = list(
@@ -16,6 +15,7 @@ Rsenvironment <- R6Class("rsenvironment",
         budget = NULL,
         initial.state = 0,
         stateTrialMat = NULL,
+        absorbing.states = NULL,
         T = NULL,
         initialize = function(n.trials, terminal.fitness, budget, initial.state, absorbing.states = function(x) { return(cbind(x, -1)) }, ...) {
           tmp = list(...)
@@ -23,6 +23,7 @@ Rsenvironment <- R6Class("rsenvironment",
           self$budget           <- budget
           self$initial.state    <- initial.state
           self$terminal.fitness <- terminal.fitness
+          self$absorbing.states <- absorbing.states
           self$n.actions        <- dim(self$environment)[3]
           actions               <- dimnames(self$environment)[[3]]
           if (is.null(actions)) {
@@ -50,12 +51,12 @@ Rsenvironment <- R6Class("rsenvironment",
            if (dim(x)[3] != 2) {
              stop("Environment must contain two options, but has ", dim(x)[3], ".")
            }
-           if (FALSE %in% (apply(x[, 1, ], 2, sum) == 1)) {
-             stop("Probabilities in the environment must sum to 1, but sum is ", apply(x[, 1, ], 2, sum), ".")
+           if (isTRUE( all.equal(apply(x[, 1, , drop = F], 3, colSums), rep(1, dim(x)[2]) )) ) {
+            stop("Probabilities in the environment must sum to 1, but sums are ", paste(tmp2, sep = ",", collapse = ", "), ".")
            }
            x[, 2, ] <- x[, 2, ] * as.numeric(x[, 1, ] > 0)
            if (any(apply(x, 3, function(z) any(duplicated(z[z[,1]>0, 2]))))) {
-            stop("One of the options has the same outcome twice, outcomes cannot be duplicated.")
+            stop("One of the options has the same outcome twice, outcomes cannot be duplicated,\nthe options are: ", paste(x, collapse = ", "))
            }
            return(x)
         },
@@ -63,7 +64,7 @@ Rsenvironment <- R6Class("rsenvironment",
           outcomes <- c(unique(self$environment[, 2, ][self$environment[, 1, ] > 0]))
           ans <- list(self$initial.state)
           for (i in self$trials + 1) {
-              ans[[i]] <- unique(absorbing.states(c(outer(ans[[i-1]], outcomes, `+`)))[,1])
+              ans[[i]] <- unique(self$absorbing.states(c(outer(ans[[i-1]], outcomes, `+`)))[,1])
           }
           ans <- lapply(ans, sort)        
           ans <- sapply(ans, "[", i = seq_len(max(sapply(ans, length))))
@@ -78,14 +79,14 @@ Rsenvironment <- R6Class("rsenvironment",
               for(s1 in c(na.omit(self$stateTrialMat[, t]))) {
                 for(s2 in list(outer(s1, self$environment[, 2, i][self$environment[, 1, i] > 0], `+`))) {
                   s1 <- match(s1, dimnames(T)[[1]])
-                  s2 <- match(absorbing.states(c(s2))[,1], dimnames(T)[[2]])
+                  s2 <- match(self$absorbing.states(c(s2))[,1], dimnames(T)[[2]])
                   T[s1, s2, t, i] <- self$environment[, 1, i][self$environment[, 1, i] > 0] + T[s1, s2, t, i]
                 }
               }
             }
           }
           for (t in self$trials) {
-            absorbing <- absorbing.states(self$states)
+            absorbing <- self$absorbing.states(self$states)
             s1 <- which(absorbing[, 2] > 0)
             s2 <- match(absorbing[s1, 1], self$states)
             T[s1, ,t , ] <- 0
@@ -105,21 +106,40 @@ Rsenvironment <- R6Class("rsenvironment",
         },
         policyEV = function(policy, s0 = self$initial.state, t0 = 1) {
           ev <- matrix(1) # initialize
-          t <- t0 # initialize
-          while (t <= self$n.trials) {
-            T <- self$T[, , t, ]
-            if (t == t0) { 
+          tr <- t0 # initialize
+          while (tr <= self$n.trials) {
+            T <- self$T[, , tr, ]
+            if (tr == t0) { 
+              # set transition pr to 0 if they do not start at s0
               T[-match(s0, dimnames(T)[[1]]), , ] <- 0
             }
-            P <- policy[, t, , drop = FALSE]
+            P <- policy[, tr, , drop = FALSE]
             P <- array(rep(P, each = dim(T)[[1]]), dim = dim(T), dimnames = dimnames(T))
             TxP <- T * aperm(P, c(2,1,3))
             ev <- colSums(TxP * rowSums(ev))
-            t <- t + 1
+            tr <- tr + 1
           }
           ev <- rowSums(ev)
           fitness <- self$terminal.fitness(budget = self$budget, state = as.numeric(dimnames(T)[[1]]))
-          return(ev %*% fitness)
+          ev <- ev %*% fitness
+          return(ev)
+        },
+        policyPS = function(policy, s0 = self$initial.state, t0 = 1) {
+          ps <- matrix(1)
+          tr <- t0 # initialize
+          while (tr <= self$n.trials) {
+            T <- self$T[, , tr, ]
+            if (tr == t0) { 
+              T[-match(s0, dimnames(T)[[1]]), , ] <- 0
+            }
+            P <- T
+            P[] <- rep(policy[, tr, , drop = FALSE], each = dim(T)[[1]])
+            TxP <- T * aperm(P, c(2,1,3))
+            ps <- cbind(ps[, 1:tr], rowSums(colSums(TxP * ps[, tr])))
+            tr <- tr + 1
+          }          
+          ps[-match(s0, dimnames(T)[[1]]), 1] <- 0
+          return(ps)
         },
         makePolicy = function(type) {
           type = match.arg(type, c("random", self$actions, "ev"))
@@ -134,6 +154,9 @@ Rsenvironment <- R6Class("rsenvironment",
           nrows <- self$n.trials * dim(self$T)[1]
           policy <- array(c(rep(pr, each = nrows)), dim = c(dim(self$T)[1], self$n.trials, self$n.actions), dimnames = list(dimnames(self$T)[[1]], self$trials, self$actions))
           return(policy)
+        },
+        makeData = function(colnames) {
+          return(melt(self$stateTrialMat[, self$trials, drop = F], na.rm = TRUE, varnames = c(NA, colnames[1]), value.name = colnames[2])[, -1])
         },
         print = function() {
           cat("rsenvironment",

@@ -1,37 +1,54 @@
 require(R6)
-library(formula.tools)
+library(Formula)
 library(reshape2)
+library(arrangements)
+library(Rcpp)
+sourceCpp("rsfft.cpp")
 source("../../utils/classes/cognitiveModel.R", chdir = TRUE)
 source("../../utils/classes/rsenvironment.R", chdir = TRUE)
 
 Rsfft <- R6Class("rsfft",
   inherit = cognitiveModel,
   public = list(
-    environment = "rsftEnvironment",
+    env = "rsftenvironment",
     V = NULL,
     EV = NULL,
-    initialize = function(environment, formula = NULL, fixed = NULL, data = NULL) {
-      allowedparm <- matrix(numeric(0), 0, 3, dimnames = list(NULL, c("ll", "ul", "init")))
+    state = NULL,
+    budget = NULL,
+    timehorizon = NULL,
+    nout = NULL,
+    nopt = NULL,
+    terminal.fitness = NULL,
+    initialize = function(env = NULL, formula = NULL, sbt = NULL, nout = NULL, nopt = NULL, fixed = NULL, data = NULL, choicerule, terminal.fitness.fun) {
       if (is.null(formula)) {
         formula <- ~ timehorizon + state
       } 
       if (is.null(data)) {
-        data <- melt(environment$stateTrialMat[, environment$trials], na.rm = TRUE, varnames = c(NA, rhs.vars(formula)[1]), value.name = rhs.vars(formula)[2])
-      } else {
-        data <- get_all_vars(formula, data)
+        time_state_names <- attr(terms(formula), 'term.labels')
+        data <- env$makeData(time_state_names)
+        self$makeValueMat()
+        self$makeEVMat()
       }
 
-      super$initialize(formula = formula, data = data, allowedparm = allowedparm, fixedparm = NULL, choicerule =  "softmax", model = "Risk sensitivity FFT", discount = 0)
+      n_node_orders <- nrow(permutations(3))
+      allowedparm <- matrix(c(1, n_node_orders, 0), 1, 3, dimnames = list("alpha", c("ll", "ul", "init")))
+      super$initialize(formula = formula, data = data, allowedparm = allowedparm, fixedparm = fixed, choicerule = choicerule, model = "Risk sensitivity FFT", discount = 0)
 
-      self$environment <- environment
-      self$makeValueMat()
-      self$makeEVMat()
+      self$env <- env
+      self$nout <- nout
+      self$nopt <- nopt
+      self$state <- model.frame(sbt, data)[, 1]
+      self$budget <- model.frame(sbt, data)[, 2]
+      self$timehorizon <- model.frame(sbt, data)[, 3]   
+      self$terminal.fitness <- terminal.fitness.fun
 
       },
-    predict = function(type = c("choice", "value", "ev"), action = NULL, newdata = NULL) {
+    predict = function(type = c("choice", "node", "value", "ev", "pstate"), action = NULL, newdata = NULL) {
       type <- match.arg(type)
+      nout <- self$nout
+
       if (is.null(action)) {
-        action <- ifelse(self$environment$n.actions == 2, 1, self$environment$actions)
+        action <- ifelse(self$nopt == 2, 1, seq_len(self$nopt))
       }
       if (!is.null(newdata)) {
         input <- newdata[, rhs.vars(self$formula)]
@@ -39,91 +56,140 @@ Rsfft <- R6Class("rsfft",
         input <- self$input
       }
 
-      trials <- input[, 1]
-      states <- input[, 2]
-      rows <- match(states, na.omit(unique(c(self$environment$stateTrialMat))))
-      cols <- match(trials, rev(self$environment$trials))
+      x_cols <- seq_len(nout)
+      nopt <- self$nopt
+      ntrial <- length(self$state)
 
-      X <- switch(type,
-        ev = self$EV,
-        choice = self$V,
-        value = self$V)
-
-      ids <- cbind(rows, cols, rep(seq_len(dim(X)[3]), length(trials)))
-
-      v <- matrix(X[ids], ncol = dim(X)[3],dimnames = dimnames(X), byrow = FALSE)
-
-      switch(type,
-        choice = super$applychoicerule(v)[, action],
-        value = v[, action],
-        ev = v)
-    },
-    fft = function(state, timehorizon, budget = self$environment$budget, outcomes = self$environment$environment[, 2, , drop = FALSE], probabilities = self$environment$environment[, 1, , drop = FALSE], bReachedFun = function(environment, state) {  environment$vars == min(environment$vars) }, ...) {
-
-      tf <- function(state) {
-        self$environment$terminal.fitness(budget = self$environment$budget, state = state)
+      outcomes_arr <- array(0L, dim = c(ntrial, nout, nopt))
+      for (i in seq_len(nout)) {
+         outcomes_arr[,,i] <- model.matrix(Formula(self$formula), input, rhs = i)[, -1, drop = FALSE][, x_cols, drop = FALSE]
       }
+      probabilities_arr <- array(0L, dim = c(ntrial, nout, nopt))
+      for (i in seq_len(nout)) {
+         probabilities_arr[,,i] <-model.matrix(Formula(self$formula), input, rhs = i)[, -1, drop = FALSE][, -x_cols, drop = FALSE]
+      }
+
+      # outcomes_list <- lapply(seq_len(nout), function(i) {
+       
+      # })
+      # probabilities_list <- lapply(seq_len(nout), function(i) {
+      #   model.matrix(Formula(self$formula), input, rhs = i)[, -1, drop = FALSE][, -x_cols, drop = FALSE]
+      # })
+
       # FFT
       # 1. Reached the budget?
       # - YES
       #   | Decide by a default function
       # - NO:
-      #   | 2. Is the max outcome x t >= budget for only one option?
+      #   | 2. Can only one of the options reach the budget: Is max outcome x t >= budget for only one option?
       #     - YES:
-      #       | Chose it
+      #       | Chose it, proportionally to how much it exceeds 0
       #     - NO:
-      #       | 3. Is the min outcome x t >= budget for one option?
+      #       | 3. Can one option reach it for sure? Is the min outcome x t >= budget for one option?
       #             - YES:
-      #               | Chose the sure option
+      #               | Chose the sure option, proportionally to how much it exceeds the budet
       #             - NO (both unsure):
-      #               | Chose higher probability option with beta
-      #    
-      # Problem: ignores pr(x)
-      #
+      #               | Chose higher EV option
 
+      nopt <- self$nopt
+      timehorizon <- self$timehorizon
+      state <- self$state
+      budget <- self$budget
+      col_order <- permutations(3)[self$parm['alpha'],]
+      # values to return for each node of the tree
+      values <- lapply(seq_len(nopt), function(i) nodevalues(col_order-1, probabilities_arr[,,i], outcomes_arr[,,i], timehorizon, budget, state, self$terminal.fitness))
 
-      # if the safe reaches the budget for sur ... why do you not take it????????
-      if (state > budget) {
-        return(bReachedFun(self$environment, state))
-      } else {
-        finalB <- state + outcomes * timehorizon
-        reachB <- finalB >= budget
-        anyReachB <- apply(reachB, 2, any)
-        if (sum(anyReachB) == 1) {
-          return(as.numeric(anyReachB))
-        } else {
-          sureReachB <- apply(reachB, 2, all)
-          if (sum(sureReachB) == 1) {
-            return(as.numeric(sureReachB))
-          } else {
-            probabilities[!reachB] <- 0
-            prReachB <- colSums(probabilities)
-            return(as.numeric(prReachB))
-          }
+      # values_reached_b <- lapply(seq_len(nopt), function(i) self$reachedBudgetFun(probabilities_list[[i]], outcomes_list[[i]]))
+      # for (i in seq_len(nopt)) {
+      #   values[[i]][,1] <- - values_reached_b[[i]]
+      # }
+
+      # Indicator matrix for the tree
+      I <- indicators(col_order, outcomes_arr, probabilities_arr, timehorizon, budget, state)
+      # return values at the nodes specified by the indicator
+      values <- matrix( unlist ( lapply(seq_len(nopt), function(x) rowSums(values[[x]] * I)) ), ncol = nopt, byrow = FALSE)
+      
+      if (type == "ev") {
+        trials <- input[, 1]
+        states <- input[, 2]
+        rows <- match(states, self$env$states)
+        cols <- match(trials, rev(self$env$trials))
+        ev <- self$EV[cbind(rows, cols, 1)]
+      } else if (type == "choice" | type == "value") {
+        # acts <- rep(seq_len(nout), each = length(trials))
+        # v <- matrix(self$V[cbind(rows, cols, acts)], ncol = self$env$n.actions, dimnames = list(NULL, self$env$actions))
+        if (type == "choice") {
+          choice <- super$applychoicerule(values)
         }
+      } else if (type == "pstate") {
+          trials <- input[, 1]
+          states <- input[, 2]
+          rows <- match(states, self$env$states)
+          cols <- match(trials, rev(self$env$trials))
+          ps <- self$V
+          ps[] <- self$applychoicerule(matrix(ps, nc = self$env$n.actions))
+          ps <- self$env$policyPS(ps)[cbind(rows, cols)]
+      } else if (type == 'node') {
+        node <- apply(I, 1, function(x) colnames(I)[which(x==1)])
+        node <- factor(node, levels = colnames(I), ordered = TRUE)
+      }
+
+      switch (type,
+        choice = choice[, action],
+        node = node,
+        value = values[, action],
+        ev = ev,
+        pstate = ps)
+    },
+    fit = function(type = 'grid') {
+      fun <- function(parm, self) {
+        self$setparm(parm)
+        -cogsciutils::gof(obs = self$obs, pred = self$predict(), type = 'log', response = 'discrete')
+      }
+      free_parm <- self$freenames
+      LB <- self$allowedparm[, 'll'][free_parm]
+      UB <- self$allowedparm[, 'ul'][free_parm]
+      STEP <- c(alpha = 1, tau = .5)[free_parm]
+      if (type == 'grid') {
+        parGrid <- expand.grid(sapply(free_parm, function(i) seq(LB[i], UB[i], STEP[i]), simplify = FALSE))
+        ll <- sapply(1:nrow(parGrid), function(i) fun(parm = unlist(parGrid[i,,drop=FALSE]), self = self))
+        self$setparm(unlist(parGrid[which.min(ll), ]))
+      }
+      else {
+       par0 <- self$allowedparm[, 'init']
+        fit <- solnp(pars = par0, fun = fun, LB = LB, UB = UB, self = self)
+        self$setparm(fit$pars)
       }
     },
+    reachedBudgetFun = function(x, p) {
+      x <- as.matrix(x)
+      p <- as.matrix(p)
+      return(sapply(1:nrow(x), function(i) -varG(x = x[i,], p = p[i,])))
+    },
     makeValueMat = function() {
-      V <- self$environment$makeStateTrialActionMat()
-      b <- self$environment$budget
-      o <- self$environment$environment[, 2, ]
-      p <- self$environment$environment[, 1, ]
+      V <- self$env$makeStateTrialActionMat()
+      b <- self$env$budget
+      o <- self$env$environment[, 2, ]
+      p <- self$env$environment[, 1, ]
       colTrials <- dimnames(V)[[2]]
       rowStates <- dimnames(V)[[1]]
 
       for (s in rowStates) {
-        for (t in colTrials) {
-          V[s, t, ] <- self$fft(state = as.numeric(s), timehorizon = as.numeric(t), budget = b, outcomes = o, probabilities = p)
+        for (tr in colTrials) {
+          V[s, tr, ] <- self$fft(state = as.numeric(s), timehorizon = as.numeric(tr), budget = b, outcomes = o, probabilities = p)
         }
       }
       self$V <- V
     },
     makeEVMat = function() {
       EV <- array(NA, dim = dim(self$V)[1:2], dimnames = dimnames(self$V)[1:2])
-      P <- array(t(apply(self$V, 1, cogsciutils::choicerule, type = "arg")), dim = dim(self$V), dimnames = dimnames(self$V))
+      P <- t(apply(self$V, 1, self$applychoicerule))
+      P <- array(P, dim = dim(self$V), dimnames = dimnames(self$V))
+      P[is.na(P)] <- 0
+
       for (s in rownames(EV)) {
-        for (t in self$environment$trials) {
-          EV[s,t] <- self$environment$policyEV(P, s0 = as.numeric(s), t0 = as.numeric(t))
+        for (tr in self$env$trials) {
+          EV[s,tr] <- self$env$policyEV(P, s0 = as.numeric(s), t0 = as.numeric(tr))
         }
       }
       dim(EV) <- c(dim(EV), 1)
@@ -133,16 +199,10 @@ Rsfft <- R6Class("rsfft",
 )
 
 
-rsfft <- function(environment, formula = NULL, fixed = NULL, data = NULL) {
-
-    obj <- Rsfft$new(environment = environment, data = data, formula = formula, fixed = fixed)
-
-    return(obj)
+rsfft <- function(formula = NULL, sbt = NULL, nopt = NULL, nout = NULL, fixed = NULL, data = NULL, env = NULL, choicerule, terminal.fitness.fun) {
+    obj <- Rsfft$new(env = env, formula = formula, sbt = sbt, nopt = nopt, nout = nout, data = data, fixed = fixed, terminal.fitness.fun = terminal.fitness.fun, choicerule)
+  if (length(obj$fixednames) < length(obj$parm)) {
+    obj$fit()
+  }
+  return(obj)
 }
-
-predict.rsfft <- function(obj, type = NULL, action = NULL, newdata = NULL) {
-  return(obj$predict(type = type, action = action, newdata = newdata))
-}
-
-
-# bReachedFun <- function(env, state) { env$terminal.fitness(state = state + env$evs - 4 * env$vars, budget = env$budget) }
