@@ -1,16 +1,21 @@
 library(R6)
+library(Rsolnp)
+source("../utils/classes/cognitiveModel.R", chdir = TRUE)
 
 gcm <- R6Class("gcm",
+               inherit = cognitiveModel,
                public = list(
                  obs = NULL,
                  input = NULL,
                  cat = NULL,
                  parm = NULL,
+                 constr = NULL,
                  metric = NULL,
                  ndim = NULL,
                  input_id = NULL,
                  stimulus_frequencies = NULL,
-                 initialize = function(formula, data, cat, metric = c("minkowski", "discrete")) {
+                 fixed = NULL, 
+                 initialize = function(formula, data, cat, metric = c("minkowski", "discrete"), fixed) {
                    self$obs <- model.frame(formula, data)[, 1] # observed response
                    self$input <- model.frame(formula, data)[, -1] # feature values
                    self$cat <- model.frame(cat, data)[, 1] # true cat
@@ -18,6 +23,7 @@ gcm <- R6Class("gcm",
                    self$metric <- match.arg(metric)
                    self$input_id <- apply(self$input, 1, paste0, collapse = "")
                    self$stimulus_frequencies <- self$calc_stimulus_frequencies()
+                   self$fixed <- fixed
                    
                    # w = vector with attention weights, sum = 1
                    # c = scalar, sensitivity that discriminate the items on the dimensions
@@ -29,10 +35,10 @@ gcm <- R6Class("gcm",
                    allowedparm[, "ul"] <- c(rep(1, self$ndim), 5, 1, 1)
                    allowedparm[, "init"] <- c(rep(1/self$ndim, self$ndim), 2.5, 1, 1)
                    self$parm <- allowedparm[, "init"]
+                   self$constr <- allowedparm[, c("ll", "ul")]
                  },
                  calc_stimulus_frequencies = function() {
                    id <- self$input_id
-                   print(id)
                    id <- factor(id, levels = unique(id))
                    cat <- factor(self$cat)
                    res <- sapply(1:nrow(self$input), function(z) {
@@ -47,7 +53,7 @@ gcm <- R6Class("gcm",
                    # x: matrix with features of every trial, e.g., learningset
                    # y: matrix with feature combinations to which the similarity should be calculated; e.g., prototypes
                    x <- as.data.frame(unique(self$input))
-                   rownames(x) <- self$input_id
+                   rownames(x) <- unique(self$input_id)
                    
                    if(missing(y)) {
                      # if no y, calculate similarity of x to x
@@ -60,7 +66,7 @@ gcm <- R6Class("gcm",
                      identical <- FALSE
                      y <- y[, grepl("^Dim", colnames(y))]
                      y <- as.data.frame(unique(y))
-                     rownames(y) <- apply(y, 1, paste0, collapse = "")
+                     rownames(y) <- apply(unique(y), 1, paste0, collapse = "")
                      pairs <- rbind(rep(1:nrow(x), each = nrow(y)), rep(1:nrow(y), times = nrow(x)))
                      sim_mat <- matrix(0, nrow = nrow(x), ncol = nrow(y))
                    }
@@ -108,6 +114,20 @@ gcm <- R6Class("gcm",
                      dist <- w %*% as.numeric(dist != 0) # Vector multiplication
                    }
                    return(dist)
+                 },
+                 fit = function() {
+                   LB <- self$constr[names(self$parm) %in% names(self$fixed) == FALSE, 'll'] 
+                   UB <- self$constr[names(self$parm) %in% names(self$fixed) == FALSE, 'ul']  
+                   par0 <- self$parm[names(self$parm) %in% names(self$fixed) == FALSE]
+                   equal <- function(parameter, ...) {
+                     return(sum(head(parameter, - 1)))
+                   }
+                   fun <- function(parm, self) {
+                     self$setparm(parm)
+                     -cogsciutils::gof(obs = self$obs, pred = self$predict(), type = 'log', response = 'discrete')
+                   }
+                   fit <- solnp(pars = par0, fun = fun, eqfun = equal, eqB = 1, LB = LB, UB = UB, self = self)
+                   self$setparm(fit$pars)
                  }
                )
 )
