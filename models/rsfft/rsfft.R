@@ -69,6 +69,8 @@ Rsfft <- R6Class("rsfft",
          probabilities_arr[,,i] <-model.matrix(Formula(self$formula), input, rhs = i)[, -1, drop = FALSE][, -x_cols, drop = FALSE]
       }
 
+      # test change
+
       # outcomes_list <- lapply(seq_len(nout), function(i) {
        
       # })
