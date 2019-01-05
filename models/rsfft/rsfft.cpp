@@ -15,7 +15,7 @@ using namespace arma;
 // Value 3:
 // Yes: terminal reward of maximum outcome x timehorizon per option
 // No: reward of the expexted value x timehorizon
-
+//
 
 
 // Makes the indicator matrix lexicographic
@@ -56,7 +56,7 @@ NumericMatrix indicators(NumericVector col_order,
   // allocate the return
   NumericMatrix I = NumericMatrix(tdim, 3);
 /*  colnames(I) = CharacterVector({ "R+", "R-O+", "R-O-S+", "R-O-S-I+", "R-O-S-I-" });*/
- colnames(I) = CharacterVector({ "sX-", "sX+rP-", "sX+rP+"});
+ colnames(I) = CharacterVector({ "max_reaches+", "sX+rP-", "sX+rP+"});
 
   // Initialize tmp
   NumericMatrix tmpVarP = NumericMatrix(tdim, adim);
@@ -64,6 +64,8 @@ NumericMatrix indicators(NumericVector col_order,
   // compute final value per option based on time x outcome 
  for (unsigned int t = 0; t < tdim; ++t) {
   for (unsigned int a = 0; a < adim; ++a) {
+    // max reaches b
+    
     tmpVarP(t, a) = max(probabilities.slice(a).row(t)) * min(probabilities.slice(a).row(t));
     // higher probability of min outcome?
      /* I(t, 2) += ((min(outcome(t, _)) - need(t)) >= 0);
