@@ -15,7 +15,6 @@ using namespace arma;
 // Value 3:
 // Yes: terminal reward of maximum outcome x timehorizon per option
 // No: reward of the expexted value x timehorizon
-//
 
 
 // Makes the indicator matrix lexicographic
