@@ -1,8 +1,9 @@
 library(R6)
 library(Rsolnp)
-source("../utils/classes/cognitiveModel.R", chdir = TRUE)
+library(cogsciutils)
+source("../../../cogscimodels/utils/classes/cognitiveModel.R")
 
-gcm <- R6Class("gcm",
+Gcm <- R6Class("gcm",
                inherit = cognitiveModel,
                public = list(
                  obs = NULL,
@@ -15,7 +16,7 @@ gcm <- R6Class("gcm",
                  input_id = NULL,
                  stimulus_frequencies = NULL,
                  fixed = NULL, 
-                 initialize = function(formula, data, cat, metric = c("minkowski", "discrete"), fixed) {
+                 initialize = function(formula, data, cat, metric = c("minkowski", "discrete"), fixed, choicerule, discount) {
                    self$obs <- model.frame(formula, data)[, 1] # observed response
                    self$input <- model.frame(formula, data)[, -1] # feature values
                    self$cat <- model.frame(cat, data)[, 1] # true cat
@@ -34,8 +35,8 @@ gcm <- R6Class("gcm",
                    allowedparm[, "ll"] <- c(rep(0, self$ndim), 0.0001, 1, 1)
                    allowedparm[, "ul"] <- c(rep(1, self$ndim), 5, 1, 1)
                    allowedparm[, "init"] <- c(rep(1/self$ndim, self$ndim), 2.5, 1, 1)
-                   self$parm <- allowedparm[, "init"]
-                   self$constr <- allowedparm[, c("ll", "ul")]
+                   
+                   super$initialize(formula = formula, data = data, fixedparm = fixed, model = "gcm", discount = discount, choicerule = choicerule, allowedparm = allowedparm)
                  },
                  calc_stimulus_frequencies = function() {
                    id <- self$input_id
@@ -52,8 +53,8 @@ gcm <- R6Class("gcm",
                  calc_similarity_matrix = function(x, y){
                    # x: matrix with features of every trial, e.g., learningset
                    # y: matrix with feature combinations to which the similarity should be calculated; e.g., prototypes
-                   x <- as.data.frame(unique(self$input))
-                   rownames(x) <- unique(self$input_id)
+                   x <- as.data.frame(unique(x))
+                   rownames(x) <- apply(x, 1, paste0, collapse = "")
                    
                    if(missing(y)) {
                      # if no y, calculate similarity of x to x
@@ -64,7 +65,6 @@ gcm <- R6Class("gcm",
                    } else {
                      # if y, calculate similarity between x and y
                      identical <- FALSE
-                     y <- y[, grepl("^Dim", colnames(y))]
                      y <- as.data.frame(unique(y))
                      rownames(y) <- apply(unique(y), 1, paste0, collapse = "")
                      pairs <- rbind(rep(1:nrow(x), each = nrow(y)), rep(1:nrow(y), times = nrow(x)))
@@ -89,21 +89,36 @@ gcm <- R6Class("gcm",
                    
                    return(sim_mat)
                  },
-                 predict = function(){
+                 predict = function(newdata = NULL){
+                   if(!is.null(newdata)) {
+                     input <- model.frame(self$formula, newdata, na.action = NULL)[, -1]
+                     n <- nrow(input)
+                     input_id <- apply(input, 1, paste0, collapse = "")
+                     stimulus_frequencies <- self$stimulus_frequencies[, nrow(self$input), , drop = FALSE]
+                     names <- dimnames(stimulus_frequencies)
+                     names[[2]] <- 1:n
+                     stimulus_frequencies <- aperm(array(rep(stimulus_frequencies, n), dim = c(8, 2, n), dimnames = names[c(1, 3, 2)]), perm = c(1, 3, 2))
+                   } else {
+                     stimulus_frequencies <- self$stimulus_frequencies
+                     input <- self$input
+                     input_id <- self$input_id
+                     n <- nrow(input)
+                   }
                    ### ONLY FOR GCM
-                   sim_mat <- self$calc_similarity_matrix(x = self$input)
-                   
-                   res <- sapply(1:nrow(self$input), function(trial) {
-                     if(trial == 1) {
-                       return(1/self$ndim)
+                   sim_mat <- self$calc_similarity_matrix(x = rbind(self$input, input), y = self$input)
+                   res <- sapply(1:n, function(trial) {
+                     if(trial == 1 & is.null(newdata)) {
+                       return(1/length(unique(self$cat)))
                      }
-                     id <- self$input_id[trial]
-                     sim_to_cat1 <- self$stimulus_frequencies[, (trial-1), 2] %*% sim_mat[id, ]
-                       
-                     total_sim <- rowSums(self$stimulus_frequencies[, (trial-1), ]) %*% sim_mat[id, ]
+                     id <- input_id[trial]
+                     effective_trial <- trial - is.null(newdata)
+                     sim_to_cat1 <- stimulus_frequencies[, effective_trial, 2] %*% sim_mat[id, ]
+                     
+                     total_sim <- rowSums(stimulus_frequencies[, effective_trial, ]) %*% sim_mat[id, ]
                      
                      sim_to_cat1/total_sim
                    })
+                   res <- self$applychoicerule(res)
                    return(res)
                  },
                  calc_distance = function(probe, exemplar, r = self$parm["r"], w = self$parm[1:self$ndim]){
@@ -116,11 +131,12 @@ gcm <- R6Class("gcm",
                    return(dist)
                  },
                  fit = function() {
-                   LB <- self$constr[names(self$parm) %in% names(self$fixed) == FALSE, 'll'] 
-                   UB <- self$constr[names(self$parm) %in% names(self$fixed) == FALSE, 'ul']  
-                   par0 <- self$parm[names(self$parm) %in% names(self$fixed) == FALSE]
+                   allowedparm <- self$allowedparm
+                   LB <- allowedparm[self$freenames, 'll'] 
+                   UB <- allowedparm[self$freenames, 'ul']  
+                   par0 <- allowedparm[self$freenames, 'init']
                    equal <- function(parameter, ...) {
-                     return(sum(head(parameter, - 1)))
+                     return(sum(parameter[1:self$ndim]))
                    }
                    fun <- function(parm, self) {
                      self$setparm(parm)
@@ -131,3 +147,11 @@ gcm <- R6Class("gcm",
                  }
                )
 )
+
+gcm <- function(formula, data, cat, metric = c("minkowski", "discrete"), fixed, choicerule, discount = 0) {
+  obj <- Gcm$new(formula = formula, data = data, cat = cat, metric = metric, fixed = fixed, choicerule = choicerule, discount = discount)
+  if(length(obj$freenames) > 0) {
+    obj$fit()
+  }
+  return(obj)
+}
