@@ -21,10 +21,10 @@ cognitiveModel <- R6Class(
     discount = NA,
     initialize = function(formula, data, allowedparm, fixedparm = NULL, choicerule =  NULL, model = NULL, discount = NULL) {
       self$model <- model
-      fml <- Formula(formula)
-      self$input <- model.part(fml, model.frame(fml, data), rhs = 1:length(fml)[2])
-      self$obs <- as.vector(model.response(model.frame(fml, data)))
-      self$formula <- fml
+      formula <- as.formula(formula)
+      self$input <- get_all_vars(formula, data)[,-1]
+      self$obs   <- get_all_vars(formula, data)[,1]
+      self$formula <- formula
       
       if (!is.null(choicerule)) {
         choicerule <- match.arg(choicerule, c("luce", "argmax", "softmax", "epsilon"))
