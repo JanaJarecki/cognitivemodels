@@ -44,7 +44,7 @@ Rsfft <- R6Class("rsfft",
       self$budget <- model.frame(sbt, data)[, 2]
       self$timehorizon <- model.frame(sbt, data)[, 3]   
       self$terminal.fitness <- terminal.fitness.fun
-      self$features <- makeFeatureMat()
+      self$features <- self$makeFeatureMat()
       self$sbt <- sbt
 
     },
@@ -109,12 +109,11 @@ Rsfft <- R6Class("rsfft",
       }
 
       split_criterion <- c(1.05, 3.5, 0.5)
-
-      I <- indicators(features, split_criterion)
-
       exit_structure <- c(1, 0, 1, 0)
 
-      values <- matrix(exit_structure, nrow = 1)[rep(1, ntrial), ]
+      I <- indicators(features, split_criterion)   
+
+      values <- matrix(exit_structure, nrow = 1)[rep(1, nrow(input)), ]
       values <- t(values)[t(I)==1]
       values <- cbind(values, 1-values)
 
