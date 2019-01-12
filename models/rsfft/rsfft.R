@@ -20,6 +20,7 @@ Rsfft <- R6Class("rsfft",
     nopt = NULL,
     features = NULL,
     terminal.fitness = NULL,
+    sbt = NULL,
     initialize = function(env = NULL, formula = NULL, sbt = NULL, nout = NULL, nopt = NULL, fixed = NULL, data = NULL, choicerule, terminal.fitness.fun) {
       if (is.null(formula)) {
         formula <- ~ timehorizon + state
@@ -44,6 +45,7 @@ Rsfft <- R6Class("rsfft",
       self$timehorizon <- model.frame(sbt, data)[, 3]   
       self$terminal.fitness <- terminal.fitness.fun
       self$features <- makeFeatureMat()
+      self$sbt <- sbt
 
     },
     makeFeatureMat = function(input = self$input, budget = self$budget, state =self$state, th = self$timehorizon) {
@@ -60,7 +62,7 @@ Rsfft <- R6Class("rsfft",
       for (i in seq_len(nout)) {
          probabilities_arr[, , i] <- model.matrix(Formula(self$formula), input, rhs = i)[, -1, drop = FALSE][, -x_cols, drop = FALSE]
          checkSumTo1 <- all.equal(rowSums(probabilities_arr[,,i]), rep(1, ntrial))
-         if (!isTRUE(checkSumTo1) {
+         if (!isTRUE(checkSumTo1)) {
             stop('Some probabilities in your data do not sum to 1.\nProbabilities are specified in your formula by "', paste(attr(terms(formula(Formula(self$formula), rhs = i, lhs = 0)), 'term.labels')[-x_cols], collapse = ', '), '".\nCheck if the formula refers to the right columns?')
          }
        }    
@@ -90,14 +92,21 @@ Rsfft <- R6Class("rsfft",
       if (is.null(action)) {
         action <- ifelse(self$nopt == 2, 1, seq_len(self$nopt))
       }
+
       if (!is.null(newdata)) {
         input <- newdata[, rhs.vars(self$formula)]
+        state <- newdata[, rhs.vars(self$sbt)][,1]
+        budget <- newdata[, rhs.vars(self$sbt)][,2]
+        timehorizon <- newdata[, rhs.vars(self$sbt)][,3]
+        features <- self$makeFeatureMat(
+          input = input,
+          budget = budget,
+          state = state,
+          th = timehorizon)
       } else {
         input <- self$input
+        features <- self$features
       }
-
-      
-
 
       split_criterion <- c(1.05, 3.5, 0.5)
 
