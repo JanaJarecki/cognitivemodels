@@ -34,6 +34,11 @@ Rsfft <- R6Class("rsfft",
         # self$makeEVMat()
       }
 
+      allowedparm <- matrix(0, 3, 3, dimn = list(
+        c("maxlv", "minhv", "pmaxlv"),
+        c("ll", "ul", "init")))
+      super$initialize(formula = formula, data = data, allowedparm = allowedparm, fixedparm = fixed, choicerule = choicerule, model = "Risk sensitivity FFT", discount = 0)
+
       self$env <- env
       self$nout <- nout
       self$nopt <- nopt
@@ -47,18 +52,8 @@ Rsfft <- R6Class("rsfft",
       features <- self$makeFeatureMat(fml = formula)
       self$features <- features
 
-      allowedparm <- matrix(c(
-        0, max(features[,1]), NA, # 1.05
-        0, max(features[,2]), NA, # 3.50
-        0, max(features[,3]), NA), # 0.50
-        ncol = 3,
-        nrow = 3,
-        byrow = TRUE,
-        dimnames = list(c("maxlv", "minhv", "pmaxlv"), c("ll", "ul", "init")))
-      allowedparm[, 'init'] <- rowMeans(allowedparm, na.rm = T)
-
-      super$initialize(formula = formula, data = data, allowedparm = allowedparm, fixedparm = fixed, choicerule = choicerule, model = "Risk sensitivity FFT", discount = 0)
-
+      self$allowedparm[1:3, 'll'] <- apply(features, 2, max)
+      self$allowedparm[1:3, 'init'] <- rowMeans(allowedparm, na.rm = T)
     },
     makeFeatureMat = function(input = self$input, budget = self$budget, state =self$state, th = self$timehorizon, fml) {
       if (missing(fml)) {
@@ -72,6 +67,7 @@ Rsfft <- R6Class("rsfft",
       
       outcomes_arr <- array(0L, dim = c(ntrial, nout, nopt))
       probabilities_arr <- array(0L, dim = c(ntrial, nout, nopt))
+
       for (i in seq_len(nout)) {
          outcomes_arr[, , i] <- model.matrix(fml, input, rhs = i)[, -1, drop = FALSE][, x_cols, drop = FALSE]
       }     
@@ -270,7 +266,7 @@ Rsfft <- R6Class("rsfft",
 rsfft <- function(formula = NULL, sbt = NULL, nopt = NULL, nout = NULL, fixed = NULL, data = NULL, env = NULL, choicerule, terminal.fitness.fun) {
     obj <- Rsfft$new(env = env, formula = formula, sbt = sbt, nopt = nopt, nout = nout, data = data, fixed = fixed, terminal.fitness.fun = terminal.fitness.fun, choicerule)
   if (length(obj$fixednames) < length(obj$parm)) {
-    # obj$fit()
+    obj$fit()
   }
   return(obj)
 }
