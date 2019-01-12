@@ -31,7 +31,8 @@ Rsfft <- R6Class("rsfft",
       }
 
       n_node_orders <- nrow(permutations(3))
-      allowedparm <- matrix(c(1, n_node_orders, 0), 1, 3, dimnames = list("alpha", c("ll", "ul", "init")))
+      # allowedparm <- matrix(c(1, n_node_orders, 0), 1, 3, dimnames = list("alpha", c("ll", "ul", "init")))
+      allowedparm <- matrix(NA, 0, 3, dimnames = list(NULL, c("ll", "ul", "init")))
       super$initialize(formula = formula, data = data, allowedparm = allowedparm, fixedparm = fixed, choicerule = choicerule, model = "Risk sensitivity FFT", discount = 0)
 
       self$env <- env
@@ -62,54 +63,87 @@ Rsfft <- R6Class("rsfft",
 
       outcomes_arr <- array(0L, dim = c(ntrial, nout, nopt))
       for (i in seq_len(nout)) {
-         outcomes_arr[,,i] <- model.matrix(Formula(self$formula), input, rhs = i)[, -1, drop = FALSE][, x_cols, drop = FALSE]
+         outcomes_arr[, , i] <- model.matrix(Formula(self$formula), input, rhs = i)[, -1, drop = FALSE][, x_cols, drop = FALSE]
       }
       probabilities_arr <- array(0L, dim = c(ntrial, nout, nopt))
       for (i in seq_len(nout)) {
-         probabilities_arr[,,i] <-model.matrix(Formula(self$formula), input, rhs = i)[, -1, drop = FALSE][, -x_cols, drop = FALSE]
+        probs <- model.matrix(Formula(self$formula), input, rhs = i)[, -1, drop = FALSE][, -x_cols, drop = FALSE]
+        if( ncol(probs) == (nout - 1) ) {
+          probs <- cbind(probs, 1L - rowSums(probs))
+         }
+         probabilities_arr[, , i] <- probs         
       }
+      variances <- sapply(1:nopt, function(i) varG(probabilities_arr[,,i], outcomes_arr[,,i]))
+      which_hv <- cbind(rep(1:ntrial, nout), rep(1:nout, each=ntrial), apply(variances, 1, which.max))
+      which_lv <- cbind(rep(1:ntrial, nout), rep(1:nout, each=ntrial), apply(variances, 1, which.min))
 
-      # test change
+      hv_outcomes <- array(outcomes_arr[as.matrix(which_hv)], dim(variances))
+      hv_probabilities <- array(probabilities_arr[as.matrix(which_hv)], dim(variances))      
+      lv_outcomes <- array(outcomes_arr[as.matrix(which_lv)], dim(variances))
 
-      # outcomes_list <- lapply(seq_len(nout), function(i) {
+      need <- self$budget - self$state
+      max_lv_outcome <- apply(lv_outcomes, 1, max)
+      max_hv_outcome <- apply(hv_outcomes, 1, max)
+      min_hv_outcome <- apply(hv_outcomes, 1, min)
+
+      features <- cbind(
+        pmin(pmax(need / max_lv_outcome, 0), 99 ) / self$timehorizon,
+        pmin(pmax(need /min_hv_outcome, 0), 99 ) / self$timehorizon,
+        hv_probabilities[hv_outcomes == max_hv_outcome])
+
+      split_criterion <- c(1.05, 3.5, 0.5)
+
+      I <- indicators(features, split_criterion)
+
+      exit_structure <- c(1, 0, 1, 0)
+
+      values <- matrix(exit_structure, nrow = 1)[rep(1, ntrial), ]
+      values <- t(values)[t(I)==1]
+      values <- cbind(values, 1-values)
+
+      
+
+      # # test change
+
+      # # outcomes_list <- lapply(seq_len(nout), function(i) {
        
-      # })
-      # probabilities_list <- lapply(seq_len(nout), function(i) {
-      #   model.matrix(Formula(self$formula), input, rhs = i)[, -1, drop = FALSE][, -x_cols, drop = FALSE]
-      # })
+      # # })
+      # # probabilities_list <- lapply(seq_len(nout), function(i) {
+      # #   model.matrix(Formula(self$formula), input, rhs = i)[, -1, drop = FALSE][, -x_cols, drop = FALSE]
+      # # })
 
-      # FFT
-      # 1. Reached the budget?
-      # - YES
-      #   | Decide by a default function
-      # - NO:
-      #   | 2. Can only one of the options reach the budget: Is max outcome x t >= budget for only one option?
-      #     - YES:
-      #       | Chose it, proportionally to how much it exceeds 0
-      #     - NO:
-      #       | 3. Can one option reach it for sure? Is the min outcome x t >= budget for one option?
-      #             - YES:
-      #               | Chose the sure option, proportionally to how much it exceeds the budet
-      #             - NO (both unsure):
-      #               | Chose higher EV option
+      # # FFT
+      # # 1. Reached the budget?
+      # # - YES
+      # #   | Decide by a default function
+      # # - NO:
+      # #   | 2. Can only one of the options reach the budget: Is max outcome x t >= budget for only one option?
+      # #     - YES:
+      # #       | Chose it, proportionally to how much it exceeds 0
+      # #     - NO:
+      # #       | 3. Can one option reach it for sure? Is the min outcome x t >= budget for one option?
+      # #             - YES:
+      # #               | Chose the sure option, proportionally to how much it exceeds the budet
+      # #             - NO (both unsure):
+      # #               | Chose higher EV option
 
-      nopt <- self$nopt
-      timehorizon <- self$timehorizon
-      state <- self$state
-      budget <- self$budget
-      col_order <- permutations(3)[self$parm['alpha'],]
-      # values to return for each node of the tree
-      values <- lapply(seq_len(nopt), function(i) nodevalues(col_order-1, probabilities_arr[,,i], outcomes_arr[,,i], timehorizon, budget, state, self$terminal.fitness))
+      # nopt <- self$nopt
+      # timehorizon <- self$timehorizon
+      # state <- self$state
+      # budget <- self$budget
+      # col_order <- permutations(3)[self$parm['alpha'],]
+      # # values to return for each node of the tree
+      # values <- lapply(seq_len(nopt), function(i) nodevalues(col_order-1, probabilities_arr[,,i], outcomes_arr[,,i], timehorizon, budget, state, self$terminal.fitness))
 
-      # values_reached_b <- lapply(seq_len(nopt), function(i) self$reachedBudgetFun(probabilities_list[[i]], outcomes_list[[i]]))
-      # for (i in seq_len(nopt)) {
-      #   values[[i]][,1] <- - values_reached_b[[i]]
-      # }
+      # # values_reached_b <- lapply(seq_len(nopt), function(i) self$reachedBudgetFun(probabilities_list[[i]], outcomes_list[[i]]))
+      # # for (i in seq_len(nopt)) {
+      # #   values[[i]][,1] <- - values_reached_b[[i]]
+      # # }
 
-      # Indicator matrix for the tree
-      I <- indicators(col_order, outcomes_arr, probabilities_arr, timehorizon, budget, state)
-      # return values at the nodes specified by the indicator
-      values <- matrix( unlist ( lapply(seq_len(nopt), function(x) rowSums(values[[x]] * I)) ), ncol = nopt, byrow = FALSE)
+      # # Indicator matrix for the tree
+      # I <- indicators(col_order, outcomes_arr, probabilities_arr, timehorizon, budget, state)
+      # # return values at the nodes specified by the indicator
+      # values <- matrix( unlist ( lapply(seq_len(nopt), function(x) rowSums(values[[x]] * I)) ), ncol = nopt, byrow = FALSE)
       
       if (type == "ev") {
         trials <- input[, 1]
@@ -146,18 +180,18 @@ Rsfft <- R6Class("rsfft",
     fit = function(type = 'grid') {
       fun <- function(parm, self) {
         self$setparm(parm)
-        -cogsciutils::gof(obs = self$obs, pred = self$predict(), type = 'log', response = 'discrete')
+        cogsciutils::gof(obs = self$obs, pred = self$predict(), type = 'log', response = 'discrete')
       }
       free_parm <- self$freenames
-      LB <- self$allowedparm[, 'll'][free_parm]
-      UB <- self$allowedparm[, 'ul'][free_parm]
-      STEP <- c(alpha = 1, tau = .5)[free_parm]
+      LB <- self$allowedparm[free_parm, 'll', drop = FALSE]
+      UB <- self$allowedparm[free_parm, 'ul', drop = FALSE]
+      STEP <- c(alpha = 1, tau = .5, eps = .05)[free_parm]
+
       if (type == 'grid') {
-        parGrid <- expand.grid(sapply(free_parm, function(i) seq(LB[i], UB[i], STEP[i]), simplify = FALSE))
+        parGrid <- expand.grid(sapply(free_parm, function(i) c(LB[i, ], seq(max(LB[i, ], STEP[i]), UB[i, ], STEP[i])), simplify = FALSE))
         ll <- sapply(1:nrow(parGrid), function(i) fun(parm = unlist(parGrid[i,,drop=FALSE]), self = self))
-        self$setparm(unlist(parGrid[which.min(ll), ]))
-      }
-      else {
+        self$setparm(unlist(parGrid[which.max(ll), , drop = FALSE]))
+      } else {
        par0 <- self$allowedparm[, 'init']
         fit <- solnp(pars = par0, fun = fun, LB = LB, UB = UB, self = self)
         self$setparm(fit$pars)

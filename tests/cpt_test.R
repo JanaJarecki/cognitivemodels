@@ -17,7 +17,6 @@ model <- cpt(rp ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py), nopt = 2, nou
 
 model$predict()
 
-
 dt <- data.frame(
   x1 = c(-2),
   px = c(.1),
@@ -30,6 +29,7 @@ dt <- data.frame(
 model <- cpt(rp ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py), nopt = 2, nout = 2, ref = 0, choicerule = NULL, data = dt, fixed = c(alpha = 0.88, beta = 0.88, lambda = 2.25, gammap = 0.61, gamman = 0.69))
 
 model$predict("v", 1:2)
+model$logLik()
 
 
 dt <- data.frame(
@@ -74,3 +74,14 @@ ggplot(data.frame(x = ps[,1]), aes(x=x)) +
   scale_x_continuous("p", breaks = seq(0,1,.2)) +
   scale_y_continuous("w(p)", breaks = seq(0,1,.2)) +
   ggtitle("Weighting Function")
+
+
+  metric = match.arg('discrete', 'minkowski')
+
+  f <- function(metric = c('asfrew', 'bowerew')) {
+    metric = match.arg(metric)
+    metric
+  }
+
+  f()
+  f('x')
