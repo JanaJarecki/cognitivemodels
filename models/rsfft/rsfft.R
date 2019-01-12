@@ -52,7 +52,7 @@ Rsfft <- R6Class("rsfft",
       features <- self$makeFeatureMat(fml = formula)
       self$features <- features
 
-      self$allowedparm[1:3, 'll'] <- apply(features, 2, max)
+      self$allowedparm[1:3, 'ul'] <- apply(features, 2, max)
       self$allowedparm[1:3, 'init'] <- rowMeans(allowedparm, na.rm = T)
     },
     makeFeatureMat = function(input = self$input, budget = self$budget, state =self$state, th = self$timehorizon, fml) {
@@ -213,6 +213,8 @@ Rsfft <- R6Class("rsfft",
       free_parm <- self$freenames
       LB <- self$allowedparm[free_parm, 'll', drop = FALSE]
       UB <- self$allowedparm[free_parm, 'ul', drop = FALSE]
+      apply(allowedparm, 1, function(x) (max(x)-min(x))/100)
+
       STEP <- c(alpha = 1, tau = .5, eps = .05)[free_parm]
 
       if (type == 'grid') {
