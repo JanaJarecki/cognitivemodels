@@ -210,13 +210,13 @@ Rsfft <- R6Class("rsfft",
         self$setparm(parm)
         cogsciutils::gof(obs = self$obs, pred = self$predict(), type = 'log', response = 'discrete')
       }
-      free_parm <- self$freenames
-      LB <- self$allowedparm[free_parm, 'll', drop = FALSE]
-      UB <- self$allowedparm[free_parm, 'ul', drop = FALSE]
-      apply(allowedparm, 1, function(x) (max(x)-min(x))/100)
-
-      STEP <- c(alpha = 1, tau = .5, eps = .05)[free_parm]
-
+      f <- self$freenames
+      f <- c(f, "maxlv")
+      A <- self$allowedparm[f,,drop=FALSE]
+      LB <- A[, 'll', drop = FALSE]
+      UB <- A[, 'ul', drop = FALSE]
+      STEP <- apply(A, 1, function(x) round((max(x)-min(x)) / sqrt(100 * length(f)), 2))
+      
       if (type == 'grid') {
         parGrid <- expand.grid(sapply(free_parm, function(i) c(LB[i, ], seq(max(LB[i, ], STEP[i]), UB[i, ], STEP[i])), simplify = FALSE))
         ll <- sapply(1:nrow(parGrid), function(i) fun(parm = unlist(parGrid[i,,drop=FALSE]), self = self))

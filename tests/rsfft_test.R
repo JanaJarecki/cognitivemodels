@@ -11,10 +11,7 @@ dt <- as.data.table(cbind(probs, outcomes, budget, state, timehorizon))
 setnames(dt, 1:8, c(paste0('p',1:4), paste0('x',1:4)))
 dt$choice <- c(1,1,1)
 
-mod <- rsfft(choice ~ (x1 + x2 + p1 + p2) | (x3 + x4 + p3 + p4), sbt = ~ state + budget + timehorizon, nopt = 2, nout = 2, data = dt, choicerule = "eps", terminal.fitness.fun = function(state, budget) { ((state - budget) >= 0) * state}, fixed = c(maxlv= .5, minhv = 2.5, pmaxlv = 0.5, eps = .3))
-mod
-
-mod
+mod <- rsfft(choice ~ (x1 + x2 + p1 + p2) | (x3 + x4 + p3 + p4), sbt = ~ state + budget + timehorizon, nopt = 2, nout = 2, data = dt, choicerule = "eps", terminal.fitness.fun = function(state, budget) { ((state - budget) >= 0) * state})
 
 mod$features
 mod$input
