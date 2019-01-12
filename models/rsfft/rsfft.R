@@ -26,16 +26,13 @@ Rsfft <- R6Class("rsfft",
         formula <- ~ timehorizon + state
       } 
       if (is.null(data)) {
-        time_state_names <- attr(terms(formula), 'term.labels')
-        data <- env$makeData(time_state_names)
-        self$makeValueMat()
-        self$makeEVMat()
+        stop("not yet implemented.")
+        # Check the implementation here
+        # time_state_names <- attr(terms(formula), 'term.labels')
+        # data <- env$makeData(time_state_names)
+        # self$makeValueMat()
+        # self$makeEVMat()
       }
-
-      n_node_orders <- nrow(permutations(3))
-      # allowedparm <- matrix(c(1, n_node_orders, 0), 1, 3, dimnames = list("alpha", c("ll", "ul", "init")))
-      allowedparm <- matrix(NA, 0, 3, dimnames = list(NULL, c("ll", "ul", "init")))
-      super$initialize(formula = formula, data = data, allowedparm = allowedparm, fixedparm = fixed, choicerule = choicerule, model = "Risk sensitivity FFT", discount = 0)
 
       self$env <- env
       self$nout <- nout
@@ -44,11 +41,30 @@ Rsfft <- R6Class("rsfft",
       self$budget <- model.frame(sbt, data)[, 2]
       self$timehorizon <- model.frame(sbt, data)[, 3]   
       self$terminal.fitness <- terminal.fitness.fun
-      self$features <- self$makeFeatureMat()
       self$sbt <- sbt
 
+      # n_node_orders <- nrow(permutations(3))
+      features <- self$makeFeatureMat(fml = formula)
+      self$features <- features
+
+      allowedparm <- matrix(c(
+        0, max(features[,1]), NA, # 1.05
+        0, max(features[,2]), NA, # 3.50
+        0, max(features[,3]), NA), # 0.50
+        ncol = 3,
+        nrow = 3,
+        byrow = TRUE,
+        dimnames = list(c("maxlv", "minhv", "pmaxlv"), c("ll", "ul", "init")))
+      allowedparm[, 'init'] <- rowMeans(allowedparm, na.rm = T)
+
+      super$initialize(formula = formula, data = data, allowedparm = allowedparm, fixedparm = fixed, choicerule = choicerule, model = "Risk sensitivity FFT", discount = 0)
+
     },
-    makeFeatureMat = function(input = self$input, budget = self$budget, state =self$state, th = self$timehorizon) {
+    makeFeatureMat = function(input = self$input, budget = self$budget, state =self$state, th = self$timehorizon, fml) {
+      if (missing(fml)) {
+        fml <- self$formula
+      }
+      fml <- Formula(fml)
       nout <- self$nout
       nopt <- self$nopt
       ntrial <- nrow(input)
@@ -57,15 +73,15 @@ Rsfft <- R6Class("rsfft",
       outcomes_arr <- array(0L, dim = c(ntrial, nout, nopt))
       probabilities_arr <- array(0L, dim = c(ntrial, nout, nopt))
       for (i in seq_len(nout)) {
-         outcomes_arr[, , i] <- model.matrix(Formula(self$formula), input, rhs = i)[, -1, drop = FALSE][, x_cols, drop = FALSE]
+         outcomes_arr[, , i] <- model.matrix(fml, input, rhs = i)[, -1, drop = FALSE][, x_cols, drop = FALSE]
       }     
       for (i in seq_len(nout)) {
-         probabilities_arr[, , i] <- model.matrix(Formula(self$formula), input, rhs = i)[, -1, drop = FALSE][, -x_cols, drop = FALSE]
+         probabilities_arr[, , i] <- model.matrix(fml, input, rhs = i)[, -1, drop = FALSE][, -x_cols, drop = FALSE]
          checkSumTo1 <- all.equal(rowSums(probabilities_arr[,,i]), rep(1, ntrial))
          if (!isTRUE(checkSumTo1)) {
             stop('Some probabilities in your data do not sum to 1.\nProbabilities are specified in your formula by "', paste(attr(terms(formula(Formula(self$formula), rhs = i, lhs = 0)), 'term.labels')[-x_cols], collapse = ', '), '".\nCheck if the formula refers to the right columns?')
          }
-       }    
+       }
 
       variances <- sapply(1:nopt, function(i) varG(probabilities_arr[,,i], outcomes_arr[,,i]))
       which_hv <- cbind(rep(1:ntrial, nout), rep(1:nout, each=ntrial), apply(variances, 1, which.max))
@@ -108,7 +124,7 @@ Rsfft <- R6Class("rsfft",
         features <- self$features
       }
 
-      split_criterion <- c(1.05, 3.5, 0.5)
+      split_criterion <- self$parm[1:3]
       exit_structure <- c(1, 0, 1, 0)
 
       I <- indicators(features, split_criterion)   
@@ -254,7 +270,7 @@ Rsfft <- R6Class("rsfft",
 rsfft <- function(formula = NULL, sbt = NULL, nopt = NULL, nout = NULL, fixed = NULL, data = NULL, env = NULL, choicerule, terminal.fitness.fun) {
     obj <- Rsfft$new(env = env, formula = formula, sbt = sbt, nopt = nopt, nout = nout, data = data, fixed = fixed, terminal.fitness.fun = terminal.fitness.fun, choicerule)
   if (length(obj$fixednames) < length(obj$parm)) {
-    obj$fit()
+    # obj$fit()
   }
   return(obj)
 }
