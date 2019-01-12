@@ -18,6 +18,7 @@ Rsfft <- R6Class("rsfft",
     timehorizon = NULL,
     nout = NULL,
     nopt = NULL,
+    features = NULL,
     terminal.fitness = NULL,
     initialize = function(env = NULL, formula = NULL, sbt = NULL, nout = NULL, nopt = NULL, fixed = NULL, data = NULL, choicerule, terminal.fitness.fun) {
       if (is.null(formula)) {
@@ -42,12 +43,50 @@ Rsfft <- R6Class("rsfft",
       self$budget <- model.frame(sbt, data)[, 2]
       self$timehorizon <- model.frame(sbt, data)[, 3]   
       self$terminal.fitness <- terminal.fitness.fun
+      self$features <- makeFeatureMat()
 
-      },
+    },
+    makeFeatureMat = function(input = self$input, budget = self$budget, state =self$state, th = self$timehorizon) {
+      nout <- self$nout
+      nopt <- self$nopt
+      ntrial <- nrow(input)
+      x_cols <- seq_len(nout)
+      
+      outcomes_arr <- array(0L, dim = c(ntrial, nout, nopt))
+      probabilities_arr <- array(0L, dim = c(ntrial, nout, nopt))
+      for (i in seq_len(nout)) {
+         outcomes_arr[, , i] <- model.matrix(Formula(self$formula), input, rhs = i)[, -1, drop = FALSE][, x_cols, drop = FALSE]
+      }     
+      for (i in seq_len(nout)) {
+         probabilities_arr[, , i] <- model.matrix(Formula(self$formula), input, rhs = i)[, -1, drop = FALSE][, -x_cols, drop = FALSE]
+         checkSumTo1 <- all.equal(rowSums(probabilities_arr[,,i]), rep(1, ntrial))
+         if (!isTRUE(checkSumTo1) {
+            stop('Some probabilities in your data do not sum to 1.\nProbabilities are specified in your formula by "', paste(attr(terms(formula(Formula(self$formula), rhs = i, lhs = 0)), 'term.labels')[-x_cols], collapse = ', '), '".\nCheck if the formula refers to the right columns?')
+         }
+       }    
+
+      variances <- sapply(1:nopt, function(i) varG(probabilities_arr[,,i], outcomes_arr[,,i]))
+      which_hv <- cbind(rep(1:ntrial, nout), rep(1:nout, each=ntrial), apply(variances, 1, which.max))
+      which_lv <- cbind(rep(1:ntrial, nout), rep(1:nout, each=ntrial), apply(variances, 1, which.min))
+
+      hv_outcomes <- array(outcomes_arr[as.matrix(which_hv)], dim(variances))
+      hv_probabilities <- array(probabilities_arr[as.matrix(which_hv)], dim(variances))      
+      lv_outcomes <- array(outcomes_arr[as.matrix(which_lv)], dim(variances))
+
+      max_lv_outcome <- apply(lv_outcomes, 1, max)
+      max_hv_outcome <- apply(hv_outcomes, 1, max)
+      min_hv_outcome <- apply(hv_outcomes, 1, min)
+
+      need <- budget - state
+
+      return(cbind(
+        pmin(pmax(need / max_lv_outcome, 0), 99 ) / th,
+        pmin(pmax(need /min_hv_outcome, 0), 99 ) / th,
+        hv_probabilities[hv_outcomes == max_hv_outcome]))
+    },
     predict = function(type = c("choice", "node", "value", "ev", "pstate"), action = NULL, newdata = NULL) {
       type <- match.arg(type)
-      nout <- self$nout
-
+      
       if (is.null(action)) {
         action <- ifelse(self$nopt == 2, 1, seq_len(self$nopt))
       }
@@ -57,39 +96,8 @@ Rsfft <- R6Class("rsfft",
         input <- self$input
       }
 
-      x_cols <- seq_len(nout)
-      nopt <- self$nopt
-      ntrial <- length(self$state)
+      
 
-      outcomes_arr <- array(0L, dim = c(ntrial, nout, nopt))
-      for (i in seq_len(nout)) {
-         outcomes_arr[, , i] <- model.matrix(Formula(self$formula), input, rhs = i)[, -1, drop = FALSE][, x_cols, drop = FALSE]
-      }
-      probabilities_arr <- array(0L, dim = c(ntrial, nout, nopt))
-      for (i in seq_len(nout)) {
-        probs <- model.matrix(Formula(self$formula), input, rhs = i)[, -1, drop = FALSE][, -x_cols, drop = FALSE]
-        if( ncol(probs) == (nout - 1) ) {
-          probs <- cbind(probs, 1L - rowSums(probs))
-         }
-         probabilities_arr[, , i] <- probs         
-      }
-      variances <- sapply(1:nopt, function(i) varG(probabilities_arr[,,i], outcomes_arr[,,i]))
-      which_hv <- cbind(rep(1:ntrial, nout), rep(1:nout, each=ntrial), apply(variances, 1, which.max))
-      which_lv <- cbind(rep(1:ntrial, nout), rep(1:nout, each=ntrial), apply(variances, 1, which.min))
-
-      hv_outcomes <- array(outcomes_arr[as.matrix(which_hv)], dim(variances))
-      hv_probabilities <- array(probabilities_arr[as.matrix(which_hv)], dim(variances))      
-      lv_outcomes <- array(outcomes_arr[as.matrix(which_lv)], dim(variances))
-
-      need <- self$budget - self$state
-      max_lv_outcome <- apply(lv_outcomes, 1, max)
-      max_hv_outcome <- apply(hv_outcomes, 1, max)
-      min_hv_outcome <- apply(hv_outcomes, 1, min)
-
-      features <- cbind(
-        pmin(pmax(need / max_lv_outcome, 0), 99 ) / self$timehorizon,
-        pmin(pmax(need /min_hv_outcome, 0), 99 ) / self$timehorizon,
-        hv_probabilities[hv_outcomes == max_hv_outcome])
 
       split_criterion <- c(1.05, 3.5, 0.5)
 
