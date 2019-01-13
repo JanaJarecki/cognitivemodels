@@ -49,17 +49,14 @@ Rsfft <- R6Class("rsfft",
       self$sbt <- sbt
 
       # n_node_orders <- nrow(permutations(3))
-      features <- self$makeFeatureMat(fml = formula)
+      features <- self$makeFeatureMat()
       self$features <- features
 
       self$allowedparm[1:3, 'ul'] <- apply(features, 2, max)
-      self$allowedparm[1:3, 'init'] <- rowMeans(allowedparm, na.rm = T)
+      self$allowedparm[1:3, 'init'] <- rowMeans(self$allowedparm[1:3,])
     },
-    makeFeatureMat = function(input = self$input, budget = self$budget, state =self$state, th = self$timehorizon, fml) {
-      if (missing(fml)) {
-        fml <- self$formula
-      }
-      fml <- Formula(fml)
+    makeFeatureMat = function(input = self$input, budget = self$budget, state =self$state, th = self$timehorizon) {
+      fml <- Formula(self$formula)
       nout <- self$nout
       nopt <- self$nopt
       ntrial <- nrow(input)
@@ -90,13 +87,20 @@ Rsfft <- R6Class("rsfft",
       max_lv_outcome <- apply(lv_outcomes, 1, max)
       max_hv_outcome <- apply(hv_outcomes, 1, max)
       min_hv_outcome <- apply(hv_outcomes, 1, min)
-
       need <- budget - state
 
-      return(cbind(
-        pmin(pmax(need / max_lv_outcome, 0), 99 ) / th,
-        pmin(pmax(need /min_hv_outcome, 0), 99 ) / th,
-        hv_probabilities[hv_outcomes == max_hv_outcome]))
+      features <- cbind(
+        need / max_lv_outcome / th,
+        need / min_hv_outcome / th,
+        hv_probabilities[hv_outcomes == max_hv_outcome])
+
+      # Correct for NaN and Inf values
+      features[need == 0, 1:2] <- 0
+      for (i in 1:2) {
+        infrows <- is.infinite(features[, i])
+        features[infrows, i] <- max(features[!infrows, i]) + quantile(features[!infrows, i], .01)
+      }
+      return(features)
     },
     predict = function(type = c("choice", "node", "value", "ev", "pstate"), action = NULL, newdata = NULL) {
       type <- match.arg(type)
@@ -128,50 +132,6 @@ Rsfft <- R6Class("rsfft",
       values <- matrix(exit_structure, nrow = 1)[rep(1, nrow(input)), ]
       values <- t(values)[t(I)==1]
       values <- cbind(values, 1-values)
-
-      
-
-      # # test change
-
-      # # outcomes_list <- lapply(seq_len(nout), function(i) {
-       
-      # # })
-      # # probabilities_list <- lapply(seq_len(nout), function(i) {
-      # #   model.matrix(Formula(self$formula), input, rhs = i)[, -1, drop = FALSE][, -x_cols, drop = FALSE]
-      # # })
-
-      # # FFT
-      # # 1. Reached the budget?
-      # # - YES
-      # #   | Decide by a default function
-      # # - NO:
-      # #   | 2. Can only one of the options reach the budget: Is max outcome x t >= budget for only one option?
-      # #     - YES:
-      # #       | Chose it, proportionally to how much it exceeds 0
-      # #     - NO:
-      # #       | 3. Can one option reach it for sure? Is the min outcome x t >= budget for one option?
-      # #             - YES:
-      # #               | Chose the sure option, proportionally to how much it exceeds the budet
-      # #             - NO (both unsure):
-      # #               | Chose higher EV option
-
-      # nopt <- self$nopt
-      # timehorizon <- self$timehorizon
-      # state <- self$state
-      # budget <- self$budget
-      # col_order <- permutations(3)[self$parm['alpha'],]
-      # # values to return for each node of the tree
-      # values <- lapply(seq_len(nopt), function(i) nodevalues(col_order-1, probabilities_arr[,,i], outcomes_arr[,,i], timehorizon, budget, state, self$terminal.fitness))
-
-      # # values_reached_b <- lapply(seq_len(nopt), function(i) self$reachedBudgetFun(probabilities_list[[i]], outcomes_list[[i]]))
-      # # for (i in seq_len(nopt)) {
-      # #   values[[i]][,1] <- - values_reached_b[[i]]
-      # # }
-
-      # # Indicator matrix for the tree
-      # I <- indicators(col_order, outcomes_arr, probabilities_arr, timehorizon, budget, state)
-      # # return values at the nodes specified by the indicator
-      # values <- matrix( unlist ( lapply(seq_len(nopt), function(x) rowSums(values[[x]] * I)) ), ncol = nopt, byrow = FALSE)
       
       if (type == "ev") {
         trials <- input[, 1]
@@ -211,14 +171,13 @@ Rsfft <- R6Class("rsfft",
         cogsciutils::gof(obs = self$obs, pred = self$predict(), type = 'log', response = 'discrete')
       }
       f <- self$freenames
-      f <- c(f, "maxlv")
       A <- self$allowedparm[f,,drop=FALSE]
       LB <- A[, 'll', drop = FALSE]
       UB <- A[, 'ul', drop = FALSE]
       STEP <- apply(A, 1, function(x) round((max(x)-min(x)) / sqrt(100 * length(f)), 2))
-      
+
       if (type == 'grid') {
-        parGrid <- expand.grid(sapply(free_parm, function(i) c(LB[i, ], seq(max(LB[i, ], STEP[i]), UB[i, ], STEP[i])), simplify = FALSE))
+        parGrid <- expand.grid(sapply(f, function(i) c(LB[i, ], seq(max(LB[i, ], STEP[i]), UB[i, ], STEP[i])), simplify = FALSE))
         ll <- sapply(1:nrow(parGrid), function(i) fun(parm = unlist(parGrid[i,,drop=FALSE]), self = self))
         self$setparm(unlist(parGrid[which.max(ll), , drop = FALSE]))
       } else {
