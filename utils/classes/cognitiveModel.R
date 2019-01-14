@@ -20,6 +20,7 @@ cognitiveModel <- R6Class(
     choicerule = NA, 
     optimization = NA,
     discount = NA,
+    gofvalue = NULL,
     initialize = function(formula, data, allowedparm, fixedparm = NULL, choicerule =  NULL, model = NULL, discount = NULL) {
       self$model <- model
       formula <- as.formula(formula)
@@ -117,7 +118,7 @@ cognitiveModel <- R6Class(
         ST <- apply(allowedfreeparm, 1, function(x) round((max(x) - min(x)) / sqrt(10 * nfree), 2))
         parGrid <- expand.grid(sapply(rownames(LB), function(i) c(LB[i, ], seq(max(LB[i, ], ST[i]), UB[i, ], ST[i])), simplify = FALSE))
         negGof <- sapply(1:nrow(parGrid), function(i) fun(parm = unlist(parGrid[i,,drop=FALSE]), self = self))
-        fit <- list(value = min(negGof),
+        fit <- list(values = min(negGof),
                     pars = unlist(parGrid[which.min(negGof), , drop = FALSE]))
       }
 
@@ -137,7 +138,8 @@ cognitiveModel <- R6Class(
           fits <- apply(par0, 1, function(i) solnp(pars = i, fun = fun, LB = LB, UB = UB, self = self, control = solnp_control))
           fit <- fits[[which.min(lapply(fits, function(fit) tail(fit$values, 1)))]]
         }
-             
+
+      self$gofvalue = tail(fit$value, 1)
       self$setparm(fit$pars)
     },
     print = function(digits = 2) {
