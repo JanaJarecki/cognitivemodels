@@ -113,7 +113,7 @@ cognitiveModel <- R6Class(
       UB <- allowedfreeparm[, 'ul', drop = FALSE]
 
       # Grid-based fitting 
-      if (any(grepl('grid', type))) {
+      if ('grid' %in% type) {
         ST <- apply(allowedfreeparm, 1, function(x) round((max(x) - min(x)) / sqrt(10 * nfree), 2))
         parGrid <- expand.grid(sapply(rownames(LB), function(i) c(LB[i, ], seq(max(LB[i, ], ST[i]), UB[i, ], ST[i])), simplify = FALSE))
         negGof <- sapply(1:nrow(parGrid), function(i) fun(parm = unlist(parGrid[i,,drop=FALSE]), self = self))
@@ -121,7 +121,7 @@ cognitiveModel <- R6Class(
                     pars = unlist(parGrid[which.min(negGof), , drop = FALSE]))
       }
 
-      # Parameter for solnp
+      # Controls for solnp
       solnp_control <- list(trace = 0)
 
       # Optimization-based fitting
