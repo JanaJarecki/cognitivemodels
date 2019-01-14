@@ -1,6 +1,7 @@
 # Work with reference classes
 library(R6)
 library(cogsciutils)
+library(Rsolnp)
 # library(formula.tools)
 library(Formula)
 
@@ -102,15 +103,10 @@ cognitiveModel <- R6Class(
       type <- match.arg(type, several.ok = TRUE)
       allowedfreeparm <- self$allowedparm[self$freenames,,drop=FALSE]
 
-      fun <- function(parm, self) {
-        self$setparm(parm)
-        -cogsciutils::gof(obs = self$obs, pred = self$predict(), type = 'log', response = 'discrete')
-      }
-
       LB <- allowedfreeparm[, 'll', drop = FALSE]
       UB <- allowedfreeparm[, 'ul', drop = FALSE]
       
-      if (any(grepl('grid', type)) {
+      if (any(grepl('grid', type))) {
         ST <- apply(allowedfreeparm, 1, function(x) round((max(x)-min(x)) / sqrt(10 * length(f)), 2))
         parGrid <- expand.grid(sapply(rownames(LB), function(i) c(LB[i, ], seq(max(LB[i, ], ST[i]), UB[i, ], ST[i])), simplify = FALSE))
         negGof <- sapply(1:nrow(parGrid), function(i) fun(parm = unlist(parGrid[i,,drop=FALSE]), self = self))
@@ -118,7 +114,12 @@ cognitiveModel <- R6Class(
                     pars = unlist(parGrid[which.min(negGof), , drop = FALSE]))
       }
 
-      if (all(grepl('rsolnp', type)) {
+      fun <- function(parm, self) {
+        self$setparm(parm)
+        -cogsciutils::gof(obs = self$obs, pred = self$predict(), type = 'log', response = 'discrete')
+      }
+
+      if (all(grepl('rsolnp', type))) {
         par0 <- self$allowedparm[, 'init']
         fit <- solnp(pars = par0, fun = fun, LB = LB, UB = UB, self = self)
       }
