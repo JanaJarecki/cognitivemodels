@@ -129,9 +129,9 @@ cognitiveModel <- R6Class(
           par0 <- parGrid[grid5, , drop = FALSE]
           fits <- apply(par0, 1, function(i) solnp(pars = i, fun = fun, LB = LB, UB = UB, self = self))
           fit <- fits[which.max(lapply(fits, "[[", 'value'))]
-        }       
-        self$setparm(fit$pars)
-      }
+        }
+             
+      self$setparm(fit$pars)
     },
     print = function(digits = 2) {
       cat(self$model)
