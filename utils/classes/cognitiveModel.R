@@ -102,33 +102,40 @@ cognitiveModel <- R6Class(
     fit = function(type = c('grid', 'solnp')) {
       type <- match.arg(type, several.ok = TRUE)
       allowedfreeparm <- self$allowedparm[self$freenames,,drop=FALSE]
-
-      LB <- allowedfreeparm[, 'll', drop = FALSE]
-      UB <- allowedfreeparm[, 'ul', drop = FALSE]
-      
-      if (any(grepl('grid', type))) {
-        ST <- apply(allowedfreeparm, 1, function(x) round((max(x)-min(x)) / sqrt(10 * length(f)), 2))
-        parGrid <- expand.grid(sapply(rownames(LB), function(i) c(LB[i, ], seq(max(LB[i, ], ST[i]), UB[i, ], ST[i])), simplify = FALSE))
-        negGof <- sapply(1:nrow(parGrid), function(i) fun(parm = unlist(parGrid[i,,drop=FALSE]), self = self))
-        fit <- list(value = min(negGof),
-                    pars = unlist(parGrid[which.min(negGof), , drop = FALSE]))
-      }
+      nfree <- length(self$freenames)
 
       fun <- function(parm, self) {
         self$setparm(parm)
         -cogsciutils::gof(obs = self$obs, pred = self$predict(), type = 'log', response = 'discrete')
       }
 
-      if (all(grepl('rsolnp', type))) {
-        par0 <- self$allowedparm[, 'init']
-        fit <- solnp(pars = par0, fun = fun, LB = LB, UB = UB, self = self)
+      LB <- allowedfreeparm[, 'll', drop = FALSE]
+      UB <- allowedfreeparm[, 'ul', drop = FALSE]
+
+      # Grid-based fitting 
+      if (any(grepl('grid', type))) {
+        ST <- apply(allowedfreeparm, 1, function(x) round((max(x) - min(x)) / sqrt(10 * nfree), 2))
+        parGrid <- expand.grid(sapply(rownames(LB), function(i) c(LB[i, ], seq(max(LB[i, ], ST[i]), UB[i, ], ST[i])), simplify = FALSE))
+        negGof <- sapply(1:nrow(parGrid), function(i) fun(parm = unlist(parGrid[i,,drop=FALSE]), self = self))
+        fit <- list(value = min(negGof),
+                    pars = unlist(parGrid[which.min(negGof), , drop = FALSE]))
       }
 
+      # Parameter for solnp
+      solnp_control <- list(trace = 0)
+
+      # Optimization-based fitting
+      if (all(grepl('rsolnp', type))) {
+        par0 <- self$allowedparm[, 'init']
+        fit <- solnp(pars = par0, fun = fun, LB = LB, UB = UB, self = self, control = solnp_control)
+      }
+
+      # Optimization-based fitting with grid values as starting point(s)
       if (any(grepl('grid|rsolnp', type))) {
           grid5 <- which(rank(negGof, ties.method = 'random') <= 5)
           par0 <- parGrid[grid5, , drop = FALSE]
-          fits <- apply(par0, 1, function(i) solnp(pars = i, fun = fun, LB = LB, UB = UB, self = self))
-          fit <- fits[which.max(lapply(fits, "[[", 'value'))]
+          fits <- apply(par0, 1, function(i) solnp(pars = i, fun = fun, LB = LB, UB = UB, self = self, control = solnp_control))
+          fit <- fits[[which.min(lapply(fits, function(fit) tail(fit$values, 1)))]]
         }
              
       self$setparm(fit$pars)
