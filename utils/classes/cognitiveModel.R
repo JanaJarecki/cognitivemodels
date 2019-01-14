@@ -98,6 +98,38 @@ cognitiveModel <- R6Class(
     RMSE = function(...) {
       return(cogsciutils::gof(obs = self$obs, pred = self$predict(), type = "rmse", discount = self$discount, ...))
     },
+    fit = function(type = c('grid', 'solnp')) {
+      type <- match.arg(type, several.ok = TRUE)
+
+      fun <- function(parm, self) {
+        self$setparm(parm)
+        -cogsciutils::gof(obs = self$obs, pred = self$predict(), type = 'log', response = 'discrete')
+      }
+      f <- self$freenames
+      A <- self$allowedparm[f,,drop=FALSE]
+      LB <- A[, 'll', drop = FALSE]
+      UB <- A[, 'ul', drop = FALSE]
+      STEP <- apply(A, 1, function(x) round((max(x)-min(x)) / sqrt(10 * length(f)), 2))
+
+      if (any(grepl('grid', typ)) {
+        parGrid <- expand.grid(sapply(f, function(i) c(LB[i, ], seq(max(LB[i, ], STEP[i]), UB[i, ], STEP[i])), simplify = FALSE))
+        neg_ll <- sapply(1:nrow(parGrid), function(i) fun(parm = unlist(parGrid[i,,drop=FALSE]), self = self))
+        self$setparm(unlist(parGrid[which.min(ll), , drop = FALSE]))
+      }
+
+      if (any(grepl('rsolnp', typ)) {
+        if (length(type) == 1) {
+          par0 <- self$allowedparm[, 'init']
+          fit <- solnp(pars = par0, fun = fun, LB = LB, UB = UB, self = self)
+        } else {
+          best5 <- rank(neg_ll, ties.method = 'random') <= 5
+          par0 <- parGrid[best5, , drop = FALSE]
+          fits <- apply(par0, 1, function(i) solnp(pars = i, fun = fun, LB = LB, UB = UB, self = self))
+          fit <- fits[which.max(lapply(fits, "[[", 'value'))]
+        }       
+        self$setparm(fit$pars)
+      }
+    },
     print = function(digits = 2) {
       cat(self$model)
       cat("\nCall:\n",
