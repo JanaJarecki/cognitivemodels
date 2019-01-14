@@ -3,6 +3,7 @@ library(Formula)
 library(reshape2)
 library(arrangements)
 library(Rcpp)
+library(Rsolnp)
 sourceCpp("rsfft.cpp")
 source("../../utils/classes/cognitiveModel.R", chdir = TRUE)
 source("../../utils/classes/rsenvironment.R", chdir = TRUE)
@@ -164,27 +165,6 @@ Rsfft <- R6Class("rsfft",
         value = values[, action],
         ev = ev,
         pstate = ps)
-    },
-    fit = function(type = 'grid') {
-      fun <- function(parm, self) {
-        self$setparm(parm)
-        cogsciutils::gof(obs = self$obs, pred = self$predict(), type = 'log', response = 'discrete')
-      }
-      f <- self$freenames
-      A <- self$allowedparm[f,,drop=FALSE]
-      LB <- A[, 'll', drop = FALSE]
-      UB <- A[, 'ul', drop = FALSE]
-      STEP <- apply(A, 1, function(x) round((max(x)-min(x)) / sqrt(100 * length(f)), 2))
-
-      if (type == 'grid') {
-        parGrid <- expand.grid(sapply(f, function(i) c(LB[i, ], seq(max(LB[i, ], STEP[i]), UB[i, ], STEP[i])), simplify = FALSE))
-        ll <- sapply(1:nrow(parGrid), function(i) fun(parm = unlist(parGrid[i,,drop=FALSE]), self = self))
-        self$setparm(unlist(parGrid[which.max(ll), , drop = FALSE]))
-      } else {
-       par0 <- self$allowedparm[, 'init']
-        fit <- solnp(pars = par0, fun = fun, LB = LB, UB = UB, self = self)
-        self$setparm(fit$pars)
-      }
     },
     reachedBudgetFun = function(x, p) {
       x <- as.matrix(x)
