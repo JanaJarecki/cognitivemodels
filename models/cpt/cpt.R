@@ -86,17 +86,6 @@ Cpt <- R6Class("cpt",
       
       return(out)
     },
-    fit = function() {
-      LB <- self$allowedparm[, 'll'] 
-      UB <- self$allowedparm[, 'ul']  
-      par0 <- self$allowedparm[, 'init']
-      fun <- function(parm, self) {
-        self$setparm(parm)
-        -cogsciutils::gof(obs = self$obs, pred = self$predict()[, 1], type = 'log', response = 'discrete')
-      }
-      fit <- solnp(pars = par0, fun = fun, LB = LB, UB = UB, self = self)
-      self$setparm(fit$pars)
-    },
     setWeightingFun = function(type) {
         if (type == "TK1992") {
           # One-parameter specification of cumulative prospect theory
