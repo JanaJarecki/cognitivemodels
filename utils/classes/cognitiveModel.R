@@ -33,7 +33,7 @@ cognitiveModel <- R6Class(
         if (choicerule == "softmax") {
           allowedparm <- rbind(allowedparm, tau = c(0.1, 10, 0.5))
         } else if (choicerule == "epsilon") {
-          allowedparm <- rbind(allowedparm, eps = c(0.001, 1, 0.2))
+          allowedparm <- rbind(allowedparm, eps = c(0.001, 1L, 0.2))
         }
       }
 
@@ -133,8 +133,6 @@ cognitiveModel <- R6Class(
 
       # Optimization-based fitting with grid values as starting point(s)
       if (any(grepl('grid|rsolnp', type))) {
-          print('in solnp')
-          print(UB)
           grid5 <- which(rank(negGof, ties.method = 'random') <= 5)
           par0 <- parGrid[grid5, , drop = FALSE]
           fits <- apply(par0, 1, function(i) solnp(pars = i, fun = fun, LB = LB, UB = UB, self = self, control = solnp_control))
