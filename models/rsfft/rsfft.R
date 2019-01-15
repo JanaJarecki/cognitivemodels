@@ -35,8 +35,8 @@ Rsfft <- R6Class("rsfft",
         # self$makeEVMat()
       }
 
-      allowedparm <- matrix(0, 3, 3, dimn = list(
-        c("maxlv", "minhv", "pmaxlv"),
+      allowedparm <- matrix(0, 4, 3, dimn = list(
+        c("maxlv", "minhv", "pmaxlv", "order"),
         c("ll", "ul", "init")))
       super$initialize(formula = formula, data = data, allowedparm = allowedparm, fixedparm = fixed, choicerule = choicerule, model = "Risk sensitivity FFT", discount = 0)
 
@@ -55,6 +55,7 @@ Rsfft <- R6Class("rsfft",
 
       self$allowedparm[1:3, 'ul'] <- apply(features, 2, max)
       self$allowedparm[1:3, 'init'] <- rowMeans(self$allowedparm[1:3,])
+      self$allowedparm['order', ] <- c(1, 6, 1)
     },
     makeFeatureMat = function(input = self$input, budget = self$budget, state =self$state, th = self$timehorizon) {
       fml <- Formula(self$formula)
@@ -125,13 +126,14 @@ Rsfft <- R6Class("rsfft",
         features <- self$features
       }
 
-      split_criterion <- self$parm[1:3]
-      exit_structure <- c(1, 0, 1, 0)
+      splitCriteria <- self$parm[1:3]
+      order <- permutations(3,3)[self$parm['order'], ]
+      exits <- matrix(c(1, 0, 1)[order], nrow = 1)[rep(1, nrow(input)), ]
+      exits <- cbind(exits, 1L - exits[, 3])
+      
+      I <- indicators(features[, order], splitCriteria[order])   
 
-      I <- indicators(features, split_criterion)   
-
-      values <- matrix(exit_structure, nrow = 1)[rep(1, nrow(input)), ]
-      values <- t(values)[t(I)==1]
+      values <- t(exits)[t(I)==1]
       values <- cbind(values, 1-values)
       
       if (type == "ev") {
@@ -165,6 +167,23 @@ Rsfft <- R6Class("rsfft",
         value = values[, action],
         ev = ev,
         pstate = ps)
+    },
+    fit = function(type = c('grid', 'rsolnp')) {
+      if ('order' %in% self$freenames) {
+        self$freenames <- setdiff(self$freenames, 'order')
+        self$fixednames <- c(self$fixednames, 'order')
+        possibleOrders <- seq_len(self$allowedparm['order', 'ul'])
+        gofvalues <- sapply(possibleOrders, function(o) {
+          self$setparm(c(order = o))
+          super$fit(type)
+          return(self$gofvalue)
+        } )
+        self$setparm(c(order = possibleOrders[which.min(gofvalues)]))
+        self$fixednames <- setdiff(self$fixednames, 'order')
+        self$freenames <- c(self$freenames, 'order')
+      } else {
+        super$fit(type)
+      }
     },
     reachedBudgetFun = function(x, p) {
       x <- as.matrix(x)

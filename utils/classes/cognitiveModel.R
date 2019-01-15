@@ -123,7 +123,7 @@ cognitiveModel <- R6Class(
       }
 
       # Controls for solnp
-      solnp_control <- list(trace = 0)
+      solnp_control <- list(trace = 1, delta = sqrt(.Machine$double.eps))
 
       # Optimization-based fitting
       if (all(grepl('rsolnp', type))) {
@@ -133,6 +133,8 @@ cognitiveModel <- R6Class(
 
       # Optimization-based fitting with grid values as starting point(s)
       if (any(grepl('grid|rsolnp', type))) {
+          print('in solnp')
+          print(UB)
           grid5 <- which(rank(negGof, ties.method = 'random') <= 5)
           par0 <- parGrid[grid5, , drop = FALSE]
           fits <- apply(par0, 1, function(i) solnp(pars = i, fun = fun, LB = LB, UB = UB, self = self, control = solnp_control))
