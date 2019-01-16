@@ -16,7 +16,7 @@ Gcm <- R6Class("gcm",
                  input_id = NULL,
                  stimulus_frequencies = NULL,
                  fixed = NULL, 
-                 loglik = NULL, # new
+                 loglik = NULL,
                  initialize = function(formula, data, cat, metric = c("minkowski", "discrete"), fixed, choicerule, discount) {
                    self$obs <- model.frame(formula, data)[, 1] # observed response
                    self$input <- model.frame(formula, data)[, -1] # feature values
