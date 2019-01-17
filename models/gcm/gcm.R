@@ -145,8 +145,8 @@ Gcm <- R6Class("gcm",
 
 gcm <- function(formula, data, cat, metric = c("minkowski", "discrete"), fixed, choicerule, discount = 0) {
   obj <- Gcm$new(formula = formula, data = data, cat = cat, metric = metric, fixed = fixed, choicerule = choicerule, discount = discount)
-  # if(length(obj$freenames) > 0) {
-  #   obj$fit()
-  # }
+  if(length(obj$freenames) > 0) {
+    obj$fit()
+  }
   return(obj)
 }
