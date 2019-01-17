@@ -107,7 +107,7 @@ cognitiveModel <- R6Class(
 
       fun <- function(parm, self) {
         self$setparm(parm)
-        -cogsciutils::gof(obs = self$obs, pred = self$predict(), type = 'log', response = 'discrete')
+        -cogsciutils::gof(obs = self$obs, pred = self$predict(), type = 'log', response = 'discrete', discount = self$discount)
       }
 
       LB <- allowedfreeparm[, 'll', drop = FALSE]
