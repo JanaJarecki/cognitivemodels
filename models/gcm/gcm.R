@@ -18,14 +18,9 @@ Gcm <- R6Class("gcm",
                  fixed = NULL, 
                  gofvalue = NULL,
                  initialize = function(formula, data, cat, metric = c("minkowski", "discrete"), fixed, choicerule, discount) {
-                   self$obs <- model.frame(formula, data)[, 1] # observed response
-                   self$input <- model.frame(formula, data)[, -1] # feature values
                    self$cat <- model.frame(cat, data)[, 1] # true cat
-                   self$ndim <- ncol(self$input)
                    self$metric <- match.arg(metric)
-                   self$input_id <- apply(self$input, 1, paste0, collapse = "")
-                   self$stimulus_frequencies <- self$calc_stimulus_frequencies()
-                   self$fixed <- fixed
+                   self$ndim <- length(formula)
                    
                    # w = vector with attention weights, sum = 1
                    # c = scalar, sensitivity that discriminate the items on the dimensions
@@ -38,6 +33,9 @@ Gcm <- R6Class("gcm",
                    allowedparm[, "init"] <- c(rep(1/self$ndim, self$ndim), 2.5, 1, 1)
                    
                    super$initialize(formula = formula, data = data, fixedparm = fixed, model = "gcm", discount = discount, choicerule = choicerule, allowedparm = allowedparm)
+
+                   self$input_id <- apply(self$input, 1, paste0, collapse = "")
+                   self$stimulus_frequencies <- self$calc_stimulus_frequencies()
                  },
                  make_weight_names = function(ndim = self$ndim) {
                    return(c(paste0("w", 1:ndim)))
@@ -115,6 +113,7 @@ Gcm <- R6Class("gcm",
                        return(1/length(unique(self$cat)))
                      }
                      id <- input_id[trial]
+
                      effective_trial <- trial - is.null(newdata)
                      sim_to_cat1 <- stimulus_frequencies[, effective_trial, 2] %*% sim_mat[id, ]
                      
@@ -134,52 +133,20 @@ Gcm <- R6Class("gcm",
                    }
                    return(dist)
                  },
-                 fit = function(unidim) {
-                   allowedparm <- self$allowedparm
-                   LB <- allowedparm[self$freenames, 'll'] 
-                   UB <- allowedparm[self$freenames, 'ul']  
-                   par0 <- allowedparm[self$freenames, 'init']
-                   fun <- function(parm, self) {
-                     self$setparm(parm)
-                     -cogsciutils::gof(obs = self$obs, pred = self$predict(), type = 'log', response = 'discrete')
+                 fit = function(type = "solnp") {
+                   eqfun <- function(parameter, ...) {
+                     return(sum(parameter[1:self$ndim]))
                    }
-                   
-                   if (unidim == FALSE) {
-                     
-                     equal <- function(parameter, ...) {
-                       return(sum(parameter[1:self$ndim]))
-                     }
-                     fit <- solnp(pars = par0, fun = fun, eqfun = equal, eqB = 1, LB = LB, UB = UB, self = self)
-                     pars <- fit$pars
-                     negloglik <- tail(fit$values, 1)
-                     
-                   } else {
-                     
-                     negloglik <- Inf
-                     for(i in 1:self$ndim) {
-                       # make all weights to 0 and then make wi to 1
-                       self$parm[1:self$ndim] <- 0
-                       self$parm[i] <- 1 
-                       
-                       fit <- solnp(pars = par0, fun = fun, LB = LB, UB = UB, self = self)
-                       if(tail(fit$values, 1) < negloglik) {
-                         pars <- c(self$parm[1:self$ndim], fit$pars)
-                         negloglik <- tail(fit$values, 1)
-                       }
-                     }
-                     
-                   }
-
-                   self$setparm(pars)
-                   self$gofvalue <- negloglik
+                   eqB = 1
+                   super$fit(type = type, eqfun = eqfun, eqB = eqB)
                  }
                )
 )
 
 gcm <- function(formula, data, cat, metric = c("minkowski", "discrete"), fixed, choicerule, discount = 0) {
   obj <- Gcm$new(formula = formula, data = data, cat = cat, metric = metric, fixed = fixed, choicerule = choicerule, discount = discount)
-  if(length(obj$freenames) > 0) {
-    obj$fit(unidim = FALSE)
-  }
+  # if(length(obj$freenames) > 0) {
+  #   obj$fit()
+  # }
   return(obj)
 }

@@ -39,6 +39,20 @@ Gcm_unidim <- R6Class("gcm_unidim",
                  #   self$loglik <- negloglik # new
                  #   
                  # }
+                 # negloglik <- Inf
+                 # for(i in 1:self$ndim) {
+                 #   # make all weights to 0 and then make wi to 1
+                 #   self$parm[1:self$ndim] <- 0
+                 #   self$parm[i] <- 1 
+                 #   
+                 #   fit <- solnp(pars = par0, fun = fun, LB = LB, UB = UB, self = self)
+                 #   if(tail(fit$values, 1) < negloglik) {
+                 #     pars <- c(self$parm[1:self$ndim], fit$pars)
+                 #     negloglik <- tail(fit$values, 1)
+                 #   }
+                 # }
+                 
+                 
                )
 )
 
