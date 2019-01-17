@@ -106,6 +106,7 @@ cognitiveModel <- R6Class(
       nfree <- length(self$freenames)
 
       fun <- function(parm, self) {
+        print(parm['eps'])
         self$setparm(parm)
         -cogsciutils::gof(obs = self$obs, pred = self$predict(), type = 'log', response = 'discrete')
       }
@@ -123,16 +124,16 @@ cognitiveModel <- R6Class(
       }
 
       # Controls for solnp
-      solnp_control <- list(trace = 1, delta = sqrt(.Machine$double.eps))
+      solnp_control <- list(trace = 1, delta = sqrt(.Machine$double.eps), rho = 10)
 
       # Optimization-based fitting
-      if (all(grepl('rsolnp', type))) {
-        par0 <- self$allowedparm[, 'init']
+      if (all(grepl('solnp', type))) {
+        par0 <- allowedfreeparm[, 'init']
         fit <- solnp(pars = par0, fun = fun, LB = LB, UB = UB, self = self, control = solnp_control)
       }
 
       # Optimization-based fitting with grid values as starting point(s)
-      if (any(grepl('grid|rsolnp', type))) {
+      if (any(grepl('grid|solnp', type))) {
           grid5 <- which(rank(negGof, ties.method = 'random') <= 5)
           par0 <- parGrid[grid5, , drop = FALSE]
           fits <- apply(par0, 1, function(i) solnp(pars = i, fun = fun, LB = LB, UB = UB, self = self, control = solnp_control))
