@@ -8,6 +8,9 @@ Gcm_unidim <- R6Class("gcm_unidim",
                public = list(
                  initialize = function(formula, data, cat, metric = c("minkowski", "discrete"), fixed, choicerule, discount) {
                    super$initialize(formula = formula, data = data, cat = cat, metric = metric, fixed = fixed, discount = discount, choicerule = choicerule)
+                   weightnames <- super$make_weight_names()
+                   self$fixednames <- c(weightnames, setdiff(self$fixednames, weightnames))
+                   self$freenames <- setdiff(self$freenames, self$fixednames)
                  }
                  # fit = function() {
                  #   fun <- function(parm, self) {

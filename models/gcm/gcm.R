@@ -16,7 +16,7 @@ Gcm <- R6Class("gcm",
                  input_id = NULL,
                  stimulus_frequencies = NULL,
                  fixed = NULL, 
-                 loglik = NULL,
+                 gofvalue = NULL,
                  initialize = function(formula, data, cat, metric = c("minkowski", "discrete"), fixed, choicerule, discount) {
                    self$obs <- model.frame(formula, data)[, 1] # observed response
                    self$input <- model.frame(formula, data)[, -1] # feature values
@@ -31,13 +31,16 @@ Gcm <- R6Class("gcm",
                    # c = scalar, sensitivity that discriminate the items on the dimensions
                    # p = scalar for decay function, 1 (exponential) for readily discriminable stimuli or 2 (gaussian) for highly confusable stimuli
                    # r = scalar, distance metric, 1 = city-block for separable-dimension stimuli, 2 = euclidean for integral-dimension stimuli
-                   allowedparm <- matrix(0, ncol = 3, nrow = self$ndim + 3, dimnames = list(c(paste0("w", 1:self$ndim), "c", "p", "r"),
+                   allowedparm <- matrix(0, ncol = 3, nrow = self$ndim + 3, dimnames = list(c(self$make_weight_names(), "c", "p", "r"),
                                                                                             c("ll", "ul", "init")))
                    allowedparm[, "ll"] <- c(rep(0, self$ndim), 0.0001, 1, 1)
                    allowedparm[, "ul"] <- c(rep(1, self$ndim), 5, 1, 1)
                    allowedparm[, "init"] <- c(rep(1/self$ndim, self$ndim), 2.5, 1, 1)
                    
                    super$initialize(formula = formula, data = data, fixedparm = fixed, model = "gcm", discount = discount, choicerule = choicerule, allowedparm = allowedparm)
+                 },
+                 make_weight_names = function(ndim = self$ndim) {
+                   return(c(paste0("w", 1:ndim)))
                  },
                  calc_stimulus_frequencies = function() {
                    id <- self$input_id
@@ -168,7 +171,7 @@ Gcm <- R6Class("gcm",
                    }
 
                    self$setparm(pars)
-                   self$loglik <- negloglik
+                   self$gofvalue <- negloglik
                  }
                )
 )
