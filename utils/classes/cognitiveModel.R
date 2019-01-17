@@ -106,7 +106,7 @@ cognitiveModel <- R6Class(
       nfree <- length(self$freenames)
 
       fun <- function(parm, self) {
-        print(parm['eps'])
+#        print(parm['eps'])
         self$setparm(parm)
         -cogsciutils::gof(obs = self$obs, pred = self$predict(), type = 'log', response = 'discrete')
       }
