@@ -100,7 +100,7 @@ cognitiveModel <- R6Class(
     RMSE = function(...) {
       return(cogsciutils::gof(obs = self$obs, pred = self$predict(), type = "rmse", discount = self$discount, ...))
     },
-    fit = function(type = c('grid', 'solnp')) {
+    fit = function(type = c('grid', 'solnp'), ...) {
       type <- match.arg(type, several.ok = TRUE)
       allowedfreeparm <- self$allowedparm[self$freenames,,drop=FALSE]
       nfree <- length(self$freenames)
@@ -129,14 +129,14 @@ cognitiveModel <- R6Class(
       # Optimization-based fitting
       if (all(grepl('solnp', type))) {
         par0 <- allowedfreeparm[, 'init']
-        fit <- solnp(pars = par0, fun = fun, LB = LB, UB = UB, self = self, control = solnp_control)
+        fit <- solnp(pars = par0, fun = fun, LB = LB, UB = UB, self = self, control = solnp_control, ...)
       }
 
       # Optimization-based fitting with grid values as starting point(s)
       if (any(grepl('grid|solnp', type))) {
           grid5 <- which(rank(negGof, ties.method = 'random') <= 5)
           par0 <- parGrid[grid5, , drop = FALSE]
-          fits <- apply(par0, 1, function(i) solnp(pars = i, fun = fun, LB = LB, UB = UB, self = self, control = solnp_control))
+          fits <- apply(par0, 1, function(i) solnp(pars = i, fun = fun, LB = LB, UB = UB, self = self, control = solnp_control), ...)
           fit <- fits[[which.min(lapply(fits, function(fit) tail(fit$values, 1)))]]
         }
 
