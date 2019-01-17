@@ -1,7 +1,7 @@
 require(R6)
-library(Formula)
-library(stringr)
-library(Rsolnp)
+# library(Formula)
+# library(stringr)
+# library(Rsolnp)
 source("../../utils/classes/cognitiveModel.R", chdir = TRUE)
 
 Cpt <- R6Class("cpt",

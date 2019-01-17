@@ -1,5 +1,4 @@
 source("../models/rsfft/rsfft.R", chdir = TRUE)
-
 library(data.table)
 
 probs <- cbind(rbind(c(.6,.4), c(.6,.4), c(.5,.5)), rbind(c(.1,.9), c(.7,.3), c(.2,.8)))
@@ -12,7 +11,9 @@ dt <- as.data.table(cbind(probs, outcomes, budget, state, timehorizon))
 setnames(dt, 1:8, c(paste0('p',1:4), paste0('x',1:4)))
 dt$choice <- c(1,1,1)
 
-mod <- rsfft(choice ~ (x1 + x2 + p1 + p2) | (x3 + x4 + p3 + p4), sbt = ~ state + budget + timehorizon, nopt = 2, nout = 2, data = dt, choicerule = "soft", terminal.fitness.fun = function(state, budget) { ((state - budget) >= 0) * state}, fixed = c(alpha=0, tau=2))
+mod <- rsfft(choice ~ (x1 + x2 + p1 + p2) | (x3 + x4 + p3 + p4), sbt = ~ state + budget + timehorizon, nopt = 2, nout = 2, data = dt, choicerule = "eps", terminal.fitness.fun = function(state, budget) { ((state - budget) >= 0) * state})
+mod$gofvalue
+mod
 
 cbind(dt,
   node = mod$predict("node", action = 1:2),
