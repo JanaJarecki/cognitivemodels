@@ -150,3 +150,5 @@ gcm <- function(formula, data, cat, metric = c("minkowski", "discrete"), fixed, 
   }
   return(obj)
 }
+
+Gcm$set("active", "super_", function() super) # colinfay.me/r6-parent-exposure/; super$super doesn't work if we want to expose function at grandparent level from grandchild

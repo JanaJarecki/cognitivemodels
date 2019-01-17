@@ -106,7 +106,6 @@ cognitiveModel <- R6Class(
       nfree <- length(self$freenames)
 
       fun <- function(parm, self) {
-#        print(parm['eps'])
         self$setparm(parm)
         -cogsciutils::gof(obs = self$obs, pred = self$predict(), type = 'log', response = 'discrete')
       }
@@ -124,7 +123,7 @@ cognitiveModel <- R6Class(
       }
 
       # Controls for solnp
-      solnp_control <- list(trace = 1, delta = sqrt(.Machine$double.eps), rho = 10)
+      solnp_control <- list(trace = 1, delta = sqrt(.Machine$double.eps))
 
       # Optimization-based fitting
       if (all(grepl('solnp', type))) {
