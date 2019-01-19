@@ -20,7 +20,7 @@ Gcm <- R6Class("gcm",
                  initialize = function(formula, data, cat, metric = c("minkowski", "discrete"), fixed, choicerule, discount) {
                    self$cat <- get_all_vars(cat, data)[, 1] # true cat
                    self$metric <- match.arg(metric)
-                   self$ndim <- length(formula)
+                   self$ndim <- length(attr(terms(formula), "term.labels"))
                    
                    # w = vector with attention weights, sum = 1
                    # c = scalar, sensitivity that discriminate the items on the dimensions
