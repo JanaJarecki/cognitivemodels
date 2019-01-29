@@ -9,10 +9,8 @@ Gcm_unidim <- R6Class("gcm_unidim",
                  initialize = function(formula, data, cat, metric = c("minkowski", "discrete"), fixed, choicerule, discount) {
                    super$initialize(formula = formula, data = data, cat = cat, metric = metric, fixed = fixed, discount = discount, choicerule = choicerule)
                  },
-                 fit = function(type = "solnp", ...) {
+                 fit = function(type = c("grid", "solnp"), ...) {
                    if("w1" %in% self$freenames) {
-                     print("W1 is free")
-
                      weightnames <- super$make_weight_names()
                      self$fixednames <- c(weightnames, setdiff(self$fixednames, weightnames))
                      self$freenames <- setdiff(self$freenames, self$fixednames)
@@ -22,6 +20,7 @@ Gcm_unidim <- R6Class("gcm_unidim",
                      parms <- matrix(nrow = self$ndim, ncol = length(self$parm), dimnames = list(NULL, names(self$parm)))
                      for(i in 1:nrow(unidimweights)) {
                        self$setparm(unidimweights[i, ])
+                       print(unidimweights[i, ])
                        if(length(self$freenames) > 0) {
                          super$super_$fit(type = type, ...)
                          gofs[i] <- self$gofvalue
