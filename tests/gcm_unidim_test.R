@@ -1,4 +1,5 @@
 rm(list=ls(all=T)) # Empty workspace
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 source("../models/gcm/gcm_unidim.R", chdir = TRUE)
 
 # Learning and test set
