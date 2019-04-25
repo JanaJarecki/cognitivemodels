@@ -3,7 +3,7 @@
 R packages containing cognitive models.
 
 ## Getting started
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. 
+This explains how to use the models. 
 
 ## Prerequisites
 Working installation of R and the devtools and Rcpp packages (devtools version 2.0.2, `install.packages("devtools")`, Rcpp version 1.0.1 `install.packages("Rcpp")`).
