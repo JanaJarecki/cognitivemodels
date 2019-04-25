@@ -46,7 +46,7 @@ Cogscimodel <- R6Class(
         self$obs <- get_all_vars(formula(f, lhs=1, rhs=0), data)[, 1]
       }
       self$response <- match.arg(response)
-      self$discount <- discount   
+      self$discount <- self$setdiscount(discount) 
       if ( !is.null(choicerule) ) {
         choicerule <- match.arg(choicerule, c('luce', 'argmax', 'softmax', 'epsilon'))
         self$choicerule <- choicerule
@@ -100,7 +100,7 @@ Cogscimodel <- R6Class(
     #' Set data to ignore when fitting
     #' @param x intteger or integer vector, rows to discount
     setdiscount = function(x) {
-      self$discount <- if(sum(x) == 0) {
+      if(sum(x) == 0) {
         NULL
       } else if (is.logical(x)) {
         cumsum(x)
@@ -168,7 +168,7 @@ Cogscimodel <- R6Class(
     },
     #' Compute goodness of fit
     #' @param type string, fit measure to use, e.g. 'loglikelihood', allowed types see \link[cogsciutils]{gof}
-    gof = function(type, n = 1, newdata = NULL, ...) {
+    gof = function(type, n = 1, newdata = NULL, discount = FALSE, ...) {
       if (is.null(self$obs)) {
         stop('Model has no observed variables, check your formula or data', call.=FALSE)
       }
@@ -178,7 +178,10 @@ Cogscimodel <- R6Class(
       } else {
         obs <- as.matrix(self$obs)
         pred <- as.matrix(self$predict())[, 1:ncol(obs), drop = FALSE]
-      }      
+      }
+      if (discount) {
+        pred[self$discount, ] <- NA
+      }
       .args <- c(list(obs = obs, pred = pred, na.rm = TRUE, n = n), list(options = c(list(...), response = self$response)))
       do.call(cogsciutils::gof, .args)
     },
@@ -266,7 +269,8 @@ Cogscimodel <- R6Class(
         type = self$fit.options$measure,
         n = self$fit.options$n,
         newdata = self$fit.options$newdata,
-        options = self$fit.options$options)
+        options = self$fit.options$options,
+        discount = !is.null(self$discount))
     },
     getSolnpEq = function() {
       if ( !any(sapply(self$parm[self$fixednames], is.character)) ) {
