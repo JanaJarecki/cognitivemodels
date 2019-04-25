@@ -45,13 +45,14 @@ see `?jr19mem`
 #### Usage
     ebm(formula, data, ...) #ebm for examplar-based model
 see `?ebm`
-### 3. Optimal risk-sensitive foraging model
+### 3. Optimal risk-sensitive foraging model (Houston & McNamara, 1988)
 #### Usage
     hm1988(env, formula, data, choicerule, fixed = NULL)
 see `?hm1988`
-### 4. Cumulative prospect theory model
+### 4. Cumulative prospect theory model (Kahneman & Tversky, 1979; Tversky & Kahneman, 1992)
 #### Usage
-    cpt(rp ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py), nopt = 2, nout = 2, ref = 0, choicerule = "softmax", data = dt)
+    cpt(rp ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py), nopt = 2, nout = 2, ref = 0,
+        choicerule = "softmax", data = dt)
 see `?cpt`
     
 # Authors
