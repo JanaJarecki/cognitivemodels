@@ -42,7 +42,7 @@ Ebm <- R6Class('ebm',
     ndim = NULL,
     biasnames = NULL,
     weightnames = NULL,
-    initialize = function(formula, data, fixed = NULL, type, learntrials = seq_len(nrow(data)), initialparm = NULL, discount = 2, choicerule = NULL, fit.options = list()) {
+    initialize = function(formula, data, fixed = NULL, type, learntrials = seq_len(nrow(data)), initialparm = NULL, discount = 1, choicerule = NULL, fit.options = list()) {
       if ( !any(grepl('\\|', formula)) ) {
         stop('"formula" in ebm misses a pipe ("|") before the criterion variable,\n\te.g., formula = y ~ x1 + x2 | cr.', call. = FALSE)
       }
@@ -78,7 +78,8 @@ Ebm <- R6Class('ebm',
         self$biasnames <- rownames(biasparm)
         allowedparm <- rbind(allowedparm, biasparm)
       }
-      super$initialize(formula = formula(f, rhs = 1, lhs = 1), data = d, fixed = fixed, allowedparm = allowedparm, choicerule = choicerule, discount = discount, model = paste0('Exemplar-based model [type: ', self$type, ']'), response = ifelse(self$type == 'judgment', 'c', 'd'), fit.options = fit.options)
+      discount <- self$inferdiscount(self$criterion)
+      super$initialize(formula = formula(f, rhs = 1, lhs = 1), data = d, fixed = fixed, allowedparm = allowedparm, choicerule = choicerule, discount = discount, model = paste0('Exemplar-based model [type: ', self$type, ']'), response = ifelse(self$type == 'judgment', 'contonuous', 'discrete'), fit.options = fit.options)
       self$formula <- formula
       if (!is.null(fit.options$newdata)) {
         self$fit.options$newdata <- get_all_vars(self$formula, fit.options$newdata)
@@ -94,6 +95,13 @@ Ebm <- R6Class('ebm',
       } else {
         'choice'
       }
+    },
+    inferdiscount = function(criterion) {
+      if (self$type != 'judgment') {
+        discount <- which(!duplicated(criterion))[2] + 1
+        message('Parameter estimates improve if the first few trials are ignored. Discounting trial 1 to ', discount, '. To avoid, set "discount=1"')
+        return(discount)
+      }    
     },
     settype = function(x) {
       x <- match.arg(x, c('judgment', 'choice', 'valuebasedchoice'))
