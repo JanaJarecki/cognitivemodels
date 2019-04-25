@@ -4,7 +4,8 @@
 \alias{ebm_cpp}
 \title{Exemplar-based prediction computation}
 \usage{
-ebm_cpp(values, features, w, r, q, lambda, lastLearnTrial, firstOutTrial)
+ebm_cpp(values, features, w, r, q, lambda, b, lastLearnTrial,
+  firstOutTrial)
 }
 \arguments{
 \item{values}{numeric vector with experienced values}
@@ -18,6 +19,8 @@ ebm_cpp(values, features, w, r, q, lambda, lastLearnTrial, firstOutTrial)
 \item{q}{exponent in distance metric (model parameter)}
 
 \item{lambda}{sensitivity (model parameter)}
+
+\item{b}{bias parameter vector for classification (model parameter), must be NA for judgments}
 
 \item{lastLearnTrial}{integer last trial of learning phase}
 

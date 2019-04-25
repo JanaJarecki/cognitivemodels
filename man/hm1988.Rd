@@ -9,7 +9,7 @@ hm1988(env, formula, data, choicerule, fixed = NULL)
 \arguments{
 \item{env}{environment}
 
-\item{data}{data}
+\item{data}{data frame}
 }
 \description{
 Houston & McNamara's (1988) dynamic optimization for risk-sensitive foraging problems with discrete time

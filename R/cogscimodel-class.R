@@ -34,7 +34,7 @@ Cogscimodel <- R6Class(
     allowedparm = 'matrix',
     choicerule = NULL, 
     optimization = NA,
-    discount = NA,
+    discount = 'numeric',
     gofvalue = NULL,
     fit.options = NULL,
     initialize = function(formula, data, allowedparm, fixed = NULL, choicerule =  NULL, model = NULL, discount = NULL, response = c('discrete', 'continuous'), fit.options = list()) {
@@ -88,7 +88,7 @@ Cogscimodel <- R6Class(
       self$allowedparm <- allowedparm
       self$setparm(self$substituteequal(fixed))
       self$setdiscount(discount)
-      self$fit.options <- list(measure = 'loglikelihood', n = 1, nbest = 3, options = list())
+      self$fit.options <- list(measure = 'loglikelihood', n = 1, nbest = length(self$freenames), options = list())
       if (!is.null(fit.options$measure)) {
         fit.options$measure <- match.arg(tolower(fit.options$measure), c('loglikelihood', 'mse', 'wmse', 'rmse', 'sse', 'wsse', 'mape', 'mdape', 'accuracy'))
       }
@@ -100,17 +100,15 @@ Cogscimodel <- R6Class(
     #' Set data to ignore when fitting
     #' @param x intteger or integer vector, rows to discount
     setdiscount = function(x) {
-      if(sum(x) == 0) {
-        x <- NULL
+      self$discount <- if(sum(x) == 0) {
+        NULL
       } else if (is.logical(x)) {
-        x <- cumsum(x)
-      } else if (length(x > 1)) {
-        x <- as.numeric(x)
+        cumsum(x)
+      } else if (length(x) > 1) {
+        as.numeric(x)
       } else if(length(x) == 1) {
-        x <- seq_len(x)
+        seq_len(x)
       }
-      self$discount <- x
-      return(invisible(self))
     },
     #' Get the choicerule parameter
     which.choiceruleparm = function() {
@@ -209,15 +207,17 @@ Cogscimodel <- R6Class(
       if ( type[1] == 'solnp' ) {
         fit <- self$fitSolnp(par0 = pars[, 'init'], pars)
       }
+
       if ( type[1] == 'grid' & length(type) == 1) {
         fit <- self$fitGrid(1, pars)
       }
+
       if ( all(type == c('grid', 'solnp')) ) {
-        nbest <- self$fit.options$nbest
-        gridFit <- self$fitGrid(nbest = nbest, pars, offset = TRUE) 
+        gridFit <- self$fitGrid(nbest = self$fit.options$nbest, pars, offset = TRUE)
         fits <- apply(gridFit$parm, 1, self$fitSolnp, parspace = pars)
         fit <- fits[[which.min(lapply(fits, function(x) tail(x$val, 1)))]]
       }
+
       self$setparm(fit$parm)
       self$gofvalue <- fit$vals
     },

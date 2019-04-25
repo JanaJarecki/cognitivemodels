@@ -42,7 +42,7 @@ Ebm <- R6Class('ebm',
     ndim = NULL,
     biasnames = NULL,
     weightnames = NULL,
-    initialize = function(formula, data, fixed = NULL, type, learntrials = seq_len(nrow(data)), initialparm = NULL, discount = 1, choicerule = NULL, fit.options = list()) {
+    initialize = function(formula, data, fixed = NULL, type, learntrials = seq_len(nrow(data)), initialparm = NULL, discount = 2, choicerule = NULL, fit.options = list()) {
       if ( !any(grepl('\\|', formula)) ) {
         stop('"formula" in ebm misses a pipe ("|") before the criterion variable,\n\te.g., formula = y ~ x1 + x2 | cr.', call. = FALSE)
       }
