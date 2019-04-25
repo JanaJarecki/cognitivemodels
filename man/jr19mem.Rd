@@ -31,7 +31,7 @@ dt <- data.frame(choices, attributes, prices, subj_values)
 # Fit the model
 M <- jr19mem(choices ~ a1 + a2 | subj_values | prices, data = dt)
 
-#' M # view results
+M # view results
 M$predict() # predict data
 M$coef() # view coefficients
 
