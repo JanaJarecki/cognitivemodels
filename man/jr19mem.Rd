@@ -15,10 +15,24 @@ jr19mem(formula, data)
 An object of class R6 holding the fitted model. Parameters will be fitted by the grid-and-maximum-likelihood method; a model object \code{M} can be viewed with \code{M}, parameter estimates can be obtained with \code{mod$param}
 }
 \description{
-Fits the memory-based model used in Jarecki & Rieskamp (2019). The interface is similar to lm. Ths is a wrapper around the more general \code{ebm} exemplar-based-model function.
+Fits the memory-based model used in Jarecki & Rieskamp (2019). The interface is similar to lm.
+}
+\details{
+The function is a wrapper around the more general \code{ebm} exemplar-based-model function.
 }
 \examples{
 none yet
+attributes <- expand.grid(a1=0:1,a2=0:1)[rep(1:4,5),]
+prices <- rep(c(0,.5,.5,1),5)
+subj_values <- rep(c(2,0.2,0.1,2), 5)
+choices <- rep(c(1,0,0,1),5)
+dt <- data.frame(choices, attributes, prices, subj_values)
+# Fit the model
+M <- jr19mem(choices ~ a1 + a2 | subj_values | prices, data = dt)
+M # view results
+M$predict() # predict data
+M$coef() # view coefficients
+
 }
 \author{
 Jana B. Jarecki, \email{jj@janajarecki.com}
