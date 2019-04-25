@@ -1,12 +1,50 @@
 #' Houston & McNamara's (1988) dynamic optimization for risk-sensitive foraging problems with discrete time
 #' 
 #' @import reshape2
-#' @param env environment
-#' @param data data frame
+#' @param env environment, see example. It specifies the risky option, safe option, and the number of trials, the state, and requirement (also called the budget).
+#' @param data (optional) data frame
 #' @reference Houston, A. I., & McNamara, J. M. (1988). A framework for the functional analysis of behaviour. Behavioural and Brain Science, 11, 117–163.
-
-
-# set up the environment
+#' @return An object of class R6 holding the model, it has no free parameters. A model object \code{M} can be viewed with \code{M}, predictions can be made with \code{M$predict()} for choice predictions, and \code{M$predict("ev")} for the expected value of the optimal choice and \code{M$predict("value", 1:2)} for the expected value of all choices.
+#' @author Jana B. Jarecki, \email{jj@janajarecki.com}
+#' @details Risk-sensitive foraging means you have, for instance, four choices between the same two risky lotteries and after the four choices you need to have accumulated at least 12 points to get a reward. The optimal solution to this choice problem relies on dynamic programming. The function creates all possible future states given the possible remaining trials, and predicts the optimal choice polica or the expected value of chosing either option given a certain state and a certain time horizon.
+#' @examples
+#' # define the the environment like this:
+#' ###    requirement: budget = 12
+#' ###    number of choices: n.trials = 4
+#' ###    initial number of points: initial.state = 10
+#' ###    risky option: a1, with three outcomes
+#' ###    safe option: a2, with three outcomes
+#' env <- rsenvironment(budget = 12,
+#'                      n.trials = 4,
+#'                      initial.state = 10,
+#'                      a1 = matrix(c(0.1, 0.8, 0.1, 0, 1, 2), nc = 2),
+#'                      a2 = matrix(c(0.4, 0.2, 0.4, 0, 1, 2), nc = 2))
+#' # check the environment
+#' env
+#' # > env
+#' # Reach 12 in 4 trials with options:
+#' #     a1 (0, 0.1) or (1, 0.8) or (2, 0.1) 
+#' #     a2 (0, 0.4) or (1, 0.2) or (2, 0.4) 
+#' #
+#' # Initial state of 10
+#' 
+#' # Run the optimal model
+#' M <- hm1988(env = env, ~ timehorizon + state, choicerule = 'arg')
+#' 
+#' # Results:
+#' M # view model
+#' M$input # view all possible state + trial combinations
+#' M$predict() # optimal response for all possible state x trial combinations
+#' cbind(M$input, M$predict())
+#' M$predict('response') # optimal response
+#' M$predict("ev") # expected value of optimal choice for all possible states and trials
+#' M$predict("value") # expected value of choice a1
+#' M$predict("value", 1:2) # expected value of a1 or a2
+#'
+#' # Predict specific state x trial scenarios for 1 ... 4 trials left and a state of 11
+#' newdt <-  data.frame(timehorizon = 1:4, state = 11)
+#' M$predict('v', newdata = newdt, 1:2)
+#' M$predict('r', newdata = newdt)
 hm1988 <- function(env, formula, data, choicerule, fixed = NULL) {
   obj <- Hm1988$new(env = env, data = data, formula = formula, choicerule = choicerule, fixed = fixed)
   return(obj)
