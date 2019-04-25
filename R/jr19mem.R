@@ -4,8 +4,6 @@
 #' @param formula an object of class formula (\code{response ~ attr1 + attr + attr3 + attr4 | subjvalue | price }). Specifies the variables for response, features, experienced values, and prices; the value variable must be preceeded by a pipe (\code{|}) and the price/cost variable by a second pipe.
 #' @param data a data.frame or matrix, must contain the variables in \code{formula}; must be ordered in the order in which respondents saw the stimuli.
 #' @return An object of class R6 holding the fitted model. Parameters will be fitted by the grid-and-maximum-likelihood method; a model object \code{M} can be viewed with \code{M}, parameter estimates can be obtained with \code{mod$param}
-#' @examples 
-#' none yet
 #' @author Jana B. Jarecki, \email{jj@janajarecki.com}
 #' @details The function is a wrapper around the more general \code{ebm} exemplar-based-model function.
 #' @examples

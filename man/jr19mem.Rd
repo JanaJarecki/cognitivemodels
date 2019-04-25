@@ -21,7 +21,6 @@ Fits the memory-based model used in Jarecki & Rieskamp (2019). The interface is 
 The function is a wrapper around the more general \code{ebm} exemplar-based-model function.
 }
 \examples{
-none yet
 # Create data
 attributes <- expand.grid(a1=0:1,a2=0:1)[rep(1:4,2),]
 prices <- rep(c(0,.5,.5,1),2)
