@@ -51,7 +51,7 @@ see `?ebm`
 see `?hm1988`
 ### 4. Cumulative prospect theory model
 #### Usage
-    hm1988(env, formula, data, choicerule, fixed = NULL)
+    cpt(rp ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py), nopt = 2, nout = 2, ref = 0, choicerule = "softmax", data = dt)
 see `?cpt`
     
 # Authors
