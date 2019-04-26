@@ -48,7 +48,7 @@ dt <- data.frame(
 # Make the model, add fixed parameters (don't fit)
 M <- cpt(rp ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py),
          nopt = 2, nout = 2, ref = 0, choicerule = "softmax", data = dt,
-         fixed = list(alpha = 0.88, beta #' = 0.88, lambda = 2.25,
+         fixed = list(alpha = 0.88, beta = 0.88, lambda = 2.25,
          gammap = 0.61, gamman = 0.69, tau = 1))
 # View the model
 M
