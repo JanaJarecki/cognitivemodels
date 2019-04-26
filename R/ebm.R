@@ -12,6 +12,7 @@
 #'   \item Memory-based preference model: \code{purchased ~ f1 + f2 + f3 | value | price} (see details)
 #' }
 #' @param data a data.frame or matrix containing the variables in \code{formula}; make sure it is ordered in the order in which respondents saw the stimuli.
+#' @param type (optional) String specifying the type of model: \code{"categorization", "judgment", "valuebasedchoice"}, will be inferred if omitted.
 #' @return An exemplar-based model; it can be viewed with \code{summary(mod)}, where \code{mod} is the name of the model object.
 #' @examples 
 #' #  No examples yet
@@ -21,11 +22,12 @@
 #' @references {Juslin, P., Olsson, H., & Olsson, A.-C. (2003). Exemplar effects in categorization and multiple-cue judgment. Journal of Experimental Psychology: General, 132, 133–156. doi:10.1037/0096-3445.132.1.133}
 #' @details You may add a 'cost' term to the formula separated by a second pipe:  \code{reponse ~ feature1 + feature2 + ... | criterion | cost}. The model then predicts a value, compares this value to cost, and if the value is greater than the cost returns \code{1}, otherwise \code{0} (chose the stimulus, reject the stimulus). This is implemented with a softmax choice rule.
 #' @export
-ebm <- function(formula, data, ...) {
-   args <- c(list(formula = formula, data = data), list(...))
+ebm <- function(formula, data, type, ...) {
+   args <- c(list(formula = formula, data = data, type = type), list(...))
    obj <- do.call(Ebm$new, args)
    # check(mod) #todo
    if (length(obj$freenames) > 0) {
+      message('Fitting free parameter', .brackify(obj$freenames))
       obj$fit(c('grid', 'solnp'))
    }
    return(obj)
@@ -42,7 +44,7 @@ Ebm <- R6Class('ebm',
     ndim = NULL,
     biasnames = NULL,
     weightnames = NULL,
-    initialize = function(formula, data, fixed = NULL, type, learntrials = seq_len(nrow(data)), initialparm = NULL, discount = 1, choicerule = NULL, fit.options = list()) {
+    initialize = function(formula, data, type, fixed = NULL, learntrials = seq_len(nrow(data)), initialparm = NULL, discount = 1, choicerule = NULL, fit.options = list()) {
       if ( !any(grepl('\\|', formula)) ) {
         stop('"formula" in ebm misses a pipe ("|") before the criterion variable,\n\te.g., formula = y ~ x1 + x2 | cr.', call. = FALSE)
       }
@@ -79,7 +81,7 @@ Ebm <- R6Class('ebm',
         allowedparm <- rbind(allowedparm, biasparm)
       }
       discount <- self$inferdiscount(self$criterion)
-      super$initialize(formula = formula(f, rhs = 1, lhs = 1), data = d, fixed = fixed, allowedparm = allowedparm, choicerule = choicerule, discount = discount, model = paste0('Exemplar-based model [type: ', self$type, ']'), response = ifelse(self$type == 'judgment', 'contonuous', 'discrete'), fit.options = fit.options)
+      super$initialize(formula = formula(f, rhs = 1, lhs = 1), data = d, fixed = fixed, allowedparm = allowedparm, choicerule = choicerule, discount = discount, model = paste0('Exemplar-based model [type: ', self$type, ']'), response = ifelse(self$type == 'judgment', 'continuous', 'discrete'), fit.options = fit.options)
       self$formula <- formula
       if (!is.null(fit.options$newdata)) {
         self$fit.options$newdata <- get_all_vars(self$formula, fit.options$newdata)

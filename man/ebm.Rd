@@ -4,7 +4,7 @@
 \alias{ebm}
 \title{Exemplar-based cognitive model}
 \usage{
-ebm(formula, data, ...)
+ebm(formula, data, type, ...)
 }
 \arguments{
 \item{formula}{a formula specifying the variables (\code{reponse ~ feature1 + feature2 + ... | criterion}), which needs a pipe (\code{|}) before the criterion variable. Examples:
@@ -15,6 +15,8 @@ ebm(formula, data, ...)
 }}
 
 \item{data}{a data.frame or matrix containing the variables in \code{formula}; make sure it is ordered in the order in which respondents saw the stimuli.}
+
+\item{type}{(optional) String specifying the type of model: \code{"categorization", "judgment", "valuebasedchoice"}, will be inferred if omitted.}
 }
 \value{
 An exemplar-based model; it can be viewed with \code{summary(mod)}, where \code{mod} is the name of the model object.
