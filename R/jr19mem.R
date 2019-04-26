@@ -3,6 +3,7 @@
 #' @description Fits the memory-based model used in Jarecki & Rieskamp (2019). The interface is similar to lm.
 #' @param formula an object of class formula (\code{response ~ attr1 + attr + attr3 + attr4 | subjvalue | price }). Specifies the variables for response, features, experienced values, and prices; the value variable must be preceeded by a pipe (\code{|}) and the price/cost variable by a second pipe.
 #' @param data a data.frame or matrix, must contain the variables in \code{formula}; must be ordered in the order in which respondents saw the stimuli.
+#' @param fixed (optional) List with fixed parameter, allowed are \code{lambda} to fix the discriminability parameter, and \code{tau} to fix the choicerule parameter.
 #' @return An object of class R6 holding the fitted model. Parameters will be fitted by the grid-and-maximum-likelihood method; a model object \code{M} can be viewed with \code{M}, parameter estimates can be obtained with \code{mod$param}
 #' @author Jana B. Jarecki, \email{jj@janajarecki.com}
 #' @details The function is a wrapper around the more general \code{ebm} exemplar-based-model function.
@@ -22,8 +23,8 @@
 #' M$coef() # view coefficients
 #' 
 #' @export
-jr19mem <- function(formula, data) {
-  fixed <- list(r = 1, q = 1)
+jr19mem <- function(formula, data, fixed = NULL) {
+  fixed <- c(list(r = 1, q = 1), fixed)
   features <- attr(terms(formula(as.Formula(formula), rhs = 1, lhs = 0)), 'term.labels')
   fixed[features] <- 1/length(features)
   .args <- list(formula = formula, data = data, choicerule = 'softmax', fixed = fixed, type = 'valuebasedchoice', discount = 2)
