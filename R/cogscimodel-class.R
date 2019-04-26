@@ -46,13 +46,17 @@ Cogscimodel <- R6Class(
         self$obs <- get_all_vars(formula(f, lhs=1, rhs=0), data)[, 1]
       }
       self$response <- match.arg(response)
+      if ( response == 'continuous' ) {
+        R <- max(self$obs) - min(self$obs)
+        allowedparm <- rbind(allowedparm, sigma = c(0, R, R / 2, NA))
+      }
       self$discount <- self$setdiscount(discount) 
       if ( !is.null(choicerule) ) {
         choicerule <- match.arg(choicerule, c('luce', 'argmax', 'softmax', 'epsilon'))
         self$choicerule <- choicerule
-        if (choicerule == 'softmax') {
+        if ( choicerule == 'softmax' ) {
           allowedparm <- rbind(allowedparm, tau = c(0.1, 10, 0.5, NA))
-        } else if (choicerule == 'epsilon') {
+        } else if ( choicerule == 'epsilon' ) {
           allowedparm <- rbind(allowedparm, eps = c(0.001, 1L, 0.2, NA))
         }
       }
@@ -75,10 +79,6 @@ Cogscimodel <- R6Class(
       }
       if ( length(fixed) < nrow(allowedparm) & is.null(self$obs) ) {
         stop('Trying to estimate parameter ', .brackify(setdiff(rownames(allowedparm), names(fixed))), ', but "formula" lacks left-hand side specifying observed data\n\tEither add parameter to "fixed" fixing all parameters, or specify observations as left-hand-side of "formula".', call. = FALSE)
-      }
-      if ( response == 'continuous' ) {
-        R <- max(self$obs) - min(self$obs)
-        allowedparm <- rbind(allowedparm, sigma = c(0, R, R / 2))
       }
       self$fixednames <- intersect(rownames(allowedparm), names(fixed))
       self$freenames <- setdiff(rownames(allowedparm), self$fixednames)
