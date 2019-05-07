@@ -29,6 +29,8 @@ varG <- function(p, x) {
 #----------------------------------------------------------------------
 MakeGridList <- function(names, nsteps = list(), ul = list(), ll = list(), sumto = NULL, to = 1, ...) {
   # ul and ll at the level of the individual parameter   
+  ul <- as.list(ul)
+  ll <- as.list(ll)
   ul <- ul[which(names(ul) %in% names)]
   ll <- ll[which(names(ll) %in% names)]
   sumto <- Filter(Negate(is.null), sumto)
