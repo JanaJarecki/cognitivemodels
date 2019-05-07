@@ -13,4 +13,3 @@ formula <- response ~ f1 + f2
 
 args <- list(formula = formula, cat = ~ true_cat, metric = "mink", fixed = c(r = 1, p = 1, c = 1, tau = 0.5), choicerule = "soft")
 m <- do.call(gcm, c(args, data = list(dt), discount = 0))
-m$ndim
