@@ -16,8 +16,11 @@ Gcm_unidim <- R6Class("gcm_unidim",
                      self$freenames <- setdiff(self$freenames, self$fixednames)
 
                      unidimweights <- matrix(diag(self$ndim), ncol = self$ndim, dimnames = list(NULL, super$make_weight_names()))
+                     unidimweights <- unidimweights[c(1, 3), ] # delete
                      gofs <- vector("numeric", length = self$ndim)
+                     gofs <- vector("numeric", length = self$ndim - 1) # delete
                      parms <- matrix(nrow = self$ndim, ncol = length(self$parm), dimnames = list(NULL, names(self$parm)))
+                     parms <- matrix(nrow = self$ndim - 1, ncol = length(self$parm), dimnames = list(NULL, names(self$parm))) # delete
                      for(i in 1:nrow(unidimweights)) {
                        self$setparm(unidimweights[i, ])
                        print(unidimweights[i, ])

@@ -1,10 +1,10 @@
 library(R6)
 library(Rsolnp)
 library(cogsciutils)
-source("../../../cogscimodels/utils/classes/cognitiveModel.R")
+library(cogscimodels)
 
 Gcm <- R6Class("gcm",
-               inherit = cognitiveModel,
+               inherit = Cogscimodel,
                public = list(
                  obs = NULL,
                  input = NULL,
@@ -26,13 +26,14 @@ Gcm <- R6Class("gcm",
                    # c = scalar, sensitivity that discriminate the items on the dimensions
                    # p = scalar for decay function, 1 (exponential) for readily discriminable stimuli or 2 (gaussian) for highly confusable stimuli
                    # r = scalar, distance metric, 1 = city-block for separable-dimension stimuli, 2 = euclidean for integral-dimension stimuli
-                   allowedparm <- matrix(0, ncol = 3, nrow = self$ndim + 3, dimnames = list(c(self$make_weight_names(), "c", "p", "r"),
-                                                                                            c("ll", "ul", "init")))
+                   allowedparm <- matrix(0, ncol = 4, nrow = self$ndim + 3, dimnames = list(c(self$make_weight_names(), "c", "p", "r"),
+                                                                                            c("ll", "ul", "init", "na")))
                    allowedparm[, "ll"] <- c(rep(0, self$ndim), 0.0001, 1, 1)
-                   allowedparm[, "ul"] <- c(rep(1, self$ndim), 5, 1, 1)
+                   allowedparm[, "ul"] <- c(rep(1, self$ndim), 10, 1, 1)
                    allowedparm[, "init"] <- c(rep(1/self$ndim, self$ndim), 2.5, 1, 1)
+                   allowedparm[, "na"] <- c(rep(1/self$ndim, self$ndim), 1, 1, 1)
                    
-                   super$initialize(formula = formula, data = data, fixedparm = fixed, model = "gcm", discount = discount, choicerule = choicerule, allowedparm = allowedparm)
+                   super$initialize(formula = formula, data = data, fixed = as.list(fixed), model = "gcm", discount = discount, choicerule = choicerule, allowedparm = allowedparm, response = "discrete")
 
                    self$input_id <- apply(self$input, 1, paste0, collapse = "")
                    self$stimulus_frequencies <- self$calc_stimulus_frequencies()
@@ -57,7 +58,6 @@ Gcm <- R6Class("gcm",
                    # y: matrix with feature combinations to which the similarity should be calculated; e.g., prototypes
                    x <- as.data.frame(unique(x))
                    rownames(x) <- apply(x, 1, paste0, collapse = "")
-                   
                    if(missing(y)) {
                      # if no y, calculate similarity of x to x
                      identical <- TRUE
@@ -79,8 +79,8 @@ Gcm <- R6Class("gcm",
                      exemplar <- y[z[2], ]
                      distance <- self$calc_distance(probe = probe, exemplar = exemplar)
                      
-                     c <- self$parm["c"]
-                     p <- self$parm["p"]
+                     c <- self$parm[["c"]]
+                     p <- self$parm[["p"]]
                      similarity <- exp(-c * distance^p)
                      sim_mat[row.names(probe), row.names(exemplar)] <- similarity
                    }
@@ -124,7 +124,8 @@ Gcm <- R6Class("gcm",
                    res <- self$applychoicerule(res)
                    return(res)
                  },
-                 calc_distance = function(probe, exemplar, r = self$parm["r"], w = self$parm[1:self$ndim]){
+                 calc_distance = function(probe, exemplar, r = self$parm[["r"]], w = self$parm[1:self$ndim]){
+                   w <- unlist(w)
                    dist <- as.numeric(probe - exemplar)
                    if(self$metric == "minkowski"){
                      dist <- sum( w*abs(dist)^r )^(1/r)
@@ -133,20 +134,35 @@ Gcm <- R6Class("gcm",
                    }
                    return(dist)
                  },
-                 fit = function(type = "solnp") {
-                   eqfun <- function(parameter, ...) {
-                     return(sum(parameter[1:self$ndim]))
-                   }
-                   eqB = 1
-                   super$fit(type = type, eqfun = eqfun, eqB = eqB)
+                 eqfun = function() {
+                   return(list(
+                     eqfun = function(pars, self) {
+                       sum(pars[1:self$ndim])
+                     },
+                     eqB = 1
+                     )
+                  )
+                 },
+                 parGrid = function(offset) {
+                   return(MakeGridList(
+                     names = self$freenames,
+                     ll = self$allowedparm[, 'll'] + offset,
+                     ul = self$allowedparm[, 'ul'] - offset,
+                     nsteps = list(w = 4, c = 4, tau = 4),
+                     sumto = list('w' = paste0("w", 1:self$ndim)),
+                     regular = TRUE,
+                     offset = offset))
                  }
+                 # fit = function(type = "solnp") {
+                 #   super$fit(type = type, eqfun = eqfun, eqB = eqB)
+                 # }
                )
 )
 
 gcm <- function(formula, data, cat, metric = c("minkowski", "discrete"), fixed, choicerule, discount = 0) {
   obj <- Gcm$new(formula = formula, data = data, cat = cat, metric = metric, fixed = fixed, choicerule = choicerule, discount = discount)
   if(length(obj$freenames) > 0) {
-    obj$fit()
+    obj$fit(type = "grid")
   }
   return(obj)
 }
