@@ -1,12 +1,14 @@
-require(R6)
-library(Formula)
-library(reshape2)
-library(arrangements)
-library(Rcpp)
-library(Rsolnp)
-sourceCpp("rsfft.cpp")
-source("../../utils/classes/cognitiveModel.R", chdir = TRUE)
-source("../../utils/classes/rsenvironment.R", chdir = TRUE)
+#' Risk-sensitive foraging fast and frugal tree
+#' 
+#' @import arrangements
+#' @inheritParams Cogscimodel
+rsfft <- function(formula = NULL, sbt = NULL, nopt = NULL, nout = NULL, fixed = NULL, data = NULL, env = NULL, choicerule, terminal.fitness.fun) {
+    obj <- Rsfft$new(env = env, formula = formula, sbt = sbt, nopt = nopt, nout = nout, data = data, fixed = fixed, terminal.fitness.fun = terminal.fitness.fun, choicerule)
+  if (length(obj$fixednames) < length(obj$parm)) {
+    obj$fit()
+  }
+  return(obj)
+}
 
 Rsfft <- R6Class("rsfft",
   inherit = cognitiveModel,
@@ -83,24 +85,25 @@ Rsfft <- R6Class("rsfft",
       which_lv <- cbind(rep(1:ntrial, nout), rep(1:nout, each=ntrial), apply(variances, 1, which.min))
 
       hv_outcomes <- array(outcomes_arr[as.matrix(which_hv)], dim(variances))
-      hv_probabilities <- array(probabilities_arr[as.matrix(which_hv)], dim(variances))      
+      hv_probabilities <- array(probabilities_arr[as.matrix(which_hv)], dim(variances))
       lv_outcomes <- array(outcomes_arr[as.matrix(which_lv)], dim(variances))
 
       max_lv_outcome <- apply(lv_outcomes, 1, max)
       max_hv_outcome <- apply(hv_outcomes, 1, max)
       min_hv_outcome <- apply(hv_outcomes, 1, min)
+      min_lv_outcome <- apply(lv_outcomes, 1, min)
       need <- budget - state
 
       features <- cbind(
-        need / max_lv_outcome / th,
-        need / min_hv_outcome / th,
+        need / max_hv_outcome / th,
+        need / min_lv_outcome / th,
         hv_probabilities[hv_outcomes == max_hv_outcome])
 
       # Correct for NaN and Inf values
       features[need == 0, 1:2] <- 0
       for (i in 1:2) {
-        infrows <- is.infinite(features[, i])
-        features[infrows, i] <- max(features[!infrows, i]) + quantile(features[!infrows, i], .01)
+        isInf <- is.infinite(features[, i])
+        features[isInf, i] <- max(features[!isInf, i]) + quantile(features[!isInf, i], .01)
       }
       return(features)
     },
@@ -125,10 +128,11 @@ Rsfft <- R6Class("rsfft",
         input <- self$input
         features <- self$features
       }
-
-      splitCriteria <- self$parm[1:3]
-      order <- permutations(3,3)[self$parm['order'], ]
-      exits <- matrix(c(1, 0, 1)[order], nrow = 1)[rep(1, nrow(input)), ]
+      parmNames <- rownames(self$allowedparm)
+      splitCriteria <- self$parm[parmNames[1:3]]
+      order <- self$parm[parmNames[4]]
+      order <- permutations(3,3)[order, ]
+      exits <- matrix(c(0, 1, 1)[order], nrow = 1)[rep(1, nrow(input)), ]
       exits <- cbind(exits, 1L - exits[, 3])
       
       I <- indicators(features[, order], splitCriteria[order])   
@@ -221,12 +225,3 @@ Rsfft <- R6Class("rsfft",
     }
   )
 )
-
-
-rsfft <- function(formula = NULL, sbt = NULL, nopt = NULL, nout = NULL, fixed = NULL, data = NULL, env = NULL, choicerule, terminal.fitness.fun) {
-    obj <- Rsfft$new(env = env, formula = formula, sbt = sbt, nopt = nopt, nout = nout, data = data, fixed = fixed, terminal.fitness.fun = terminal.fitness.fun, choicerule)
-  if (length(obj$fixednames) < length(obj$parm)) {
-    obj$fit()
-  }
-  return(obj)
-}

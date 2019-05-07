@@ -11,15 +11,16 @@ dt <- as.data.table(cbind(probs, outcomes, budget, state, timehorizon))
 setnames(dt, 1:8, c(paste0('p',1:4), paste0('x',1:4)))
 dt$choice <- c(1,1,1)
 
-mod <- rsfft(choice ~ (x1 + x2 + p1 + p2) | (x3 + x4 + p3 + p4), sbt = ~ state + budget + timehorizon, nopt = 2, nout = 2, data = dt, choicerule = "eps", terminal.fitness.fun = function(state, budget) { ((state - budget) >= 0) * state})
-mod$gofvalue
+mod <- rsfft(choice ~ (x1 + x2 + p1 + p2) | (x3 + x4 + p3 + p4), sbt = ~ state + budget + timehorizon, nopt = 2, nout = 2, data = dt, choicerule = "eps", terminal.fitness.fun = function(state, budget) { ((state - budget) >= 0) * state}, fixed = c(order = 1, maxlv = 1.01, minhv = 0.5))
 mod
-
+cbind(dt, )
+self <- mod
 cbind(dt,
-  node = mod$predict("node", action = 1:2),
-  round(mod$predict("c", action = 1:2),2),
-  round(mod$predict("v", action = 1:2),2))
+  round(mod$features, 2),
+  node = mod$predict("node", action = 1:3),
+  pred = round(mod$predict("c", action = 1),3))
 
+mod$predict('c', 1:2)
 
 dt
 mod$input

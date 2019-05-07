@@ -1,6 +1,9 @@
-source("../../utils/classes/cognitiveModel.R", chdir = TRUE)
-source("../../utils/classes/rsenvironment.R", chdir = TRUE)
-source("../cpt/cpt.R", chdir = TRUE)
+#' Risk-sensitive foraging cognitive prospect theory
+#' #' @inheritParams Cogscimodel rscpt
+rscpt <- function(env, formula = NULL, fixed = NULL, data = NULL, choicerule, ref) {
+    obj <- Rscpt$new(env = env, data = data, formula = formula, fixed = fixed, choicerule = choicerule, ref = ref)
+    return(obj)
+}
 
 Rscpt <- R6Class("rscpt",
   inherit = cognitiveModel,
@@ -144,9 +147,3 @@ Rscpt <- R6Class("rscpt",
     }
   )
 )
-
-
-rscpt <- function(env, formula = NULL, fixed = NULL, data = NULL, choicerule, ref) {
-    obj <- Rscpt$new(env = env, data = data, formula = formula, fixed = fixed, choicerule = choicerule, ref = ref)
-    return(obj)
-}

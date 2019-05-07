@@ -1,23 +1,48 @@
-devtools::install_github('janajarecki/cogsciutils', force = TRUE)
-source("../cognitiveModel.R", chdir = TRUE)
-source("../mem.R", chdir = TRUE)
-
-
+context("EBM values")
+library(cogscimodels)
 # Test data for binary case with risky gambles
 # column 1 - 3: risky gamble values
 # column 4: binary chose, don't chose feedback
 # column 5: choices people made, to fit free model parameter from
-d <- matrix(c(
-    9, 0.10, 20, 1, 0,
-    7, 0.50, 10, 0, 1,
-    6, 0.30,  0, 0, 1,
-   15, 0.50, 10, 1, 1,
-    0, 0.90,  5, 0, 0), nc = 5, byrow = T)
+# Juslin Olsson & Olsson (2003)
+d <- matrix(c(1,1,0,0,57,
+              1,0,1,0,56,
+              0,0,0,1,51,
+              1,1,1,0,56), 4, 5, T)
 d <- as.data.frame(d)
-names(d) <- c('x1', 'x2', 'x3', 'truey', 'y')
+d$x = 0
+model <- ebm(formula = x ~ V1 + V2 + V3 + V4 | V5, data = d, discount = 0, fixed = c(r = 2, V4 = .25, lambda = 10))
+d <- as.data.frame(matrix(1, 1, 4))
+model$predict(newdata = as.data.frame(matrix(1, 1, 4)))
+
+model$fit('solnp')
+
+model$predict('c')
+self <- model
+gof(model$obs, model$predict, 'log', na.rm=T)
+
+cogsciutils::gof(model$obs, model$predict(), 'mse', resp="c", na.rm=TRUE)
+
+
+model$fit('solnp')
+model$logLik()
+model$MSE()
+model$discount
+
 
 # Make the model, similar to lm(), but diffrent
-model <- Mem(formula = y ~ x1 + x2 + x3 + truey, data = d, discount = 1, fixed = c(r = 2))
+model <- ebm(formula = y ~ x1 + x2 + x3 | truey, data = d, discount = 1, fixed = c(r = 2))
+self$fit('solnp')
+model
+
+gof(obs = model$obs, pred = model$predict(), resp = model$response, na.rm = TRUE)
+
+class(model$obs)
+
+model$predict()
+model$fit()
+ebm_cpp(1, c(1,2), c(.5,.5), 1, 1, 1, 1, 1)
+
 RMSE(model)
 model$fit(c("grid", "solnp"))
 model$logLik()

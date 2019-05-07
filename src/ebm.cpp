@@ -1,14 +1,30 @@
+// ebm.cpp
 #include <Rcpp.h>
 using namespace Rcpp;
 
+//' Exemplar-based prediction computation
+//' 
+//' @param values numeric vector with experienced values
+//' @param features numeric matrix with feature values
+//' @param w numeric vector of weights (model parameter)
+//' @param r square root in distance metic (model parameter)
+//' @param q exponent in distance metric (model parameter)
+//' @param lambda sensitivity (model parameter)
+//' @param b bias parameter vector for classification (model parameter), must be NA for judgments
+//' @param lastLearnTrial integer last trial of learning phase
+//' @param firstOutTrial integer first trial of output, starting the predictions later
+//' @examples
+//' # none
+//' @export
 // [[Rcpp::export]]
-Rcpp::NumericVector mem_cpp(
+Rcpp::NumericVector ebm_cpp(
   Rcpp::NumericVector values,
   Rcpp::NumericMatrix features,
   Rcpp::NumericVector w,
   double r,
   double q,
   double lambda,
+  Rcpp::NumericVector b,
   int lastLearnTrial,
   int firstOutTrial) {
   
@@ -40,17 +56,23 @@ Rcpp::NumericVector mem_cpp(
 
       // compute the distance between t and previous_t
       for (int f = 0; f < nfeatures; f++) {
-        dist[previous_t] += w[f] * pow( fabs(features(t, f) - features(previous_t, f)), r);         
+        dist[previous_t] += w[f] * pow( fabs(features(t, f) - features(previous_t, f)), r);
       }
       // transform the distance into a similarity
       dist[previous_t] = pow(dist[previous_t], q / r);
 
-      // multiply the similarity between t and previous_t with the value of previous_t
+      /*// multiply the similarity between t and previous_t with the value of previous_t
       // and add the result up for all previous_ts
       val[t] += exp(-1 * lambda * dist[previous_t]) * values[previous_t];
 
       // add all the similarities between t and all previous_ts up
-      sim[t] += exp(-1 * lambda * dist[previous_t]);
+      sim[t] += exp(-1 * lambda * dist[previous_t]);*/
+      // multiply the similarity between t and previous_t with the value of previous_t
+      // and add the result up for all previous_ts
+      val[t] += exp(-1 * lambda * dist[previous_t]) * values[previous_t] * (NumericVector::is_na(b[0]) ? 1 : b[1]);
+
+      // add all the similarities between t and all previous_ts up
+      sim[t] += exp(-1 * lambda * dist[previous_t]) * (NumericVector::is_na(b[0]) ? 1 : b[values[previous_t]]);
     }
 
     // standardize the value sum by the similarity sum and store in the ith row of the result

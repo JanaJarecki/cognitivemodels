@@ -43,7 +43,7 @@ NumericMatrix indicators(arma::mat features,
 
   // allocate the return
   NumericMatrix I = NumericMatrix(tdim, ndim+1);
-  colnames(I) = CharacterVector({ "too many max LV", "too many min HV", "p(max HV) high enough", "p(min HV) too low"});
+  colnames(I) = CharacterVector({ "maxLV >= c1", "minHV >= c2", "p(max HV) >= c3", "p(max HV) <= c3"});
   
   // compute final value per option based on time x outcome 
  for (unsigned int t = 0; t < tdim; ++t) {
