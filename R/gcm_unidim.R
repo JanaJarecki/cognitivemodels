@@ -1,8 +1,3 @@
-library(R6)
-library(Rsolnp)
-library(cogsciutils)
-source("../../../cogscimodels/models/gcm/gcm.R")
-
 Gcm_unidim <- R6Class("gcm_unidim",
                inherit = Gcm,
                public = list(

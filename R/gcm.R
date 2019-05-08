@@ -1,8 +1,4 @@
-library(R6)
-library(Rsolnp)
-library(cogsciutils)
-library(cogscimodels)
-
+#' @export
 Gcm <- R6Class("gcm",
                inherit = Cogscimodel,
                public = list(
@@ -144,14 +140,15 @@ Gcm <- R6Class("gcm",
                   )
                  },
                  parGrid = function(offset) {
-                   return(MakeGridList(
+                   grid <- MakeGridList(
                      names = self$freenames,
                      ll = self$allowedparm[, 'll'] + offset,
                      ul = self$allowedparm[, 'ul'] - offset,
                      nsteps = list(w = 4, c = 4, tau = 4),
                      sumto = list('w' = paste0("w", 1:self$ndim)),
                      regular = TRUE,
-                     offset = offset))
+                     offset = 0)
+                   return(grid)
                  }
                  # fit = function(type = "solnp") {
                  #   super$fit(type = type, eqfun = eqfun, eqB = eqB)
@@ -159,10 +156,11 @@ Gcm <- R6Class("gcm",
                )
 )
 
+#' @export
 gcm <- function(formula, data, cat, metric = c("minkowski", "discrete"), fixed, choicerule, discount = 0) {
   obj <- Gcm$new(formula = formula, data = data, cat = cat, metric = metric, fixed = fixed, choicerule = choicerule, discount = discount)
   if(length(obj$freenames) > 0) {
-    obj$fit(type = "grid")
+    obj$fit(type = c("grid", "solnp"))
   }
   return(obj)
 }
