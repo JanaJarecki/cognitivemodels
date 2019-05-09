@@ -45,6 +45,7 @@
 #' newdt <-  data.frame(timehorizon = 1:4, state = 11)
 #' M$predict('v', newdata = newdt, 1:2)
 #' M$predict('r', newdata = newdt)
+#' @export
 hm1988 <- function(env, formula, data, choicerule, fixed = NULL) {
   obj <- Hm1988$new(env = env, data = data, formula = formula, choicerule = choicerule, fixed = fixed)
   return(obj)

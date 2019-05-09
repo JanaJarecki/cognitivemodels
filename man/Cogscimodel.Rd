@@ -44,6 +44,10 @@ Class for cognitive models
 \details{
 Ignore a model parameter by setting it to \code{NULL}, in this case your matrix \code{allowedparm} needs to contain
 }
+\section{Set data to ignore when fitting}{
+NA
+}
+
 \examples{
 Cogscimodel$new(formula = y ~ x, data = data.frame(y=1:2, x=3:4), allowedparm = rbind(alpha = c('ul'=0, 'll'=1, 'init'=.5)), model = 'name of my model')
 }

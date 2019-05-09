@@ -18,7 +18,8 @@
 #' @export
 Cogscimodel <- R6Class(
   'cogscimodel',
-  # #' @section should be inherited, followed by method list
+  #' @section
+  # should be inherited, followed by method list
   public = list(
     model = 'string',
     formula = 'Formula',
