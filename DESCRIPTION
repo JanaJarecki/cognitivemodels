@@ -9,7 +9,7 @@ Description: Implementation of cognitive models, includes a general class cognit
 License: GPL (>= 2)
 Imports: 
     Rcpp,
-    cogsciutils,
+    cogsciutils (>= 1.0.1),
     Formula,
     R6,
     Rsolnp,
