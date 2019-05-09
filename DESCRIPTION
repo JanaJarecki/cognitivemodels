@@ -9,7 +9,15 @@ Description: Implementation of cognitive models, includes a general class cognit
 License: GPL (>= 2)
 Imports: 
     Rcpp,
-    cogsciutils
+    cogsciutils,
+    Formula,
+    R6,
+    Rsolbp,
+    stringr,
+    arrangements,
+    combinat,
+    quadprog,
+    reshape2
 Remotes:
   janajarecki/cogsciutils
 LinkingTo:

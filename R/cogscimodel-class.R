@@ -1,9 +1,9 @@
 #' Class for cognitive models
 #' 
-#' @import Formula
 #' @import Rsolnp
 #' @import cogsciutils
 #' @import R6
+#' @import Formula
 #' @usage Cogscimodel$new(formula, data, allowedparm)
 #' @param formula Formula, like \code{y ~ x1 + x2}, depends on the model.
 #' @param data Data.frame or matrix, must contain all variables in \code{formula}.
