@@ -49,6 +49,8 @@ NA
 }
 
 \examples{
-Cogscimodel$new(formula = y ~ x, data = data.frame(y=1:2, x=3:4), allowedparm = rbind(alpha = c('ul'=0, 'll'=1, 'init'=.5)), model = 'name of my model')
+Cogscimodel$new(formula = y ~ x, data = data.frame(y=1:2, x=3:4),
+allowedparm = rbind(alpha = c('ul'=0, 'll'=1, 'init'=.5)),
+model = 'name of my model')
 }
 \keyword{datasets}
