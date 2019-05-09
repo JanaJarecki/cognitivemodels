@@ -16,4 +16,7 @@ Encoding: UTF-8
 NeedsCompilation: yes
 RoxygenNote: 6.1.1
 Suggests: 
-    testthat
+    testthat,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
