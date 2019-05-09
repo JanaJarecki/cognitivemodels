@@ -14,7 +14,9 @@
 #' @param discount (optional) Integer or integer vector, which or how many many trials to discount?
 #' @details Ignore a model parameter by setting it to \code{NULL}, in this case your matrix \code{allowedparm} needs to contain
 #' @examples 
-#' Cogscimodel$new(formula = y ~ x, data = data.frame(y=1:2, x=3:4), allowedparm = rbind(alpha = c('ul'=0, 'll'=1, 'init'=.5)), model = 'name of my model')
+#' Cogscimodel$new(formula = y ~ x, data = data.frame(y=1:2, x=3:4),
+#' allowedparm = rbind(alpha = c('ul'=0, 'll'=1, 'init'=.5)),
+#' model = 'name of my model')
 #' @export
 Cogscimodel <- R6Class(
   'cogscimodel',
@@ -174,7 +176,7 @@ Cogscimodel <- R6Class(
       }
       if ( !(missing(newdata) | is.null(newdata)) ) {
         obs <- get_all_vars(formula(self$formula, lhs=1, rhs=0), newdata)[, 1, drop = FALSE]
-        pred <- as.matrix(self$predict())[, 1:ncol(obs), drop = FALSE]
+        pred <- as.matrix(self$predict(newdata = newdata))[, 1:ncol(obs), drop = FALSE]
       } else {
         obs <- as.matrix(self$obs)
         pred <- as.matrix(self$predict())[, 1:ncol(obs), drop = FALSE]
@@ -251,7 +253,7 @@ Cogscimodel <- R6Class(
       colnames(par) <- rownames(parspace)
       return(par)
     },
-    fitSolnp = function(par0, parspace, control = list(trace = 1)) {
+    fitSolnp = function(par0, parspace, control = list(trace = 0)) {
       fit <- solnp(pars = par0,
         fun = self$fitObjective,
         LB = parspace[, 'll', drop = FALSE],
