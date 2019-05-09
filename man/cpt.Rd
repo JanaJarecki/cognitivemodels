@@ -55,6 +55,9 @@ M
 M$predict("value") # predict values
 M$predict("response") # predict choices after soft-max
 }
+\references{
+Tversky, A., & Kahneman, D. (1992). Advances in prospect theory: cumulative representation of uncertainty. Journal of Risk and Uncertainty, 5, 297–323. doi:10.1007/BF00122574
+}
 \author{
 Jana B. Jarecki, \email{jj@janajarecki.com}
 }
