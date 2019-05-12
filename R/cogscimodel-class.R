@@ -41,66 +41,93 @@ Cogscimodel <- R6Class(
       self$model <- model
       f <- Formula(formula)
       self$formula <- f
-      self$input <- get_all_vars(formula(f, lhs=0, rhs=NULL), data)
-      if ( length(f)[1] > 0 ) {
-        self$obs <- get_all_vars(formula(f, lhs=1, rhs=0), data)[, 1]
-      }
-      self$response <- match.arg(response)
-      if ( response == 'continuous' ) {
-        R <- max(self$obs) - min(self$obs)
-        allowedparm <- rbind(allowedparm, sigma = c(0, R, R / 2, NA))
-      }
-      self$discount <- self$setdiscount(discount) 
-      if ( !is.null(choicerule) ) {
-        choicerule <- match.arg(choicerule, c('luce', 'argmax', 'softmax', 'epsilon'))
-        self$choicerule <- choicerule
-        if ( choicerule == 'softmax' ) {
-          allowedparm <- rbind(allowedparm, tau = c(0.1, 10, 0.5, NA))
-        } else if ( choicerule == 'epsilon' ) {
-          allowedparm <- rbind(allowedparm, eps = c(0.001, 1L, 0.2, NA))
-        }
-      }
+      self$setinput(f, data)
+      self$allowedparm <- allowedparm
+      self$setresponse(response)
+      self$setdiscount(discount)
+      self$setchoicerule(choicerule)
+      self$setfitoptions(fit.options)
+      fixed <- as.list(fixed)
+
       # Checks
-      if (!is.null(fixed) & !is.list(fixed)) {
-        if (is.numeric(fixed)) {
-          fixed <- as.list(fixed)
-        } else {
-          stop('"fixed" must be a list, but is ', class(fixed), '.', call. = FALSE)
-        }
+      if (!is.null(fixed) & !is.numeric(fixed)) {
+          stop('Parameter in "fixed" must be numeric.', call. = FALSE)
       }
       if ( any(duplicated(names(fixed))) ) {
         stop('Names of "fixed" must be unique: ', .brackify(names(fixed)[duplicated(names(fixed))])," appear/s multiple times.", call.=FALSE)
       }
+      allowedparm <- self$allowedparm
       if ( any(!names(fixed) %in% rownames(allowedparm)) ) {
         stop('Check names of "fixed" parameter; allowed are ', .brackify(rownames(allowedparm)), ',\n\t but supplied was ', .brackify(setdiff(names(fixed), rownames(allowedparm))), '.', call.=FALSE)
       }
       if ( any(!fixed[sapply(fixed, is.character)] %in% rownames(allowedparm) ) ) {
-        stop('Check "fixed", "fixed" may be equal to the model\'s parameters ', .brackify(rownames(allowedparm)), ', but contains ', .brackify(setdiff(fixed[sapply(fixed, is.character)], rownames(allowedparm))), '.', call.=FALSE)
+        stop('Check "fixed". "fixed" may be equal to the model\'s parameters ', .brackify(rownames(allowedparm)), ', but contains ', .brackify(setdiff(fixed[sapply(fixed, is.character)], rownames(allowedparm))), '.', call.=FALSE)
       }
       if ( length(fixed) < nrow(allowedparm) & is.null(self$obs) ) {
         stop('Trying to estimate parameter ', .brackify(setdiff(rownames(allowedparm), names(fixed))), ', but "formula" lacks left-hand side specifying observed data\n\tEither add parameter to "fixed" fixing all parameters, or specify observations as left-hand-side of "formula".', call. = FALSE)
       }
-      self$fixednames <- intersect(rownames(allowedparm), names(fixed))
-      self$freenames <- setdiff(rownames(allowedparm), self$fixednames)
+
+      parnames <- rownames(allowedparm)
+      self$fixednames <- intersect(parnames, names(fixed))
+      self$freenames <- setdiff(parnames, self$fixednames)
       self$constrainednames <- names(fixed[sapply(fixed, is.character)])
       self$parm <- allowedparm[, 'init']
-      names(self$parm) <- rownames(allowedparm)
-      self$allowedparm <- allowedparm
+      names(self$parm) <- parnames
       self$setparm(self$substituteequal(fixed))
-      self$setdiscount(discount)
-      self$fit.options <- list(measure = 'loglikelihood', n = 1, nbest = length(self$freenames), options = list())
-      if (!is.null(fit.options$measure)) {
-        fit.options$measure <- match.arg(tolower(fit.options$measure), c('loglikelihood', 'mse', 'wmse', 'rmse', 'sse', 'wsse', 'mape', 'mdape', 'accuracy'))
+    },
+    # Retrieve the stimuli or inputs to the model
+    setinput = function(f, d) {
+      self$input <- self$getinput(f, d)
+    },
+    getinput = function(f, d) {
+      f <- as.Formula(f)
+      nr <- nrow(d)
+      no <- length(f)[2]
+      vn <- attr(terms(formula(f, lhs=0, rhs=1)), 'term.labels')
+      nf <- sapply(1:nopt, function(i) length(attr(terms(formula(f, lhs=0, rhs=i)), 'term.labels'))) 
+      arr <- array(NA, dim = c(nr, max(nf), no))
+      for (o in seq_len(nopt)) {
+        arr[,,o] <- as.matrix(model.frame(formula(f, lhs=0, rhs=i), d))
       }
-      if (!is.null(fit.options$newdata)) {
-        fit.options$newdata <- get_all_vars(self$formula, fit.options$newdata)
+      if (no==1) {
+        colnames(arr) <- vn
       }
-      self$fit.options[names(fit.options)] <- fit.options
+      return(arr)
+    },
+    #' Set choice rule
+    #' @parm choicerule string holding the choicerule
+    setchoicerule = function(choicerule) {
+      if ( is.null(choicerule)) {
+        self$rmchoicerule()
+      }
+      if ( !is.null(choicerule) ) {
+        choicerule <- match.arg(choicerule, c('luce', 'argmax', 'softmax', 'epsilon'))
+        self$choicerule <- choicerule
+        if ( choicerule == 'softmax' ) {
+          self$allowedparm <- rbind(self$allowedparm, tau = c(0.1, 10, 0.5, NA))
+        } else if ( choicerule == 'epsilon' ) {
+          self$allowedparm <- rbind(self$allowedparm, eps = c(0.001, 1L, 0.2, NA))
+        }
+      }
+    },
+    #' Remove choicerule
+    rmchoicerule = function() {
+      keep <- setdiff(names(self$getparm(), names(self$getparm('c'))))
+      self$allowedparm <- self$allowedparm[keep,,drop=FALSE]
+      self$choicerule <- NULL
+    },
+    setresponse = function(response) {
+      response <- match.arg(response)
+      if ( response == 'continuous' ) {
+        rg <- max(self$obs) - min(self$obs)
+        allowedparm <- rbind(allowedparm, sigma = c(0, rg, rg / 2, NA))
+      }
+      self$response <- response
     },
     #' Set data to ignore when fitting
     #' @param x intteger or integer vector, rows to discount
     setdiscount = function(x) {
-      if(sum(x) == 0) {
+      self$discount <- if(sum(x) == 0) {
         NULL
       } else if (is.logical(x)) {
         cumsum(x)
@@ -111,10 +138,10 @@ Cogscimodel <- R6Class(
       }
     },
     #' Get the choicerule parameter
-    which.choiceruleparm = function() {
+    getcrparm = function() {
       return(switch(self$choicerule,
-        softmax = which(names(self$parm) == 'tau'),
-        epsilon = which(names(self$parm) == 'eps')))
+        softmax = self$parm['tau'],
+        epsilon = self$parm['eps']))
     },
     substituteequal = function(x) {
       subs_val_in_fixed <- x[ na.omit(match( x, names(x) )) ]
@@ -126,6 +153,17 @@ Cogscimodel <- R6Class(
         x[sapply(x, is.character)] <- subs_val_in_free 
       }
       return(x)
+    },
+    #' Get parameter
+    # @param x string which type of parameter to get
+    getparm = function(x = c('all', 'free', 'fixed', 'choicerule', 'constrained')) {
+      x <- match.arg(x)
+      return(switch(x,
+        all = self$parm,
+        free = self$parm[self$freenames],
+        fixed = self$parm[self$fixednames],
+        choicerule = self$parm[self$choicerule],
+        constrained = self$parm[self$constrainedparm]))
     },
     #' Set new parameter
     #' @param x named vector with parameter values, names must be one in \code{allowedparm}
@@ -152,13 +190,29 @@ Cogscimodel <- R6Class(
       self$parm <- c(self$parm, x)
       self$pred <- NULL
     },
+    #' Sets fit options
+    # param x list of fitting options
+    setfitoptions = function(x) {
+      default <- list(measure = 'loglikelihood', n = 1, nbest = length(self$freenames), options = list())
+      if ( !all(names(x) %in% names(default)) ) {
+        stop('"fit.options" contains ', .brackify(setdiff(names(x), names(default))), ', which is not part of the allowed options: ', names(default), '.')
+      }
+      if (!is.null(x$measure)) {
+        x$measure <- match.arg(tolower(x$measure), c('loglikelihood', 'mse', 'wmse', 'rmse', 'sse', 'wsse', 'mape', 'mdape', 'accuracy'))
+      }
+      if (!is.null(x$newdata)) {
+        x$newdata <- getinput(self$formula, x$newdata)
+      }
+      default[names(x)] <- x
+      self$fit.options <- default
+    },
     #' Transforms predictions with choicerule
     #' @param x string, choice rules, e.g. 'softmax', allowed choicerules see \link[cogsciutils]{choicerule}
     applychoicerule = function(x) {
       if ( is.null(self$choicerule) ) {
         return(x)
       } else {
-        args <- c(list(x = x, type = self$choicerule), as.list(self$parm[self$which.choiceruleparm()]))
+        args <- c(list(x = x, type = self$choicerule), as.list(self$parm[self$getcrparm()]))
         x[] <- do.call(cogsciutils::choicerule, args)
         return(x)
       }
