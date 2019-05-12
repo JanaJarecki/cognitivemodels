@@ -59,6 +59,9 @@ newdt <-  data.frame(timehorizon = 1:4, state = 11)
 M$predict('v', newdata = newdt, 1:2)
 M$predict('r', newdata = newdt)
 }
+\references{
+Houston, A. I., & McNamara, J. M. (1988). A framework for the functional analysis of behaviour. Behavioural and Brain Science, 11, 117–163.
+}
 \author{
 Jana B. Jarecki, \email{jj@janajarecki.com}
 }

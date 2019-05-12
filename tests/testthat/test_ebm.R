@@ -1,6 +1,5 @@
 context("EBM values")
 library(cogscimodels)
-library(data.table)
 
 # Nosofsky, R. M. (1989). Further tests of an exemplar-similarity approach to relating identification and categorization. Perception & Psychophysics, 45, 279–290. doi:10.3758/BF03204942
   # From Table 3 and Figure 2
@@ -37,60 +36,58 @@ test_that('EBM [choice] parameter estimation', {
   fml <- pobs_size ~ angle + size | true_cat_size
   nn <- d$N_size
   keep <- !is.na(d$true_cat_size)
-  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2), type = 'c', fit.options = list(n = nn, newdata = d)) # no constraints
+  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2), type = 'c', fit.options = list(n = nn, newdata = d), discount = 0) # no constraints
   expect_equal(unlist(model$parm), parm['size', names(model$parm)], tol = .01)
-  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, angle = .5, size = .5), type = 'c', fit.options = list(n = nn, newdata = d)) # weights constrained
+  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, angle = .5, size = .5), type = 'c', fit.options = list(n = nn, newdata = d), discount = 0) # weights constrained
   expect_equal(unlist(model$parm), c(angle=.50, size=.50, lambda=2.40, r=2, q=2, b0=.49, b1=.51), tol = .01)
-  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, b0 = .5, b1 = .5), type = 'c', fit.options = list(n = nn, newdata = d)) # bias constrained
+  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, b0 = .5, b1 = .5), type = 'c', fit.options = list(n = nn, newdata = d), discount = 0) # bias constrained
   expect_equal(unlist(model$parm), c(angle=.10, size=.90, lambda=1.60, r=2, q=2, b0=.50, b1=.50), tol = .01)
   
   # Angle condition
   fml <- pobs_angle ~ angle + size | true_cat_angle
   nn <- d$N_angle
   keep <- !is.na(d$true_cat_angle)
-  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2), type = 'c', fit.options = list(n = nn, newdata = d)) # no constraints
+  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2), discount = 0, type = 'c', fit.options = list(n = nn, newdata = d)) # no constraints
   expect_equal(unlist(model$parm), parm['angle', names(model$parm)], tol = .01)
-  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, angle = .5, size = .5), type = 'c', fit.options = list(n = nn, newdata = d)) # weights constrained
+  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, angle = .5, size = .5), discount = 0, type = 'c', fit.options = list(n = nn, newdata = d)) # weights constrained
   expect_equal(unlist(model$parm), c(angle=.50, size=.50, lambda=3.57, r=2, q=2, b0=.45, b1=.55), tol = .01)
-  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, b0 = .5, b1 = .5), type = 'c', fit.options = list(n = nn, newdata = d)) # bias constrained
+  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, b0 = .5, b1 = .5), type = 'c', discount = 0, fit.options = list(n = nn, newdata = d)) # bias constrained
   expect_equal(unlist(model$parm), c(angle=1.00, size=0, lambda=3.09, r=2, q=2, b0=.50, b1=.50), tol = .01)
 
   # Crisscross condition
   fml <- pobs_criss ~ angle + size | true_cat_criss
   nn <- d$N_criss
   keep <- !is.na(d$true_cat_criss)
-  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2), type = 'c', fit.options = list(n = nn, newdata = d)) # no constraints
+  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2), type = 'c', fit.options = list(n = nn, newdata = d), discount = 0) # no constraints
   expect_equal(unlist(model$parm), parm['criss', names(model$parm)], tol = .02)
-  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, angle = .5, size = .5), type = 'c', fit.options = list(n = nn, newdata = d)) # weights constrained
+  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, angle = .5, size = .5), type = 'c', fit.options = list(n = nn, newdata = d), discount = 0) # weights constrained
   expect_equal(unlist(model$parm), c(angle=.50, size=.50, lambda=1.23, r=2, q=2, b0=.45, b1=.55), tol = .01)
-  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, b0 = .5, b1 = .5), type = 'c', fit.options = list(n = nn, newdata = d)) # bias constrained
+  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, b0 = .5, b1 = .5), type = 'c', fit.options = list(n = nn, newdata = d), discount = 0) # bias constrained
   expect_equal(unlist(model$parm), c(angle=.93, size=0.07, lambda=3, r=2, q=2, b0=.50, b1=.50), tol = .01)
 
   # Diagonal condition
   fml <- pobs_diag ~ angle + size | true_cat_diag
   nn <- d$N_diag
   keep <- !is.na(d$true_cat_diag)
-  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2), type = 'c', fit.options = list(n = nn, newdata = d)) # no constraints
+  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2), type = 'c', fit.options = list(n = nn, newdata = d), discount = 0) # no constraints
   expect_equal(unlist(model$parm), parm['diag', names(model$parm)], tol = .01)
-  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, angle = .5, size = .5), type = 'c', fit.options = list(n = nn, newdata = d)) # weights constrained
+  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, angle = .5, size = .5), type = 'c', fit.options = list(n = nn, newdata = d), discount = 0) # weights constrained
   expect_equal(unlist(model$parm), c(angle=.50, size=.50, lambda=1.81, r=2, q=2, b0=.48, b1=.52), tol = .05)
-  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, b0 = .5, b1 = .5), type = 'c', fit.options = list(n = nn, newdata = d)) # bias constrained
+  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, b0 = .5, b1 = .5), type = 'c', fit.options = list(n = nn, newdata = d), discount = 0) # bias constrained
   expect_equal(unlist(model$parm), c(angle=.81, size=0.19, lambda=2.42, r=2, q=2, b0=.50, b1=.50), tol = .01)
   })
 
 
 test_that('EBM [choice] predictions', {
   model <- ebm(obs_cat_size ~ angle + size | true_cat_size, data = d[!is.na(d$true_cat_size), ], fixed = as.list(parm['size',]), type = 'c')
-  model$logLik()
-  psize <- 1-c(.99,.99,.99,.99,.86,.84,.81,.83,.31,.33,.28,.28,.03,.02,.01,.02) # 
+  psize <- 1-c(.99,.99,.99,.99,.86,.84,.81,.83,.31,.33,.28,.28,.03,.02,.01,.02)
   expect_equal(model$predict(d), psize, tol = .01)
-  expect_equal(SSE(d$obs_cat_size/d$N, model$predict(d)), 0.015, tol = .001)
-  expect_equal(Loglikelihood(d$obs_cat_size/d$N, model$predict(d), n = d$N, pdf = 'binomial', binomial.coef = TRUE, response = 'd'), -40.08, tol = 0.02)
-
+  expect_equal(SSE(d$obs_cat_size/d$N_size, model$predict(d)), 0.015, tol = .001)
+  expect_equal(Loglikelihood(d$obs_cat_size/d$N_size, model$predict(d), n = d$N_size, pdf = 'binomial', binomial.coef = TRUE, response = 'd'), -40.08, tol = 0.02)
   model$setparm(c('lambda'=2.38, 'size'=.50, 'angle'=.50, 'b0'=.49, 'b1'=.51))
   expect_equal( 1-model$predict(d[9,]), 0.48, .01)
   expect_equal(SSE(d$obs_cat_size/d$N, model$predict(d)), 0.077, tol = .01)
-  expect_equal(Loglikelihood(d$obs_cat_size/d$N, model$predict(d), n = d$N, binomial.coef= TRUE, pdf = 'binom'), -71, tol = 0.1)
+  expect_equal(Loglikelihood(d$obs_cat_size/d$N_size, model$predict(d), n = d$N_size, binomial.coef= TRUE, pdf = 'binom'), -71, tol = 0.1)
 
   # Angle condition
   # Model parameter from Table 5 "angle", pred from Fig. 5 "angle"
@@ -125,42 +122,44 @@ test_that('EBM error handlers', {
 })
 
 
-dt <- data.frame(x1 = c(1,0,1,0), x2 = c(0,1,0,1), ve = c(10,11,10,11), price = 10)
-m <- ebm(~ x1 + x2 | ve | price, data = dt[1:2,], fixed = list(x1=.5, x2=.5, lambda = 1, r = 1, q = 1), type = 'j')
-m$predict()
-m$predict(newdata = dt[3:4,], firstout = 1)
-Softmax(cbind(10.26894,10),1)
-Softmax(cbind(10.73106,10),1)
-
-exp(-0)/(exp(-0)+exp(-1))*10+exp(-1)/(exp(-0)+exp(-1))*11
-
-# Test subjective estimaion of valus and chioce predictions of 
-dt <- data.table(f1      = c(1,1,0,0,1,0,1,0,0),
-                 f2      = c(1,1,0,0,1,0,1,0,0),
-                 f3      = c(1,1,0,0,0,1,1,1,0),
-                 choices = c(0,0,1,1,0,1,0,1,0),
-                 prices  = c(1,1,3,3,2,2,1,2,3))
-dt[, vest := ve(prices, choices)]
-mod <- ebm(choices ~ f1 + f2 + f3 | vest | prices, data = dt[1:3], fixed = list(f1=1/3, f2=1/3, f3=1/3, r=1, q=1, lambda = 1, tau = 1))
-modv <- ebm(choices ~ f1 + f2 + f3 | vest | prices, data = dt[1:3], fixed = list(f1=1/3, f2=1/3, f3=1/3, r=1, q=1, lambda = 1), type = 'j')
-dt[1:3, vpred := modv$predict()]
-dt[1:3, cpred := mod$predict()]
-dt[4:9, vpred2 := modv$predict(.SD)]
-dt[4:9, cpred2 := mod$predict(.SD)]
-dt[, vpred3 := modv$predict(.SD[4:9], firstout=1)]
-dt[, cpred3 := mod$predict(.SD[4:9], firstout=1)]
-
-# Calculate the predicted value for trial 4 per hand
-syp <- 2 * exp(-1) + exp(0) # denominator, sum of similarities
-vp <- (2 * exp(-1) * dt[2, vest] + exp(0) * dt[3, vest]) / syp # predicted value
-1/(1+exp(-(vp-3))) # predicted choices
 
 
-dt <- data.table(matrix(c(
-  1,1,0,0,57,
-  1,0,1,0,56,
-  0,0,0,1,51,
-  1,1,1,0,59), nr = 4, byrow = TRUE))
+# dt <- data.frame(x1 = c(1,0,1,0), x2 = c(0,1,0,1), ve = c(10,11,10,11), price = 10)
+# m <- ebm(~ x1 + x2 | ve | price, data = dt[1:2,], fixed = list(x1=.5, x2=.5, lambda = 1, r = 1, q = 1), type = 'j')
+# m$predict()
+# m$predict(newdata = dt[3:4,], firstout = 1)
+# Softmax(cbind(10.26894,10),1)
+# Softmax(cbind(10.73106,10),1)
 
-mm <- ebm(~ V1 + V2 + V3 + V4 | V5, data = dt, fixed = list(r = 1, q = 1, V1 = .4, V2 = .3, V3 = .2, V4 = .1, lambda = .50))
-mm$predict(newdata = data.table(matrix(c(1,1,1,1), nr = 1)))
+# exp(-0)/(exp(-0)+exp(-1))*10+exp(-1)/(exp(-0)+exp(-1))*11
+
+# # Test subjective estimaion of valus and chioce predictions of 
+# dt <- data.table(f1      = c(1,1,0,0,1,0,1,0,0),
+#                  f2      = c(1,1,0,0,1,0,1,0,0),
+#                  f3      = c(1,1,0,0,0,1,1,1,0),
+#                  choices = c(0,0,1,1,0,1,0,1,0),
+#                  prices  = c(1,1,3,3,2,2,1,2,3))
+# dt[, vest := ve(prices, choices)]
+# mod <- ebm(choices ~ f1 + f2 + f3 | vest | prices, data = dt[1:3], fixed = list(f1=1/3, f2=1/3, f3=1/3, r=1, q=1, lambda = 1, tau = 1))
+# modv <- ebm(choices ~ f1 + f2 + f3 | vest | prices, data = dt[1:3], fixed = list(f1=1/3, f2=1/3, f3=1/3, r=1, q=1, lambda = 1), type = 'j')
+# dt[1:3, vpred := modv$predict()]
+# dt[1:3, cpred := mod$predict()]
+# dt[4:9, vpred2 := modv$predict(.SD)]
+# dt[4:9, cpred2 := mod$predict(.SD)]
+# dt[, vpred3 := modv$predict(.SD[4:9], firstout=1)]
+# dt[, cpred3 := mod$predict(.SD[4:9], firstout=1)]
+
+# # Calculate the predicted value for trial 4 per hand
+# syp <- 2 * exp(-1) + exp(0) # denominator, sum of similarities
+# vp <- (2 * exp(-1) * dt[2, vest] + exp(0) * dt[3, vest]) / syp # predicted value
+# 1/(1+exp(-(vp-3))) # predicted choices
+
+
+# dt <- data.table(matrix(c(
+#   1,1,0,0,57,
+#   1,0,1,0,56,
+#   0,0,0,1,51,
+#   1,1,1,0,59), nr = 4, byrow = TRUE))
+
+# mm <- ebm(~ V1 + V2 + V3 + V4 | V5, data = dt, fixed = list(r = 1, q = 1, V1 = .4, V2 = .3, V3 = .2, V4 = .1, lambda = .50))
+# mm$predict(newdata = data.table(matrix(c(1,1,1,1), nr = 1)))

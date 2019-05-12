@@ -3,7 +3,7 @@
 #' @import reshape2
 #' @param env environment, see example. It specifies the risky option, safe option, and the number of trials, the state, and requirement (also called the budget).
 #' @param data (optional) data frame
-#' @reference Houston, A. I., & McNamara, J. M. (1988). A framework for the functional analysis of behaviour. Behavioural and Brain Science, 11, 117–163.
+#' @references Houston, A. I., & McNamara, J. M. (1988). A framework for the functional analysis of behaviour. Behavioural and Brain Science, 11, 117–163.
 #' @return An object of class R6 holding the model, it has no free parameters. A model object \code{M} can be viewed with \code{M}, predictions can be made with \code{M$predict()} for choice predictions, and \code{M$predict("ev")} for the expected value of the optimal choice and \code{M$predict("value", 1:2)} for the expected value of all choices.
 #' @author Jana B. Jarecki, \email{jj@janajarecki.com}
 #' @details Risk-sensitive foraging means you have, for instance, four choices between the same two risky lotteries and after the four choices you need to have accumulated at least 12 points to get a reward. The optimal solution to this choice problem relies on dynamic programming. The function creates all possible future states given the possible remaining trials, and predicts the optimal choice polica or the expected value of chosing either option given a certain state and a certain time horizon.
@@ -45,6 +45,7 @@
 #' newdt <-  data.frame(timehorizon = 1:4, state = 11)
 #' M$predict('v', newdata = newdt, 1:2)
 #' M$predict('r', newdata = newdt)
+#' @export
 hm1988 <- function(env, formula, data, choicerule, fixed = NULL) {
   obj <- Hm1988$new(env = env, data = data, formula = formula, choicerule = choicerule, fixed = fixed)
   return(obj)

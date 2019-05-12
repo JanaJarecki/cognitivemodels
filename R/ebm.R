@@ -44,7 +44,7 @@ Ebm <- R6Class('ebm',
     ndim = NULL,
     biasnames = NULL,
     weightnames = NULL,
-    initialize = function(formula, data, type, fixed = NULL, learntrials = seq_len(nrow(data)), initialparm = NULL, discount = 1, choicerule = NULL, fit.options = list()) {
+    initialize = function(formula, data, type, fixed = NULL, learntrials = seq_len(nrow(data)), initialparm = NULL, discount = NULL, choicerule = NULL, fit.options = list()) {
       if ( !any(grepl('\\|', formula)) ) {
         stop('"formula" in ebm misses a pipe ("|") before the criterion variable,\n\te.g., formula = y ~ x1 + x2 | cr.', call. = FALSE)
       }
@@ -80,7 +80,7 @@ Ebm <- R6Class('ebm',
         self$biasnames <- rownames(biasparm)
         allowedparm <- rbind(allowedparm, biasparm)
       }
-      discount <- self$inferdiscount(self$criterion)
+      discount <- self$inferdiscount(self$criterion, discount, showmsg = all(names(allowedparm) %in% names(fixed)))
       super$initialize(formula = formula(f, rhs = 1, lhs = 1), data = d, fixed = fixed, allowedparm = allowedparm, choicerule = choicerule, discount = discount, model = paste0('Exemplar-based model [type: ', self$type, ']'), response = ifelse(self$type == 'judgment', 'continuous', 'discrete'), fit.options = fit.options)
       self$formula <- formula
       if (!is.null(fit.options$newdata)) {
@@ -98,10 +98,14 @@ Ebm <- R6Class('ebm',
         'choice'
       }
     },
-    inferdiscount = function(criterion) {
-      if (self$type != 'judgment') {
+    inferdiscount = function(criterion, discount, showmsg) {
+      if ( !is.null(discount) ) {
+        return(discount)
+      }  else if (self$type != 'judgment') {
         discount <- which(!duplicated(criterion))[2] + 1
-        message('Parameter estimates improve if the first few trials are ignored. Discounting trial 1 to ', discount, '. To avoid, set "discount=1"')
+        if ( showmsg ) {
+          message('Parameter estimates improve if first few trials are ignored. Discounting trial 1 to ', discount, '.\nTo avoid, set "discount=0"')
+        }
         return(discount)
       }    
     },
