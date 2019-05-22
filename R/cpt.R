@@ -91,27 +91,16 @@ Cpt <- R6Class("cpt",
       type <- match.arg(type)
 
       if ( !is.null(newdata) ) {
-        input <- model.frame(self$formula, newdata)[, -1, drop = F]
+        input <- self$getinput(self$formula, newdata)
+        # input <- model.frame(self$formula, newdata)[, -1, drop = F]
         ref <- if(length(newref) == 1) { rep(newref, nrow(input)) } else { newref }
       } else {
         input <- self$input
         ref <- self$ref
       }
-       
-      OptionList <- lapply(seq_along(self$nout), function(i) {
-        model.matrix(Formula(self$formula), input, rhs = i)[, -1, drop = FALSE]
-      })
-
-      v <- lapply(OptionList, function(i) self$cpt(
-        x = i[, seq_along(self$nout)],
-        p = i[, -seq_along(self$nout)], ref = ref))
-      v <- matrix(unlist(v), ncol = length(v))
-      
-      nn <- unlist(lapply(OptionList, function(x) unique(str_extract(dimnames(x)[[2]], pattern = "[a-z]+"))[1]))
-      if (length(unique(nn)) < self$nopt) {
-        nn <- paste0(nn[1], seq_len(self$nopt))
-      }
-      colnames(v) <- nn
+     v <- apply(input, 3, function(i) {
+      self$cpt(x = i[,1:2,drop=FALSE], p = i[,3:4,drop=FALSE], ref = ref)})
+      colnames(v) <- self$getoptionlabel()
 
       switch (type,
         response = super$applychoicerule(v),
@@ -137,10 +126,11 @@ Cpt <- R6Class("cpt",
         # One-parameter specification of cumulative prospect theory (?)
         wfun <- function(p, x, gammap, gamman, ...) {
           if(dim(p)[2] != 2) {
-            stop("Argument p in the weighting fun in cpt must have 2 columns,\nbut has ", ncol(p), ", which is: ", head(p))
+            stop("p in the cpt-weighting fun needs 2 columns,\nbut has ", ncol(p), ", which is: ", head(p))
         }
-        id <- as.numeric(factor(apply(cbind(p,x), 1, paste, collapse=''), ordered = TRUE))
-        px <- cbind(p,x,id)
+        px <- cbind(p, x)
+        id <- as.numeric(factor(apply(px, 1, paste, collapse=''), ordered = TRUE))
+        px <- cbind(px, id)
         p_unique <- p[!duplicated(id), , drop = F]
         x_unique <- x[!duplicated(id), , drop = F]
         out <- t(sapply(1:nrow(p_unique), function(.rowid, x, p) {
