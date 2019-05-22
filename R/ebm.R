@@ -4,6 +4,7 @@
 #' @import combinat
 #' @useDynLib cogscimodels, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
+#' @importFrom abind abind
 #' @description Fits an exemplar-based model (also known as generalized context model, GCM, Medin & Schaffer, 1978; Nosofsky, 1986). The model predicts the value of a current stimulus from the values of previous stimuli, weighted by the similarity between the current and the previous stimuli's features. This model can be used to fit judgments (1,2,...,100) or categorization (0,1) responses.
 #' @param formula a formula specifying the variables (\code{reponse ~ feature1 + feature2 + ... | criterion}), which needs a pipe (\code{|}) before the criterion variable. Examples:
 #' \itemize{

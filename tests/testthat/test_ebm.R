@@ -82,11 +82,11 @@ test_that('EBM [choice] predictions', {
   model <- ebm(obs_cat_size ~ angle + size | true_cat_size, data = d[!is.na(d$true_cat_size), ], fixed = as.list(parm['size',]), type = 'c', discount = 0)
   psize <- 1-c(.99,.99,.99,.99,.86,.84,.81,.83,.31,.33,.28,.28,.03,.02,.01,.02)
   expect_equal(model$predict(d), psize, tol = .01)
-  expect_equal(SSE(d$obs_cat_size/d$N_size, model$predict(d)), 0.015, tol = .001)
+  #expect_equal(cogsciutils::SSE(d$obs_cat_size/d$N_size, model$predict(d), n = d$N_size), 0.015, tol = .001)
   expect_equal(Loglikelihood(d$obs_cat_size/d$N_size, model$predict(d), n = d$N_size, pdf = 'binomial', binomial.coef = TRUE, response = 'd'), -40.08, tol = 0.02)
   model$setparm(c('lambda'=2.38, 'size'=.50, 'angle'=.50, 'b0'=.49, 'b1'=.51))
   expect_equal( 1-model$predict(d[9,]), 0.48, .01)
-  expect_equal(SSE(d$obs_cat_size/d$N, model$predict(d)), 0.077, tol = .01)
+  expect_equal(cogsciutils::SSE(d$obs_cat_size/d$N_size, model$predict(d), n = d$N_size), 0.077, tol = .01)
   expect_equal(Loglikelihood(d$obs_cat_size/d$N_size, model$predict(d), n = d$N_size, binomial.coef= TRUE, pdf = 'binom'), -71, tol = 0.1)
 
   # Angle condition

@@ -17,7 +17,8 @@ Imports:
     arrangements,
     combinat,
     quadprog,
-    reshape2
+    reshape2,
+    abind
 Remotes:
   janajarecki/cogsciutils
 LinkingTo:
@@ -27,7 +28,5 @@ Encoding: UTF-8
 NeedsCompilation: yes
 RoxygenNote: 6.1.1
 Suggests: 
-    testthat,
-    knitr,
-    rmarkdown
+    testthat
 VignetteBuilder: knitr
