@@ -49,7 +49,7 @@ Cogscimodel <- R6Class(
       self$setresponse(response)
       self$setdiscount(discount)
       self$initializeparm(allowedparm, fixed)
-      self$setchoicerule(choicerule)
+      self$setchoicerule(choicerule, fixed)
       self$setparm(self$substituteequal(fixed))
       self$setfitoptions(fit.options, f) # run thi safter initializing parm
       self$model <- model
@@ -119,7 +119,7 @@ Cogscimodel <- R6Class(
     },
     #' Set choice rule
     #' @parm choicerule string holding the choicerule
-    setchoicerule = function(choicerule) {
+    setchoicerule = function(choicerule, fixed) {
       if(is.null(self$parm)) { stop('setchoicerule needs to be after setparm') }
       if ( is.null(choicerule) & (length(self$choicerule) > 0 )) {
         self$rmchoicerule()
@@ -135,10 +135,11 @@ Cogscimodel <- R6Class(
         self$allowedparm <- rbind(
           self$allowedparm,
           switch(choicerule,
-            softmax = parm['tau',],
-            epsilon = parm['eps',])
-          
-        )}
+            softmax = parm['tau', , drop = FALSE],
+            epsilon = parm['eps', , drop = FALSE])
+        )
+        self$initializeparm(self$allowedparm, fixed)
+      }
     },
     #' Remove choicerule
     rmchoicerule = function() {
@@ -186,7 +187,7 @@ Cogscimodel <- R6Class(
         all = self$parm,
         free = self$parm[self$freenames],
         fixed = self$parm[self$fixednames],
-        choicerule = self$parm[switch(x,
+        choicerule = self$parm[switch(self$choicerule,
           softmax = 'tau',
           epsilon = 'epsilon')],
         constrained = self$parm[self$constrainednames]))
