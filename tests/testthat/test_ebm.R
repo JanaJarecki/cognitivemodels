@@ -79,7 +79,7 @@ test_that('EBM [choice] parameter estimation', {
 
 
 test_that('EBM [choice] predictions', {
-  model <- ebm(obs_cat_size ~ angle + size | true_cat_size, data = d[!is.na(d$true_cat_size), ], fixed = as.list(parm['size',]), type = 'c')
+  model <- ebm(obs_cat_size ~ angle + size | true_cat_size, data = d[!is.na(d$true_cat_size), ], fixed = as.list(parm['size',]), type = 'c', discount = 0)
   psize <- 1-c(.99,.99,.99,.99,.86,.84,.81,.83,.31,.33,.28,.28,.03,.02,.01,.02)
   expect_equal(model$predict(d), psize, tol = .01)
   expect_equal(SSE(d$obs_cat_size/d$N_size, model$predict(d)), 0.015, tol = .001)

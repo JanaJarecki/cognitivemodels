@@ -81,7 +81,7 @@ Ebm <- R6Class('ebm',
         allowedparm <- rbind(allowedparm, biasparm)
       }
       discount <- self$inferdiscount(self$criterion, discount, showmsg = all(names(allowedparm) %in% names(fixed)))
-      super$initialize(formula = formula(f, rhs = 1, lhs = 1), data = d, fixed = fixed, allowedparm = allowedparm, choicerule = choicerule, discount = discount, model = paste0('Exemplar-based model [type: ', self$type, ']'), response = ifelse(self$type == 'judgment', 'continuous', 'discrete'), fit.options = fit.options)
+      super$initialize(formula = formula, data = d, fixed = fixed, allowedparm = allowedparm, choicerule = choicerule, discount = discount, model = paste0('Exemplar-based model [type: ', self$type, ']'), response = ifelse(self$type == 'judgment', 'continuous', 'discrete'), fit.options = fit.options)
       self$formula <- formula
       if (!is.null(fit.options$newdata)) {
         self$fit.options$newdata <- get_all_vars(self$formula, fit.options$newdata)
@@ -147,6 +147,16 @@ Ebm <- R6Class('ebm',
         return(NULL)
       }
     },
+    getinput = function(f = self$formula, d) {
+      f <- delete.response(terms(as.Formula(f)))
+      f <- update(f, new = drop.terms(f, length(attr(f, 'term.labels'))))
+      f <- if (self$type == 'choice') {
+        return(super$getinput(f, d))
+      } else {
+        f <- update(f, new = drop.terms(f, length(attr(f, 'term.labels'))))
+        return(super$getinput(f, d))
+      }
+    },
     predict = function(newdata, learnto = max(self$learntrials), firstout = if (missing(newdata)) { 1 } else { (nrow(self$input) + 1) } ) {
       if ( missing(newdata) & !is.null(self$pred) ) {
         return(self$pred)
@@ -158,8 +168,8 @@ Ebm <- R6Class('ebm',
       lastlearntrial <- learnto
 
       if ( !missing(newdata) ) {
-        f <- as.Formula(self$formula)
         d <- as.data.frame(newdata)
+        f <- as.Formula(self$formula)
         if ( learnto > max(self$learntrials) ) {
           criterion <- c(criterion, get_all_vars(formula(f, lhs=0, rhs=2), d)[,1])
         } else {
@@ -171,13 +181,13 @@ Ebm <- R6Class('ebm',
             cost <- tail(cost, -(firstout-1))
           }
         }
-        features <- rbind(features, get_all_vars(formula(f, lhs=0, rhs=1), d))
+        features <- abind(features, self$getinput(self$formula, newdata), along = 1)
       }
       parameter <- ifelse(is.na(parameter), self$allowedparm[names(parameter), 'na'], parameter)
       parameter <- unlist(parameter)
       .a <- list(
         values = as.double(criterion),
-        features = as.matrix(features),
+        features = matrix(features, ncol = dim(features)[2]),
         w = as.double(parameter[self$weightnames]),
         r = as.double(parameter['r']),
         q = as.double(parameter['q']),
