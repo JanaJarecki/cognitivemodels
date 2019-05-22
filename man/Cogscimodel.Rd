@@ -24,13 +24,14 @@ Cogscimodel$new(formula, data, allowedparm)
 \item{discount}{(optional) Integer or integer vector, which or how many many trials to discount?}
 
 \item{x}{intteger or integer vector, rows to discount
-Get the choicerule parameter
+Get parameter
 Set new parameter}
 
 \item{x}{named vector with parameter values, names must be one in \code{allowedparm}
 Add a new parameter}
 
 \item{x}{named vector with parameter value not in \code{allowedparm}
+Sets fit options
 Transforms predictions with choicerule}
 
 \item{x}{string, choice rules, e.g. 'softmax', allowed choicerules see \link[cogsciutils]{choicerule}
@@ -44,7 +45,7 @@ Class for cognitive models
 \details{
 Ignore a model parameter by setting it to \code{NULL}, in this case your matrix \code{allowedparm} needs to contain
 }
-\section{Set data to ignore when fitting}{
+\section{Set choice rule}{
 NA
 }
 
