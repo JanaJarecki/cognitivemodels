@@ -226,6 +226,12 @@ Cogscimodel <- R6Class(
       self$parm <- c(self$parm, x)
       self$pred <- NULL
     },
+    #' Number of free parameter
+    #' @param x String specifying which
+    nparm = function(x = 'all') {
+      x <- match.arg(x, c('all', 'free', 'fixed', 'choicerule', 'constrained'))
+      return(length(self$getparm(x)))
+    },
     #' Sets fit options
     # param x list of fitting options
     setfitoptions = function(x, f = self$formula) {
@@ -290,10 +296,10 @@ Cogscimodel <- R6Class(
       self$gof(type = 'loglikelihood', ...)
     },
     BIC = function() {
-      -2 * self$logLik() + nrow(self$input) * length(self$freenames)
+      -2 * self$logLik() + dim(self$input)[1] * self$nparm('free')
     },
     AIC = function() {
-     -2 * self$logLik() + 2 * length(self$freenames)
+     -2 * self$logLik() + 2 * self$nparm('free')
     },
     MSE = function(...) {
       self$gof(type = 'mse', ...)
