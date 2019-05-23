@@ -51,7 +51,7 @@ Shortfall <- R6Class("shortfall",
       # }
       allowedparm <- list(
         beta = c(0, 15, 1, 0),
-        delta   = c(0, 1, .5, 1)
+        delta = c(0, 1, .5, 1)
       )
       allowedparm <- matrix(unlist(allowedparm), ncol = 4, byrow = TRUE, dimnames= list(names(allowedparm), c('ll', 'ul', 'init', 'na'))) 
       super$initialize(formula = formula, data = data, allowedparm = allowedparm, fixed = fixed, choicerule =  choicerule, model = paste0('Shortfall'), discount = 0, response = 'discrete', fit.options = fit.options)
