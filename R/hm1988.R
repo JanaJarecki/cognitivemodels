@@ -70,7 +70,7 @@ Hm1988 <- R6Class('hm1988',
         time_state_names <- attr(terms(formula), 'term.labels')
         data <- env$makeData(time_state_names)
       }
-      allowedparm <- matrix(numeric(0), 0, 3, dimnames = list(NULL, c('ll', 'ul', 'init')))
+      allowedparm <- matrix(numeric(0), 0, 4, dimnames = list(NULL, c('ll', 'ul', 'init', 'na')))
       super$initialize(formula = formula, data = data, allowedparm = allowedparm, fixed = fixed, choicerule =  choicerule, model = 'Optimal RSFT Model (Houston & McNamara, 1988)', discount = 0, response = 'discrete')
       self$env <- env
       self$makeValueMat()

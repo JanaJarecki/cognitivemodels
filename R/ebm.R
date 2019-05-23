@@ -116,10 +116,12 @@ Ebm <- R6Class('ebm',
       self$pred <- NULL
     },
     parGrid = function(offset) {
+      allowedparm <- self$allowedparm
+      offset <- c(offset, w = .1, b = .1)
       return(MakeGridList(
         names = self$freenames,
-        ll = self$allowedparm[, 'll'] + offset,
-        ul = self$allowedparm[, 'ul'] - offset,
+        ll = setNames(allowedparm[, 'll'], rownames(allowedparm)),
+        ul = setNames(allowedparm[, 'ul'], rownames(allowedparm)),
         nsteps = list(w = 4, b = 4, r = 3, q = 3, lambda = 4, tau = 4, sigma = 4),
         sumto = list('w' = self$weightnames, 'b' = self$biasnames),
         regular = TRUE,

@@ -98,7 +98,7 @@ Cogscimodel <- R6Class(
       nf <- sapply(1:nopt, function(i) length(attr(terms(formula(f, lhs=0, rhs=i)), 'term.labels')))
       arr <- array(NA, dim = c(nr, max(nf), nopt))
       for (o in seq_len(nopt)) {
-        arr[,,o] <- as.matrix(model.frame(formula(f, lhs=0, rhs=o), d))
+        arr[,,o][] <- as.matrix(model.frame(formula(f, lhs=0, rhs=o), d))
       }
       if ( nopt==1 ) {
         colnames(arr) <- vn
@@ -349,9 +349,10 @@ Cogscimodel <- R6Class(
         list(parm = parm[, self$freenames, drop = FALSE], val = val[select]))
     },
     parGrid = function(offset = 0) {
+      allowedparm <- self$allowedparm
       return(MakeGridList(names = self$freenames,
-            ll = self$allowedparm[, 'll'],
-            ul = self$allowedparm[, 'ul'],
+            ll = setNames(allowedparm[, 'll'], rownames(allowedparm)),
+            ul = setNames(allowedparm[, 'ul'], rownames(allowedparm)),
             offset = offset))
     },
     randomPar = function(parspace) {
