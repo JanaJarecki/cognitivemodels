@@ -27,12 +27,17 @@ varG <- function(p, x) {
 # Make a list with a regularly-spaced parameter grid
 # For grid-based fitting and parameter recovery
 #----------------------------------------------------------------------
-MakeGridList <- function(names, nsteps = list(), ul = list(), ll = list(), sumto = NULL, to = 1, ...) {
+MakeGridList <- function(names, nsteps = list(), ul = list(), ll = list(), sumto = NULL, to = 1, offset = 0, ...) {
   # ul and ll at the level of the individual parameter   
   ul <- as.list(ul)
   ll <- as.list(ll)
   ul <- ul[which(names(ul) %in% names)]
   ll <- ll[which(names(ll) %in% names)]
+  offset <- as.list(offset)
+  if ( length(offset) == 1 ) {
+    offset <- rep(offset, length(ul))
+    names(offset) <- names(ul)
+  }
   sumto <- Filter(Negate(is.null), sumto)
   sumto <- Filter(function(z) all(z %in% names), sumto)
   nsteps <- nsteps[which(names(nsteps) %in% c(names, names(sumto)))]
@@ -57,12 +62,14 @@ MakeGridList <- function(names, nsteps = list(), ul = list(), ll = list(), sumto
       nsteps[[i]] <- 3
    }
    for (i in setdiff(setdiff(names, unlist(sumto)), unlist(sumto))) {
-      parameter[[i]] <- seq(ll[[i]], ul[[i]], (ul[[i]] - ll[[i]]) / (nsteps[[i]] - 1))
+      lli <- ll[[i]] + offset[[i]]
+      uli <- ul[[i]] - offset[[i]]
+      parameter[[i]] <- seq(lli, uli, (uli - lli) / (nsteps[[i]] - 1))
    }
 
    # Parts that sum to x
   for (i in names(sumto)) {
-    mat <- .grid(rsum = to[[i]], ncol = length(sumto[[i]]), nstep = nsteps[[i]], ...)
+    mat <- .grid(rsum = to[[i]], ncol = length(sumto[[i]]), nstep = nsteps[[i]], offset = offset[[i]], ...)
     colnames(mat) <- sumto[[i]]
     parameter[[i]] <- mat
   }

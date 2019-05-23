@@ -335,8 +335,10 @@ Cogscimodel <- R6Class(
       np <- length(self$freenames)
       LB <- parspace[, 'll', drop = FALSE]
       UB <- parspace[, 'ul', drop = FALSE]
+      OF <- as.list(    0.1/(1 + exp(-(UB-LB)))[,1]  ) # offset, scales logistically from super small to 10% of the range of each parameter
       ST <- apply(parspace, 1, function(x) round((max(x) - min(x)) / sqrt(10 * np), 2))
-      GRID <- self$parGrid( if( offset ) { 0.01 * min(UB-LB) } else { 0 } )
+      OF <- if ( offset ) { as.list(    0.1/(1 + exp(-(UB-LB)))[,1]  ) } else { 0 } # offset, scales logistically from super small to 10% of the range of each parameter
+      GRID <- self$parGrid( OF )
       val <- sapply(1:nrow(GRID$ids), function(i) {
           pars <- GetParmFromGrid(i, GRID)
           self$fitObjective(pars, self = self)
