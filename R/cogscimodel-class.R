@@ -9,7 +9,7 @@
 #' @param data Data.frame or matrix, must contain all variables in \code{formula}.
 #' @param allowedparm Matrix with 4 columns like \code{rbind(alpha=c('ul'=0,'ll'=1,'init'=0.5,'na'=1))}. Defines each parameter's lower limit, upper limit, starting value (for fitting), and value that make the parameter have zero effect. Row names define parameter names. Columns names must be \code{'ll', 'ul', 'init', 'na'} (lower limit, upper limit, inital value, no-effect value; resp.).
 #' @param fixed (optional) Named vector with model parameter(s) that are predefined (will not be fitted). If a fixed parameter is \code{NULL} model parameter will be ignored. See details.
-#' @param choicerule (optional, default \code{NULL}) String specifying the choice rule, e.g. \code{'softmax', 'argmax'}, see \link[cogsciutils]{choicerule} for possible choicerules; \code{NLL} means predictions as is.
+#' @param choicerule (optional, defaultoptions \code{NULL}) String specifying the choice rule, e.g. \code{'softmax', 'argmax'}, see \link[cogsciutils]{choicerule} for possible choicerules; \code{NLL} means predictions as is.
 #' @param model (optional) String, the name of the model
 #' @param discount (optional) Integer or integer vector, which or how many many trials to discount?
 #' @details Ignore a model parameter by setting it to \code{NULL}, in this case your matrix \code{allowedparm} needs to contain
@@ -50,15 +50,15 @@ Cogscimodel <- R6Class(
       self$setdiscount(discount)
       self$initializeparm(allowedparm, fixed)
       self$setchoicerule(choicerule, fixed)
-      self$setparm(self$substituteequal(fixed))
-      self$setfitoptions(fit.options, f) # run thi safter initializing parm
+      self$setparm(self$substituteparm(self$switchoffparm(fixed)))
+      self$setfitoptions(fit.options, f) # run this safter initializing parm
       self$model <- model
       self$formula <- f
 
       # Checks
       if ( length(fixed) > 0 ) {
         allowedparm <- self$allowedparm
-        if ( !all(sapply(fixed, is.numeric)) ) {
+        if ( !all(sapply(fixed[!is.na(fixed)], is.numeric)) ) {
             stop('Parameter in "fixed" must be numeric, check ', .brackify(fixed[!sapply(fixed, is.numeric)]) , '.', call. = FALSE)
         }
         if ( any(duplicated(names(fixed))) ) {
@@ -167,8 +167,8 @@ Cogscimodel <- R6Class(
         seq_len(x)
       }
     },
-    substituteequal = function(x) {
-      if (is.null(self$allowedparm)) { stop('substituteequal called before alloewdparm is defined') }
+    substituteparm = function(x) {
+      if (is.null(self$allowedparm)) { stop('substituteparm called before alloewdparm is defined') }
       equal_in_fixed <- x[ na.omit(match( x, names(x) )) ]
       if ( length(equal_in_fixed) > 0 ) {
         x[sapply(x, is.character)] <- equal_in_fixed 
@@ -176,6 +176,14 @@ Cogscimodel <- R6Class(
       equal_in_free <- self$allowedparm[ na.omit(match( x, rownames(self$allowedparm) )) , 'init']
       if ( length(equal_in_free) > 0) {
         x[sapply(x, is.character)] <- equal_in_free 
+      }
+      return(x)
+    },
+    switchoffparm = function(x) {
+      if (is.null(self$allowedparm)) { stop('ignoreparm called before alloewdparm is defined') }
+      na_parm <- names(x[is.na(x)])
+      if ( length(na_parm) > 0 ) {
+        x[na_parm] <- self$allowedparm[na_parm, 'na']
       }
       return(x)
     },
@@ -221,22 +229,29 @@ Cogscimodel <- R6Class(
     #' Sets fit options
     # param x list of fitting options
     setfitoptions = function(x, f = self$formula) {
+      defaultoptions <- list(
+        measure = 'loglikelihood',
+        n = 1,
+        nbest = length(self$freenames),
+        newdata = NULL,
+        options = list())
+
+      # Checks
       if ( is.null(f) ) {
-        stop('"f" in setfitoptions() is NULL.')
+        stop('formula "f" in setfitoptions() is NULL.')
+      }      
+     if ( !all(names(x) %in% names(defaultoptions)) ) {
+        stop('"fit.options" contains ', .brackify(setdiff(names(x), names(defaultoptions))), ', which is not part of the allowed options: ', .brackify(names(defaultoptions)), '.')
       }
-      
-      default <- list(measure = 'loglikelihood', n = 1, nbest = length(self$freenames), newdata = NULL, options = list())
-      if ( !all(names(x) %in% names(default)) ) {
-        stop('"fit.options" contains ', .brackify(setdiff(names(x), names(default))), ', which is not part of the allowed options: ', .brackify(names(default)), '.')
-      }
+      # Substitute
       if ( !is.null(x$measure) ) {
         x['measure'] <- match.arg(tolower(x$measure), c('loglikelihood', 'mse', 'wmse', 'rmse', 'sse', 'wsse', 'mape', 'mdape', 'accuracy'))
       }
       if ( !is.null(x$newdata) ) {
         x$newdata <- self$getinput(f, x$newdata)
       }
-      default[names(x)] <- x
-      self$fit.options <- default
+      defaultoptions[names(x)] <- x
+      self$fit.options <- defaultoptions
     },
     #' Transforms predictions with choicerule
     #' @param x string, choice rules, e.g. 'softmax', allowed choicerules see \link[cogsciutils]{choicerule}
@@ -388,7 +403,7 @@ Cogscimodel <- R6Class(
       }
     },
     eqfun = function(pars, self, measure) {
-      return(list(NULL, NULL)) # default: no constraints   
+      return(list(NULL, NULL)) # defaultoptions: no constraints   
     },
     print = function(digits = 2) {
       cat(self$model)

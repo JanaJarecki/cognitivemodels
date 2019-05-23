@@ -3,12 +3,8 @@
 #' @inheritParams Cogscimodel
 #' @description Fits the cumulative prospect theory model.
 #' @param formula Object of class formula, for instance \code{response ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py)}, defines the response, outcome, and probability variables; choice options must be separated by a pipe (\code{|}). 
-#' @param nopt Integer spedifying the number of options.
-#' @param nout Integer specifying the number of outcomes.
-#' @param ref Integer or numeric vector, reference point.
+#' @param asp Object of class formula defining the aspiration level variable (\code{aso=~var}), strings will be reformulated.
 #' @param choicerule (optional) choierule, for instance \code{"softmax"}, allowed values are listed in \code{type} under \code{\link[cogsciutils]{choicerule}}.
-#' @param weighting (optional) weighting function. Currently the one used in Kahneman & Tversky (1992), \code{"KT1992"}, is possible.
-#' @param value (optional) value function. Currently, only the one used by Kahneman & Tversky (1992), \code{"KT1992"}, is possible.
 #' @references Tversky, A., & Kahneman, D. (1992). Advances in prospect theory: cumulative representation of uncertainty. Journal of Risk and Uncertainty, 5, 297–323. doi:10.1007/BF00122574
 #' @return An object of class R6 holding the model, it has free parameters. A model object \code{M} can be viewed with \code{M}, predictions can be made with \code{M$predict()} for choice predictions, and \code{M$predict("ev")} for the expected value of the optimal choice and \code{M$predict("value", 1:2)} for the expected value of all choices.
 #' @author Jana B. Jarecki, \email{jj@janajarecki.com}
@@ -49,13 +45,13 @@ Shortfall <- R6Class("shortfall",
   public = list(
     aspirationlevel = NULL,
     asp = NULL,
-    initialize = function(formula, asp, fixed = NULL, data = NULL, choicerule = NULL, fit.options = list(nbest = 1)) {
-      if ( any(is.na(fixed)) ) {
-        stop('n cpt() ignoring parameters is not (yet) implemented.', call.=FALSE)
-      }
-      allowedparm <- list( #todo: check if the 'ignore' values are correct
+    initialize = function(formula, asp, fixed = NULL, data = NULL, choicerule = NULL, fit.options = list()) {
+      # if ( any(is.na(fixed)) ) {
+      #   stop('n cpt() ignoring parameters is not (yet) implemented.', call.=FALSE)
+      # }
+      allowedparm <- list(
         beta = c(0, 15, 1, 0),
-        delta   = c(0, 1, .5, 0)
+        delta   = c(0, 1, .5, 1)
       )
       allowedparm <- matrix(unlist(allowedparm), ncol = 4, byrow = TRUE, dimnames= list(names(allowedparm), c('ll', 'ul', 'init', 'na'))) 
       super$initialize(formula = formula, data = data, allowedparm = allowedparm, fixed = fixed, choicerule =  choicerule, model = paste0('Shortfall'), discount = 0, response = 'discrete', fit.options = fit.options)
@@ -64,14 +60,17 @@ Shortfall <- R6Class("shortfall",
       self$aspirationlevel <- self$getinput(self$asp, data)
       
       if(dim(self$input)[2] %% 2 != 0) {
-        stop('Formula needs an even number of right-habnd elements, but has ', dim(self$input)[2], ' elements.')
+        stop('Formula needs an even number of right-hand elements, but has ', dim(self$input)[2], ' elements.')
       }
     },
     predict = function(type = c("response", "value"), action = NULL, newdata = NULL) {
       type <- match.arg(type)
+      beta <- self$parm[['beta']]
+      delta <- self$parm[['delta']]
+
       if ( is.null(newdata) ) {
         input <- self$input
-        a <- self$aspirationlevel
+        al <- self$aspirationlevel
       } else {
         input <- self$getinput(self$formula, newdata)
         al <- self$getinput(self$asp, newdata)
@@ -86,12 +85,12 @@ Shortfall <- R6Class("shortfall",
         rowSums(X[,,i] * P[,,i])
       })
       R <- sapply(1:no, function(i, al) {
-        X[] <- al - X[,,i]
+        X[] <- delta * al - X[,,i]
         X[X<0] <- 0
         rowSums(X[,,i] * P[,,i])
       }, al = c(al))
 
-      beta <- self$parm[['beta']]
+      
       v <- EV - beta * R
       colnames(v) <- self$getoptionlabel()
 
