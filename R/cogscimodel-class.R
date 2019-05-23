@@ -296,7 +296,7 @@ Cogscimodel <- R6Class(
       self$gof(type = 'loglikelihood', ...)
     },
     BIC = function() {
-      -2 * self$logLik() + dim(self$input)[1] * self$nparm('free')
+      -2 * self$logLik() + dim(self$input)[1] * log(self$nparm('free'))
     },
     AIC = function() {
      -2 * self$logLik() + 2 * self$nparm('free')
@@ -318,7 +318,7 @@ Cogscimodel <- R6Class(
         fit <- self$fitSolnp(par0 = pars[, 'init'], pars)
       }
 
-      if ( type[1] == 'grid' & length(type) == 1) {
+      if ( type[1] == 'grid' & length(type) == 1 ) {
         fit <- self$fitGrid(1, pars)
       }
 
@@ -358,7 +358,7 @@ Cogscimodel <- R6Class(
       colnames(par) <- rownames(parspace)
       return(par)
     },
-    fitSolnp = function(par0, parspace, control = list(trace = 0)) {
+    fitSolnp = function(par0, parspace, control = list(trace = 1)) {
       fit <- solnp(pars = par0,
         fun = self$fitObjective,
         LB = parspace[, 'll', drop = FALSE],

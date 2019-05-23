@@ -50,7 +50,7 @@ Shortfall <- R6Class("shortfall",
       #   stop('n cpt() ignoring parameters is not (yet) implemented.', call.=FALSE)
       # }
       allowedparm <- list(
-        beta = c(0, 1500, 1, 0),
+        beta = c(0, 15, 1, 0),
         delta   = c(0, 1, .5, 1)
       )
       allowedparm <- matrix(unlist(allowedparm), ncol = 4, byrow = TRUE, dimnames= list(names(allowedparm), c('ll', 'ul', 'init', 'na'))) 
