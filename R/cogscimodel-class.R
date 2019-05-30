@@ -237,6 +237,14 @@ Cogscimodel <- R6Class(
       p <- c(self$getparm('free'), self$getparm('constrained'))
       self$setparm(self$allowedparm[names(p), 'init'])
     },
+    # Simulate responses rather than response probabilities
+    simulate = function() {
+      pred <- self$predict()
+      if ( ncol(pred) > 2 | self$response == 'continuous' ) {
+        stop('simulation is only implemented for binary discrete choices')
+      }
+      return(rbinom(pred[,1], size = 1, prob=pred))
+    },
     #' Sets fit options
     # param x list of fitting options
     setfitoptions = function(x, f = self$formula) {
