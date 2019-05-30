@@ -232,6 +232,11 @@ Cogscimodel <- R6Class(
       x <- match.arg(x, c('all', 'free', 'fixed', 'choicerule', 'constrained'))
       return(length(self$getparm(x)))
     },
+    # Reset parameter to their starting values
+    resetparm = function() {
+      p <- c(self$getparm('free'), self$getparm('constrained'))
+      self$setparm(self$allowedparm[names(p), 'init'])
+    },
     #' Sets fit options
     # param x list of fitting options
     setfitoptions = function(x, f = self$formula) {
