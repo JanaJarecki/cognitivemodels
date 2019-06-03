@@ -1,5 +1,16 @@
 #' Class for risk-sensitive foraging environments
-#' 
+#'
+#' @param budget Numeric, minimum requirement.
+#' @param n.trials  Numeric, number of trials.
+#' @param initial.state Numeric, starting state.
+#' @param ... Numeric matrix (n x 2) with probabilities in column one and outcomes in columnn 2.
+#' @param terminal.fitness Function that specifies the terminal reward (what you get at the end of n.trials), defaults to "get zero if below budget and 1 otherwise". See details.
+#' @details The argument \code{terminal.fitness} must be a function with exactly two arguments \coge{budget} and \code{state}, that returns for each budget and state the terminal reward.
+#' @export 
+rsenvironment <- function(budget, ..., n.trials, initial.state, terminal.fitness = function(state, budget) { as.numeric(state >= budget) } ) {
+  Rsenvironment$new(n.trials = n.trials, terminal.fitness, budget = budget, initial.state = initial.state, ...)
+}
+
 Rsenvironment <- R6Class("rsenvironment",
     public = list(
         environment = NULL,
@@ -168,9 +179,8 @@ Rsenvironment <- R6Class("rsenvironment",
       })
     )
 
-rsenvironment <- function(budget, ..., terminal.fitness = function(state, budget) { as.numeric(state >= budget) }, n.trials, initial.state) {
-  Rsenvironment$new(n.trials = n.trials, terminal.fitness, budget = budget, initial.state = initial.state, ...)
-}
+
+
 
 print.rsenvironment <- function(obj) {
   obj$print()
