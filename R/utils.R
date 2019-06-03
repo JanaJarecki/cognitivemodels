@@ -127,7 +127,7 @@ GetParmFromGrid <- function(id, grid) {
   mat <- if (regular) {
     t(combinat::xsimplex(ncol, nstep, fun = function(i) i/sum(i)))
   } else {
-    sweep(matrix(rbeta(ncol * nrow, 2, 2), ncol = ncol), 1, rowSums(mat), FUN = "/")
+    sweep(matrix(stats::rbeta(ncol * nrow, 2, 2), ncol = ncol), 1, rowSums(mat), FUN = "/")
   }
   if ( offset > 0 ) {
     mat[mat == 0] <- offset

@@ -15,7 +15,7 @@ rsfft(formula = NULL, sbt = NULL, nopt = NULL, nout = NULL,
 
 \item{data}{Data.frame or matrix, must contain all variables in \code{formula}.}
 
-\item{choicerule}{(optional, default \code{NULL}) String specifying the choice rule, e.g. \code{'softmax', 'argmax'}, see \link[cogsciutils]{choicerule} for possible choicerules; \code{NLL} means predictions as is.}
+\item{choicerule}{(optional, defaultoptions \code{NULL}) String specifying the choice rule, e.g. \code{'softmax', 'argmax'}, see \link[cogsciutils]{choicerule} for possible choicerules; \code{NLL} means predictions as is.}
 }
 \description{
 Risk-sensitive foraging fast and frugal tree
