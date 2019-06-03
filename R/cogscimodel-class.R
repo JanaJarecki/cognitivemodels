@@ -245,6 +245,41 @@ Cogscimodel <- R6Class(
       }
       return(rbinom(pred[,1], size = 1, prob=pred))
     },
+    parameterrecovery = function(nruns, nsteps = list(), seed = 98634) {
+      oldpar <- self$getparm()
+      oldpred <- self$pred
+      oldobs <- self$obs
+      pargrid <- self$pargrid(nsteps = nsteps)
+      parid <- pargrid$ids
+      truepar <- pargrid$parm
+      npar <- length(truepar)
+      nparset <- nrow(parid)
+      set.seed(seed)
+      estimate <- sapply(seq_len(nrow(parid)), function(id, pargrid) {
+        self$setparm(GetParmFromGrid(id, pargrid))
+          runs <- sapply(seq_len(nruns), function(x) {
+            self$obs[] <- self$simulate()
+            self$resetparm()
+            self$fit()
+            unlist(self$getparm('free'), use.names = FALSE)
+          })
+          unlist(runs)        
+      }, pargrid = pargrid)
+      estimate <- matrix(c(estimate), nc = length(truepar), byrow = TRUE, dimnames = list(NULL, names(self$getparm('free'))))
+      estimate <- cbind(id = rep(seq_len(nparset), each = nruns),
+        run = rep(seq_len(nruns), times = nparset),
+        estimate)
+
+      true <- t(sapply(seq_len(nrow(parid)), function(id, paggrid) {
+        GetParmFromGrid(id, pargrid)
+      }))
+      true <- cbind(id = seq_len(nparset), true)
+
+      self$setparm(oldpar)
+      self$pred <- oldpred
+
+      return(list(true = as.data.frame(true), estimate = as.data.frame(estimate), seed = seed))
+    },
     #' Sets fit options
     # param x list of fitting options
     setfitoptions = function(x, f = self$formula) {
@@ -351,7 +386,7 @@ Cogscimodel <- R6Class(
       OF <- as.list(    0.1/(1 + exp(-(UB-LB)))[,1]  ) # offset, scales logistically from super small to 10% of the range of each parameter
       ST <- apply(parspace, 1, function(x) round((max(x) - min(x)) / sqrt(10 * np), 2))
       OF <- if ( offset ) { as.list(    0.1/(1 + exp(-(UB-LB)))[,1]  ) } else { 0 } # offset, scales logistically from super small to 10% of the range of each parameter
-      GRID <- self$parGrid( OF )
+      GRID <- self$pargrid( OF )
       val <- sapply(1:nrow(GRID$ids), function(i) {
           pars <- GetParmFromGrid(i, GRID)
           self$fitObjective(pars, self = self)
@@ -361,12 +396,14 @@ Cogscimodel <- R6Class(
       return(
         list(parm = parm[, self$freenames, drop = FALSE], val = val[select]))
     },
-    parGrid = function(offset = 0) {
+    pargrid = function(offset = 0, ...) {
       allowedparm <- self$allowedparm
-      return(MakeGridList(names = self$freenames,
-            ll = setNames(allowedparm[, 'll'], rownames(allowedparm)),
-            ul = setNames(allowedparm[, 'ul'], rownames(allowedparm)),
-            offset = offset))
+      return(MakeGridList(
+        names = self$freenames,
+        ll = setNames(allowedparm[, 'll'], rownames(allowedparm)),
+        ul = setNames(allowedparm[, 'ul'], rownames(allowedparm)),
+        offset = offset,
+        ...))
     },
     randomPar = function(parspace) {
       n <- log(5^nrow(parspace))
