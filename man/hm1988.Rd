@@ -8,10 +8,23 @@ hm1988(env, formula, data, choicerule, fixed = NULL,
   fit.options = NULL)
 }
 \arguments{
-\item{env}{object of class \link{rsenvironment}, see example. It specifies the risky and safe option, the number of trials, the state, and requirement (aka budget).
-#' @param formula (optional) object of class \link[stats]{formula}, e.g. \code{choice ~ timehorizon + state}, defines how the variables are called in the data.}
+\item{env}{object of class \link{rsenvironment}, see example. It specifies the risky and safe option, the number of trials, the state, and requirement (aka budget).}
+
+\item{formula}{(optional) object of class \link[stats]{formula}, e.g. \code{choice ~ timehorizon + state}, defines how the variables are called in the data.}
 
 \item{data}{(optional) data frame}
+
+\item{choicerule}{(optional, defaultoptions \code{NULL}) String specifying the choice rule, e.g. \code{'softmax', 'argmax'}, see \link[cogsciutils]{choicerule} for possible choicerules; \code{NLL} means predictions as is.}
+
+\item{fixed}{(optional) Named vector with model parameter(s) that are predefined (will not be fitted). If a fixed parameter is \code{NULL} model parameter will be ignored. See details.}
+
+\item{fit.options}{(optional) List, options for fitting:
+\description{
+\item{\code{measure}}{}
+\item{\code{n}}{Number of observations, if data is aggregated}
+\item{\code{nbest}}{How many values to select for grid+hillclimbing?}
+\item{\code{newdata}}{New data to calculate fit on}
+\item{\code{options}}{Other options, see \link[cogsciutils]{gof}}}}
 }
 \value{
 An object of class R6 holding the model, it has no free parameters. A model object \code{M} can be viewed with \code{M}, predictions can be made with \code{M$predict()} for choice predictions, and \code{M$predict("ev")} for the expected value of the optimal choice and \code{M$predict("value", 1:2)} for the expected value of all choices.

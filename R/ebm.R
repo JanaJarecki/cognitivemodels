@@ -14,6 +14,7 @@
 #' }
 #' @param data a data.frame or matrix containing the variables in \code{formula}; make sure it is ordered in the order in which respondents saw the stimuli.
 #' @param type (optional) String specifying the type of model: \code{"categorization", "judgment", "valuebasedchoice"}, will be inferred if omitted.
+#' @param ... other arguments from other functions, currently ignored.
 #' @return An exemplar-based model; it can be viewed with \code{summary(mod)}, where \code{mod} is the name of the model object.
 #' @examples 
 #' #  No examples yet
@@ -153,6 +154,7 @@ Ebm <- R6Class('ebm',
     getinput = function(f = self$formula, d) {
       f <- delete.response(terms(as.Formula(f)))
       f <- update(f, new = drop.terms(f, length(attr(f, 'term.labels'))))
+      f <- terms(f)
       f <- if (self$type == 'choice') {
         return(super$getinput(f, d))
       } else {

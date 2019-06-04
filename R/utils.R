@@ -23,10 +23,7 @@ varG <- function(p, x) {
   sprintf('[%s]', paste(x, collapse = ', '))
 }
 
-#----------------------------------------------------------------------
-# Make a list with a regularly-spaced parameter grid
-# For grid-based fitting and parameter recovery
-#----------------------------------------------------------------------
+# Make a list with a regularly-spaced parameter grid for grid-based fitting and parameter recovery
 MakeGridList <- function(names, nsteps = list(), ul = list(), ll = list(), sumto = NULL, to = 1, offset = 0, ...) {
   # ul and ll at the level of the individual parameter   
   ul <- as.list(ul)
@@ -82,10 +79,8 @@ MakeGridList <- function(names, nsteps = list(), ul = list(), ll = list(), sumto
    return(list(parm = parameter, ids = ids))
 }
 
-#----------------------------------------------------------------------
-# Get one element from the parameter id list
-# For grid-based fitting and parameter recovery
-#----------------------------------------------------------------------
+
+# Get one element from the parameter id list, f For grid-based fitting and parameter recovery
 GetParmFromGrid <- function(id, grid) {
   grid <- as.list(grid)
   parmids <- grid[[2]]

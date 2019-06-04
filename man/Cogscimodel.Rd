@@ -23,6 +23,14 @@ Cogscimodel$new(formula, data, allowedparm)
 
 \item{discount}{(optional) Integer or integer vector, which or how many many trials to discount?}
 
+\item{fit.options}{(optional) List, options for fitting:
+\description{
+\item{\code{measure}}{}
+\item{\code{n}}{Number of observations, if data is aggregated}
+\item{\code{nbest}}{How many values to select for grid+hillclimbing?}
+\item{\code{newdata}}{New data to calculate fit on}
+\item{\code{options}}{Other options, see \link[cogsciutils]{gof}}}}
+
 \item{choicerule}{string holding the choicerule
 Remove choicerule
 Set data to ignore when fitting}

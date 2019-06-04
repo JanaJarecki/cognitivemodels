@@ -1,4 +1,5 @@
 #' Kahneman & Tversky's (1992) cumulative prospect theory model
+#' 
 #' @importFrom stringr str_extract
 #' @inheritParams Cogscimodel
 #' @description Fits the cumulative prospect theory model.

@@ -12,6 +12,13 @@
 #' @param choicerule (optional, defaultoptions \code{NULL}) String specifying the choice rule, e.g. \code{'softmax', 'argmax'}, see \link[cogsciutils]{choicerule} for possible choicerules; \code{NLL} means predictions as is.
 #' @param model (optional) String, the name of the model
 #' @param discount (optional) Integer or integer vector, which or how many many trials to discount?
+#' @param fit.options (optional) List, options for fitting:
+#' \description{
+#' \item{\code{measure}}{}
+#' \item{\code{n}}{Number of observations, if data is aggregated}
+#' \item{\code{nbest}}{How many values to select for grid+hillclimbing?}
+#' \item{\code{newdata}}{New data to calculate fit on}
+#' \item{\code{options}}{Other options, see \link[cogsciutils]{gof}}}
 #' @details Ignore a model parameter by setting it to \code{NULL}, in this case your matrix \code{allowedparm} needs to contain
 #' @examples 
 #' Cogscimodel$new(formula = y ~ x, data = data.frame(y=1:2, x=3:4),

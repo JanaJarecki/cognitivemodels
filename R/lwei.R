@@ -1,3 +1,4 @@
+#' Linear-weighting model
 #' @import quadprog
 lwei <- function(formula, nopt, nout, ref, fixed = NULL, data, choicerule, weighting = c('TK1992'), value = c('TK1992')) {
   obj <- Lwei$new(formula, nopt, nout, ref, fixed = fixed, data, choicerule, weighting = c('TK1992'), value = c('TK1992'))

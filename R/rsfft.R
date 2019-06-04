@@ -1,6 +1,7 @@
 #' Risk-sensitive foraging fast and frugal tree
 #' 
 #' @import arrangements
+#' @useDynLib cogscimodels, .registration = TRUE
 #' @inheritParams Cogscimodel
 rsfft <- function(formula = NULL, sbt = NULL, nopt = NULL, nout = NULL, fixed = NULL, data = NULL, env = NULL, choicerule, terminal.fitness.fun) {
     obj <- Rsfft$new(env = env, formula = formula, sbt = sbt, nopt = nopt, nout = nout, data = data, fixed = fixed, terminal.fitness.fun = terminal.fitness.fun, choicerule)
