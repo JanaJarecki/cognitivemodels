@@ -12,7 +12,7 @@
 #' # Create data
 #' dt <- data.frame(
 #'  choices = rep(c(1,0,0,1),2),
-#'  attributes = expand.grid(a1=0:1,a2=0:1)[rep(1:4,2),],
+#'  expand.grid(a1=0:1,a2=0:1)[rep(1:4,2),],
 #'  prices = rep(c(0,.5,.5,1),2),
 #'  subj_values = rep(c(2,0.2,0.1,2), 2)
 #' )
