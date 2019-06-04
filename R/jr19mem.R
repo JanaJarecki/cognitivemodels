@@ -1,6 +1,7 @@
 #' Memory-based preference model (cognitive model)
 #' 
 #' @description Fits the memory-based model used in Jarecki & Rieskamp (2019). The interface is similar to lm.
+#' @importFrom stats terms
 #' @param formula an object of class formula (\code{response ~ attr1 + attr + attr3 + attr4 | subjvalue | price }). Specifies the variables for response, features, experienced values, and prices; the value variable must be preceeded by a pipe (\code{|}) and the price/cost variable by a second pipe.
 #' @param data a data.frame or matrix, must contain the variables in \code{formula}; must be ordered in the order in which respondents saw the stimuli.
 #' @param fixed (optional) List with fixed parameter, allowed are \code{lambda} to fix the discriminability parameter, and \code{tau} to fix the choicerule parameter.
@@ -9,13 +10,13 @@
 #' @details The function is a wrapper around the more general \code{ebm} exemplar-based-model function.
 #' @examples
 #' # Create data
-#' attributes <- expand.grid(a1=0:1,a2=0:1)[rep(1:4,2),]
-#' prices <- rep(c(0,.5,.5,1),2)
-#' subj_values <- rep(c(2,0.2,0.1,2), 2)
-#' choices <- rep(c(1,0,0,1),2)
-#' dt <- data.frame(choices, attributes, prices, subj_values)
+#' dt <- data.frame(
+#'  choices = rep(c(1,0,0,1),2),
+#'  expand.grid(a1=0:1,a2=0:1)[rep(1:4,2),],
+#'  prices = rep(c(0,.5,.5,1),2),
+#'  subj_values = rep(c(2,0.2,0.1,2), 2)
+#' )
 #' 
-#' # Fit the model
 #' M <- jr19mem(choices ~ a1 + a2 | subj_values | prices, data = dt)
 #' 
 #' M # view results
@@ -25,7 +26,7 @@
 #' @export
 jr19mem <- function(formula, data, fixed = NULL) {
   fixed <- c(list(r = 1, q = 1), fixed)
-  features <- attr(terms(formula(as.Formula(formula), rhs = 1, lhs = 0)), 'term.labels')
+  features <- attr(stats::terms(formula(as.Formula(formula), rhs = 1, lhs = 0)), 'term.labels')
   fixed[features] <- 1/length(features)
   .args <- list(formula = formula, data = data, choicerule = 'softmax', fixed = fixed, type = 'valuebasedchoice', discount = 2)
   obj <- do.call(ebm, .args)

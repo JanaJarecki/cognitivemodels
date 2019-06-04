@@ -1,7 +1,8 @@
 #' Houston & McNamara's (1988) dynamic optimization for risk-sensitive foraging problems with discrete time
 #' 
 #' @import reshape2
-#' @param env environment, see example. It specifies the risky option, safe option, and the number of trials, the state, and requirement (also called the budget).
+#' @param env object of class \link{rsenvironment}, see example. It specifies the risky and safe option, the number of trials, the state, and requirement (aka budget).
+#' #' @param formula (optional) object of class \link[stats]{formula}, e.g. \code{choice ~ timehorizon + state}, defines how the variables are called in the data.
 #' @param data (optional) data frame
 #' @references Houston, A. I., & McNamara, J. M. (1988). A framework for the functional analysis of behaviour. Behavioural and Brain Science, 11, 117–163.
 #' @return An object of class R6 holding the model, it has no free parameters. A model object \code{M} can be viewed with \code{M}, predictions can be made with \code{M$predict()} for choice predictions, and \code{M$predict("ev")} for the expected value of the optimal choice and \code{M$predict("value", 1:2)} for the expected value of all choices.
@@ -46,8 +47,12 @@
 #' M$predict('v', newdata = newdt, 1:2)
 #' M$predict('r', newdata = newdt)
 #' @export
-hm1988 <- function(env, formula, data, choicerule, fixed = NULL) {
-  obj <- Hm1988$new(env = env, data = data, formula = formula, choicerule = choicerule, fixed = fixed)
+hm1988 <- function(env, formula, data, choicerule, fixed = NULL, fit.options = NULL) {
+  obj <- Hm1988$new(env = env, data = data, formula = formula, choicerule = choicerule, fixed = fixed, fit.options = fit.options)
+  if (length(obj$getparm('free')) > 0) {
+      message('Fitting free parameter', .brackify(obj$freenames))
+      obj$fit(c('grid', 'solnp'))
+   }
   return(obj)
 }
 
@@ -62,7 +67,7 @@ Hm1988 <- R6Class('hm1988',
     V = NULL,
     env = 'rsenvironment',
     choicerule = NULL,
-    initialize = function(env = NA, data, formula, choicerule, fixed) {
+    initialize = function(env = NA, data, formula, choicerule, fixed, fit.options) {
       if (missing(formula)) {
         formula <- ~ timehorizon + state
       }
@@ -70,8 +75,8 @@ Hm1988 <- R6Class('hm1988',
         time_state_names <- attr(terms(formula), 'term.labels')
         data <- env$makeData(time_state_names)
       }
-      allowedparm <- matrix(numeric(0), 0, 3, dimnames = list(NULL, c('ll', 'ul', 'init')))
-      super$initialize(formula = formula, data = data, allowedparm = allowedparm, fixed = fixed, choicerule =  choicerule, model = 'Optimal RSFT Model (Houston & McNamara, 1988)', discount = 0, response = 'discrete')
+      allowedparm <- matrix(numeric(0), 0, 4, dimnames = list(NULL, c('ll', 'ul', 'init', 'na')))
+      super$initialize(formula = formula, data = data, allowedparm = allowedparm, fixed = fixed, choicerule =  choicerule, model = 'Optimal RSFT Model (Houston & McNamara, 1988)', discount = 0, response = 'discrete', fit.options = fit.options)
       self$env <- env
       self$makeValueMat()
       self$makeEVMat()
@@ -79,9 +84,9 @@ Hm1988 <- R6Class('hm1988',
       predict = function(type = c('response', 'values', 'ev', 'pstates'), action = NULL, newdata = NULL) {
         type = match.arg(type)
         action <- if ( is.null(action) & self$env$n.actions == 2) { 1 } else { self$env$actions }
-        input <- if ( is.null(newdata) ) { self$input } else { get_all_vars(self$formula, newdata) }
-        trials <- input[, 1]
-        states <- input[, 2]
+        input <- if ( is.null(newdata) ) { self$input } else { self$getinput(self$formula, newdata) }
+        trials <- input[, 1, ]
+        states <- input[, 2, ]
         rows <- match(states, self$env$states)
         cols <- match(trials, rev(self$env$trials))
         acts <- rep(seq_len(self$env$n.actions), each = length(trials))

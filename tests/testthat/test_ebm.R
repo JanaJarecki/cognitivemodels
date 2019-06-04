@@ -36,7 +36,7 @@ test_that('EBM [choice] parameter estimation', {
   fml <- pobs_size ~ angle + size | true_cat_size
   nn <- d$N_size
   keep <- !is.na(d$true_cat_size)
-  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2), type = 'c', fit.options = list(n = nn, newdata = d), discount = 0) # no constraints
+  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2), type = 'choice', fit.options = list(n = nn, newdata = d), discount = 0) # no constraints
   expect_equal(unlist(model$parm), parm['size', names(model$parm)], tol = .01)
   model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, angle = .5, size = .5), type = 'c', fit.options = list(n = nn, newdata = d), discount = 0) # weights constrained
   expect_equal(unlist(model$parm), c(angle=.50, size=.50, lambda=2.40, r=2, q=2, b0=.49, b1=.51), tol = .01)
@@ -81,17 +81,18 @@ test_that('EBM [choice] parameter estimation', {
 test_that('EBM [choice] predictions', {
   model <- ebm(obs_cat_size ~ angle + size | true_cat_size, data = d[!is.na(d$true_cat_size), ], fixed = as.list(parm['size',]), type = 'c', discount = 0)
   psize <- 1-c(.99,.99,.99,.99,.86,.84,.81,.83,.31,.33,.28,.28,.03,.02,.01,.02)
+  nn <- d$N_size
   expect_equal(model$predict(d), psize, tol = .01)
   #expect_equal(cogsciutils::SSE(d$obs_cat_size/d$N_size, model$predict(d), n = d$N_size), 0.015, tol = .001)
-  expect_equal(Loglikelihood(d$obs_cat_size/d$N_size, model$predict(d), n = d$N_size, pdf = 'binomial', binomial.coef = TRUE, response = 'd'), -40.08, tol = 0.02)
+  expect_equal(Loglikelihood(d$obs_cat_size/d$N_size, model$predict(d), n = nn, pdf = 'binomial', binomial.coef = TRUE, response = 'd'), -40.08, tol = 0.02)
   model$setparm(c('lambda'=2.38, 'size'=.50, 'angle'=.50, 'b0'=.49, 'b1'=.51))
   expect_equal( 1-model$predict(d[9,]), 0.48, .01)
-  expect_equal(cogsciutils::SSE(d$obs_cat_size/d$N_size, model$predict(d), n = d$N_size), 0.077, tol = .01)
-  expect_equal(Loglikelihood(d$obs_cat_size/d$N_size, model$predict(d), n = d$N_size, binomial.coef= TRUE, pdf = 'binom'), -71, tol = 0.1)
+  expect_equal(cogsciutils::SSE(d$obs_cat_size/d$N_size, model$predict(d), n = nn), 0.077, tol = .01)
+  expect_equal(Loglikelihood(d$obs_cat_size/d$N_size, model$predict(d), n = nn, binomial.coef= TRUE, pdf = 'binom'), -71, tol = 0.1)
 
   # Angle condition
   # Model parameter from Table 5 "angle", pred from Fig. 5 "angle"
-  model <- ebm(~ angle + size | true_cat_angle, data = d[!is.na(d$true_cat_angle),], fixed = as.list(parm['angle',]), type = 'c')
+  model <- ebm(~ angle + size | true_cat_angle, data = d[!is.na(d$true_cat_angle),], fixed = as.list(parm['angle',]), type = 'c', discount = 0)
   pangle <- c(94,56,19,01,96,62,23,03,92,55,14,01,98,56,13,01)/100 # 
   expect_equal(1-model$predict(d), pangle, tol = .01)
   model$setparm(c('lambda' = 3.57, 'size' = .50, 'angle' = .50, 'b0' = .45, 'b1' = .55))
@@ -99,7 +100,7 @@ test_that('EBM [choice] predictions', {
 
   # Criss-cross condition
   # Model parameter from Table 5 "criss-cross", pred from Fig. 5 "criss-cross"
-  model <- ebm(pobs_criss ~ angle + size | true_cat_criss, data = d[!is.na(d$true_cat_criss),], fixed = as.list(parm['criss',]), type = 'c')
+  model <- ebm(pobs_criss ~ angle + size | true_cat_criss, data = d[!is.na(d$true_cat_criss),], fixed = as.list(parm['criss',]), type = 'c', discount = 0)
   pcriss <- c(22,37,55,76,40,49,56,61,64,57,48,36,81,56,33,19)/100 # 
   expect_equal(1-model$predict(d), pcriss, tol = .02)
 

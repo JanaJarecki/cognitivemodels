@@ -4,10 +4,12 @@
 \alias{hm1988}
 \title{Houston & McNamara's (1988) dynamic optimization for risk-sensitive foraging problems with discrete time}
 \usage{
-hm1988(env, formula, data, choicerule, fixed = NULL)
+hm1988(env, formula, data, choicerule, fixed = NULL,
+  fit.options = NULL)
 }
 \arguments{
-\item{env}{environment, see example. It specifies the risky option, safe option, and the number of trials, the state, and requirement (also called the budget).}
+\item{env}{object of class \link{rsenvironment}, see example. It specifies the risky and safe option, the number of trials, the state, and requirement (aka budget).
+#' @param formula (optional) object of class \link[stats]{formula}, e.g. \code{choice ~ timehorizon + state}, defines how the variables are called in the data.}
 
 \item{data}{(optional) data frame}
 }
