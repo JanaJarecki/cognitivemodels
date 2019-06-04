@@ -24,13 +24,13 @@ The function is a wrapper around the more general \code{ebm} exemplar-based-mode
 }
 \examples{
 # Create data
-attributes <- expand.grid(a1=0:1,a2=0:1)[rep(1:4,2),]
-prices <- rep(c(0,.5,.5,1),2)
-subj_values <- rep(c(2,0.2,0.1,2), 2)
-choices <- rep(c(1,0,0,1),2)
-dt <- data.frame(choices, attributes, prices, subj_values)
+dt <- data.frame(
+ choices = rep(c(1,0,0,1),2),
+ expand.grid(a1=0:1,a2=0:1)[rep(1:4,2),],
+ prices = rep(c(0,.5,.5,1),2),
+ subj_values = rep(c(2,0.2,0.1,2), 2)
+)
 
-# Fit the model
 M <- jr19mem(choices ~ a1 + a2 | subj_values | prices, data = dt)
 
 M # view results
