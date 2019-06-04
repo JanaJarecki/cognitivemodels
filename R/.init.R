@@ -10,6 +10,5 @@
 #' @useDynLib cogscimodels, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
 #' @keywords internal
-NULL
 "_PACKAGE"
 #> [1] "_PACKAGE"

@@ -118,7 +118,7 @@ Cogscimodel <- R6Class(
       self$obs <- model.frame(formula(f, lhs=1, rhs=0), d)
     },
     #' Set choice rule
-    #' @parm choicerule string holding the choicerule
+    #' @param choicerule string holding the choicerule
     setchoicerule = function(choicerule, fixed) {
       if(is.null(self$parm)) { stop('setchoicerule needs to be after setparm') }
       if ( is.null(choicerule) & (length(self$choicerule) > 0 )) {

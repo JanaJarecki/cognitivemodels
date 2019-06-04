@@ -17,11 +17,15 @@ Cogscimodel$new(formula, data, allowedparm)
 
 \item{fixed}{(optional) Named vector with model parameter(s) that are predefined (will not be fitted). If a fixed parameter is \code{NULL} model parameter will be ignored. See details.}
 
-\item{choicerule}{(optional, default \code{NULL}) String specifying the choice rule, e.g. \code{'softmax', 'argmax'}, see \link[cogsciutils]{choicerule} for possible choicerules; \code{NLL} means predictions as is.}
+\item{choicerule}{(optional, defaultoptions \code{NULL}) String specifying the choice rule, e.g. \code{'softmax', 'argmax'}, see \link[cogsciutils]{choicerule} for possible choicerules; \code{NLL} means predictions as is.}
 
 \item{model}{(optional) String, the name of the model}
 
 \item{discount}{(optional) Integer or integer vector, which or how many many trials to discount?}
+
+\item{choicerule}{string holding the choicerule
+Remove choicerule
+Set data to ignore when fitting}
 
 \item{x}{intteger or integer vector, rows to discount
 Get parameter
@@ -31,6 +35,9 @@ Set new parameter}
 Add a new parameter}
 
 \item{x}{named vector with parameter value not in \code{allowedparm}
+Number of free parameter}
+
+\item{x}{String specifying which
 Sets fit options
 Transforms predictions with choicerule}
 

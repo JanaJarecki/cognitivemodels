@@ -1,7 +1,8 @@
 #' Houston & McNamara's (1988) dynamic optimization for risk-sensitive foraging problems with discrete time
 #' 
 #' @import reshape2
-#' @param env environment, see example. It specifies the risky option, safe option, and the number of trials, the state, and requirement (also called the budget).
+#' @param env object of class \link{rsenvironment}, see example. It specifies the risky and safe option, the number of trials, the state, and requirement (aka budget).
+#' #' @param formula (optional) object of class \link[stats]{formula}, e.g. \code{choice ~ timehorizon + state}, defines how the variables are called in the data.
 #' @param data (optional) data frame
 #' @references Houston, A. I., & McNamara, J. M. (1988). A framework for the functional analysis of behaviour. Behavioural and Brain Science, 11, 117–163.
 #' @return An object of class R6 holding the model, it has no free parameters. A model object \code{M} can be viewed with \code{M}, predictions can be made with \code{M$predict()} for choice predictions, and \code{M$predict("ev")} for the expected value of the optimal choice and \code{M$predict("value", 1:2)} for the expected value of all choices.
