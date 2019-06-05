@@ -51,7 +51,7 @@ Shortfall <- R6Class("shortfall",
       # }
       allowedparm <- list(
         beta = c(0, 15, 1, 0),
-        delta   = c(0, 1, .5, 1)
+        delta = c(0, 1, .5, 1)
       )
       allowedparm <- matrix(unlist(allowedparm), ncol = 4, byrow = TRUE, dimnames= list(names(allowedparm), c('ll', 'ul', 'init', 'na'))) 
       super$initialize(formula = formula, data = data, allowedparm = allowedparm, fixed = fixed, choicerule =  choicerule, model = paste0('Shortfall'), discount = 0, response = 'discrete', fit.options = fit.options)
@@ -81,15 +81,14 @@ Shortfall <- R6Class("shortfall",
       X <- input[,   1:nh , , drop=FALSE]
       P <- input[, -(1:nh), ,drop=FALSE]      
 
-      EV <- sapply(1:no, function(i) {
-        rowSums(X[,,i] * P[,,i])
+      EV <- sapply(1:no, function(o) {
+        rowSums(X[,,o] * P[,,o])
       })
-      R <- sapply(1:no, function(i, al) {
-        X[] <- delta * al - X[,,i]
+      R <- sapply(1:no, function(o, al) {
+        X[] <- delta * al[,,o] - X[,,o]
         X[X<0] <- 0
-        rowSums(X[,,i] * P[,,i])
-      }, al = c(al))
-
+        rowSums(X[,,o] * P[,,o])
+      }, al = al)
       
       v <- EV - beta * R
       colnames(v) <- self$getoptionlabel()
