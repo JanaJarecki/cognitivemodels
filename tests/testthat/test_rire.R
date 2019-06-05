@@ -1,4 +1,4 @@
-context("CPT values")
+context("rire")
 library(cogscimodels)
 
 test_that("CPT predicted value identities", {

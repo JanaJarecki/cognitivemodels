@@ -8,10 +8,29 @@ hm1988(env, formula, data, choicerule, fixed = NULL,
   fit.options = NULL)
 }
 \arguments{
+<<<<<<< HEAD
 \item{env}{object of class \link{rsenvironment}, see example. It specifies the risky and safe option, the number of trials, the state, and requirement (aka budget).
 #' @param formula (optional) object of class \link[stats]{formula}, e.g. \code{choice ~ timehorizon + state}, defines how the variables are called in the data.}
+=======
+\item{env}{object of class \link{rsenvironment}, see example. It specifies the risky and safe option, the number of trials, the state, and requirement (aka budget).}
+
+\item{formula}{(optional) object of class \link[stats]{formula}, e.g. \code{choice ~ timehorizon + state}, defines how the variables are called in the data.}
+>>>>>>> development
 
 \item{data}{(optional) data frame}
+
+\item{choicerule}{(optional, default \code{NULL}) String specifying the choice rule. Allowed values: \code{NULL} or e.g., \code{"softmax"}, values of \code{type}s in \link[cogsciutils]{choicerule}.}
+
+\item{fixed}{(optional) List of model parameters and their fixed values, those parameters won't be estimated. Fixing a parameter to \code{NA} means ignoring it entirely (see details).}
+
+\item{fit.options}{(optional) List with parameter estimation options:
+\describe{
+   \item{\code{measure}}{Goodness-of-fit measure (default: \code{"loglikelihood"}); allowed are values of \link[cogsciutils]{gof}'s argument \code{type}}
+   \item{\code{n}}{Number of observations, if data is aggregated}
+   \item{\code{nbest}}{How many best values to select for grid+hillclimbing?}
+   \item{\code{newdata}}{New data to fit parameters with}
+   \item{\code{options}}{Other options, see \link[cogsciutils]{gof}}
+}}
 }
 \value{
 An object of class R6 holding the model, it has no free parameters. A model object \code{M} can be viewed with \code{M}, predictions can be made with \code{M$predict()} for choice predictions, and \code{M$predict("ev")} for the expected value of the optimal choice and \code{M$predict("value", 1:2)} for the expected value of all choices.

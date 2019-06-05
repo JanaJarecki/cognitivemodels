@@ -8,7 +8,7 @@ Maintainer: Jana B. Jarecki <jj@janajarecki.com>
 Description: Implementation of cognitive models, includes a general class cognitive models that has methods to fit free parameters to data and, can apply choicerules, and various goodness-of-fit measures (loglikelihood, MSE, etc.). The interface is similar to the lm() interface. So far an exemplar model "emb" (generalized context model) is included.
 License: GPL (>= 2)
 Imports: 
-    Rcpp,
+    Rcpp (>= 1.0.1),
     cogsciutils (>= 1.0.1),
     Formula,
     R6,

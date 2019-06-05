@@ -3,6 +3,17 @@
 using namespace Rcpp;
 using namespace arma;
 
+// This fixed compiler bugs on mac os
+#ifdef _OPENMP
+  #include <omp.h>
+#endif
+#ifdef _OPENMP
+  // multithreaded OpenMP version of code
+#else
+  // single-threaded version of code
+#endif
+
+
 // Indicator 1 "reached": Am I at the requirement (budget)?
 // Indicator 2 "one": Can only one reach the requirement (budget)?
 // Indicator 3 "sureY": Can one for sure reach the requirement (budget)?

@@ -16,9 +16,9 @@ cpt(formula, nopt, nout, ref, fixed = list(), data, choicerule,
 
 \item{ref}{Integer or numeric vector, reference point.}
 
-\item{fixed}{(optional) Named vector with model parameter(s) that are predefined (will not be fitted). If a fixed parameter is \code{NULL} model parameter will be ignored. See details.}
+\item{fixed}{(optional) List of model parameters and their fixed values, those parameters won't be estimated. Fixing a parameter to \code{NA} means ignoring it entirely (see details).}
 
-\item{data}{Data.frame or matrix, must contain all variables in \code{formula}.}
+\item{data}{Data.frame or matrix holding \code{formula}'s variables.}
 
 \item{choicerule}{(optional) choierule, for instance \code{"softmax"}, allowed values are listed in \code{type} under \code{\link[cogsciutils]{choicerule}}.}
 

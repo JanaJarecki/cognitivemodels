@@ -17,6 +17,8 @@ ebm(formula, data, type, ...)
 \item{data}{a data.frame or matrix containing the variables in \code{formula}; make sure it is ordered in the order in which respondents saw the stimuli.}
 
 \item{type}{(optional) String specifying the type of model: \code{"categorization", "judgment", "valuebasedchoice"}, will be inferred if omitted.}
+
+\item{...}{other arguments from other functions, currently ignored.}
 }
 \value{
 An exemplar-based model; it can be viewed with \code{summary(mod)}, where \code{mod} is the name of the model object.

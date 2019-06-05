@@ -2,6 +2,7 @@
 #' 
 #' @description Fits the memory-based model used in Jarecki & Rieskamp (2019). The interface is similar to lm.
 #' @importFrom stats terms
+#' @importFrom Formula as.Formula
 #' @param formula an object of class formula (\code{response ~ attr1 + attr + attr3 + attr4 | subjvalue | price }). Specifies the variables for response, features, experienced values, and prices; the value variable must be preceeded by a pipe (\code{|}) and the price/cost variable by a second pipe.
 #' @param data a data.frame or matrix, must contain the variables in \code{formula}; must be ordered in the order in which respondents saw the stimuli.
 #' @param fixed (optional) List with fixed parameter, allowed are \code{lambda} to fix the discriminability parameter, and \code{tau} to fix the choicerule parameter.
@@ -26,7 +27,7 @@
 #' @export
 jr19mem <- function(formula, data, fixed = NULL) {
   fixed <- c(list(r = 1, q = 1), fixed)
-  features <- attr(stats::terms(formula(as.Formula(formula), rhs = 1, lhs = 0)), 'term.labels')
+  features <- attr(terms(formula(as.Formula(formula), rhs = 1, lhs = 0)), 'term.labels')
   fixed[features] <- 1/length(features)
   .args <- list(formula = formula, data = data, choicerule = 'softmax', fixed = fixed, type = 'valuebasedchoice', discount = 2)
   obj <- do.call(ebm, .args)

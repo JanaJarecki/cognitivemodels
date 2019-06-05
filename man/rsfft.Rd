@@ -9,14 +9,15 @@ rsfft(formula = NULL, sbt = NULL, nopt = NULL, nout = NULL,
   terminal.fitness.fun)
 }
 \arguments{
-\item{formula}{Formula, like \code{y ~ x1 + x2}, depends on the model.}
+\item{formula}{Formula (e.g., \code{y ~ x1 + x2}); depends on the model.}
 
-\item{fixed}{(optional) Named vector with model parameter(s) that are predefined (will not be fitted). If a fixed parameter is \code{NULL} model parameter will be ignored. See details.}
+\item{fixed}{(optional) List of model parameters and their fixed values, those parameters won't be estimated. Fixing a parameter to \code{NA} means ignoring it entirely (see details).}
 
-\item{data}{Data.frame or matrix, must contain all variables in \code{formula}.}
+\item{data}{Data.frame or matrix holding \code{formula}'s variables.}
 
-\item{choicerule}{(optional, defaultoptions \code{NULL}) String specifying the choice rule, e.g. \code{'softmax', 'argmax'}, see \link[cogsciutils]{choicerule} for possible choicerules; \code{NLL} means predictions as is.}
+\item{choicerule}{(optional, default \code{NULL}) String specifying the choice rule. Allowed values: \code{NULL} or e.g., \code{"softmax"}, values of \code{type}s in \link[cogsciutils]{choicerule}.}
 }
 \description{
 Risk-sensitive foraging fast and frugal tree
 }
+\keyword{internal}
