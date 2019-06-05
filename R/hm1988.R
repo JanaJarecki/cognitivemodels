@@ -3,6 +3,7 @@
 #' @import reshape2
 #' @param env object of class \link{rsenvironment}, see example. It specifies the risky and safe option, the number of trials, the state, and requirement (aka budget).
 #' @param formula (optional) object of class \link[stats]{formula}, e.g. \code{choice ~ timehorizon + state}, defines how the variables are called in the data.
+
 #' @param data (optional) data frame
 #' @inheritParams Cogscimodel
 #' @references Houston, A. I., & McNamara, J. M. (1988). A framework for the functional analysis of behaviour. Behavioural and Brain Science, 11, 117–163.
