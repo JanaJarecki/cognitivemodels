@@ -35,6 +35,7 @@ test_that('Estimated Parameter', {
   fml <- pobs_size ~ angle + size | true_cat_size
   nn <- d$N_size
   keep <- !is.na(d$true_cat_size)
+
   # no constraints
   model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2), type = 'choice', fit.options = list(n = nn, newdata = d), discount = 0)
   expect_equal(model$coef(), parm['size', names(model$coef())], tol = .01)
@@ -44,7 +45,7 @@ test_that('Estimated Parameter', {
   # bias constrained
   model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, b0 = .5, b1 = .5), type = 'c', fit.options = list(n = nn, newdata = d), discount = 0)
   expect_equal(model$coef(), c(angle=.10, size=.90, lambda=1.60), tol = .01)
-  
+
   # # Angle condition
   # fml <- pobs_angle ~ angle + size | true_cat_angle
   # nn <- d$N_angle
@@ -84,6 +85,7 @@ test_that('Estimated Parameter', {
 
 
 test_that('EBM [choice] predictions', {
+
   gc()
   # Size soncition
   model <- ebm(obs_cat_size ~ angle + size | true_cat_size, data = d[!is.na(d$true_cat_size), ], fixed = as.list(parm['size',]), type = 'c', discount = 0)
