@@ -1,6 +1,15 @@
 // ebm.cpp
 #include <Rcpp.h>
 using namespace Rcpp;
+// This fixed compiler bugs on mac os
+#ifdef _OPENMP
+  #include <omp.h>
+#endif
+#ifdef _OPENMP
+  // multithreaded OpenMP version of code
+#else
+  // single-threaded version of code
+#endif
 
 //' Exemplar-based prediction computation
 //' 
