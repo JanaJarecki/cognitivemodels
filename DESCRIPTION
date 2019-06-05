@@ -1,7 +1,7 @@
 Package: cogscimodels
 Type: Package
 Title: Cognitive Model Estimation and Prediction
-Version: 1.0
+Version: 1.0.1
 Date: 2019-03-12
 Author: Jana B. Jarecki
 Maintainer: Jana B. Jarecki <jj@janajarecki.com>
