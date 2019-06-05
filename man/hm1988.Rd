@@ -14,17 +14,18 @@ hm1988(env, formula, data, choicerule, fixed = NULL,
 
 \item{data}{(optional) data frame}
 
-\item{choicerule}{(optional, defaultoptions \code{NULL}) String specifying the choice rule, e.g. \code{'softmax', 'argmax'}, see \link[cogsciutils]{choicerule} for possible choicerules; \code{NLL} means predictions as is.}
+\item{choicerule}{(optional, default \code{NULL}) String specifying the choice rule. Allowed values: \code{NULL} or e.g., \code{"softmax"}, values of \code{type}s in \link[cogsciutils]{choicerule}.}
 
-\item{fixed}{(optional) Named vector with model parameter(s) that are predefined (will not be fitted). If a fixed parameter is \code{NULL} model parameter will be ignored. See details.}
+\item{fixed}{(optional) List of model parameters and their fixed values, those parameters won't be estimated. Fixing a parameter to \code{NA} means ignoring it entirely (see details).}
 
-\item{fit.options}{(optional) List, options for fitting:
-\description{
-\item{\code{measure}}{}
-\item{\code{n}}{Number of observations, if data is aggregated}
-\item{\code{nbest}}{How many values to select for grid+hillclimbing?}
-\item{\code{newdata}}{New data to calculate fit on}
-\item{\code{options}}{Other options, see \link[cogsciutils]{gof}}}}
+\item{fit.options}{(optional) List with parameter estimation options:
+\describe{
+   \item{\code{measure}}{Goodness-of-fit measure (default: \code{"loglikelihood"}); allowed are values of \link[cogsciutils]{gof}'s argument \code{type}}
+   \item{\code{n}}{Number of observations, if data is aggregated}
+   \item{\code{nbest}}{How many best values to select for grid+hillclimbing?}
+   \item{\code{newdata}}{New data to fit parameters with}
+   \item{\code{options}}{Other options, see \link[cogsciutils]{gof}}
+}}
 }
 \value{
 An object of class R6 holding the model, it has no free parameters. A model object \code{M} can be viewed with \code{M}, predictions can be made with \code{M$predict()} for choice predictions, and \code{M$predict("ev")} for the expected value of the optimal choice and \code{M$predict("value", 1:2)} for the expected value of all choices.

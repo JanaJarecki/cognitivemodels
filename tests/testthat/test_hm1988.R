@@ -1,20 +1,15 @@
-context("Houston McNamara")
+context("hm1988")
 library(cogscimodels)
 
 # Houston, A. I., & McNamara, J. M. (1988). A framework for the functional analysis of behaviour. Behavioural and Brain Science, 11, 117–163. doi:10.1017/S0140525X00053061
 # p. 118 - 119
-test_that('Houston & McNamara (1988)', {
+test_that('Values of hm1988', {
   env <- rsenvironment(
     budget = 12,
     n.trials = 1,
     initial.state = 0,
     a1 = matrix(c(0.1, 0.8, 0.1, 0, 1, 2), nc = 2),
     a2 = matrix(c(0.4, 0.2, 0.4, 0, 1, 2), nc = 2))
-
-  mod <- hm1988(env = env, choicerule = 'arg')
-
-  mod$predict('v')
-
   val11 <- cbind(a1=c(0.9, 0.99, 0.999, 0.9999),
                  a2=c(0.6, 0.96, 0.996, 0.9996)) # Table 1
   nd <-  data.frame(timehorizon = 1:4, state = 11)

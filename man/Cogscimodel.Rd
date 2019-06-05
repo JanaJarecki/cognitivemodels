@@ -9,27 +9,28 @@
 Cogscimodel$new(formula, data, allowedparm)
 }
 \arguments{
-\item{formula}{Formula, like \code{y ~ x1 + x2}, depends on the model.}
+\item{formula}{Formula (e.g., \code{y ~ x1 + x2}); depends on the model.}
 
-\item{data}{Data.frame or matrix, must contain all variables in \code{formula}.}
+\item{data}{Data.frame or matrix holding \code{formula}'s variables.}
 
-\item{allowedparm}{Matrix with 4 columns like \code{rbind(alpha=c('ul'=0,'ll'=1,'init'=0.5,'na'=1))}. Defines each parameter's lower limit, upper limit, starting value (for fitting), and value that make the parameter have zero effect. Row names define parameter names. Columns names must be \code{'ll', 'ul', 'init', 'na'} (lower limit, upper limit, inital value, no-effect value; resp.).}
+\item{allowedparm}{Matrix. Row names define the names of the allowed parameters, excluding choicerule parameters. Needs 4 columns named \code{"ll","ul","init","na"}, defining each parameter's lower limit, upper limit, starting value for fitting, and value that makes a parameter have zero effect.}
 
-\item{fixed}{(optional) Named vector with model parameter(s) that are predefined (will not be fitted). If a fixed parameter is \code{NULL} model parameter will be ignored. See details.}
+\item{fixed}{(optional) List of model parameters and their fixed values, those parameters won't be estimated. Fixing a parameter to \code{NA} means ignoring it entirely (see details).}
 
-\item{choicerule}{(optional, defaultoptions \code{NULL}) String specifying the choice rule, e.g. \code{'softmax', 'argmax'}, see \link[cogsciutils]{choicerule} for possible choicerules; \code{NLL} means predictions as is.}
+\item{choicerule}{(optional, default \code{NULL}) String specifying the choice rule. Allowed values: \code{NULL} or e.g., \code{"softmax"}, values of \code{type}s in \link[cogsciutils]{choicerule}.}
 
-\item{model}{(optional) String, the name of the model}
+\item{model}{(optional) String, the model's name.}
 
-\item{discount}{(optional) Integer or integer vector, which or how many many trials to discount?}
+\item{discount}{(optional) Integer or integer vector, which or how many many trials to discount}
 
-\item{fit.options}{(optional) List, options for fitting:
-\description{
-\item{\code{measure}}{}
-\item{\code{n}}{Number of observations, if data is aggregated}
-\item{\code{nbest}}{How many values to select for grid+hillclimbing?}
-\item{\code{newdata}}{New data to calculate fit on}
-\item{\code{options}}{Other options, see \link[cogsciutils]{gof}}}}
+\item{fit.options}{(optional) List with parameter estimation options:
+\describe{
+   \item{\code{measure}}{Goodness-of-fit measure (default: \code{"loglikelihood"}); allowed are values of \link[cogsciutils]{gof}'s argument \code{type}}
+   \item{\code{n}}{Number of observations, if data is aggregated}
+   \item{\code{nbest}}{How many best values to select for grid+hillclimbing?}
+   \item{\code{newdata}}{New data to fit parameters with}
+   \item{\code{options}}{Other options, see \link[cogsciutils]{gof}}
+}}
 
 \item{choicerule}{string holding the choicerule
 Remove choicerule
@@ -58,7 +59,7 @@ Compute goodness of fit}
 Class for cognitive models
 }
 \details{
-Ignore a model parameter by setting it to \code{NULL}, in this case your matrix \code{allowedparm} needs to contain
+Ignore a model parameter by setting it to \code{NA} in \code{fixed}, in this case your matrix \code{allowedparm} needs to contain a value in the column na nullifying the effect of the parameter.
 }
 \section{Set choice rule}{
 NA

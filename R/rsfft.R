@@ -1,5 +1,6 @@
 #' Risk-sensitive foraging fast and frugal tree
 #' 
+#' @keywords internal
 #' @import arrangements
 #' @useDynLib cogscimodels, .registration = TRUE
 #' @inheritParams Cogscimodel

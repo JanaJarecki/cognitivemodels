@@ -1,4 +1,4 @@
-context("EBM values")
+context("ebm")
 library(cogscimodels)
 
 # Nosofsky, R. M. (1989). Further tests of an exemplar-similarity approach to relating identification and categorization. Perception & Psychophysics, 45, 279–290. doi:10.3758/BF03204942
@@ -20,28 +20,30 @@ parm <- rbind(size = c(lambda=1.60,angle=.10,size=.90,b0=.50,b1=.50,r=2,q=2),
                 angle = c(3.20,.98,.02,.43,.57,2,2),
                 criss = c(1.62,.80,.20,.45,.55,2,2),
                 diag = c(2.42, .81,.19,.49,.51,2,2))
+d$N_size <- d$obs_cat_size + c(72,255,72,73,234,66,208,226,23,18,55,58,2,8,3,3)
+d$N_angle <- d$obs_cat_angle + c(79,155,48,2,81,190,60,2,262,47,11,4,76,47,24,2)
+d$N_criss <- d$obs_cat_criss + c(48,94,45,162,34,34,138,47,53,120,33,24,180,44,63,41)
+d$N_diag <- d$obs_cat_diag + c(40,200,242,83,65,49,180,70,8,57,42,199,3,27,58,55)
+d$pobs_size <- d$obs_cat_size/d$N_size
+d$pobs_angle <- d$obs_cat_angle/d$N_angle
+d$pobs_criss <- d$obs_cat_criss/d$N_criss
+d$pobs_diag <- d$obs_cat_diag/d$N_diag
 
 
-test_that('EBM [choice] parameter estimation', {
-  d$N_size <- d$obs_cat_size + c(72,255,72,73,234,66,208,226,23,18,55,58,2,8,3,3)
-  d$N_angle <- d$obs_cat_angle + c(79,155,48,2,81,190,60,2,262,47,11,4,76,47,24,2)
-  d$N_criss <- d$obs_cat_criss + c(48,94,45,162,34,34,138,47,53,120,33,24,180,44,63,41)
-  d$N_diag <- d$obs_cat_diag + c(40,200,242,83,65,49,180,70,8,57,42,199,3,27,58,55)
-  d$pobs_size <- d$obs_cat_size/d$N_size
-  d$pobs_angle <- d$obs_cat_angle/d$N_angle
-  d$pobs_criss <- d$obs_cat_criss/d$N_criss
-  d$pobs_diag <- d$obs_cat_diag/d$N_diag
-  
+test_that('Estimated Parameter', {
   # Size condition
   fml <- pobs_size ~ angle + size | true_cat_size
   nn <- d$N_size
   keep <- !is.na(d$true_cat_size)
-  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2), type = 'choice', fit.options = list(n = nn, newdata = d), discount = 0) # no constraints
-  expect_equal(unlist(model$parm), parm['size', names(model$parm)], tol = .01)
-  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, angle = .5, size = .5), type = 'c', fit.options = list(n = nn, newdata = d), discount = 0) # weights constrained
-  expect_equal(unlist(model$parm), c(angle=.50, size=.50, lambda=2.40, r=2, q=2, b0=.49, b1=.51), tol = .01)
-  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, b0 = .5, b1 = .5), type = 'c', fit.options = list(n = nn, newdata = d), discount = 0) # bias constrained
-  expect_equal(unlist(model$parm), c(angle=.10, size=.90, lambda=1.60, r=2, q=2, b0=.50, b1=.50), tol = .01)
+  # no constraints
+  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2), type = 'choice', fit.options = list(n = nn, newdata = d), discount = 0)
+  expect_equal(model$coef(), parm['size', names(model$coef())], tol = .01)
+  # weights constrained
+  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, angle = .5, size = .5), type = 'c', fit.options = list(n = nn, newdata = d), discount = 0)
+  expect_equal(model$coef(), c(lambda=2.40, b0=.49, b1=.51), tol = .01)
+  # bias constrained
+  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, b0 = .5, b1 = .5), type = 'c', fit.options = list(n = nn, newdata = d), discount = 0)
+  expect_equal(model$coef(), c(angle=.10, size=.90, lambda=1.60), tol = .01)
   
   # # Angle condition
   # fml <- pobs_angle ~ angle + size | true_cat_angle
@@ -69,26 +71,32 @@ test_that('EBM [choice] parameter estimation', {
   fml <- pobs_diag ~ angle + size | true_cat_diag
   nn <- d$N_diag
   keep <- !is.na(d$true_cat_diag)
-  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2), type = 'c', fit.options = list(n = nn, newdata = d), discount = 0) # no constraints
-  expect_equal(unlist(model$parm), parm['diag', names(model$parm)], tol = .01)
-  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, angle = .5, size = .5), type = 'c', fit.options = list(n = nn, newdata = d), discount = 0) # weights constrained
-  expect_equal(unlist(model$parm), c(angle=.50, size=.50, lambda=1.81, r=2, q=2, b0=.48, b1=.52), tol = .05)
-  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, b0 = .5, b1 = .5), type = 'c', fit.options = list(n = nn, newdata = d), discount = 0) # bias constrained
-  expect_equal(unlist(model$parm), c(angle=.81, size=0.19, lambda=2.42, r=2, q=2, b0=.50, b1=.50), tol = .01)
+  # No constraints
+  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2), type = 'c', fit.options = list(n = nn, newdata = d), discount = 0)
+  expect_equal(model$coef(), parm['diag', names(model$coef())], tol = .01)
+  # weights constrained
+  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, angle = .5, size = .5), type = 'c', fit.options = list(n = nn, newdata = d), discount = 0)
+  expect_equal(model$coef(), c(lambda=1.81, b0=.48, b1=.52), tol = .05)
+  # bias constrained
+  model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, b0 = .5, b1 = .5), type = 'c', fit.options = list(n = nn, newdata = d), discount = 0)
+  expect_equal(model$coef(), c(angle=.81, size=0.19, lambda=2.42), tol = .01)
   })
 
 
 test_that('EBM [choice] predictions', {
+  gc()
+  # Size soncition
   model <- ebm(obs_cat_size ~ angle + size | true_cat_size, data = d[!is.na(d$true_cat_size), ], fixed = as.list(parm['size',]), type = 'c', discount = 0)
   psize <- 1-c(.99,.99,.99,.99,.86,.84,.81,.83,.31,.33,.28,.28,.03,.02,.01,.02)
   nn <- d$N_size
   expect_equal(model$predict(d), psize, tol = .01)
-  #expect_equal(cogsciutils::SSE(d$obs_cat_size/d$N_size, model$predict(d), n = d$N_size), 0.015, tol = .001)
+  expect_equal(cogsciutils::SSE(d$obs_cat_size/d$N_size, model$predict(d), n = d$N_size), 0.015, tol = .001)
   expect_equal(cogsciutils::Loglikelihood(d$obs_cat_size/d$N_size, model$predict(d), n = nn, pdf = 'binomial', binomial.coef = TRUE, response = 'd'), -40.08, tol = 0.02)
+
   model$setparm(c('lambda'=2.38, 'size'=.50, 'angle'=.50, 'b0'=.49, 'b1'=.51))
   expect_equal( 1-model$predict(d[9,]), 0.48, .01)
   expect_equal(cogsciutils::SSE(d$obs_cat_size/d$N_size, model$predict(d), n = nn), 0.077, tol = .01)
-  expect_equal(Loglikelihood(d$obs_cat_size/d$N_size, model$predict(d), n = nn, binomial.coef= TRUE, pdf = 'binom'), -71, tol = 0.1)
+  expect_equal(cogsciutils::Loglikelihood(d$obs_cat_size/d$N_size, model$predict(d), n = nn, binomial.coef= TRUE, pdf = 'binom'), -71, tol = 0.1)
 
   # Angle condition
   # Model parameter from Table 5 "angle", pred from Fig. 5 "angle"
