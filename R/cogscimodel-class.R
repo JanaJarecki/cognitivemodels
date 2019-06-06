@@ -253,41 +253,6 @@ Cogscimodel <- R6Class(
       }
       return(rbinom(pred[,1], size = 1, prob=pred))
     },
-    parameterrecovery = function(nruns, nsteps = list(), seed = 98634) {
-      oldpar <- self$getparm()
-      oldpred <- self$pred
-      oldobs <- self$obs
-      pargrid <- self$pargrid(nsteps = nsteps)
-      parid <- pargrid$ids
-      truepar <- pargrid$parm
-      npar <- length(truepar)
-      nparset <- nrow(parid)
-      set.seed(seed)
-      estimate <- sapply(seq_len(nrow(parid)), function(id, pargrid) {
-        self$setparm(GetParmFromGrid(id, pargrid))
-          runs <- sapply(seq_len(nruns), function(x) {
-            self$obs[] <- self$simulate()
-            self$resetparm()
-            self$fit()
-            unlist(self$getparm('free'), use.names = FALSE)
-          })
-          unlist(runs)        
-      }, pargrid = pargrid)
-      estimate <- matrix(c(estimate), nc = length(truepar), byrow = TRUE, dimnames = list(NULL, names(self$getparm('free'))))
-      estimate <- cbind(id = rep(seq_len(nparset), each = nruns),
-        run = rep(seq_len(nruns), times = nparset),
-        estimate)
-
-      true <- t(sapply(seq_len(nrow(parid)), function(id, paggrid) {
-        GetParmFromGrid(id, pargrid)
-      }))
-      true <- cbind(id = seq_len(nparset), true)
-
-      self$setparm(oldpar)
-      self$pred <- oldpred
-
-      return(list(true = as.data.frame(true), estimate = as.data.frame(estimate), seed = seed))
-    },
     #' Sets fit options
     # param x list of fitting options
     setfitoptions = function(x, f = self$formula) {
@@ -419,7 +384,7 @@ Cogscimodel <- R6Class(
       colnames(par) <- rownames(parspace)
       return(par)
     },
-    fitSolnp = function(par0, parspace, control = list(trace = 1)) {
+    fitSolnp = function(par0, parspace, control = list(trace = 0)) {
       fit <- solnp(pars = par0,
         fun = self$fitObjective,
         LB = parspace[, 'll', drop = FALSE],
