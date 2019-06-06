@@ -8,14 +8,10 @@ hm1988(env, formula, data, choicerule, fixed = NULL,
   fit.options = NULL)
 }
 \arguments{
-<<<<<<< HEAD
+\item{env}{object of class \link{rsenvironment}, see example. It specifies the risky and safe option, the number of trials, the state, and requirement (aka budget).}
+\item{formula}{(optional) object of class \link[stats]{formula}, e.g. \code{choice ~ timehorizon + state}, defines how the variables are called in the data.}
 \item{env}{object of class \link{rsenvironment}, see example. It specifies the risky and safe option, the number of trials, the state, and requirement (aka budget).
 #' @param formula (optional) object of class \link[stats]{formula}, e.g. \code{choice ~ timehorizon + state}, defines how the variables are called in the data.}
-=======
-\item{env}{object of class \link{rsenvironment}, see example. It specifies the risky and safe option, the number of trials, the state, and requirement (aka budget).}
-
-\item{formula}{(optional) object of class \link[stats]{formula}, e.g. \code{choice ~ timehorizon + state}, defines how the variables are called in the data.}
->>>>>>> development
 
 \item{data}{(optional) data frame}
 

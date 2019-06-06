@@ -46,7 +46,6 @@ test_that('Estimated Parameter', {
   model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, b0 = .5, b1 = .5), type = 'c', fit.options = list(n = nn, newdata = d), discount = 0)
   expect_equal(model$coef(), c(angle=.10, size=.90, lambda=1.60), tol = .01)
 
-  
   # # Angle condition
   # fml <- pobs_angle ~ angle + size | true_cat_angle
   # nn <- d$N_angle
@@ -100,7 +99,6 @@ test_that('EBM [choice] predictions', {
   expect_equal( 1-model$predict(d[9,]), 0.48, .01)
   expect_equal(cogsciutils::SSE(d$obs_cat_size/d$N_size, model$predict(d), n = nn), 0.077, tol = .01)
   expect_equal(cogsciutils::Loglikelihood(d$obs_cat_size/d$N_size, model$predict(d), n = nn, binomial.coef= TRUE, pdf = 'binom'), -71, tol = 0.1)
-
 
   # Angle condition
   # Model parameter from Table 5 "angle", pred from Fig. 5 "angle"
