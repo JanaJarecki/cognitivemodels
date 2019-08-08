@@ -31,11 +31,12 @@ d$pobs_diag <- d$obs_cat_diag/d$N_diag
 
 
 test_that('Estimated Parameter', {
+  #
   # Size condition
+  # --------------------------------------------------------------------------
   fml <- pobs_size ~ angle + size | true_cat_size
   nn <- d$N_size
   keep <- !is.na(d$true_cat_size)
-
   # no constraints
   model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2), type = 'choice', fit.options = list(n = nn, newdata = d), discount = 0)
   expect_equal(model$coef(), parm['size', names(model$coef())], tol = .01)
@@ -46,7 +47,9 @@ test_that('Estimated Parameter', {
   model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, b0 = .5, b1 = .5), type = 'choice', fit.options = list(n = nn, newdata = d), discount = 0)
   expect_equal(model$coef(), c(angle=.10, size=.90, lambda=1.60), tol = .01)
 
-  # # Angle condition
+  #
+  # Angle condition
+  # -------------------------------------------------------------------------- 
   # fml <- pobs_angle ~ angle + size | true_cat_angle
   # nn <- d$N_angle
   # keep <- !is.na(d$true_cat_angle)
@@ -68,7 +71,9 @@ test_that('Estimated Parameter', {
   # model <- ebm(fml, data = d[keep, ], fixed = list(q = 2, r = 2, b0 = .5, b1 = .5), type = 'c', fit.options = list(n = nn, newdata = d), discount = 0) # bias constrained
   # expect_equal(unlist(model$parm), c(angle=.93, size=0.07, lambda=3, r=2, q=2, b0=.50, b1=.50), tol = .01)
 
+  #
   # Diagonal condition
+  # --------------------------------------------------------------------------
   fml <- pobs_diag ~ angle + size | true_cat_diag
   nn <- d$N_diag
   keep <- !is.na(d$true_cat_diag)
@@ -85,22 +90,24 @@ test_that('Estimated Parameter', {
 
 
 test_that('EBM [choice] predictions', {
-
   gc()
-  # Size soncition
+  #
+  # Size condition
+  # --------------------------------------------------------------------------
   model <- ebm(obs_cat_size ~ angle + size | true_cat_size, data = d[!is.na(d$true_cat_size), ], fixed = as.list(parm['size',]), type = 'c', discount = 0)
   psize <- 1-c(.99,.99,.99,.99,.86,.84,.81,.83,.31,.33,.28,.28,.03,.02,.01,.02)
   nn <- d$N_size
   expect_equal(model$predict(d), psize, tol = .01)
   expect_equal(cogsciutils::SSE(d$obs_cat_size/d$N_size, model$predict(d), n = d$N_size), 0.015, tol = .001)
   expect_equal(cogsciutils::Loglikelihood(d$obs_cat_size/d$N_size, model$predict(d), n = nn, pdf = 'binomial', binomial.coef = TRUE, response = 'd'), -40.08, tol = 0.02)
-
   model$setparm(c('lambda'=2.38, 'size'=.50, 'angle'=.50, 'b0'=.49, 'b1'=.51))
   expect_equal( 1-model$predict(d[9,]), 0.48, .01)
   expect_equal(cogsciutils::SSE(d$obs_cat_size/d$N_size, model$predict(d), n = nn), 0.077, tol = .01)
   expect_equal(cogsciutils::Loglikelihood(d$obs_cat_size/d$N_size, model$predict(d), n = nn, binomial.coef= TRUE, pdf = 'binom'), -71, tol = 0.1)
 
+  #
   # Angle condition
+  # --------------------------------------------------------------------------
   # Model parameter from Table 5 "angle", pred from Fig. 5 "angle"
   model <- ebm(~ angle + size | true_cat_angle, data = d[!is.na(d$true_cat_angle),], fixed = as.list(parm['angle',]), type = 'c', discount = 0)
   pangle <- c(94,56,19,01,96,62,23,03,92,55,14,01,98,56,13,01)/100 # 
@@ -108,13 +115,17 @@ test_that('EBM [choice] predictions', {
   model$setparm(c('lambda' = 3.57, 'size' = .50, 'angle' = .50, 'b0' = .45, 'b1' = .55))
   expect_equal(1-model$predict(d[14,]), .18, tol = .1)
 
-  # Criss-cross condition
+  #
+  # Criss-cross conditin
+  # --------------------------------------------------------------------------
   # Model parameter from Table 5 "criss-cross", pred from Fig. 5 "criss-cross"
   model <- ebm(pobs_criss ~ angle + size | true_cat_criss, data = d[!is.na(d$true_cat_criss),], fixed = as.list(parm['criss',]), type = 'c', discount = 0)
   pcriss <- 1-c(22,37,55,76,40,49,56,61,64,57,48,36,81,56,33,19)/100 # 
   expect_equal(model$predict(d), pcriss, tol = .02)
 
+  #
   # Diagonal condition
+  # ---------------------------------------------------------------------------
   # Model parameter from Table 5 "diagonal", pred from Fig. 5 "diagonal"
   model <- ebm(~ angle + size | true_cat_diag, data = d[!is.na(d$true_cat_diag),], fixed = as.list(parm['diag',]), type = 'c')
   pdiag <- 1 - c(43,78,89,96,22,51,69,85,13,29,47,78,04,10,21,56)/100 # 
