@@ -129,3 +129,21 @@ GetParmFromGrid <- function(id, grid) {
   }   
   return(mat)
 }
+
+
+
+#' Compute akaike weights
+#' @param x row vector with goodness of fit measure (AIC, or log likelihood)
+#' @param measure string (default \code{"aic"}) holding which measure of fit x contains, allowed are \code{"aic", "loglikelihood"}.
+akaikeweight <- function(x, measure = c("aic", "loglikelihood")) {
+  if (nrow(x) > 1) {
+    t(apply(x, 1, akaikeweight, source = source))
+  }
+  measure <- match.arg(measure)
+  winner <- base::max(x)
+  deltas <- x - winner
+  if (measure == "aic") {
+    deltas <- -1/2 * deltas
+  }
+  return(exp(deltas) / sum(exp(deltas)))
+}
