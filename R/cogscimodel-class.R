@@ -208,6 +208,18 @@ Cogscimodel <- R6Class(
           epsilon = 'epsilon')],
         constrained = self$parm[self$constrainednames]))
     },
+    getfreeparm = function() {
+      self$getparm('free')
+    },
+    getfixedparm = function() {
+      self$getparm('fixed')
+    },
+    getconstrparm = function() {
+      self$getparm('constrained')
+    },
+    getchoiceruleparm = function() {
+      self$getparm('choicerule')
+    },
     #' Set new parameter
     #' @param x named vector with parameter values, names must be one in \code{allowedparm}
     setparm = function(x) {
