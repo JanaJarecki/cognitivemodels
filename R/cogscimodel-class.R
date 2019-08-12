@@ -54,9 +54,9 @@ Cogscimodel <- R6Class(
 
       self$setinput(f, data)
       self$setobs(f, data)
-      self$setresponse(response)
       self$setdiscount(discount)
       self$initializeparm(allowedparm, fixed)
+      self$setresponse(response)
       self$setchoicerule(choicerule, fixed)
       self$setparm(self$substituteparm(self$switchoffparm(fixed)))
       self$setfitoptions(fit.options, f) # run this safter initializing parm
@@ -158,7 +158,7 @@ Cogscimodel <- R6Class(
     setresponse = function(response) {
       if ( response == 'continuous' ) {
         rg <- max(self$obs) - min(self$obs)
-        self$allowedparm <- rbind(self$allowedparm, sigma = c(0, rg, rg / 2, NA))
+        self$allowedparm <- rbind(self$allowedparm, sigma = c(0, rg, rg/2, NA))
       }
       self$response <- response
     },
