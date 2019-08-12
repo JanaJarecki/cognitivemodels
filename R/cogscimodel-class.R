@@ -158,7 +158,7 @@ Cogscimodel <- R6Class(
     setresponse = function(response) {
       if ( response == 'continuous' ) {
         rg <- max(self$obs) - min(self$obs)
-        allowedparm <- rbind(self$allowedparm, sigma = c(0, rg, rg / 2, NA))
+        self$allowedparm <- rbind(self$allowedparm, sigma = c(0, rg, rg / 2, NA))
       }
       self$response <- response
     },
