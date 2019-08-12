@@ -16,35 +16,42 @@
 #' @references None yet
 
 #' @export
-utility <- function(formula, data, type = c('power'), fixed = list("alpha"), choicerule = NULL, response = c('continuous', 'discrete'), discount = 0, ...) {
-  args <- match.arg()[-1]
-  obj <- do.call(Bayeslearn$new, args)
-  # check(mod) #todo
+utility <- function(formula, data, type = c('power'), fixed = list(), choicerule = NULL, response = c('continuous', 'discrete'), discount = 0, ...) {
+  args <- as.list(match.call()[-1L])
+  obj <- do.call(Utility$new, args)
+  # check(model) #todo
+  #todo move this into cogscimodel-class if possible
+  if (length(obj$getparm('free')) > 0) {
+    message('Fitting free parameter ', .brackify(obj$freenames))
+    obj$fit(c('grid', 'solnp'))
+  }
   return(obj)
 }
 
-Bayeslearn <- R6Class('bayeslearn',
+Utility <- R6Class('utility',
   inherit = Cogscimodel,
   public = list(
-    priordist = NULL,
-    format = NULL,
-    priornames = NULL,
-    initialize = function(formula, data, format = c('raw', 'count'), fixed, choicerule, response, discount, ...) {
-      format = match.arg(format)
-      self$format <- format
-      formula <- self$correct_single_rhs(formula)
-      self$priornames <- paste0('prior.', attr(terms(formula(formula, lhs=0, rhs=1)), 'term.labels'))
-
-      allowedparm <- matrix(cbind(0.01, 1.99, rep(1, length(self$priornames)), 1), nc = 4, dimnames = list(self$priornames, c('ll', 'ul', 'init', 'na')))
+    type = NULL,
+    initialize = function(formula, data, type = c('power'), fixed = list(1), choicerule = NULL, response = c('continuous', 'discrete'), discount = 0, ...) {
+      self$type <- match.arg(type)
+      allowedparm <- rbind(alpha = c(ll=0, ul=2, init=1, na=1))
       super$initialize(formula = formula,
         data = data,
         allowedparm = allowedparm,
         choicerule = choicerule,
-        response = response,
-        model = paste0('Bayesian Learning'),
+        response = match.arg(response),
+        model = 'Utility',
         fixed = fixed,
         discount = discount,
         ...)
-      self$priordist <- self$inferpriordist()
-      self$model <- paste0(self$model, ' [', self$priordist, ']')
     },
+    predict = function(newdata, response = c("response")) {
+      x <- if (!missing(newdata)) {
+        self$getinput(f = self$formula, d = newdata)
+      } else {
+        self$input
+      }
+      return(x^(self$getparm()['alpha']))
+    }
+    )
+)
