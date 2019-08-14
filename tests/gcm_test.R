@@ -15,6 +15,6 @@ formula <- response ~ f1 + f2
 args <- list(formula = formula, cat = ~ true_cat, metric = "mink", fixed = c(c = 1, r = 1, p = 1, tau = 1), choicerule = "soft")
 m <- do.call(gcm, c(args, data = list(dt), discount = 0))
 
-# devtools::load_all
+# devtools::load_all()
 # To Do:
 # Make environment where discount leads to different ws than no discount

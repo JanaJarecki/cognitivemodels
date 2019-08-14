@@ -25,7 +25,7 @@ Gcm <- R6Class("gcm",
                    allowedparm <- matrix(0, ncol = 4, nrow = self$ndim + 3, dimnames = list(c(self$make_weight_names(), "c", "p", "r"),
                                                                                             c("ll", "ul", "init", "na")))
                    allowedparm[, "ll"] <- c(rep(0, self$ndim), 0.0001, 1, 1)
-                   allowedparm[, "ul"] <- c(rep(1, self$ndim), 10, 1, 1)
+                   allowedparm[, "ul"] <- c(rep(1, self$ndim), 5, 1, 1)
                    allowedparm[, "init"] <- c(rep(1/self$ndim, self$ndim), 2.5, 1, 1)
                    allowedparm[, "na"] <- c(rep(1/self$ndim, self$ndim), 1, 1, 1)
                    
@@ -112,7 +112,6 @@ Gcm <- R6Class("gcm",
 
                      effective_trial <- trial - is.null(newdata)
                      sim_to_cat1 <- stimulus_frequencies[, effective_trial, 2] %*% sim_mat[id, ]
-                     
                      total_sim <- rowSums(stimulus_frequencies[, effective_trial, ]) %*% sim_mat[id, ]
                      
                      sim_to_cat1/total_sim
@@ -160,7 +159,7 @@ Gcm <- R6Class("gcm",
 gcm <- function(formula, data, cat, metric = c("minkowski", "discrete"), fixed, choicerule, discount = 0) {
   obj <- Gcm$new(formula = formula, data = data, cat = cat, metric = metric, fixed = fixed, choicerule = choicerule, discount = discount)
   if(length(obj$freenames) > 0) {
-    obj$fit(type = c("grid", "solnp"))
+    obj$fit(type = "solnp") # c("grid", "solnp")
   }
   return(obj)
 }
