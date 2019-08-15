@@ -4,6 +4,7 @@
 #' @import cogsciutils
 #' @import R6
 #' @import Formula
+#' @importFrom rlang call_standardise
 #' @usage Cogscimodel$new(formula, data, allowedparm)
 #' @param formula Formula (e.g., \code{y ~ x1 + x2}); depends on the model.
 #' @param data Data.frame or matrix holding \code{formula}'s variables.
@@ -31,6 +32,7 @@ Cogscimodel <- R6Class(
   #' @section
   # should be inherited, followed by method list
   public = list(
+    call = NULL,
     model = 'string',
     formula = 'Formula',
     input = 'matrix',
@@ -48,6 +50,14 @@ Cogscimodel <- R6Class(
     gofvalue = NULL,
     fit.options = NULL,
     initialize = function(formula, data, allowedparm, fixed = NULL, choicerule =  NULL, model = NULL, discount = NULL, response = c('discrete', 'continuous'), fit.options = list()) {
+      # get call
+      self$call <- if ( deparse(sys.call()[[1]]) == 'super$initialize' ) {
+        # mc <- mcout <- match.call()
+        rlang::call_standardise(sys.call(-4))
+      } else {
+        rlang::call_standardise(sys.call())
+      }
+
       f <- Formula(formula)
       fixed <- as.list(fixed)
       response <- match.arg(response)
@@ -93,6 +103,10 @@ Cogscimodel <- R6Class(
       self$parm <- x[, 'init']
       names(self$parm) <- parnames
       self$allowedparm <- x
+    },
+    # Retrieve the call to super
+    getCall = function() {
+      return(self$call)
     },
     # Retrieve the stimuli or inputs to the model
     setinput = function(f, d) {
@@ -316,6 +330,11 @@ Cogscimodel <- R6Class(
       k <- ifelse('newdata' %in% names(list(...)), 0, self$nparm('free'))
       return( -2 * self$logLik() + 2*k )
     },
+    AICc = function(...) {
+      k <- ifelse('newdata' %in% names(list(...)), 0, self$nparm('free'))
+      N <- self$nobs()
+      self$AIC() + (2*k*(k+1)) / (N-k-1)
+    },
     MSE = function(...) {
       return(self$gof(type = 'mse', ...))
     },
@@ -496,6 +515,9 @@ MSE.cogscimodel <- function(obj, ...) {
 AIC.cogscimodel <- function(obj, ...) {
   obj$AIC(...)
 }
+AICc.cogscimodel <- function(obj, ...) {
+  obj$AICc(...)
+}
 BIC.cogscimodel <- function(obj, ...) {
   obj$BIC(...)
 }
@@ -507,6 +529,9 @@ summary.cogscimodel <- function(obj, ...) {
 }
 nobs.cogscimodel <- function(obj, ...) {
   obj$nobs()
+}
+getCall.cogscimodel <- function(obj, ...) {
+  obj$getCall()
 }
 print.summary.cogscimodel = function(x, digits = max(3L, getOption("digits") - 3L), ...) {
   cat("\nModel:\n",trimws(x$model),
