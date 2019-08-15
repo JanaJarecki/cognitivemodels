@@ -240,6 +240,10 @@ Cogscimodel <- R6Class(
       x <- match.arg(x, c('all', 'free', 'fixed', 'choicerule', 'constrained'))
       return(length(self$getparm(x)))
     },
+    #' Number of observations in the data
+    nobs = function() {
+      return( dim(self$input)[1] )
+    },
     #' Sets fit options
     # param x list of fitting options
     setfitoptions = function(x, f = self$formula) {
@@ -247,7 +251,7 @@ Cogscimodel <- R6Class(
         measure = 'loglikelihood',
         n = 1,
         nbest = length(self$freenames),
-        newdata = NULL,
+        newdata = NULL, #todo: does his argument make senes?
         options = list())
 
       # Checks
@@ -305,7 +309,7 @@ Cogscimodel <- R6Class(
     },
     BIC = function(...) {
       k <- ifelse('newdata' %in% names(list(...)), 0, self$nparm('free'))
-      N <- dim(self$input)[1]
+      N <- self$nobs()
       return( -2 * self$logLik() + log(N)*k )
     },
     AIC = function(...) {
@@ -500,6 +504,9 @@ RMSE.cogscimodel <- function(obj, ...) {
 }
 summary.cogscimodel <- function(obj, ...) {
   obj$summary()
+}
+nobs.cogscimodel <- function(obj, ...) {
+  obj$nobs()
 }
 print.summary.cogscimodel = function(x, digits = max(3L, getOption("digits") - 3L), ...) {
   cat("\nModel:\n",trimws(x$model),
