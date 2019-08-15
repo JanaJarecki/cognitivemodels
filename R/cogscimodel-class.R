@@ -4,6 +4,7 @@
 #' @import cogsciutils
 #' @import R6
 #' @import Formula
+#' @importFrom rlang call_standardise
 #' @usage Cogscimodel$new(formula, data, allowedparm)
 #' @param formula Formula (e.g., \code{y ~ x1 + x2}); depends on the model.
 #' @param data Data.frame or matrix holding \code{formula}'s variables.
@@ -31,6 +32,7 @@ Cogscimodel <- R6Class(
   #' @section
   # should be inherited, followed by method list
   public = list(
+    call = NULL,
     model = 'string',
     formula = 'Formula',
     input = 'matrix',
@@ -48,6 +50,11 @@ Cogscimodel <- R6Class(
     gofvalue = NULL,
     fit.options = NULL,
     initialize = function(formula, data, allowedparm, fixed = NULL, choicerule =  NULL, model = NULL, discount = NULL, response = c('discrete', 'continuous'), fit.options = list()) {
+      self$call <- if ( deparse(sys.call()[[1]]) == 'super$initialize' ) {
+        as.list(rlang::call_standardise(sys.call(-4)))
+      } else {
+        sys.call()
+      }
       f <- Formula(formula)
       fixed <- as.list(fixed)
       response <- match.arg(response)
@@ -93,6 +100,10 @@ Cogscimodel <- R6Class(
       self$parm <- x[, 'init']
       names(self$parm) <- parnames
       self$allowedparm <- x
+    },
+    # Retrieve the call to super
+    getCall = function() {
+      return(self$call)
     },
     # Retrieve the stimuli or inputs to the model
     setinput = function(f, d) {
@@ -507,6 +518,9 @@ summary.cogscimodel <- function(obj, ...) {
 }
 nobs.cogscimodel <- function(obj, ...) {
   obj$nobs()
+}
+getCall.cogscimodel <- function(obj, ...) {
+  obj$getCall()
 }
 print.summary.cogscimodel = function(x, digits = max(3L, getOption("digits") - 3L), ...) {
   cat("\nModel:\n",trimws(x$model),

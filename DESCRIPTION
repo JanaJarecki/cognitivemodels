@@ -19,7 +19,8 @@ Imports:
     quadprog,
     reshape2,
     abind,
-    knitr
+    knitr,
+    rlang
 Remotes:
   janajarecki/cogsciutils
 LinkingTo:
