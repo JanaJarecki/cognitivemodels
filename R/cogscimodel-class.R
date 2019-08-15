@@ -427,17 +427,17 @@ Cogscimodel <- R6Class(
     print = function(digits = 2) {
       cat(self$model)
       cat('\nCall:\n',
-      paste(deparse(self$formula), sep = '\n', collapse = '\n'), '\n\n', sep = '')
+      paste(deparse(self$call), sep = '\n', collapse = '\n'), '\n\n', sep = '')
       if(length(self$freenames) > 0) {
           cat('Free parm estimates\n')
-          print.default(format(self$parm[setdiff(self$freenames, self$constrainednames)], digits = digits), print.gap = 2L, quote = FALSE)
+          print.default(format(self$parm[setdiff(self$freenames, self$constrainednames)], digits = digits), print.gap=2L, quote=FALSE)
       } else {
         cat('No free parm\n')
       }
       if(length(self$fixednames) > 0) {
         cat('\n')
         cat('Fixed parm\n')
-        print.default(format(self$parm[unique(c(self$fixednames, self$constrainednames))], digits = digits), print.gap = 2L, quote = FALSE)
+        print.default(format(self$parm[unique(c(self$fixednames, self$constrainednames))], digits = digits), print.gap=2L, quote=FALSE)
       } else {
         cat('No fixed parm\n')
       }
@@ -452,33 +452,75 @@ Cogscimodel <- R6Class(
       }      
       cat('\n')
       invisible(self)
+    },
+    summary = function() {
+      coef.table <- matrix(self$parm)
+      dimnames(coef.table) <- list(names(self$parm), c("Estimate"))
+      ans <- list(call = self$formula,
+                  model = self$model,
+                  aic = self$AIC(),
+                  bic = self$BIC(),
+                  logLik = self$logLik(),
+                  freenames = self$freenames,
+                  coefficients = coef.table)
+      class(ans) <- "summary.cogscimodel"
+      return(ans)
     }
   )
 )
 
 
 # Define S3 methods
+predict.cogscimodel <- function(obj, ...) {
+  obj$predict(...)
+}
+summary.cogscimodel <- function(obj, ...) {
+  print(cogsciutils)
+}
 logLik.cogscimodel <- function(obj, ...) {
   obj$logLik(...)
 }
-SSE <- function(obj, ...) {
-  UseMethod('SSE')
-}
 SSE.cogscimodel <- function(obj, ...) {
-  obj$SSE(...)
-}
-MSE <- function(obj, ...) {
-  UseMethod('MSE')
+  ojb$SSE()
 }
 MSE.cogscimodel <- function(obj, ...) {
-  obj$MSE(...)
+  obj$MSE()
 }
-RMSE <- function(obj, ...) {
-  UseMethod('RMSE')
+AIC.cogscimodel <- function(obj, ...) {
+  obj$AIC(...)
+}
+BIC.cogscimodel <- function(obj, ...) {
+  obj$BIC(...)
 }
 RMSE.cogscimodel <- function(obj, ...) {
-  obj$RMSE(...)
+  obj$RMSE()
 }
+summary.cogscimodel <- function(obj, ...) {
+  obj$summary()
+}
+print.summary.cogscimodel = function(x, digits = max(3L, getOption("digits") - 3L), ...) {
+  cat("\nModel:\n",trimws(x$model),
+    if (is.null(x$choicerule)) {
+      'with no choice rule'
+    } else {
+      paste('with', x$choicerule, 'choicerule')
+    })
+  cat("\nCall:\n",
+    paste(deparse(x$call), sep="\n", collapse="\n"), "\n", sep="")
+  if (length(x$freenames) == 0L) {
+    cat("\nNo Free Parameters\n")
+  } else {
+    cat("\nParameters:\n")
+    printParmat(x$coefficients, digits = digits, ...)
+  }
+  cat("\nFit Measures:\n",
+    "logLik: ", format(x[['logLik']], digits=max(4L, digits+1L)),
+    ", AIC: ", format(x[['aic']],    digits = max(4L, digits+1L)),
+    ", BIC: ", format(x[['bic']],    digits = max(4L, digits+1L)), "\n\n"
+    )
+  invisible(self)
+}
+
 
 # showMethods('logLik')
 # logLik
