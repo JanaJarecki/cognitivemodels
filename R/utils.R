@@ -149,3 +149,7 @@ akaikeweight <- function(x, measure = c("aic", "loglikelihood")) {
   }
   return(exp(deltas) / sum(exp(deltas)))
 }
+
+printParmat = function(mat, digits, na.print = "NA", ...) {
+  print(mat, quote = FALSE, right = TRUE, digits = digits, na.print = na.print, ...)
+}
