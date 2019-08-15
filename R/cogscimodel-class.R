@@ -301,22 +301,25 @@ Cogscimodel <- R6Class(
       do.call(cogsciutils::gof, .args)
     },
     logLik = function(...) {
-      self$gof(type = 'loglikelihood', ...)
+      return(self$gof(type = 'loglikelihood', ...))
     },
-    BIC = function() {
-      -2 * self$logLik() + dim(self$input)[1] * log(self$nparm('free'))
+    BIC = function(...) {
+      k <- ifelse('newdata' %in% names(list(...)), 0, self$nparm('free'))
+      N <- dim(self$input)[1]
+      return( -2 * self$logLik() + log(N)*k )
     },
-    AIC = function() {
-     -2 * self$logLik() + 2 * self$nparm('free')
+    AIC = function(...) {
+      k <- ifelse('newdata' %in% names(list(...)), 0, self$nparm('free'))
+      return( -2 * self$logLik() + 2*k )
     },
     MSE = function(...) {
-      self$gof(type = 'mse', ...)
+      return(self$gof(type = 'mse', ...))
     },
     SSE = function(...) {
-      self$gof(type = 'sse', ...)
+      return(self$gof(type = 'sse', ...))
     },
     RMSE = function(...) {
-      self$gof(type = 'rmse', ...)
+      return(self$gof(type = 'rmse', ...))
     },
     fit = function(type = c('grid', 'solnp'), measure = self$fit.options$measure, ...) {
       type <- match.arg(type, several.ok = TRUE)
