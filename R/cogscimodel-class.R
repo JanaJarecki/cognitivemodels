@@ -4,6 +4,7 @@
 #' @import cogsciutils
 #' @import R6
 #' @import Formula
+#' @importFrom rlang call_standardise
 #' @usage Cogscimodel$new(formula, data, allowedparm)
 #' @param formula Formula (e.g., \code{y ~ x1 + x2}); depends on the model.
 #' @param data Data.frame or matrix holding \code{formula}'s variables.
@@ -31,6 +32,7 @@ Cogscimodel <- R6Class(
   #' @section
   # should be inherited, followed by method list
   public = list(
+    call = NULL,
     model = 'string',
     formula = 'Formula',
     input = 'matrix',
@@ -48,6 +50,11 @@ Cogscimodel <- R6Class(
     gofvalue = NULL,
     fit.options = NULL,
     initialize = function(formula, data, allowedparm, fixed = NULL, choicerule =  NULL, model = NULL, discount = NULL, response = c('discrete', 'continuous'), fit.options = list()) {
+      self$call <- if ( deparse(sys.call()[[1]]) == 'super$initialize' ) {
+        as.list(rlang::call_standardise(sys.call(-4)))
+      } else {
+        sys.call()
+      }
       f <- Formula(formula)
       fixed <- as.list(fixed)
       response <- match.arg(response)
@@ -93,6 +100,14 @@ Cogscimodel <- R6Class(
       self$parm <- x[, 'init']
       names(self$parm) <- parnames
       self$allowedparm <- x
+    },
+    # Retrieve the call to super
+    getCall = function() {
+      cc <- list(self$call[[1]], self$call[['formula']])
+      if ( 'fixed' %in% names(self$call) ) {
+        cc <- c(cc, fixed=self$call[['fixed']])
+      }
+      return( as.call( cc ) )
     },
     # Retrieve the stimuli or inputs to the model
     setinput = function(f, d) {
@@ -252,6 +267,10 @@ Cogscimodel <- R6Class(
       x <- match.arg(x, c('all', 'free', 'fixed', 'choicerule', 'constrained'))
       return(length(self$getparm(x)))
     },
+    #' Number of observations in the data
+    nobs = function() {
+      return( dim(self$input)[1] )
+    },
     #' Sets fit options
     # param x list of fitting options
     setfitoptions = function(x, f = self$formula) {
@@ -259,7 +278,7 @@ Cogscimodel <- R6Class(
         measure = 'loglikelihood',
         n = 1,
         nbest = length(self$freenames),
-        newdata = NULL,
+        newdata = NULL, #todo: does his argument make senes?
         options = list())
 
       # Checks
@@ -317,7 +336,7 @@ Cogscimodel <- R6Class(
     },
     BIC = function(...) {
       k <- ifelse('newdata' %in% names(list(...)), 0, self$nparm('free'))
-      N <- dim(self$input)[1]
+      N <- self$nobs()
       return( -2 * self$logLik() + log(N)*k )
     },
     AIC = function(...) {
@@ -512,6 +531,12 @@ RMSE.cogscimodel <- function(obj, ...) {
 }
 summary.cogscimodel <- function(obj, ...) {
   obj$summary()
+}
+nobs.cogscimodel <- function(obj, ...) {
+  obj$nobs()
+}
+getCall.cogscimodel <- function(obj, ...) {
+  obj$getCall()
 }
 print.summary.cogscimodel = function(x, digits = max(3L, getOption("digits") - 3L), ...) {
   cat("\nModel:\n",trimws(x$model),
