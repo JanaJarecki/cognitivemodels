@@ -483,11 +483,11 @@ Cogscimodel <- R6Class(
 
 
 # Define S3 methods
-predict.cogscimodel <- function(obj, ...) {
-  obj$predict(...)
+coef.cogscimodel <- function(obj, ...) {
+  do.call(obj$coef, list(...))
 }
-summary.cogscimodel <- function(obj, ...) {
-  print(cogsciutils)
+predict.cogscimodel <- function(obj, ...) {
+  do.call(obj$predict, list(...))
 }
 logLik.cogscimodel <- function(obj, ...) {
   obj$logLik(...)
