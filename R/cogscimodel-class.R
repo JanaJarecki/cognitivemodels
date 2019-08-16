@@ -50,10 +50,12 @@ Cogscimodel <- R6Class(
     gofvalue = NULL,
     fit.options = NULL,
     initialize = function(formula, data, allowedparm, fixed = NULL, choicerule =  NULL, model = NULL, discount = NULL, response = c('discrete', 'continuous'), fit.options = list()) {
+      # get call
       self$call <- if ( deparse(sys.call()[[1]]) == 'super$initialize' ) {
-        as.list(rlang::call_standardise(sys.call(-4)))
+        # mc <- mcout <- match.call()
+        rlang::call_standardise(sys.call(-4))
       } else {
-        sys.call()
+        rlang::call_standardise(sys.call())
       }
       f <- Formula(formula)
       fixed <- as.list(fixed)
@@ -339,6 +341,11 @@ Cogscimodel <- R6Class(
       k <- ifelse('newdata' %in% names(list(...)), 0, self$nparm('free'))
       return( -2 * self$logLik() + 2*k )
     },
+    AICc = function(...) {
+      k <- ifelse('newdata' %in% names(list(...)), 0, self$nparm('free'))
+      N <- self$nobs()
+      self$AIC() + (2*k*(k+1)) / (N-k-1)
+    },
     MSE = function(...) {
       return(self$gof(type = 'mse', ...))
     },
@@ -518,6 +525,9 @@ MSE.cogscimodel <- function(obj, ...) {
 }
 AIC.cogscimodel <- function(obj, ...) {
   obj$AIC(...)
+}
+AICc.cogscimodel <- function(obj, ...) {
+  obj$AICc(...)
 }
 BIC.cogscimodel <- function(obj, ...) {
   obj$BIC(...)
