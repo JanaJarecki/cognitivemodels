@@ -103,11 +103,7 @@ Cogscimodel <- R6Class(
     },
     # Retrieve the call to super
     getCall = function() {
-      cc <- list(self$call[[1]], self$call[['formula']])
-      if ( 'fixed' %in% names(self$call) ) {
-        cc <- c(cc, fixed=self$call[['fixed']])
-      }
-      return( as.call( cc ) )
+      return(self$call)
     },
     # Retrieve the stimuli or inputs to the model
     setinput = function(f, d) {
