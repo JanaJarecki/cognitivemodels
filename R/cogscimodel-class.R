@@ -554,7 +554,7 @@ print.summary.cogscimodel = function(x, digits = max(3L, getOption("digits") - 3
     ", AIC: ", format(x[['aic']],    digits = max(4L, digits+1L)),
     ", BIC: ", format(x[['bic']],    digits = max(4L, digits+1L)), "\n\n"
     )
-  invisible(self)
+  invisible(x)
 }
 
 
