@@ -133,23 +133,77 @@ GetParmFromGrid <- function(id, grid) {
 }
 
 
+##
+# Utilities for parsing, printing cogscimodels
+# --------------------------------------------------------------------------
 
-#' Compute akaike weights
-#' @param x row vector with goodness of fit measure (AIC, or log likelihood)
-#' @param measure string (default \code{"aic"}) holding which measure of fit x contains, allowed are \code{"aic", "loglikelihood"}.
-akaikeweight <- function(x, measure = c("aic", "loglikelihood")) {
-  if (nrow(x) > 1) {
-    t(apply(x, 1, akaikeweight, source = source))
-  }
-  measure <- match.arg(measure)
-  winner <- base::max(x)
-  deltas <- x - winner
-  if (measure == "aic") {
-    deltas <- -1/2 * deltas
-  }
+##' deparse(.) returning \bold{one} string
+##' @note Protects against the possibility that results from deparse() will be
+##'       split after 'width.cutoff' (by default 60, maximally 500)
+.safeDeparse <- function(x, collapse=" ") paste(deparse(x, 500L), collapse=collapse)
+.abbrDeparse <- function(x, width=60) {
+    r <- deparse(x, width)
+    if (length(r) > 1) {
+      return( paste(r[1], "...") )
+    } else {
+      return( r )
+    }
   return(exp(deltas) / sum(exp(deltas)))
 }
 
-printParmat = function(mat, digits, na.print = "NA", ...) {
-  print(mat, quote = FALSE, right = TRUE, digits = digits, na.print = na.print, ...)
+
+##' creates a directory for a new cogscimodel
+##' @path Path to the 
+.safe.dir.create <- function(path) {
+  if (!dir.exists(path) && !dir.create(path)) {
+    stop(gettextf("Cannot create directory '%s'", path), domain = NA)
+  }
+}
+
+
+#' Define parameter for cognitive models
+#' 
+#' @usage define.parameter(alpha = c(ll=0, ul=1, init=0.5, na=0))
+#' @param ... 1 or more parameters and their ranges, specified as vector: E.g., to define parameters alpha and beta enter \code{alpha = c(ll=0, ul=1, init=0.5, na=0), beta = c(0,10,5,NA)})
+#' \describe{
+#'    \item{\code{"ll"}}{Smallest value allowed for the parameter}
+#'    \item{\code{"ul"}}{Maximum value allowed for the parameter}
+#'    \item{\code{"init"}}{Initial value for fitting}
+#'    \item{\code{"na"}}{Value the parameter takes if it should have no effect, can be \code{NA}}
+#' }
+#' @value
+#' A matrix with as many rows as parameters, where rownames are paramter names and four columns ll, ul, init, na define the lower limit, upper limit, initial value and null-effect-value (optional) for each parameter.
+#' @details \code{"ll"} and \code{"ul"} are the smallest and largest value allowed for the parameter, \code{"init"} is the initial value when fitting the parameter, \code{"na"} is an optional value the parameter takes if it should have no effect.
+#' @examples 
+#' ## Define four parameter alpha, beta, gamma, delta
+#' define.parameter(alpha = c(ll=0,ul=1,init=0.5,na=0),
+#'                 beta = c(1,10,5,NA),
+#'                 gamma = c(ll=1,ul=2,init=0,na=1),
+#'                 delta = c(2,1,0))
+#' 
+#' ## Dynamically define new parameter "gamma" and "delta"
+#' ## with the same definition (ul, ll, init, na)
+#' def <- c(ll = 0, ul = 1, init = 0.5, na = 0)
+#' deflist <- list("gamma" = def, "delta" = def)
+#' do.call(define.parameter, deflist)
+#' @export
+define.parameter <- function(...) {
+  dotargs <- list(...)
+
+  dotargs <- vapply(dotargs, function(x) {
+      n <- names(x)
+      if (is.null(n)) {
+        x
+      } else if (identical(sort(n), c("init", "ll", "na", "ul"))) {
+        x[c('ll', 'ul', 'init', 'na')]
+      } else {
+        stop('Parameter definition must be named "init", "ll", "na", "ul", but names contain ', .brackify[x], '.')
+      }
+    }, c(ll=0,ul=0,init=0,na=0))
+
+  dotargs <- t(dotargs)
+  if ( any(dotargs[,'ll'] > dotargs[,'ul']) ) {
+    stop('"ll" > "ul" for the following parameter:', .brackify(rownames(dotargs)[which(dotargs[,"ll"] > dotargs[,"ul"])]), ". Check define.parameter.")
+  }
+  return(dotargs)
 }
