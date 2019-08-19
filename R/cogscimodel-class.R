@@ -269,6 +269,14 @@ Cogscimodel <- R6Class(
     nobs = function() {
       return( dim(self$input)[1] )
     },
+    # Simulate responses rather than response probabilities
+    simulate = function() {
+      pred <- as.matrix(self$predict())
+      if ( ncol(pred) > 2 | self$response == 'continuous' ) {
+        stop('simulation is only implemented for binary discrete choices')
+      }
+      return(rbinom(pred[,1], size = 1, prob=pred))
+    },
     #' Sets fit options
     # param x list of fitting options
     setfitoptions = function(x, f = self$formula) {
@@ -408,7 +416,7 @@ Cogscimodel <- R6Class(
       colnames(par) <- rownames(parspace)
       return(par)
     },
-    fitSolnp = function(par0, parspace, control = list(trace = 1)) {
+    fitSolnp = function(par0, parspace, control = list(trace = 0)) {
       fit <- solnp(pars = par0,
         fun = self$fitObjective,
         LB = parspace[, 'll', drop = FALSE],
@@ -529,6 +537,7 @@ AIC.cogscimodel <- function(obj, ...) {
 AICc.cogscimodel <- function(obj, ...) {
   obj$AICc(...)
 }
+
 BIC.cogscimodel <- function(obj, ...) {
   obj$BIC(...)
 }
