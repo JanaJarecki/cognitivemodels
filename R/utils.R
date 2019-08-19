@@ -137,10 +137,11 @@ GetParmFromGrid <- function(id, grid) {
 # Utilities for parsing, printing cogscimodels
 # --------------------------------------------------------------------------
 
-##' deparse(.) returning \bold{one} string
-##' @note Protects against the possibility that results from deparse() will be
-##'       split after 'width.cutoff' (by default 60, maximally 500)
+# deparse(.) returning \bold{one} string
+# @note Protects against the possibility that results from deparse() will be
+#       split after 'width.cutoff' (by default 60, maximally 500)
 .safeDeparse <- function(x, collapse=" ") paste(deparse(x, 500L), collapse=collapse)
+
 .abbrDeparse <- function(x, width=60) {
     r <- deparse(x, width)
     if (length(r) > 1) {
@@ -151,9 +152,8 @@ GetParmFromGrid <- function(id, grid) {
   return(exp(deltas) / sum(exp(deltas)))
 }
 
-
-##' creates a directory for a new cogscimodel
-##' @path Path to the 
+# creates a directory for a new cogscimodel
+# @param path Path to the file
 .safe.dir.create <- function(path) {
   if (!dir.exists(path) && !dir.create(path)) {
     stop(gettextf("Cannot create directory '%s'", path), domain = NA)
@@ -171,8 +171,7 @@ GetParmFromGrid <- function(id, grid) {
 #'    \item{\code{"init"}}{Initial value for fitting}
 #'    \item{\code{"na"}}{Value the parameter takes if it should have no effect, can be \code{NA}}
 #' }
-#' @value
-#' A matrix with as many rows as parameters, where rownames are paramter names and four columns ll, ul, init, na define the lower limit, upper limit, initial value and null-effect-value (optional) for each parameter.
+#' @return A matrix with as many rows as parameters, where rownames are paramter names and four columns ll, ul, init, na define the lower limit, upper limit, initial value and null-effect-value (optional) for each parameter.
 #' @details \code{"ll"} and \code{"ul"} are the smallest and largest value allowed for the parameter, \code{"init"} is the initial value when fitting the parameter, \code{"na"} is an optional value the parameter takes if it should have no effect.
 #' @examples 
 #' ## Define four parameter alpha, beta, gamma, delta
