@@ -52,8 +52,7 @@ Cogscimodel <- R6Class(
     initialize = function(formula, data, allowedparm, fixed = NULL, choicerule =  NULL, model = NULL, discount = NULL, response = c('discrete', 'continuous'), fit.options = list()) {
       # get call
       self$call <- if ( deparse(sys.call()[[1]]) == 'super$initialize' ) {
-        # mc <- mcout <- match.call()
-        rlang::call_standardise(sys.call(-4))
+        rlang::call_standardise(sys.calls()[[sys.nframe()-3]])
       } else {
         rlang::call_standardise(sys.call())
       }
