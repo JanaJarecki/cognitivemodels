@@ -1,20 +1,20 @@
 #' Kahneman & Tversky's (1992) cumulative prospect theory model
 #' @importFrom stringr str_extract
+#' @importFrom abind abind
+#' @importFrom data.table %between%
 #' @inheritParams Cogscimodel
 #' @description Fits the cumulative prospect theory model.
-#' @param formula Object of class formula, for instance \code{response ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py)}, defines the response, outcome, and probability variables; choice options must be separated by a pipe (\code{|}). 
-#' @param nopt Integer spedifying the number of options.
-#' @param nout Integer specifying the number of outcomes.
-#' @param ref Integer or numeric vector, reference point.
+#' @param formula Object of class \link{formula} (e.g, \code{y ~ x1 + p1 + x2 | y1 + py + y2}) specifying the observed variables and the gambles. Gambles must be in the form X+P+X+P+..., the last P can be omitted (X+P+X) and will be inferred (e.g. \code{y ~ x1 + p1 + x2 + I(1-p1)}). A pipe (\code{|}) separates multiple gambles (e.g., two gambles: \code{y ~ x1 + p1 + x2 | z1 + pz + z2}).
+#' @param ref A Integer, numeric matrix, or formula defining the reference point. If it is a formula (e.g, \code{~z}) the reference point is a variable in \code{data}.
 #' @param choicerule (optional) choierule, for instance \code{"softmax"}, allowed values are listed in \code{type} under \code{\link[cogsciutils]{choicerule}}.
 #' @param weighting (optional) weighting function. Currently the one used in Kahneman & Tversky (1992), \code{"KT1992"}, is possible.
 #' @param value (optional) value function. Currently, only the one used by Kahneman & Tversky (1992), \code{"KT1992"}, is possible.
 #' @references Tversky, A., & Kahneman, D. (1992). Advances in prospect theory: cumulative representation of uncertainty. Journal of Risk and Uncertainty, 5, 297–323. doi:10.1007/BF00122574
 #' @return An object of class R6 holding the model, it has free parameters. A model object \code{M} can be viewed with \code{M}, predictions can be made with \code{M$predict()} for choice predictions, and \code{M$predict("ev")} for the expected value of the optimal choice and \code{M$predict("value", 1:2)} for the expected value of all choices.
 #' @author Jana B. Jarecki, \email{jj@janajarecki.com}
-#' @details Risk-sensitive foraging means you have, for instance, four choices between the same two risky lotteries and after the four choices you need to have accumulated at least 12 points to get a reward. The optimal solution to this choice problem relies on dynamic programming. The function creates all possible future states given the possible remaining trials, and predicts the optimal choice polica or the expected value of chosing either option given a certain state and a certain time horizon.
+#' @details Fits cumulative prospect theory.
 #' @examples
-# #' # Tversky, A., & Kahneman, D. (1992). Advances in prospect theory: cumulative representation of uncertainty. Journal of Risk and Uncertainty, 5, 297–323. doi:10.1007/BF00122574
+#' ## Tversky, A., & Kahneman, D. (1992). Advances in prospect theory: cumulative representation of uncertainty. Journal of Risk and Uncertainty, 5, 297–323. doi:10.1007/BF00122574
 # p. 313
 #' dt <- data.frame(
 #'   x1 = c(100, -100),
@@ -26,34 +26,35 @@
 #'   rp = 1)
 #' 
 #' # Make the model, add fixed parameters (don't fit)
-#' M <- cpt(rp ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py),
-#'          nopt = 2, nout = 2, ref = 0, choicerule = "softmax", data = dt,
+#' # using the Parameter from the paper
+#' M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0,
+#'          choicerule = "softmax", data = dt,
 #'          fixed = list(alpha = 0.88, beta = 0.88, lambda = 2.25,
 #'          gammap = 0.61, gamman = 0.69, tau = 1))
+#' 
 #' # View the model
 #' M
-#' M$predict("value") # predict values
-#' M$predict("response") # predict choices after soft-max
+#' 
+#' # Methods
+#' predict(M, "value") # predict values, also: M$predict("value")
+#' predict(M, "response") # predict choice probability after softmax
+#' summary(M)
+#' anova(M)
 #' @export
-cpt <- function(formula, nopt, nout, ref, fixed = list(), data, choicerule, weighting = c('TK1992'), value = c('TK1992')) {
+cpt <- function(formula, data = NULL, ref, fixed = list(), choicerule = NULL, weighting = c('TK1992'), value = c('TK1992')) {
   message("This function is experimental and still under development.")
-  obj <- Cpt$new(formula = formula, nopt = nopt, nout = nout, ref = ref, fixed = fixed, data = data, choicerule = choicerule, weighting = c('TK1992'), value = c('TK1992'))
-  if ( length(obj$fixednames) < length(obj$parm) ) {
-    obj$fit(c('solnp'))
-  }
+  obj <- Cpt$new(formula = formula, ref = ref, fixed = fixed, data = data, choicerule = choicerule, weighting = c('TK1992'), value = c('TK1992'))
   return(obj)
 }
-
 
 Cpt <- R6Class("cpt",
   inherit = Cogscimodel,
   public = list(
-    nopt = NULL,
-    nout = NULL,
+    R = NULL,
     ref = NULL,
     wfun = NULL,
     vfun = NULL,
-    initialize = function(formula, nopt, nout, ref, fixed = NULl, data = NULL, choicerule = NULL, weighting = c('TK1992'), value = c('TK1992'), fit.options = list(nbest = 1)) {
+    initialize = function(formula, ref, fixed = NULL, data = NULL, choicerule = NULL, weighting = c('TK1992'), value = c('TK1992'), fit.options = list(nbest = 1)) {
       # Ranges of parameters following these studiese
       # 1. International comparison study
       # Rieger, M. O., Wang, M., & Hens, T. (2017). Estimating cumulative prospect theory parameters from an international survey. Theory and Decision, 82, 567–596. doi:10.1007/s11238-016-9582-8
@@ -61,47 +62,102 @@ Cpt <- R6Class("cpt",
       # 2. parameter stability study
       # Glöckner, A., & Pachur, T. (2012). Cognitive models of risky choice: parameter stability and predictive accuracy of prospect theory. Cognition, 123, 21–32. doi:10.1016/j.cognition.2011.12.002
       if ( any(is.na(fixed)) ) {
-        stop('n cpt() ignoring parameters is not (yet) implemented.', call.=FALSE)
+        stop('Ignoring parameters by setting them NA is not (yet) implemented.', call.=FALSE)
       }
-      allowedparm <- list( #todo: check if the 'ignore' values are correct
-        alpha   = c(0, 2, .8, 1),
-        beta    = c(0, 2, .8, 1),
-        gammap  = c(0, 2, 1, 1),
-        gamman  = c(0, 2, 1, 1),
-        lambda  = c(0, 10, 1.5, 1)
-        )
-      allowedparm <- matrix(unlist(allowedparm), ncol = 4, byrow = TRUE, dimnames= list(names(allowedparm), c('ll', 'ul', 'init', 'na')))
-     
-      super$initialize(formula = formula, data = data, allowedparm = allowedparm, fixed = fixed, choicerule =  choicerule, model = paste0("Cumulative prospect theory [", unique(c(weighting, value)), "]"), discount = 0, response = 'discrete', fit.options = fit.options)
-
-      if (length(ref) == 1) {
-        ref <- rep(ref, nrow(data))
-      }      
-      if (length(nout) == 1) {
-        nout <- rep(nout, each = nopt)
-      }
-
-      self$ref  <- ref
-      self$nout <- nout
-      self$nopt <- nopt
+      self$ref <- ref
+      super$initialize(
+        formula = formula,
+        data = data,
+        fixed = fixed,
+        choicerule =  choicerule,
+        model = paste0("Cumulative prospect theory [", unique(c(weighting, value)), "]"),
+        discount = 0,
+        response = 'discrete',
+        fit.options = fit.options,
+        allowedparm = define.parameter(# todo: check if 'ignore' is correct
+          alpha   = c(0, 2, .8, 1),
+          beta    = c(0, 2, .8, 1),
+          gammap  = c(0, 2, 1, 1),
+          gamman  = c(0, 2, 1, 1),
+          lambda  = c(0, 10, 1.5, 1)
+          ))
       self$setWeightingFun(weighting)
       self$setValueFun(value)
-    },
-    predict = function(type = c("response", "value"), action = NULL, newdata = NULL, newref = NULL) {
-      type <- match.arg(type)
-
-      if ( !is.null(newdata) ) {
-        input <- self$getinput(self$formula, newdata)
-        # input <- model.frame(self$formula, newdata)[, -1, drop = F]
-        ref <- if(length(newref) == 1) { rep(newref, nrow(input)) } else { newref }
-      } else {
-        input <- self$input
-        ref <- self$ref
+      if ( self$nparm('free') ) {
+        self$fit(c('solnp'))
       }
-     v <- apply(input, 3, function(i) {
-      self$cpt(x = i[,1:2,drop=FALSE], p = i[,3:4,drop=FALSE], ref = ref)})
-      colnames(v) <- self$getoptionlabel()
-
+    },
+    setformula = function(f) {
+      f <- as.Formula(f)
+      fs <- lapply(seq.int(length(f)[2]), function(x) formula(f, lhs=0, rhs=x, drop=FALSE))
+      trms <- lapply(fs, function(x) attr(terms(x), "term.labels"))
+      # If any RHS-segnemts of formula have uneven number of variables
+      # This means that the last probability was not supplied. In this case,
+      # add the last probability as I(1-p1-p2-p3-...)
+      fs <- lapply(1:length(trms), function(i) {
+        x <- trms[[i]]
+        if ( (length(x) %% 2) != 0 ) {
+            update(fs[[i]], as.formula(paste0("~ . + I(1-", paste0(x[seq(2,length(x),2)], collapse = "-"), ")")))
+          } else {
+            fs[[i]]
+          }
+        })
+      self$formula <- update(f, as.formula(paste(".", paste(fs, collapse = " | "))))
+    },
+    getX = function() {
+      return(self$input[,  seq(1, self$natt(), 2),,drop=FALSE])
+    },
+    getP = function() {
+      return(self$input[, -seq(1, self$natt(), 2),,drop=FALSE])
+    },
+    getR = function(f, d = self$refData) {
+      if (is.numeric(f)) {
+        out <- f
+      }
+      if(is.character(f)) {
+        f <- as.formula(paste("~",f))
+      }
+      if ( class(f) == "formula" ) {
+        if (length(formula(self$ref,lhs=0,rhs=1,drop=FALSE))[2] > self$nopt()) {
+          stop("'ref' must have", self$nopt(), "variables. Check ref.")
+        }
+        out <- get_all_vars(self$ref, d)
+      }
+      return(array(out, dim=c(self$nobs(), 1, self$nopt())))
+    },
+    setinput = function(f, d) {
+      super$setinput(f, d)
+      self$R <- self$getR(self$ref, d)
+    },
+    checkinput = function() {
+      P <- self$getP()
+      f <- self$formula
+      fs <- lapply(seq.int(length(f)[2]), function(x) attr(terms(formula(f, lhs=0, rhs=x, drop=FALSE)), "term.labels"))
+      pvars <- lapply(fs, function(x) x[seq(2, length(x), 2)] )
+      if (!all(apply(P, 3, rowSums) == 1L)) {
+        stop("Some probabilities in 'data' do not sum to 1. Problematic variables are:\n  ", paste(lapply(pvars[which(apply(P, 3, function(x) !all(rowSums(x) == 1L)))], .brackify), "does not sum to 1.\n  "), "Make sure outcomes and probabilities alternate in 'formula', like:  ~ x1+p1+x2+p2.")
+      }
+      pvars <- lapply(pvars, function(x) x[grep("I", x, invert=TRUE)] )
+      if (!all(P %between% list(0L,1L))) {
+        stop("Some probabilities in 'data' are > 1 or < 0. Problematic variables are:\n  ", .brackify(unlist(pvars[which(apply(P, 3, function(x) !all(x %between% list(0L,1L))))])), ".", "\n  Make sure outcomes and probabilities alternate in 'formula', like: ~ x1+p1+x2+p2.")
+      }
+    },
+    predict = function(type = c("response", "value"), action = NULL, newdata = NULL) {
+      type <- match.arg(type)
+      input <- if ( !is.null(newdata) ) {
+        self$getinput(f = self$formula, d = newdata)
+      } else {
+        self$input
+      }
+      R <- if ( !is.null(newdata) ) {
+        self$getR(f = self$formula, d = newdata)
+      } else {
+        self$R
+      }
+      v <- sapply(seq.int(self$nopt()), function(o) {
+        self$cpt(x = self$getX()[,,o], p = self$getP()[,,o], ref = R[,,o])
+        })
+      v <- matrix(v, ncol=self$nopt(), dimnames = list(NULL, self$getoptionlabel()))
       switch (type,
         response = super$applychoicerule(v),
         value = v)
@@ -113,12 +169,9 @@ Cpt <- R6Class("cpt",
       if (!is.matrix(x)) {
         x <- t(as.matrix(x))
       }
-
       x <- x - ref
-
-      args <- c(as.list(self$parm), list(p = p, x = x))      
-      out <- rowSums(do.call(self$wfun, args) * do.call(self$vfun, args))
-      
+      .args <- c(as.list(self$parm), list(p = p, x = x))      
+      out <- rowSums(do.call(self$wfun, .args) * do.call(self$vfun, .args))   
       return(out)
     },
     setWeightingFun = function(type) {
@@ -126,7 +179,7 @@ Cpt <- R6Class("cpt",
         # One-parameter specification of cumulative prospect theory (?)
         wfun <- function(p, x, gammap, gamman, ...) {
           if(dim(p)[2] != 2) {
-            stop("p in the cpt-weighting fun needs 2 columns,\nbut has ", ncol(p), ", which is: ", head(p))
+            stop("'p' in the cpt weighting function needs 2 columns, but has ", ncol(p), ".")
         }
         px <- cbind(p, x)
         id <- as.numeric(factor(apply(px, 1, paste, collapse=''), ordered = TRUE))
