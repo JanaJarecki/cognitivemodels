@@ -99,7 +99,7 @@ anova.cogscimodellist <- function(models, model.names = NULL) {
   llk <- unlist(llks)
   tab <- data.frame(npar = npar,
                     AIC = aic,
-                    `wAIC` = akaikeweight(aic),
+                    `wAIC` = akaike.weight(aic),
                     BIC = vapply(models, BIC, 1), #  "       "
                     logLik = llk,
                     deviance = -2*llk,
