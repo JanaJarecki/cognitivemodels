@@ -60,6 +60,8 @@ Cogscimodel <- R6Class(
       fixed <- as.list(fixed)
       response <- match.arg(response)
 
+      self$setformula(f)
+      f <- self$formula
       self$setinput(f, data)
       self$setobs(f, data)
       self$setdiscount(discount)
@@ -69,7 +71,7 @@ Cogscimodel <- R6Class(
       self$setparm(self$substituteparm(self$switchoffparm(fixed)))
       self$setfitoptions(fit.options, f) # run this safter initializing parm
       self$model <- model
-      self$formula <- f
+      self$checkinput() # run this after assigning the formula
 
       # Checks
       if ( length(fixed) > 0 ) {
@@ -124,6 +126,11 @@ Cogscimodel <- R6Class(
         colnames(arr) <- vn
       }
       return(arr)
+    },
+    checkinput = function() {
+    },
+    setformula = function(f) {
+      self$formula <- f
     },
     getoptionlabel = function(f = self$formula) {
       f <- as.Formula(f)
@@ -264,9 +271,22 @@ Cogscimodel <- R6Class(
       x <- match.arg(x, c('all', 'free', 'fixed', 'choicerule', 'constrained'))
       return(length(self$getparm(x)))
     },
-    #' Number of observations in the data
+    #' Number of trials/observations in the data
     nobs = function() {
+      # todo: maybe add the fit.options$n argument in there?
       return( dim(self$input)[1] )
+    },
+    #' Number of alternatives available
+    nopt = function() {
+      return(length(formula(as.Formula(self$formula), lhs=0, rhs=NULL)))
+    },
+    # number of responses
+    nres = function() {
+      return( dim(self$response)[2] )
+    },
+    # number of attributes
+    natt = function() {
+      return( dim(self$input)[2] )
     },
     # Simulate responses rather than response probabilities
     simulate = function() {
@@ -548,6 +568,12 @@ summary.cogscimodel <- function(obj, ...) {
 }
 nobs.cogscimodel <- function(obj, ...) {
   obj$nobs()
+}
+nopt.cogscimodel <- function(obj, ...) {
+  obj$nopt()
+}
+natt.cogscimodel <- function(obj, ...) {
+  obj$natt()
 }
 getCall.cogscimodel <- function(obj, ...) {
   obj$getCall()
