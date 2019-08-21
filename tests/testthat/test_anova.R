@@ -34,16 +34,18 @@ m3 <- ebm(fml,
           fit.options = list(n = nn, newdata = d),
           discount = 0)
 # lm model
+options(warn=-1)
 mlm <- lm(pobs ~ angle + size, data = fitdata)
 mglm <- glm(fml, data = fitdata, family = 'binomial')
+options(warn=0)
 
-print(anova(m1,m2,m3), signif.legend = FALSE)
-print(anova(m1,m2,m3))
-
-anova(mglm,mlm)
-anova(mlm,mglm)
-do.call(anova, list(m1,m2))
-
+test_that("Anova Table", {
+  # print(anova(m1,m2,m3), signif.legend = FALSE)
+  # print(anova(m1,m2,m3))
+  anova(mglm,mlm)
+  anova(mlm,mglm)
+  do.call(anova, list(m1,m2))
+})
 
 
 
