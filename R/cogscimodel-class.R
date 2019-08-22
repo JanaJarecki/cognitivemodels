@@ -113,8 +113,8 @@ Cogscimodel <- R6Class(
     #' Get the choicerule parameter
     which.choiceruleparm = function() {
       return(switch(self$choicerule,
-        softmax = which(names(self$parm) == 'tau'),
-        epsilon = which(names(self$parm) == 'eps')))
+                    softmax = which(names(self$parm) == 'tau'),
+                    epsilon = which(names(self$parm) == 'eps')))
     },
     substituteequal = function(x) {
       subs_val_in_fixed <- x[ na.omit(match( x, names(x) )) ]
@@ -133,11 +133,11 @@ Cogscimodel <- R6Class(
       if (is.matrix(x)) {
         x <- if (nrow(x) == 1) {
           setNames(x[1,], colnames(x))
-          } else if (ncol(x) == 1) {
-            setNames(x[1,], rownames(x))
-            } else {
-              stop('In setparm(), parameter must be a named vector.', call.=FALSE)
-              }
+        } else if (ncol(x) == 1) {
+          setNames(x[1,], rownames(x))
+        } else {
+          stop('In setparm(), parameter must be a named vector.', call.=FALSE)
+        }
       }
       x <- x[names(x) %in% names(self$parm)]
       self$parm[names(x)] <- x
@@ -192,7 +192,7 @@ Cogscimodel <- R6Class(
       -2 * self$logLik() + nrow(self$input) * length(self$freenames)
     },
     AIC = function() {
-     -2 * self$logLik() + 2 * length(self$freenames)
+      -2 * self$logLik() + 2 * length(self$freenames)
     },
     MSE = function(...) {
       self$gof(type = 'mse', ...)
@@ -210,19 +210,19 @@ Cogscimodel <- R6Class(
       if ( type[1] == 'solnp' ) {
         fit <- self$fitSolnp(par0 = pars[, 'init'], pars)
       }
-
+      
       if ( type[1] == 'grid' & length(type) == 1) {
         fit <- self$fitGrid(1, pars)
       }
-
+      
       if ( all(type == c('grid', 'solnp')) ) {
         gridFit <- self$fitGrid(nbest = self$fit.options$nbest, pars, offset = TRUE)
         fits <- apply(gridFit$parm, 1, self$fitSolnp, parspace = pars)
         fit <- fits[[which.min(lapply(fits, function(x) tail(x$val, 1)))]]
       }
-
+      
       self$setparm(fit$parm)
-      self$gofvalue <- fit$vals
+      self$gofvalue <- fit$val
     },
     fitGrid = function(nbest = 1, parspace, offset = FALSE) {
       np <- length(self$freenames)

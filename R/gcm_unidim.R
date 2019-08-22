@@ -9,7 +9,7 @@ Gcm_unidim <- R6Class("gcm_unidim",
                      weightnames <- super$make_weight_names()
                      self$fixednames <- c(weightnames, setdiff(self$fixednames, weightnames))
                      self$freenames <- setdiff(self$freenames, self$fixednames)
-
+                     
                      unidimweights <- matrix(diag(self$ndim), ncol = self$ndim, dimnames = list(NULL, super$make_weight_names()))
                      unidimweights <- unidimweights[c(1, 3), ] # delete
                      gofs <- vector("numeric", length = self$ndim)
@@ -36,7 +36,7 @@ Gcm_unidim <- R6Class("gcm_unidim",
                    } else {
                      super$super_$fit(type = type, ...)
                    }
-                  }
+                 }
                )
 )
 

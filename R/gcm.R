@@ -9,14 +9,17 @@ Gcm <- R6Class("gcm",
                  constr = NULL,
                  metric = NULL,
                  ndim = NULL,
+                 nval = NULL,
                  input_id = NULL,
                  stimulus_frequencies = NULL,
                  fixed = NULL, 
                  gofvalue = NULL,
-                 initialize = function(formula, data, cat, metric = c("minkowski", "discrete"), fixed, choicerule, discount) {
+                 initialize = function(formula, data, cat, metric = c("minkowski", "discrete", "threshold"), fixed, choicerule, discount) {
                    self$cat <- get_all_vars(cat, data)[, 1] # true cat
                    self$metric <- match.arg(metric)
                    self$ndim <- length(attr(terms(formula), "term.labels"))
+                   f <- Formula(formula)
+                   self$nval <- length(unique(as.vector(as.matrix(get_all_vars(formula(f, lhs=0, rhs=NULL), data)))))
                    
                    # w = vector with attention weights, sum = 1
                    # c = scalar, sensitivity that discriminate the items on the dimensions
@@ -28,9 +31,12 @@ Gcm <- R6Class("gcm",
                    allowedparm[, "ul"] <- c(rep(1, self$ndim), 5, 1, 1)
                    allowedparm[, "init"] <- c(rep(1/self$ndim, self$ndim), 2.5, 1, 1)
                    allowedparm[, "na"] <- c(rep(1/self$ndim, self$ndim), 1, 1, 1)
+                   if(self$metric == "threshold") {
+                     allowedparm <- rbind(allowedparm, gamma = c(0, self$nval - 2, 1, 1))
+                   }
                    
                    super$initialize(formula = formula, data = data, fixed = as.list(fixed), model = "gcm", discount = discount, choicerule = choicerule, allowedparm = allowedparm, response = "discrete")
-
+                   
                    self$input_id <- apply(self$input, 1, paste0, collapse = "")
                    self$stimulus_frequencies <- self$calc_stimulus_frequencies()
                  },
@@ -109,7 +115,7 @@ Gcm <- R6Class("gcm",
                        return(1/length(unique(self$cat)))
                      }
                      id <- input_id[trial]
-
+                     
                      effective_trial <- trial - is.null(newdata)
                      sim_to_cat1 <- stimulus_frequencies[, effective_trial, 2] %*% sim_mat[id, ]
                      total_sim <- rowSums(stimulus_frequencies[, effective_trial, ]) %*% sim_mat[id, ]
@@ -119,13 +125,18 @@ Gcm <- R6Class("gcm",
                    res <- self$applychoicerule(res)
                    return(res)
                  },
-                 calc_distance = function(probe, exemplar, r = self$parm[["r"]], w = self$parm[1:self$ndim]){
+                 calc_distance = function(probe, exemplar, r = self$parm[["r"]], w = self$parm[1:self$ndim], gamma = NULL){
                    w <- unlist(w)
                    dist <- as.numeric(probe - exemplar)
                    if(self$metric == "minkowski"){
                      dist <- sum( w*abs(dist)^r )^(1/r)
-                   } else {
+                   } 
+                   if(self$metric == "discrete"){
                      dist <- w %*% as.numeric(dist != 0) # Vector multiplication
+                   }
+                   if(self$metric == "threshold"){
+                     gamma <- self$parm[["gamma"]]
+                     dist <- w %*% as.numeric(dist > gamma) # Vector multiplication
                    }
                    return(dist)
                  },
@@ -136,17 +147,29 @@ Gcm <- R6Class("gcm",
                      },
                      eqB = 1
                      )
-                  )
+                   )
                  },
                  parGrid = function(offset) {
-                   grid <- MakeGridList(
-                     names = self$freenames,
-                     ll = self$allowedparm[, 'll'] + offset,
-                     ul = self$allowedparm[, 'ul'] - offset,
-                     nsteps = list(w = 4, c = 4, tau = 4),
-                     sumto = list('w' = paste0("w", 1:self$ndim)),
-                     regular = TRUE,
-                     offset = 0)
+                   if(self$metric != "threshold"){
+                     grid <- MakeGridList(
+                       names = self$freenames,
+                       ll = self$allowedparm[, 'll'] + offset,
+                       ul = self$allowedparm[, 'ul'] - offset,
+                       nsteps = list(w = 4, c = 4, tau = 4),
+                       sumto = list('w' = paste0("w", 1:self$ndim)),
+                       regular = TRUE,
+                       offset = 0)
+                   } 
+                   # else {
+                   #   grid <- MakeGridList(
+                   #     names = self$freenames,
+                   #     ll = self$allowedparm[, 'll'] + offset,
+                   #     ul = self$allowedparm[, 'ul'] - offset,
+                   #     nsteps = list(w = 4, c = 4, tau = 4, gamma = 2),
+                   #     sumto = list('w' = paste0("w", 1:self$ndim)),
+                   #     regular = TRUE,
+                   #     offset = 0)
+                   # }
                    return(grid)
                  }
                  # fit = function(type = "solnp") {
@@ -156,10 +179,23 @@ Gcm <- R6Class("gcm",
 )
 
 #' @export
-gcm <- function(formula, data, cat, metric = c("minkowski", "discrete"), fixed, choicerule, discount = 0) {
+gcm <- function(formula, data, cat, metric = c("minkowski", "discrete", "threshold"), fixed, choicerule, discount = 0) {
   obj <- Gcm$new(formula = formula, data = data, cat = cat, metric = metric, fixed = fixed, choicerule = choicerule, discount = discount)
   if(length(obj$freenames) > 0) {
-    obj$fit(type = "solnp") # c("grid", "solnp")
+    if(obj$metric == "threshold") {
+      gofs <- vector("numeric", length = obj$nval - 1)
+      parms <- matrix(nrow = obj$nval - 1, ncol = length(obj$parm), dimnames = list(NULL, names(obj$parm)))
+      for(i in 1:(obj$nval - 1)) {
+        obj$parm$gamma <- i - 1
+        obj$fit(type = "solnp")
+        gofs[i] <- obj$gofvalue
+        parms[i, ] <- unlist(obj$parm)
+      }
+      obj$setparm(parms[which.min(gofs), ])
+      obj$gofvalue <- min(gofs)
+    } else {
+      obj$fit(type = "solnp") # c("grid", "solnp")
+    }
   }
   return(obj)
 }

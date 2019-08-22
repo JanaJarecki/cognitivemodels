@@ -1,18 +1,28 @@
 rm(list=ls(all=T)) # Empty workspace
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+library(R6)
 library(data.table)
 library(cogscimodels)
 library(devtools)
 
-# Learning and test set
+source("~/cogscimodels/R/cogscimodel-class.R", chdir = TRUE)
+source("~/cogscimodels/R/gcm_unidim.R", chdir = TRUE)
+source("~/cogscimodels/R/gcm.R", chdir = TRUE)
+
+# Stimuli
 dt <- data.table(response = c(0, 0, 1, 0, 1),
                  f1 = c(4, 4, 1, 4, 1),
                  f2 = c(1, 3, 1, 4, 4),
                  true_cat = c(0, 0, 1, 0, 1))
 
+dt <- data.table(response = c(0, 1, 0, 1, 1),
+                 f1 = c(4, 1, 3, 3, 2),
+                 f2 = c(1, 4, 2, 2, 4),
+                 true_cat = c(0, 1, 0, 0, 1))
+
 formula <- response ~ f1 + f2
 
-args <- list(formula = formula, cat = ~ true_cat, metric = "mink", fixed = c(c = 1, r = 1, p = 1, tau = 1), choicerule = "soft")
+args <- list(formula = formula, cat = ~ true_cat, metric = "d", fixed = c(c = 1, r = 1, p = 1, tau = 1), choicerule = "soft")
 m <- do.call(gcm, c(args, data = list(dt), discount = 0))
 
 # devtools::load_all()
