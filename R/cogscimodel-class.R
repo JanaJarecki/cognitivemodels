@@ -558,13 +558,13 @@ Cogscimodel <- R6Class(
     fit_roi = function() {
       objective <- ROI::F_objective(
         F = function(par) { self$objective(par, self = self) },
-        n = self$npar('free'),
-        names = self$get_parnames('free'))
+        n = self$npar(),
+        names = self$get_parnames())
       
       bounds <- ROI::V_bound(
-        li = seq_len(self$npar('free')), lb = self$get_lb('free'),
-        ui = seq_len(self$npar('free')), ub = self$get_ub('free'),
-        names = self$get_parnames('free')
+        li = seq_len(self$npar()), lb = self$get_lb(),
+        ui = seq_len(self$npar()), ub = self$get_ub(),
+        names = self$get_parnames()
         )
       
       problem <- ROI::OP(
