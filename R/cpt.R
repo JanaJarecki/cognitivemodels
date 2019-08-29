@@ -61,6 +61,7 @@ Cpt <- R6Class("cpt",
       # and
       # 2. parameter stability study
       # Glöckner, A., & Pachur, T. (2012). Cognitive models of risky choice: parameter stability and predictive accuracy of prospect theory. Cognition, 123, 21–32. doi:10.1016/j.cognition.2011.12.002
+
       if ( any(is.na(fix)) ) {
         stop('Ignoring parameters by setting them NA is not (yet) implemented.', call.=FALSE)
       }

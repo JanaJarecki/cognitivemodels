@@ -4,6 +4,7 @@
 \alias{cpt}
 \title{Kahneman & Tversky's (1992) cumulative prospect theory model}
 \usage{
+<<<<<<< HEAD
 cpt(formula, data = NULL, ref, fix = list(), choicerule = NULL,
   weighting = c("TK1992"), value = c("TK1992"))
 }
@@ -21,6 +22,19 @@ cpt(formula, data = NULL, ref, fix = list(), choicerule = NULL,
 \item{\code{beta="alpha"}}{: fix beta to the value of alpha; alpha may be a free or fixed model parameter in \code{parspace}.}
 \item{\code{delta=NA}}{: ignore delta if it can be ignored by setting delta equal to the value in the column "na" of \code{parspace}, given that parspace has a value in the column "na" for delta.}
 }}
+=======
+cpt(formula, data = NULL, ref, fixed = list(), choicerule = NULL,
+  weighting = c("TK1992"), value = c("TK1992"))
+}
+\arguments{
+\item{formula}{Object of class \link{formula} (e.g, \code{y ~ x1 + p1 + x2 | y1 + py + y2}) specifying the observe variables and the gambles. Gambles must be in the form X+P+X+P+..., the last P can be omitted (X+P+X) and will be inferred (e.g. \code{y ~ x1 + p1 + x2 + I(1-p1)}). A pipe (\code{|}) separates multiple gambles (e.g., two gambles: \code{y ~ x1 + p1 + x2 | z1 + pz + x2}).}
+
+\item{data}{Data.frame or matrix holding \code{formula}'s variables.}
+
+\item{ref}{A Integer, numeric matrix, or formula defining the reference point. If it is a formula (e.g, \code{~z}) it is a variable in \code{data}.}
+
+\item{fixed}{(optional) List of model parameters and their fixed values, those parameters won't be estimated. Fixing a parameter to \code{NA} means ignoring it entirely (see details).}
+>>>>>>> 9cf294b9e89bf6634006cca45699af990ceb8386
 
 \item{choicerule}{(optional) choierule, for instance \code{"softmax"}, allowed values are listed in \code{type} under \code{\link[cogsciutils]{choicerule}}.}
 
