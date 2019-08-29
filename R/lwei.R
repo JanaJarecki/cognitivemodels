@@ -1,9 +1,9 @@
 #' Linear-weighting model
 #' @keywords internal
 #' @import quadprog
-lwei <- function(formula, nopt, nout, ref, fixed = NULL, data, choicerule, weighting = c('TK1992'), value = c('TK1992')) {
-  obj <- Lwei$new(formula, nopt, nout, ref, fixed = fixed, data, choicerule, weighting = c('TK1992'), value = c('TK1992'))
-  if (length(obj$fixednames) < length(obj$parm)) {
+lwei <- function(formula, nopt, nout, ref, fix = NULL, data, choicerule, weighting = c('TK1992'), value = c('TK1992')) {
+  obj <- Lwei$new(formula, nopt, nout, ref, fix = fix, data, choicerule, weighting = c('TK1992'), value = c('TK1992'))
+  if (length(obj$fixnames) < length(obj$par)) {
     obj$fit()
   }
   return(obj)
@@ -16,12 +16,12 @@ Lwei <- R6Class("lwei",
   inherit = cognitiveModel,
   public = list(
     type = NULL,
-    initialize = function(formula, type = c("orthonormal"), fixed = NULL, data = NULL, choicerule) {
+    initialize = function(formula, type = c("orthonormal"), fix = NULL, data = NULL, choicerule) {
       type = match.arg(type)
       formula <- as.Formula(formula)
 
-      allowedparm <- makeAllowedparm(type, formula)     
-      super$initialize(formula = formula, data = data, allowedparm = allowedparm, fixedparm = fixed, choicerule =  choicerule, model = paste0("Linear weighting model (", type, ")"), discount = 0)
+      parspace <- make_parspace(type, formula)     
+      super$initialize(formula = formula, data = data, parspace = parspace, fixpar = fix, choicerule =  choicerule, model = paste0("Linear weighting model (", type, ")"), discount = 0)
 
       self$type = type
     },
@@ -50,7 +50,7 @@ Lwei <- R6Class("lwei",
       colnames(v) <- nn
 
       switch (type,
-        choice = super$applychoicerule(v),
+        choice = super$apply_choicerule(v),
         value = v)
     },
     fit = function(type = c("quadprog")) {
@@ -70,14 +70,14 @@ Lwei <- R6Class("lwei",
         fit <- solve.QP(Dmat = Rinv, factorized = TRUE, dvec = d, Amat = C, bvec = b, meq = 1)
         best_par <- fit$solution
         names(best_par) <- colnames(input)
-        super$setparm(best_par)
+        super$setPar(best_par)
       }     
     },
-    makeAllowedparm = function(type = self$type, formula = self$formula) {
+    make_parspace = function(type = self$type, formula = self$formula) {
       rn <- c(ifelse(attr(terms(formula), c("intercept"))==1, '(inter)', NULL), attr(terms(formula), c("term.labels")))
 
       if (type == 'orthonormal') {
-        return(matrix(c(0,1,.5), nrow = length(rn), ncol = 3, byrow = TRUE, dimnames = list(rn, c('ul', 'll', 'init'))))     
+        return(matrix(c(0,1,.5), nrow = length(rn), ncol = 3, byrow = TRUE, dimnames = list(rn, c('ul', 'll', "start"))))     
       }
     }
   )

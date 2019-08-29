@@ -4,33 +4,47 @@
 \alias{ebm}
 \title{Exemplar-based cognitive model}
 \usage{
-ebm(formula, data, type, ...)
+ebm(formula, data, criterion, fix, mode, ...)
 }
 \arguments{
-\item{formula}{a formula specifying the variables (\code{reponse ~ feature1 + feature2 + ... | criterion}), which needs a pipe (\code{|}) before the criterion variable. Examples:
+\item{formula}{A formula (e.g., \code{class ~ f1 + f2}, or probably \code{judgment ~ dim1 + dim2 + dim3}) specifying the observed data and the feature variables.}
+
+\item{data}{A data.frame containing \code{formula}'s variables.}
+
+\item{criterion}{A formula (e.g., \code{~ true_class} or \code{~ true_value}) specifying the true class or criterion, note the "\code{~}".}
+
+\item{fix}{(optional)  A list with parameter constraints (e.g., \code{list(beta = 1)}). Allowed are numbers, strings, and NA. Supplying
+\code{list(alpha=0.5, beta="alpha", gamma=NA)} constrains the parameters alpha, beta, and gamma as follows
 \itemize{
-  \item Categorization model: \code{category ~ f1 + f2 + f3 | true_class}
-  \item Judgment model: \code{judgment ~ f1 + f2 + f3 | value}
-  \item Memory-based preference model: \code{purchased ~ f1 + f2 + f3 | value | price} (see details)
+\item{\code{alpha=0.5}}{: fix alpha to 0.5.}
+\item{\code{beta="alpha"}}{: fix beta to the value of alpha; alpha may be a free or fixed model parameter in \code{parspace}.}
+\item{\code{delta=NA}}{: ignore delta if it can be ignored by setting delta equal to the value in the column "na" of \code{parspace}, given that parspace has a value in the column "na" for delta.}
 }}
-
-\item{data}{a data.frame or matrix containing the variables in \code{formula}; make sure it is ordered in the order in which respondents saw the stimuli.}
-
-\item{type}{(optional) String specifying the type of model: \code{"categorization", "judgment", "valuebasedchoice"}, will be inferred if omitted.}
 
 \item{...}{other arguments from other functions, currently ignored.}
 }
 \value{
-An exemplar-based model; it can be viewed with \code{summary(mod)}, where \code{mod} is the name of the model object.
+An exemplar-based model; a model \code{M} can be viewed with \code{summary(M)}, or \code{anova(M)}.
 }
 \description{
-Fits an exemplar-based model (also known as generalized context model, GCM, Medin & Schaffer, 1978; Nosofsky, 1986). The model predicts the value of a current stimulus from the values of previous stimuli, weighted by the similarity between the current and the previous stimuli's features. This model can be used to fit judgments (1,2,...,100) or categorization (0,1) responses.
+Fits an exemplar-based model, which is also known as generalized context model (GCM, Medin & Schaffer, 1978; Nosofsky, 1986). The model predicts the value of a current stimulus from the values of previous stimuli, weighted by the similarity between the current and the previous stimuli's features. This model can be used to fit judgments (continuous) or categorization (discrete) modes.
 }
 \details{
-You may add a 'cost' term to the formula separated by a second pipe:  \code{reponse ~ feature1 + feature2 + ... | criterion | cost}. The model then predicts a value, compares this value to cost, and if the value is greater than the cost returns \code{1}, otherwise \code{0} (chose the stimulus, reject the stimulus). This is implemented with a softmax choice rule.
+If \code{type} is missing it will be inferred.
 }
+\section{Parameter Space of the Model}{
+
+\itemize{
+\item{n weights}{n attribute weights (range: 0-1, sum to 1), the parameter names equal the RHS of \code{formula}.}
+\item{lambda}{Sensitivity (range: 0.001-10), higher values mean more discriminability within the psychological space.}
+\item{r}{Exponent in the decay function (range: 1-2), a value of 1 yields exponential decay, 2 yields Gaussian decay.}
+\item{q}{}
+\item{m biases}{Bias towards categories (range: 0-1, sums to 1), the parameter names are \code{bx, by} were x,y are the categories}
+}
+}
+
 \examples{
-#  No examples yet
+No examples yet
 }
 \references{
 {Medin, D. L., & Schaffer, M. M. (1978). Context theory of classification learning. Psychological Review, 85, 207-238. doi:10.1037//0033-295X.85.3.207}

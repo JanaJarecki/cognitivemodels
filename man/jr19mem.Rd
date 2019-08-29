@@ -4,14 +4,14 @@
 \alias{jr19mem}
 \title{Memory-based preference model (cognitive model)}
 \usage{
-jr19mem(formula, data, fixed = NULL)
+jr19mem(formula, data, fix = NULL)
 }
 \arguments{
-\item{formula}{an object of class formula (\code{response ~ attr1 + attr + attr3 + attr4 | subjvalue | price }). Specifies the variables for response, features, experienced values, and prices; the value variable must be preceeded by a pipe (\code{|}) and the price/cost variable by a second pipe.}
+\item{formula}{an object of class formula (\code{mode ~ attr1 + attr + attr3 + attr4 | subjvalue | price }). Specifies the variables for mode, features, experienced values, and prices; the value variable must be preceeded by a pipe (\code{|}) and the price/cost variable by a second pipe.}
 
 \item{data}{a data.frame or matrix, must contain the variables in \code{formula}; must be ordered in the order in which respondents saw the stimuli.}
 
-\item{fixed}{(optional) List with fixed parameter, allowed are \code{lambda} to fix the discriminability parameter, and \code{tau} to fix the choicerule parameter.}
+\item{fix}{(optional) List with fix parameter, allowed are \code{lambda} to fix the discriminability parameter, and \code{tau} to fix the choicerule parameter.}
 }
 \value{
 An object of class R6 holding the fitted model. Parameters will be fitted by the grid-and-maximum-likelihood method; a model object \code{M} can be viewed with \code{M}, parameter estimates can be obtained with \code{mod$param}

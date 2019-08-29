@@ -4,26 +4,23 @@
 \alias{hm1988}
 \title{Houston & McNamara's (1988) dynamic optimization for risk-sensitive foraging problems with discrete time}
 \usage{
-hm1988(env, formula, data, choicerule, fixed = NULL,
-  fit.options = NULL)
+hm1988(env, formula, data, choicerule, fix = NULL, fit.options = NULL)
 }
 \arguments{
-\item{env}{object of class \link{rsenvironment}, see example. It specifies the risky and safe option, the number of trials, the state, and requirement (aka budget).
-#' @param formula (optional) object of class \link[stats]{formula}, e.g. \code{choice ~ timehorizon + state}, defines how the variables are called in the data.}
+\item{env}{object of class \link{rsenvironment}, see example. It specifies the risky and safe option, the number of trials, the state, and requirement (aka budget).}
+
+\item{formula}{(optional) object of class \link[stats]{formula}, e.g. \code{choice ~ timehorizon + state}, defines how the variables are called in the data.}
 
 \item{data}{(optional) data frame}
 
-\item{choicerule}{(optional, default \code{NULL}) String specifying the choice rule. Allowed values: \code{NULL} or e.g., \code{"softmax"}, values of \code{type}s in \link[cogsciutils]{choicerule}.}
+\item{choicerule}{(optional, default \code{NULL}) String specifying the choice rule, allowed are \code{NULL}, \code{"softmax"}, \code{"eps"}, and other values of the argument \code{type} to \link[cogsciutils]{choicerule}.}
 
-\item{fixed}{(optional) List of model parameters and their fixed values, those parameters won't be estimated. Fixing a parameter to \code{NA} means ignoring it entirely (see details).}
-
-\item{fit.options}{(optional) List with parameter estimation options:
-\describe{
-   \item{\code{measure}}{Goodness-of-fit measure (default: \code{"loglikelihood"}); allowed are values of \link[cogsciutils]{gof}'s argument \code{type}}
-   \item{\code{n}}{Number of observations, if data is aggregated}
-   \item{\code{nbest}}{How many best values to select for grid+hillclimbing?}
-   \item{\code{newdata}}{New data to fit parameters with}
-   \item{\code{options}}{Other options, see \link[cogsciutils]{gof}}
+\item{fix}{(optional)  A list with parameter constraints (e.g., \code{list(beta = 1)}). Allowed are numbers, strings, and NA. Supplying
+\code{list(alpha=0.5, beta="alpha", gamma=NA)} constrains the parameters alpha, beta, and gamma as follows
+\itemize{
+\item{\code{alpha=0.5}}{: fix alpha to 0.5.}
+\item{\code{beta="alpha"}}{: fix beta to the value of alpha; alpha may be a free or fixed model parameter in \code{parspace}.}
+\item{\code{delta=NA}}{: ignore delta if it can be ignored by setting delta equal to the value in the column "na" of \code{parspace}, given that parspace has a value in the column "na" for delta.}
 }}
 }
 \value{
@@ -62,9 +59,9 @@ M <- hm1988(env = env, ~ timehorizon + state, choicerule = 'arg')
 # Results:
 M # view model
 M$input # view all possible state + trial combinations
-M$predict() # optimal response for all possible state x trial combinations
+M$predict() # optimal mode for all possible state x trial combinations
 cbind(M$input, M$predict())
-M$predict('response') # optimal response
+M$predict('mode') # optimal mode
 M$predict("ev") # expected value of optimal choice for all possible states and trials
 M$predict("value") # expected value of choice a1
 M$predict("value", 1:2) # expected value of a1 or a2

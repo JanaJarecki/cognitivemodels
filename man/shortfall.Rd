@@ -4,18 +4,24 @@
 \alias{shortfall}
 \title{Shortfall Risky Choice Model}
 \usage{
-shortfall(formula, asp, data, fixed = list(), choicerule)
+shortfall(formula, asp, data, fix = list(), choicerule)
 }
 \arguments{
-\item{formula}{A \link{formula} defining the observations and stimuli in data. Stimuli are defined by outcomes and probabilities, separated by a pipe (\code{|}), like this: \code{response ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py)}, where x1 and x2 are the first option's outcomes, px is the probability Pr(x1), y1 and y2 are the second option's outcomes, and py is the probability Pr(y1).}
+\item{formula}{A \link{formula} defining the observations and stimuli in data. Stimuli are defined by outcomes and probabilities, separated by a pipe (\code{|}), like this: \code{mode ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py)}, where x1 and x2 are the first option's outcomes, px is the probability Pr(x1), y1 and y2 are the second option's outcomes, and py is the probability Pr(y1).}
 
 \item{asp}{A \link{formula} defining the aspiration level in data, e.g., (\code{~aspirlev}), strings will be reformulated.}
 
-\item{data}{Data.frame or matrix, must contain all variables in \code{formula}.}
+\item{data}{A data.frame containing \code{formula}'s variables.}
 
-\item{fixed}{(optional) Named vector with model parameter(s) that are predefined (will not be fitted). If a fixed parameter is \code{NULL} model parameter will be ignored. See details.}
+\item{fix}{(optional)  A list with parameter constraints (e.g., \code{list(beta = 1)}). Allowed are numbers, strings, and NA. Supplying
+\code{list(alpha=0.5, beta="alpha", gamma=NA)} constrains the parameters alpha, beta, and gamma as follows
+\itemize{
+\item{\code{alpha=0.5}}{: fix alpha to 0.5.}
+\item{\code{beta="alpha"}}{: fix beta to the value of alpha; alpha may be a free or fixed model parameter in \code{parspace}.}
+\item{\code{delta=NA}}{: ignore delta if it can be ignored by setting delta equal to the value in the column "na" of \code{parspace}, given that parspace has a value in the column "na" for delta.}
+}}
 
-\item{choicerule}{(optional, defaultoptions \code{NULL}) String specifying the choice rule, e.g. \code{'softmax', 'argmax'}, see \link[cogsciutils]{choicerule} for possible choicerules; \code{NLL} means predictions as is.}
+\item{choicerule}{(optional, default \code{NULL}) String specifying the choice rule, allowed are \code{NULL}, \code{"softmax"}, \code{"eps"}, and other values of the argument \code{type} to \link[cogsciutils]{choicerule}.}
 }
 \value{
 An object of class R6 holding the model, it has free parameters. A model object \code{M} can be viewed with \code{M}, predictions can be made with \code{M$predict()} for choice predictions, and \code{M$predict("ev")} for the expected value of the optimal choice and \code{M$predict("value", 1:2)} for the expected value of all choices.
@@ -39,15 +45,15 @@ dt <- data.frame(
   y2 = 0,
   rp = 1)
 
-# Make the model, add fixed parameters (don't fit)
+# Make the model, add fix parameters (don't fit)
 M <- cpt(rp ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py),
          nopt = 2, nout = 2, ref = 0, choicerule = "softmax", data = dt,
-         fixed = list(alpha = 0.88, beta = 0.88, lambda = 2.25,
+         fix = list(alpha = 0.88, beta = 0.88, lambda = 2.25,
          gammap = 0.61, gamman = 0.69, tau = 1))
 # View the model
 M
 M$predict("value") # predict values
-M$predict("response") # predict choices after soft-max
+M$predict("mode") # predict choices after soft-max
 }
 \references{
 Andraszewicz, S. (2014). Quntitative [ie Quantitative] analysis

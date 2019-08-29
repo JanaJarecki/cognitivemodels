@@ -5,17 +5,23 @@
 \title{Risk-sensitive foraging fast and frugal tree}
 \usage{
 rsfft(formula = NULL, sbt = NULL, nopt = NULL, nout = NULL,
-  fixed = NULL, data = NULL, env = NULL, choicerule,
+  fix = NULL, data = NULL, env = NULL, choicerule,
   terminal.fitness.fun)
 }
 \arguments{
-\item{formula}{Formula (e.g., \code{y ~ x1 + x2}); depends on the model.}
+\item{formula}{A formula (e.g., \code{y ~ x1 + x2}).}
 
-\item{fixed}{(optional) List of model parameters and their fixed values, those parameters won't be estimated. Fixing a parameter to \code{NA} means ignoring it entirely (see details).}
+\item{fix}{(optional)  A list with parameter constraints (e.g., \code{list(beta = 1)}). Allowed are numbers, strings, and NA. Supplying
+\code{list(alpha=0.5, beta="alpha", gamma=NA)} constrains the parameters alpha, beta, and gamma as follows
+\itemize{
+\item{\code{alpha=0.5}}{: fix alpha to 0.5.}
+\item{\code{beta="alpha"}}{: fix beta to the value of alpha; alpha may be a free or fixed model parameter in \code{parspace}.}
+\item{\code{delta=NA}}{: ignore delta if it can be ignored by setting delta equal to the value in the column "na" of \code{parspace}, given that parspace has a value in the column "na" for delta.}
+}}
 
-\item{data}{Data.frame or matrix holding \code{formula}'s variables.}
+\item{data}{A data.frame containing \code{formula}'s variables.}
 
-\item{choicerule}{(optional, default \code{NULL}) String specifying the choice rule. Allowed values: \code{NULL} or e.g., \code{"softmax"}, values of \code{type}s in \link[cogsciutils]{choicerule}.}
+\item{choicerule}{(optional, default \code{NULL}) String specifying the choice rule, allowed are \code{NULL}, \code{"softmax"}, \code{"eps"}, and other values of the argument \code{type} to \link[cogsciutils]{choicerule}.}
 }
 \description{
 Risk-sensitive foraging fast and frugal tree

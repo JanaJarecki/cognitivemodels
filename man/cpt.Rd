@@ -4,17 +4,23 @@
 \alias{cpt}
 \title{Kahneman & Tversky's (1992) cumulative prospect theory model}
 \usage{
-cpt(formula, data = NULL, ref, fixed = list(), choicerule = NULL,
+cpt(formula, data = NULL, ref, fix = list(), choicerule = NULL,
   weighting = c("TK1992"), value = c("TK1992"))
 }
 \arguments{
-\item{formula}{Object of class \link{formula} (e.g, \code{y ~ x1 + p1 + x2 | y1 + py + y2}) specifying the observe variables and the gambles. Gambles must be in the form X+P+X+P+..., the last P can be omitted (X+P+X) and will be inferred (e.g. \code{y ~ x1 + p1 + x2 + I(1-p1)}). A pipe (\code{|}) separates multiple gambles (e.g., two gambles: \code{y ~ x1 + p1 + x2 | z1 + pz + x2}).}
+\item{formula}{Object of class \link{formula} (e.g, \code{y ~ x1 + p1 + x2 | y1 + py + y2}) specifying the observed variables and the gambles. Gambles must be in the form X+P+X+P+..., the last P can be omitted (X+P+X) and will be inferred (e.g. \code{y ~ x1 + p1 + x2 + I(1-p1)}). A pipe (\code{|}) separates multiple gambles (e.g., two gambles: \code{y ~ x1 + p1 + x2 | z1 + pz + z2}).}
 
-\item{data}{Data.frame or matrix holding \code{formula}'s variables.}
+\item{data}{A data.frame containing \code{formula}'s variables.}
 
-\item{ref}{A Integer, numeric matrix, or formula defining the reference point. If it is a formula (e.g, \code{~z}) it is a variable in \code{data}.}
+\item{ref}{A Integer, numeric matrix, or formula defining the reference point. If it is a formula (e.g, \code{~z}) the reference point is a variable in \code{data}.}
 
-\item{fixed}{(optional) List of model parameters and their fixed values, those parameters won't be estimated. Fixing a parameter to \code{NA} means ignoring it entirely (see details).}
+\item{fix}{(optional)  A list with parameter constraints (e.g., \code{list(beta = 1)}). Allowed are numbers, strings, and NA. Supplying
+\code{list(alpha=0.5, beta="alpha", gamma=NA)} constrains the parameters alpha, beta, and gamma as follows
+\itemize{
+\item{\code{alpha=0.5}}{: fix alpha to 0.5.}
+\item{\code{beta="alpha"}}{: fix beta to the value of alpha; alpha may be a free or fixed model parameter in \code{parspace}.}
+\item{\code{delta=NA}}{: ignore delta if it can be ignored by setting delta equal to the value in the column "na" of \code{parspace}, given that parspace has a value in the column "na" for delta.}
+}}
 
 \item{choicerule}{(optional) choierule, for instance \code{"softmax"}, allowed values are listed in \code{type} under \code{\link[cogsciutils]{choicerule}}.}
 
@@ -29,9 +35,10 @@ An object of class R6 holding the model, it has free parameters. A model object 
 Fits the cumulative prospect theory model.
 }
 \details{
-Risk-sensitive foraging means you have, for instance, four choices between the same two risky lotteries and after the four choices you need to have accumulated at least 12 points to get a reward. The optimal solution to this choice problem relies on dynamic programming. The function creates all possible future states given the possible remaining trials, and predicts the optimal choice polica or the expected value of chosing either option given a certain state and a certain time horizon.
+Fits cumulative prospect theory.
 }
 \examples{
+## Tversky, A., & Kahneman, D. (1992). Advances in prospect theory: cumulative representation of uncertainty. Journal of Risk and Uncertainty, 5, 297–323. doi:10.1007/BF00122574
 dt <- data.frame(
   x1 = c(100, -100),
   px = 1,
@@ -41,15 +48,21 @@ dt <- data.frame(
   y2 = 0,
   rp = 1)
 
-# Make the model, add fixed parameters (don't fit)
-M <- cpt(rp ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py),
-         nopt = 2, nout = 2, ref = 0, choicerule = "softmax", data = dt,
-         fixed = list(alpha = 0.88, beta = 0.88, lambda = 2.25,
+# Make the model, add fix parameters (don't fit)
+# using the Parameter from the paper
+M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0,
+         choicerule = "softmax", data = dt,
+         fix = list(alpha = 0.88, beta = 0.88, lambda = 2.25,
          gammap = 0.61, gamman = 0.69, tau = 1))
+
 # View the model
 M
-M$predict("value") # predict values
-M$predict("response") # predict choices after soft-max
+
+# Methods
+predict(M, "value") # predict values, also: M$predict("value")
+predict(M, "mode") # predict choice probability after softmax
+summary(M)
+anova(M)
 }
 \references{
 Tversky, A., & Kahneman, D. (1992). Advances in prospect theory: cumulative representation of uncertainty. Journal of Risk and Uncertainty, 5, 297–323. doi:10.1007/BF00122574

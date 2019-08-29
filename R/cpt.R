@@ -25,11 +25,11 @@
 #'   y2 = 0,
 #'   rp = 1)
 #' 
-#' # Make the model, add fixed parameters (don't fit)
+#' # Make the model, add fix parameters (don't fit)
 #' # using the Parameter from the paper
 #' M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0,
 #'          choicerule = "softmax", data = dt,
-#'          fixed = list(alpha = 0.88, beta = 0.88, lambda = 2.25,
+#'          fix = list(alpha = 0.88, beta = 0.88, lambda = 2.25,
 #'          gammap = 0.61, gamman = 0.69, tau = 1))
 #' 
 #' # View the model
@@ -37,57 +37,95 @@
 #' 
 #' # Methods
 #' predict(M, "value") # predict values, also: M$predict("value")
-#' predict(M, "response") # predict choice probability after softmax
+#' predict(M, "mode") # predict choice probability after softmax
 #' summary(M)
 #' anova(M)
 #' @export
-cpt <- function(formula, data = NULL, ref, fixed = list(), choicerule = NULL, weighting = c('TK1992'), value = c('TK1992')) {
+cpt <- function(formula, data = NULL, ref, fix = list(), choicerule = NULL, weighting = c('TK1992'), value = c('TK1992')) {
   message("This function is experimental and still under development.")
-  obj <- Cpt$new(formula = formula, ref = ref, fixed = fixed, data = data, choicerule = choicerule, weighting = c('TK1992'), value = c('TK1992'))
-  return(obj)
+  .args <- as.list(rlang::call_standardise(match.call())[-1])
+  return(do.call(what = Cpt$new, args = .args, envir = parent.frame()))
 }
 
 Cpt <- R6Class("cpt",
   inherit = Cogscimodel,
   public = list(
-    R = NULL,
-    ref = NULL,
+    ref = "matrix",
+    formulaRef = NULL,
     wfun = NULL,
     vfun = NULL,
-    initialize = function(formula, ref, fixed = NULL, data = NULL, choicerule = NULL, weighting = c('TK1992'), value = c('TK1992'), fit.options = list(nbest = 1)) {
+    initialize = function(formula, ref, fix = NULL, data = NULL, choicerule = NULL, weighting = c('TK1992'), value = c('TK1992'), options = list()) {
       # Ranges of parameters following these studiese
       # 1. International comparison study
       # Rieger, M. O., Wang, M., & Hens, T. (2017). Estimating cumulative prospect theory parameters from an international survey. Theory and Decision, 82, 567–596. doi:10.1007/s11238-016-9582-8
       # and
       # 2. parameter stability study
       # Glöckner, A., & Pachur, T. (2012). Cognitive models of risky choice: parameter stability and predictive accuracy of prospect theory. Cognition, 123, 21–32. doi:10.1016/j.cognition.2011.12.002
-      if ( any(is.na(fixed)) ) {
+      if ( any(is.na(fix)) ) {
         stop('Ignoring parameters by setting them NA is not (yet) implemented.', call.=FALSE)
       }
-      self$ref <- ref
+      self$formulaRef <- if (is.numeric(ref)) { ref } else { chr_as_rhs(ref) }
+      self$ref <- if (is.numeric(ref)) { as.matrix(ref) } else { self$get_input(f=self$ref, d=data) }
+      self$set_weightingfun(weighting)
+      self$set_valuefun(value)
+
+      # todo: check if 'na' (ignore) values are correct
+      parspace <- make_parspace(
+        alpha   = c(0,  2,  .8, 1L),
+        beta    = c(0,  2,  .8, 1L),
+        gammap  = c(0,  2, 1,   1L), 
+        gamman  = c(0,  2, 1,   1L),
+        lambda  = c(0, 10, 1.5, 1L)
+        )
+
       super$initialize(
+        title = paste0("Cumulative prospect theory (", unique(c(weighting, value)), ")"),
         formula = formula,
         data = data,
-        fixed = fixed,
-        choicerule =  choicerule,
-        model = paste0("Cumulative prospect theory [", unique(c(weighting, value)), "]"),
-        discount = 0,
-        response = 'discrete',
-        fit.options = fit.options,
-        allowedparm = define.parameter(# todo: check if 'ignore' is correct
-          alpha   = c(0, 2, .8, 1),
-          beta    = c(0, 2, .8, 1),
-          gammap  = c(0, 2, 1, 1),
-          gamman  = c(0, 2, 1, 1),
-          lambda  = c(0, 10, 1.5, 1)
-          ))
-      self$setWeightingFun(weighting)
-      self$setValueFun(value)
-      if ( self$nparm('free') ) {
-        self$fit(c('solnp'))
+        fix = fix,
+        choicerule =  choicerule,        
+        discount = 0L,
+        mode = "discrete",
+        options = c(options, list(fit_solver = "grid")),
+        parspace = parspace       
+        )
+
+      if (self$npar("free") > 0L) {
+        message("Fitting free parameters ", .brackify(self$get_parnames("free")))
+        self$fit()
       }
     },
-    setformula = function(f) {
+    predict = function(type = c("response", "value"), action = NULL, newdata = NULL) {
+      parameters <- self$get_par()
+      type <- match.arg(type)
+
+      if (is.null(newdata) | missing(newdata)) {
+        input <- self$input
+        ref <- self$ref
+      } else {
+        input <- self$get_input(f = self$formula, d = newdata)
+        ref <- if (!is.numeric(self$ref)) { self$get_input(f = self$formulaRef, d = newdata) } else { as.matrix(self$ref) }
+      }
+
+      v <- sapply(seq.int(self$nstim()),
+        FUN = function(s, x_mat, p_mat, r_mat, par, iter) {
+          .args <- c(as.list(par), list(p = p_mat[, , s], x = x_mat[, , s] - r_mat[, iter[s]]))
+          rowSums(do.call(self$wfun, args = .args) * do.call(self$vfun, args = .args))
+        },
+        x_mat = self$get_x(input),
+        p_mat = self$get_p(input),
+        r_mat = as.matrix(ref),
+        par = parameters,
+        iter = if (ncol(ref) < self$nstim()) { rep(1L, self$nstim()) } else { seq.int(self$nstim()) }
+      )
+
+      v <- matrix(v, nc=self$nstim(), dimnames=list(NULL,self$get_stimnames()))
+
+      switch (type,
+        mode = super$apply_choicerule(v),
+        value = v)
+    },
+    set_formula = function(f) {
       f <- as.Formula(f)
       fs <- lapply(seq.int(length(f)[2]), function(x) formula(f, lhs=0, rhs=x, drop=FALSE))
       trms <- lapply(fs, function(x) attr(terms(x), "term.labels"))
@@ -104,82 +142,20 @@ Cpt <- R6Class("cpt",
         })
       self$formula <- update(f, as.formula(paste(".", paste(fs, collapse = " | "))))
     },
-    getX = function() {
-      return(self$input[,  seq(1, self$natt(), 2),,drop=FALSE])
+    get_x = function(x) {
+      # TODO: make this compatible for different # of features
+      return(x[,  seq(1, self$natt()[1], 2), , drop = FALSE])
     },
-    getP = function() {
-      return(self$input[, -seq(1, self$natt(), 2),,drop=FALSE])
+    get_p = function(x) {
+      # TODO: make this compatible for different # of features
+      return(x[, -seq(1, self$natt()[1], 2), , drop = FALSE])
     },
-    getR = function(f, d = self$refData) {
-      if (is.numeric(f)) {
-        out <- f
-      }
-      if(is.character(f)) {
-        f <- as.formula(paste("~",f))
-      }
-      if ( class(f) == "formula" ) {
-        if (length(formula(self$ref,lhs=0,rhs=1,drop=FALSE))[2] > self$nopt()) {
-          stop("'ref' must have", self$nopt(), "variables. Check ref.")
-        }
-        out <- get_all_vars(self$ref, d)
-      }
-      return(array(out, dim=c(self$nobs(), 1, self$nopt())))
-    },
-    setinput = function(f, d) {
-      super$setinput(f, d)
-      self$R <- self$getR(self$ref, d)
-    },
-    checkinput = function() {
-      P <- self$getP()
-      f <- self$formula
-      fs <- lapply(seq.int(length(f)[2]), function(x) attr(terms(formula(f, lhs=0, rhs=x, drop=FALSE)), "term.labels"))
-      pvars <- lapply(fs, function(x) x[seq(2, length(x), 2)] )
-      if (!all(apply(P, 3, rowSums) == 1L)) {
-        stop("Some probabilities in 'data' do not sum to 1. Problematic variables are:\n  ", paste(lapply(pvars[which(apply(P, 3, function(x) !all(rowSums(x) == 1L)))], .brackify), "does not sum to 1.\n  "), "Make sure outcomes and probabilities alternate in 'formula', like:  ~ x1+p1+x2+p2.")
-      }
-      pvars <- lapply(pvars, function(x) x[grep("I", x, invert=TRUE)] )
-      if (!all(P %between% list(0L,1L))) {
-        stop("Some probabilities in 'data' are > 1 or < 0. Problematic variables are:\n  ", .brackify(unlist(pvars[which(apply(P, 3, function(x) !all(x %between% list(0L,1L))))])), ".", "\n  Make sure outcomes and probabilities alternate in 'formula', like: ~ x1+p1+x2+p2.")
-      }
-    },
-    predict = function(type = c("response", "value"), action = NULL, newdata = NULL) {
-      type <- match.arg(type)
-      input <- if ( !is.null(newdata) ) {
-        self$getinput(f = self$formula, d = newdata)
-      } else {
-        self$input
-      }
-      R <- if ( !is.null(newdata) ) {
-        self$getR(f = self$formula, d = newdata)
-      } else {
-        self$R
-      }
-      v <- sapply(seq.int(self$nopt()), function(o) {
-        self$cpt(x = self$getX()[,,o], p = self$getP()[,,o], ref = R[,,o])
-        })
-      v <- matrix(v, ncol=self$nopt(), dimnames = list(NULL, self$getoptionlabel()))
-      switch (type,
-        response = super$applychoicerule(v),
-        value = v)
-    },
-    cpt = function(x, p, ref) {
-      if (!is.matrix(p)) {
-        p <- t(as.matrix(p))
-      }
-      if (!is.matrix(x)) {
-        x <- t(as.matrix(x))
-      }
-      x <- x - ref
-      .args <- c(as.list(self$parm), list(p = p, x = x))      
-      out <- rowSums(do.call(self$wfun, .args) * do.call(self$vfun, .args))   
-      return(out)
-    },
-    setWeightingFun = function(type) {
+    set_weightingfun = function(type) {
       if (type == "TK1992") {
         # One-parameter specification of cumulative prospect theory (?)
-        wfun <- function(p, x, gammap, gamman, ...) {
+        wfun <- function(x, p, gammap, gamman, ...) {
           if(dim(p)[2] != 2) {
-            stop("'p' in the cpt weighting function needs 2 columns, but has ", ncol(p), ".")
+            stop('Probabilities ("p" in the cpt weighting function) need 2 columns, but has ', ncol(p), ".")
         }
         px <- cbind(p, x)
         id <- as.numeric(factor(apply(px, 1, paste, collapse=''), ordered = TRUE))
@@ -220,15 +196,27 @@ Cpt <- R6Class("cpt",
       }
       self$wfun <- wfun
     },
-    setValueFun = function(type) {
-        if (type == "TK1992") {
-          vfun <- function(x, alpha, beta, lambda, ...) {
-            out <- x^alpha
-            out <- replace(out, x < 0, (-lambda * (-x)^beta )[x<0])
-            return(out)
-          }
-        } 
-        self$vfun <- vfun
+    set_valuefun = function(type) {
+      if (type == "TK1992") {
+        vfun <- function(x, alpha, beta, lambda, ...) {
+          return(replace(x^alpha, x < 0, (-lambda * (-x[x < 0])^beta)))
+        }
+      } 
+      self$vfun <- vfun
+    },
+    check_input = function() {
+      P <- self$get_p(self$input)
+      f <- self$formula
+      fs <- lapply(seq.int(length(f)[2]), function(x) attr(terms(formula(f, lhs=0, rhs=x, drop=FALSE)), "term.labels"))
+      pvars <- lapply(fs, function(x) x[seq(2, length(x), 2)] )
+      if (!all(apply(P, 3, rowSums) == 1L)) {
+        stop('In "data" the probability variables must sum to 1 (2nd, 4th... RHS variables in the "formula"). This is not true for:\n  ', paste(lapply(pvars[which(apply(P, 3, function(x) !all(rowSums(x) == 1L)))], .brackify), "does not sum to 1.\n  "), "Make sure outcomes and probabilities alternate in 'formula', like:  ~ x1+p1+x2+p2.")
+      }
+      pvars <- lapply(pvars, function(x) x[grep("I", x, invert=TRUE)] )
+      if (!all(P %between% list(0L,1L))) {
+        stop('In "data" the probability variables (2nd, 4th... RHS variables in the "formula") must lie between 0 - 1. This is not true for:\n  ', .brackify(unlist(pvars[which(apply(P, 3, function(x) !all(x %between% list(0L,1L))))])), ".", '\n  Check "data" or "formula"; in RHS of "formula" do outcomes and probabilities alternate (like: y ~ x1 + p1 + x2 + p2)?')
+      }
+      super$check_input() # don't change this, it runs default checks!
     }
   )
 )

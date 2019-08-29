@@ -6,7 +6,7 @@
 #' \deqn{v(o) = EV(o) - \beta R(o)}
 #' \deqn{R(o) = \sum_i ( p_i ( max [ \delta asp_{o} - out_{o,i} , 0 ] ),}
 #' where the parameter \eqn{\beta} represents risk aversion (\eqn{0 \le \beta \le 15}), the parameter \eqn{\delta} represents weight of the aspiration level (\eqn{0 \le \delta \le 1}).
-#' @param formula A \link{formula} defining the observations and stimuli in data. Stimuli are defined by outcomes and probabilities, separated by a pipe (\code{|}), like this: \code{response ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py)}, where x1 and x2 are the first option's outcomes, px is the probability Pr(x1), y1 and y2 are the second option's outcomes, and py is the probability Pr(y1).
+#' @param formula A \link{formula} defining the observations and stimuli in data. Stimuli are defined by outcomes and probabilities, separated by a pipe (\code{|}), like this: \code{mode ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py)}, where x1 and x2 are the first option's outcomes, px is the probability Pr(x1), y1 and y2 are the second option's outcomes, and py is the probability Pr(y1).
 #' @param asp A \link{formula} defining the aspiration level in data, e.g., (\code{~aspirlev}), strings will be reformulated.
 #' @references Andraszewicz, S. (2014). Quntitative [ie Quantitative] analysis
 #' of risky decision making in economic environments (Doctoral dissertation,
@@ -26,83 +26,99 @@
 #'   y2 = 0,
 #'   rp = 1)
 #' 
-#' # Make the model, add fixed parameters (don't fit)
+#' # Make the model, add fix parameters (don't fit)
 #' M <- cpt(rp ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py),
 #'          nopt = 2, nout = 2, ref = 0, choicerule = "softmax", data = dt,
-#'          fixed = list(alpha = 0.88, beta = 0.88, lambda = 2.25,
+#'          fix = list(alpha = 0.88, beta = 0.88, lambda = 2.25,
 #'          gammap = 0.61, gamman = 0.69, tau = 1))
 #' # View the model
 #' M
 #' M$predict("value") # predict values
-#' M$predict("response") # predict choices after soft-max
+#' M$predict("mode") # predict choices after soft-max
 #' @export
-shortfall <- function(formula, asp, data, fixed = list(), choicerule) {
-  obj <- Shortfall$new(formula = formula, asp = asp, fixed = fixed, data = data, choicerule = choicerule)
-  if ( length(obj$fixednames) < length(obj$parm) ) {
-    obj$fit(c('grid', 'solnp'))
-  }
-  return(obj)
+shortfall <- function(formula, asp, data, fix = list(), choicerule, options) {
+  .args <- as.list(rlang::call_standardise(match.call())[-1])
+  return(do.call(what = Shortfall$new, args = .args, envir = parent.frame()))
 }
 
 
 Shortfall <- R6Class("shortfall",
   inherit = Cogscimodel,
   public = list(
-    aspirationlevel = NULL,
-    asp = NULL,
-    initialize = function(formula, asp, fixed = NULL, data = NULL, choicerule = NULL, fit.options = list()) {
-      # if ( any(is.na(fixed)) ) {
-      #   stop('n cpt() ignoring parameters is not (yet) implemented.', call.=FALSE)
-      # }
-      allowedparm <- list(
-        beta = c(0, 15, 1, 0),
+    asplevel = NULL,
+    formulaAsp = NULL,
+    initialize = function(formula, asp, fix = NULL, data = NULL, choicerule = NULL, options = NULL) {
+      self$formulaAsp <- chr_as_rhs(asp)
+      self$asplevel <- self$get_input(f = self$formulaAsp, d = data)
+      parspace <- make_parspace(
+        beta  = c(0, 15, 1, 0),
         delta = c(0, 1, .5, 1)
-      )
-      allowedparm <- matrix(unlist(allowedparm), ncol = 4, byrow = TRUE, dimnames= list(names(allowedparm), c('ll', 'ul', 'init', 'na'))) 
-      super$initialize(formula = formula, data = data, allowedparm = allowedparm, fixed = fixed, choicerule =  choicerule, model = paste0('Shortfall'), discount = 0, response = 'discrete', fit.options = fit.options)
+        )
 
-      self$asp <- if (is.character(asp)) { reformulate(asp) } else { asp }
-      self$aspirationlevel <- self$getinput(self$asp, data)
-      
-      if(dim(self$input)[2] %% 2 != 0) {
-        stop('Formula needs an even number of right-hand elements, but has ', dim(self$input)[2], ' elements.')
+      super$initialize(
+        title = "Shortfall",
+        formula = formula,
+        data = data,
+        parspace = parspace,
+        fix = fix,
+        choicerule = choicerule,
+        discount = 0,
+        mode = "discrete",
+        options = c(options, list(fit_solver = c("grid", "solnp"))))
+
+      if (self$npar("free") > 0L) {
+        message("Fitting free parameters ", .brackify(self$get_parnames("free")))
+        self$fit()
       }
     },
-    predict = function(type = c("response", "value"), action = NULL, newdata = NULL) {
+    predict = function(type = c("response", "values"), action = NULL, newdata = NULL) {
       type <- match.arg(type)
-      beta <- self$parm[['beta']]
-      delta <- self$parm[['delta']]
+      parameters <- self$get_par()
+      beta  <- parameters["beta"]
+      delta <- parameters["delta"]
 
-      if ( is.null(newdata) ) {
+      if (is.null(newdata)) {
         input <- self$input
-        al <- self$aspirationlevel
+        asplevel <- self$asplevel
       } else {
-        input <- self$getinput(self$formula, newdata)
-        al <- self$getinput(self$asp, newdata)
+        input <- self$get_input(f = self$formula, d = newdata)
+        asplevel <- self$get_input(f = self$formulaAsp, d = newdata)
       }
 
-      no <- dim(input)[3]
-      nh <- dim(input)[2]/2
-      X <- input[,   1:nh , , drop=FALSE]
-      P <- input[, -(1:nh), , drop=FALSE]
-
-      EV <- sapply(1:no, function(o) {
-        rowSums(X[,,o] * P[,,o])
-      })
-      # if there is only one aspiration level for all options use the iteratir
-      aiter <- if(dim(al)[3]==1 & no > 1) { rep(1,no) } else { seq_len(no) }
-      R <- sapply(1:no, function(o, al, aiter) {
-        X[] <- delta * al[,,aiter[o]] - X[,,o]
-        X[X<0] <- 0
-        rowSums(X[,,o] * P[,,o])
-      }, al = al, aiter = aiter)
       
+      #Todo: make this flexible to handle different stimuli with feature lengths
+      X <- input[,  seq(1, self$natt()[1], 2), , drop = FALSE]
+      P <- input[, -seq(1, self$natt()[1], 2), , drop = FALSE]
+
+      ns <- self$nstim()
+      EV <- sapply(1:ns, function(s) {
+        rowSums(X[, , s] * P[, , s])
+      })
+      R <- sapply(1:ns, function(s, asplevel, iter) {
+        X[] <- delta * asplevel[, , iter[s]] - X[, , s]
+        X[X < 0L] <- 0L
+        rowSums(X[, , s] * P[, , s])
+      },
+      asplevel = asplevel,
+      iter = if (dim(asplevel)[3] == 1) { rep(1L,ns) } else { seq.int(ns) })
+      # if there is only one aspiration level for all options use the iterator
+
       v <- EV - beta * R
-      colnames(v) <- self$getoptionlabel()
+      colnames(v) <- self$get_stimnames()
 
       return(switch(type,
-        response = super$applychoicerule(v),
-        value = v))
+        response = super$apply_choicerule(v),
+        values = v))
+    },
+    check_input = function() {
+      if (!all(self$natt() %% 2 == 0L)) {
+        stop("Formula needs an even number of right-hand elements, but has ", .brackify(self$natt()), ' elements.')
+      }
+      if (!all((rowSums(self$input[, -seq(1, self$natt()[1], 2), ]) == self$nstim()))) {
+        stop('Probabilities (which are the 2nd, 4th, 6th... element of right side of "formula") must sum to 1, but the following variables in your data do NOT sum to 1: ', .brackify(attr(terms(self$formula), "term.labels")[seq(1, self$natt()[1], 2)]), '. Check the probability variables in "formula" and in "data".')
+      }
+
+      super$check_input() # Do not delete this, it runs default sanity checks
     }
   )
 )

@@ -41,35 +41,35 @@ Parameterrecovery <- R6Class(
       self$parameter <- names(self$true)[-1]
     },
     recover = function(model, nsteps, nruns) {
-      oldpar <- model$getparm()
+      oldpar <- model$getPar()
       oldpred <- model$pred
       oldobs <- model$obs
       pargrid <- model$pargrid(nsteps = nsteps)
       parid <- pargrid$ids
-      truepar <- pargrid$parm
+      truepar <- pargrid$par
       npar <- length(truepar)
       nparset <- nrow(parid)
       recovered <- sapply(seq_len(nrow(parid)), function(id, pargrid) {
-        model$setparm(GetParmFromGrid(id, pargrid))
+        model$setPar(getParFromGrid(id, pargrid))
           runs <- sapply(seq_len(nruns), function(x) {
             model$obs[] <- model$simulate()
-            model$resetparm()
+            model$resetPar()
             model$fit()
-            unlist(model$getparm('free'), use.names = FALSE)
+            unlist(model$getPar('free'), use.names = FALSE)
           })
           unlist(runs)        
       }, pargrid = pargrid)
-      recovered <- matrix(c(recovered), nc = length(truepar), byrow = TRUE, dimnames = list(NULL, names(model$getparm('free'))))
+      recovered <- matrix(c(recovered), nc = length(truepar), byrow = TRUE, dimnames = list(NULL, names(model$getPar('free'))))
       recovered <- cbind(id = rep(seq_len(nparset), each = nruns),
         run = rep(seq_len(nruns), times = nparset),
         recovered)
 
       true <- t(sapply(seq_len(nrow(parid)), function(id, paggrid) {
-        GetParmFromGrid(id, pargrid)
+        getParFromGrid(id, pargrid)
       }))
       true <- cbind(id = seq_len(nparset), true)
 
-      model$setparm(oldpar)
+      model$setPar(oldpar)
       model$pred <- oldpred
 
       self$true <- as.data.table(true)

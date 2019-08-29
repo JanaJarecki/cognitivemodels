@@ -14,7 +14,8 @@ library(cogscimodels)
 tk_par <- c(alpha = 0.88, beta = 0.88, lambda = 2.25, gammap = 0.61, gamman = 0.69)
 
 test_that("CPT predictions vs. Tversky & Kahneman (1992)", {
-  model <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, choicerule = NULL, data = dt, fixed = tk_par)
+  load_all()
+  model <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, choicerule = NULL, data = dt, fix = tk_par)
   expect_equal(model$predict('value')[1,'x'], c('x'=57), tol = .01)
   expect_equal(model$predict('value')[1,'y'], c('y'=57), tol = .1)
   expect_equal(model$predict('value')[2,'x'], c('x'=-129), tol = .01)

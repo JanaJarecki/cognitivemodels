@@ -35,7 +35,7 @@ anova.cogscimodel <- function(object, ...) {
   }
 
   ## Else if single object: construct table and title for a single model
-  npar <- object$nparm('free')
+  npar <- object$npar('free')
   ss <- object$SSE()
   ms <- object$MSE()
   table <- data.frame(npar, ss, ms)
@@ -71,7 +71,7 @@ anova.cogscimodellist <- function(models, model.names = NULL) {
 
   ## model stats
   llks <- lapply(models, logLik)
-  npar <- vapply(models, function(x) ifelse(inherits(x, "cogscimodel"), x$nparm('free'), x$rank), 0L)
+  npar <- vapply(models, function(x) ifelse(inherits(x, "cogscimodel"), x$npar('free'), x$rank), 0L)
   data <- lapply(calls, `[[`, "data")
   ## Order models by increasing number of prameters
   ii <- order(npar)
@@ -120,10 +120,10 @@ anova.cogscimodellist <- function(models, model.names = NULL) {
 
   class(tab) <- c("anova.cogscimodel", "anova", class(tab))
   forms <- vapply( lapply(calls, `[[`, "formula"), .safeDeparse ,"")
-  fixed <- vapply( lapply(calls, `[[`, "fixed"), .abbrDeparse, "" )
-  fixed <- vapply(fixed, function(x) gsub("^list|NULL| |\\(|\\)", "", x), "")
+  fix <- vapply( lapply(calls, `[[`, "fix"), .abbrDeparse, "" )
+  fix <- vapply(fix, function(x) gsub("^list|NULL| |\\(|\\)", "", x), "")
   header <- paste("Data:", .abbrDeparse(data[[1]]))
-  topnote <- paste("Model ", seq_along(models), ": ", names(models), "(", unlist(forms), "), ", unlist(fixed), sep = "", collapse = "\n")
+  topnote <- paste("Model ", seq_along(models), ": ", names(models), "(", unlist(forms), "), ", unlist(fix), sep = "", collapse = "\n")
   structure(tab,
     heading = c("Analysis of Fit Table\n",
                 header,

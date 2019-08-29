@@ -4,9 +4,9 @@
 #' @import arrangements
 #' @useDynLib cogscimodels, .registration = TRUE
 #' @inheritParams Cogscimodel
-rsfft <- function(formula = NULL, sbt = NULL, nopt = NULL, nout = NULL, fixed = NULL, data = NULL, env = NULL, choicerule, terminal.fitness.fun) {
-    obj <- Rsfft$new(env = env, formula = formula, sbt = sbt, nopt = nopt, nout = nout, data = data, fixed = fixed, terminal.fitness.fun = terminal.fitness.fun, choicerule)
-  if (length(obj$fixednames) < length(obj$parm)) {
+rsfft <- function(formula = NULL, sbt = NULL, nopt = NULL, nout = NULL, fix = NULL, data = NULL, env = NULL, choicerule, terminal.fitness.fun) {
+    obj <- Rsfft$new(env = env, formula = formula, sbt = sbt, nopt = nopt, nout = nout, data = data, fix = fix, terminal.fitness.fun = terminal.fitness.fun, choicerule)
+  if (length(obj$fixnames) < length(obj$par)) {
     obj$fit()
   }
   return(obj)
@@ -26,7 +26,7 @@ Rsfft <- R6Class("rsfft",
     features = NULL,
     terminal.fitness = NULL,
     sbt = NULL,
-    initialize = function(env = NULL, formula = NULL, sbt = NULL, nout = NULL, nopt = NULL, fixed = NULL, data = NULL, choicerule, terminal.fitness.fun) {
+    initialize = function(env = NULL, formula = NULL, sbt = NULL, nout = NULL, nopt = NULL, fix = NULL, data = NULL, choicerule, terminal.fitness.fun) {
       if (is.null(formula)) {
         formula <- ~ timehorizon + state
       } 
@@ -39,10 +39,10 @@ Rsfft <- R6Class("rsfft",
         # self$makeEVMat()
       }
 
-      allowedparm <- matrix(0, 4, 3, dimn = list(
+      parspace <- matrix(0, 4, 3, dimn = list(
         c("maxlv", "minhv", "pmaxlv", "order"),
-        c("ll", "ul", "init")))
-      super$initialize(formula = formula, data = data, allowedparm = allowedparm, fixedparm = fixed, choicerule = choicerule, model = "Risk sensitivity FFT", discount = 0)
+        c("lb", "ub", "start")))
+      super$initialize(formula = formula, data = data, parspace = parspace, fixpar = fix, choicerule = choicerule, title = "Risk sensitivity FFT", discount = 0)
 
       self$env <- env
       self$nout <- nout
@@ -57,9 +57,9 @@ Rsfft <- R6Class("rsfft",
       features <- self$makeFeatureMat()
       self$features <- features
 
-      self$allowedparm[1:3, 'ul'] <- apply(features, 2, max)
-      self$allowedparm[1:3, 'init'] <- rowMeans(self$allowedparm[1:3,])
-      self$allowedparm['order', ] <- c(1, 6, 1)
+      self$parspace[1:3, 'ul'] <- apply(features, 2, max)
+      self$parspace[1:3, "start"] <- rowMeans(self$parspace[1:3,])
+      self$parspace['order', ] <- c(1, 6, 1)
     },
     makeFeatureMat = function(input = self$input, budget = self$budget, state =self$state, th = self$timehorizon) {
       fml <- Formula(self$formula)
@@ -130,9 +130,9 @@ Rsfft <- R6Class("rsfft",
         input <- self$input
         features <- self$features
       }
-      parmNames <- rownames(self$allowedparm)
-      splitCriteria <- self$parm[parmNames[1:3]]
-      order <- self$parm[parmNames[4]]
+      parNames <- rownames(self$parspace)
+      splitCriteria <- self$par[parNames[1:3]]
+      order <- self$par[parNames[4]]
       order <- permutations(3,3)[order, ]
       exits <- matrix(c(0, 1, 1)[order], nrow = 1)[rep(1, nrow(input)), ]
       exits <- cbind(exits, 1L - exits[, 3])
@@ -152,7 +152,7 @@ Rsfft <- R6Class("rsfft",
         # acts <- rep(seq_len(nout), each = length(trials))
         # v <- matrix(self$V[cbind(rows, cols, acts)], ncol = self$env$n.actions, dimnames = list(NULL, self$env$actions))
         if (type == "choice") {
-          choice <- super$applychoicerule(values)
+          choice <- super$apply_choicerule(values)
         }
       } else if (type == "pstate") {
           trials <- input[, 1]
@@ -160,7 +160,7 @@ Rsfft <- R6Class("rsfft",
           rows <- match(states, self$env$states)
           cols <- match(trials, rev(self$env$trials))
           ps <- self$V
-          ps[] <- self$applychoicerule(matrix(ps, nc = self$env$n.actions))
+          ps[] <- self$apply_choicerule(matrix(ps, nc = self$env$n.actions))
           ps <- self$env$policyPS(ps)[cbind(rows, cols)]
       } else if (type == 'node') {
         node <- apply(I, 1, function(x) colnames(I)[which(x==1)])
@@ -177,15 +177,15 @@ Rsfft <- R6Class("rsfft",
     fit = function(type = c('grid', 'rsolnp')) {
       if ('order' %in% self$freenames) {
         self$freenames <- setdiff(self$freenames, 'order')
-        self$fixednames <- c(self$fixednames, 'order')
-        possibleOrders <- seq_len(self$allowedparm['order', 'ul'])
+        self$fixnames <- c(self$fixnames, 'order')
+        possibleOrders <- seq_len(self$parspace['order', 'ul'])
         gofvalues <- sapply(possibleOrders, function(o) {
-          self$setparm(c(order = o))
+          self$setPar(c(order = o))
           super$fit(type)
           return(self$gofvalue)
         } )
-        self$setparm(c(order = possibleOrders[which.min(gofvalues)]))
-        self$fixednames <- setdiff(self$fixednames, 'order')
+        self$setPar(c(order = possibleOrders[which.min(gofvalues)]))
+        self$fixnames <- setdiff(self$fixnames, 'order')
         self$freenames <- c(self$freenames, 'order')
       } else {
         super$fit(type)
@@ -213,7 +213,7 @@ Rsfft <- R6Class("rsfft",
     },
     makeEVMat = function() {
       EV <- array(NA, dim = dim(self$V)[1:2], dimnames = dimnames(self$V)[1:2])
-      P <- t(apply(self$V, 1, self$applychoicerule))
+      P <- t(apply(self$V, 1, self$apply_choicerule))
       P <- array(P, dim = dim(self$V), dimnames = dimnames(self$V))
       P[is.na(P)] <- 0
 

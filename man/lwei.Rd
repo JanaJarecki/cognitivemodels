@@ -4,7 +4,7 @@
 \alias{lwei}
 \title{Linear-weighting model}
 \usage{
-lwei(formula, nopt, nout, ref, fixed = NULL, data, choicerule,
+lwei(formula, nopt, nout, ref, fix = NULL, data, choicerule,
   weighting = c("TK1992"), value = c("TK1992"))
 }
 \description{

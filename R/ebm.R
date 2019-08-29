@@ -5,34 +5,31 @@
 #' @useDynLib cogscimodels, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
 #' @importFrom abind abind
-#' @description Fits an exemplar-based model (also known as generalized context model, GCM, Medin & Schaffer, 1978; Nosofsky, 1986). The model predicts the value of a current stimulus from the values of previous stimuli, weighted by the similarity between the current and the previous stimuli's features. This model can be used to fit judgments (1,2,...,100) or categorization (0,1) responses.
-#' @param formula a formula specifying the variables (\code{reponse ~ feature1 + feature2 + ... | criterion}), which needs a pipe (\code{|}) before the criterion variable. Examples:
-#' \itemize{
-#'   \item Categorization model: \code{category ~ f1 + f2 + f3 | true_class}
-#'   \item Judgment model: \code{judgment ~ f1 + f2 + f3 | value}
-#'   \item Memory-based preference model: \code{purchased ~ f1 + f2 + f3 | value | price} (see details)
-#' }
-#' @param data a data.frame or matrix containing the variables in \code{formula}; make sure it is ordered in the order in which respondents saw the stimuli.
-#' @param type (optional) String specifying the type of model: \code{"categorization", "judgment", "valuebasedchoice"}, will be inferred if omitted.
+#' @inheritParams Cogscimodel
+#' @description Fits an exemplar-based model, which is also known as generalized context model (GCM, Medin & Schaffer, 1978; Nosofsky, 1986). The model predicts the value of a current stimulus from the values of previous stimuli, weighted by the similarity between the current and the previous stimuli's features. This model can be used to fit judgments (continuous) or categorization (discrete) modes.
+#' @param formula A formula (e.g., \code{class ~ f1 + f2}, or probably \code{judgment ~ dim1 + dim2 + dim3}) specifying the observed data and the feature variables.
+#' @param criterion A formula (e.g., \code{~ true_class} or \code{~ true_value}) specifying the true class or criterion, note the "\code{~}".
 #' @param ... other arguments from other functions, currently ignored.
-#' @return An exemplar-based model; it can be viewed with \code{summary(mod)}, where \code{mod} is the name of the model object.
-#' @examples 
-#' #  No examples yet
+#' @return An exemplar-based model; a model \code{M} can be viewed with \code{summary(M)}, or \code{anova(M)}.
 #' @author Jana B. Jarecki, \email{jj@janajarecki.com}
 #' @references {Medin, D. L., & Schaffer, M. M. (1978). Context theory of classification learning. Psychological Review, 85, 207-238. doi:10.1037//0033-295X.85.3.207}
 #' @references {Nosofsky, R. M. (1986). Attention, similarity, and the identification-categorization relationship. Journal of Experimental Psychology: General, 115, 39-57. doi:10.1037/0096-3445.115.1.39}
 #' @references {Juslin, P., Olsson, H., & Olsson, A.-C. (2003). Exemplar effects in categorization and multiple-cue judgment. Journal of Experimental Psychology: General, 132, 133–156. doi:10.1037/0096-3445.132.1.133}
-#' @details You may add a 'cost' term to the formula separated by a second pipe:  \code{reponse ~ feature1 + feature2 + ... | criterion | cost}. The model then predicts a value, compares this value to cost, and if the value is greater than the cost returns \code{1}, otherwise \code{0} (chose the stimulus, reject the stimulus). This is implemented with a softmax choice rule.
+#' @details If \code{type} is missing it will be inferred.
+#' @section Parameter Space of the Model:
+#' \itemize{
+  #' \item{n weights}{n attribute weights (range: 0-1, sum to 1), the parameter names equal the RHS of \code{formula}.}
+  #' \item{lambda}{Sensitivity (range: 0.001-10), higher values mean more discriminability within the psychological space.}
+  #' \item{r}{Exponent in the decay function (range: 1-2), a value of 1 yields exponential decay, 2 yields Gaussian decay.}
+  #' \item{q}{}
+  #' \item{m biases}{Bias towards categories (range: 0-1, sums to 1), the parameter names are \code{bx, by} were x,y are the categories}
+#' }
+#' @examples 
+#' No examples yet
 #' @export
-ebm <- function(formula, data, type, ...) {
-   args <- c(list(formula = formula, data = data, type = type), list(...))
-   obj <- do.call(Ebm$new, args)
-   # check(mod) #todo
-   if (length(obj$freenames) > 0) {
-      message('Fitting free parameter', .brackify(obj$freenames))
-      obj$fit(c('grid', 'solnp'))
-   }
-   return(obj)
+ebm <- function(formula, data, criterion, fix, mode, ...) {
+   .args <- as.list(rlang::call_standardise(match.call())[-1])
+   return(do.call(what = Ebm$new, args = .args, envir = parent.frame()))
 }
 
 
@@ -41,177 +38,181 @@ Ebm <- R6Class('ebm',
   public = list(
     type = NULL,
     criterion = NULL,
-    cost = NULL,
+    formulaCriterion = NULL,
     learntrials = NULL,
-    ndim = NULL,
-    biasnames = NULL,
-    weightnames = NULL,
-    initialize = function(formula, data, type, fixed = NULL, learntrials = seq_len(nrow(data)), initialparm = NULL, discount = NULL, choicerule = NULL, fit.options = list()) {
-      if ( !any(grepl('\\|', formula)) ) {
-        stop('"formula" in ebm misses a pipe ("|") before the criterion variable,\n\te.g., formula = y ~ x1 + x2 | cr.', call. = FALSE)
+    parnamesBias = NULL,
+    parnamesWeights = NULL,
+    initialize = function(formula, data, criterion, mode = NULL, fix = NULL, learntrials = NULL, discount = NULL, choicerule = NULL, options = list()) {
+
+      self$learntrials <- if ( is.null(learntrials) ) { seq_len(nrow(data)) } else { learntrials }
+      self$formulaCriterion <- criterion
+      self$criterion <- super$get_input(f = criterion, d = data)
+      mode <- if (is.null(mode)) { super$infer_mode(self$criterion) } else { mode }
+      parspace <- self$make_parspace(
+          formula = formula,
+          criterion = self$criterion, 
+          mode = mode)
+      self$infer_discount(
+          discount = discount,
+          criterion = self$criterion,
+          mode = mode,
+          showmsg = all(rownames(parspace) %in% names(fix))
+        )
+
+      super$initialize(
+        formula = formula,
+        data = data,
+        fix = fix,
+        parspace = parspace,
+        choicerule = choicerule,
+        discount = discount,
+        title = paste0('Exemplar-based model'),
+        mode = mode,
+        options = c(options, list(fit_solver = "solnp"))
+      )
+
+      if ( self$npar('free') > 0 ) {
+        message('Fitting free parameter ', .brackify(self$get_parnames('free')))
+        self$fit()
       }
-      f <- as.Formula(formula)
-      d <- data.frame(data)
-      self$learntrials <- learntrials
-      self$criterion <- get_all_vars(formula(f, lhs=0, rhs=2), d)[,1]
-      if ( length(f)[2] > 2) {
-        self$cost <- get_all_vars(formula(f, lhs=0, rhs=3), d)[,1]
-      }
-      d <- get_all_vars(formula(f, lhs=1, rhs=1), d) 
-      self$weightnames <- attr(terms(formula(f, lhs=0, rhs=1)), 'term.labels')
-      self$ndim <- length(self$weightnames)
-      allowedparm <- matrix(c(rep(c(0.001, 1, 1/self$ndim, 1), self$ndim),
-                        lambda = c(0.001, 10, 0.5, 1),
-                        r = c(1, 2, 1.5, 1),
-                        q = c(1, 2, 1.5, 1)
-                        ),
-        ncol = 4, byrow = TRUE, dimnames= list(c(self$weightnames,'lambda','r','q'), c('ll','ul','init','na')))
-      if ( missing(type) ) {
-        self$inferType(d[, 1])
-      } else {
-        self$type <- match.arg(type, c('judgment', 'choice', 'valuebasedchoice'))
-      }
-      if (self$type == 'valuebasedchoice' & is.null(choicerule)) {
-        choicerule <- 'softmax'
-      }
-      if ( self$type == "choice" ) {
-        labels <- if (self$type == 'choice') {
-          sort(unique(self$criterion))
-          }
-        biasparm <- matrix(rep(c(0, 1, 1/length(labels), 1), length(labels)), nc = 4, byrow =TRUE, dimnames = list(paste0('b', labels)))
-        self$biasnames <- rownames(biasparm)
-        allowedparm <- rbind(allowedparm, biasparm)
-      }
-      discount <- self$inferdiscount(self$criterion, discount, showmsg = all(names(allowedparm) %in% names(fixed)))
-      super$initialize(formula = formula, data = d, fixed = fixed, allowedparm = allowedparm, choicerule = choicerule, discount = discount, model = paste0('Exemplar-based model [type: ', self$type, ']'), response = ifelse(self$type == 'judgment', 'continuous', 'discrete'), fit.options = fit.options)
-      self$formula <- formula
-      if (!is.null(fit.options$newdata)) {
-        self$fit.options$newdata <- get_all_vars(self$formula, fit.options$newdata)
+    },
+    predict = function(newdata, learnto = max(self$learntrials), firstout = if (missing(newdata)) { 1 } else { (self$nobs() + 1) } ) {
+      input <- self$input
+      criterion <- self$criterion
+      lastlearntrial <- learnto
+
+      if (!missing(newdata)) {
+        input <- abind::abind(input, self$get_input(f = self$formula, d = newdata), along = 1)
+        if ( learnto > max(self$learntrials) ) {
+          criterion <- abind::abind(criterion, super$get_input(f = self$formulaCriterion, d = newdata), along = 1)
+        } else {
+          criterion <- abind::abind(criterion, array(0, dim = c(nrow(newdata), dim(criterion)[2:3])), along = 1)
+        }
       }
 
-      self$allowedparm[names(initialparm), ] <- initialparm #todo: move this into class cognitivemodel
+      parameter <- self$get_par()
+
+      .args <- list(
+        values = as.double(criterion),
+        features = matrix(input, ncol = self$natt()),
+        w = as.double(parameter[seq_len(self$natt())]),
+        r = as.double(parameter['r']),
+        q = as.double(parameter['q']),
+        b = if (self$mode == "continuous") {
+          NA
+          } else {
+            as.double(tail(parameter, -(self$natt() + 3)))
+          },
+        lambda = as.double(parameter['lambda']),
+        lastLearnTrial = lastlearntrial,
+        firstOutTrial = firstout)
+      out <- do.call(ebm_cpp, args = .args, envir = parent.frame())
+      out <- round(out, 1e9)
+      out <- as.matrix(super$apply_choicerule(out))[,1]
+
+      return(out)
     },
-    inferType = function(response) {
-      self$type <- if ( !is.null(self$cost) ) {
-        'valuebasedchoice'
-      } else if ( !is.factor(response) & ( any(floor(response) != response) | any(floor(self$criterion) != self$criterion) | length(unique(response)) > 2 | length(unique(self$criterion)) > 2 ) ) {
-        'judgment'
+    make_constraints = function() {
+      parnames <- self$get_parnames()
+      parnames_fix <- self$get_parnames("fix")
+      con <- super$make_constraints()
+
+      if (!all(self$get_parnames("weights") %in% parnames_fix)) {
+        con_w <- L_constraint(
+          L = as.integer(parnames %in% self$get_parnames("weights")),
+          dir = "==",
+          rhs = 1L,
+          names = parnames)
+        con <- rbind(con, con_w)
+      }
+      if (!all(self$get_parnames("biases") %in% parnames_fix)) {
+        con_b <- L_constraint(
+          L = as.integer(parnames %in% self$get_parnames("biases")),
+          dir = "==",
+          rhs = 1L,
+          names = parnames)
+        con <- rbind(con, con_b)
+      }
+      return(con)
+    },
+    make_parspace = function(formula, criterion, mode) {
+      # parameter that are NOT dynamic
+      lrq_par <- list(
+        lambda = c(0.001, 10, 0.5, 1),
+         r = c(1, 2, 1.5, 1),
+         q = c(1, 2, 1.5, 1))
+      # dynamic weight parameter names
+      w_names <- attr(terms(as.Formula(formula)), "term.labels")
+      nw <- length(w_names)
+      w_par <- setNames(lapply(1:nw, function(.) c(0.001,1,1/nw,1)), w_names)
+      # dynamic bias parameter names
+      if (mode == "discrete") {
+        b_names <- paste0("b", sort(unique(criterion)))
+        nb <- length(b_names)
+        b_par <- setNames(lapply(1:nb, function(.) c(0.001,1,1/nb,1)), b_names)
+      }
+      # Note:
+      # Do not change the order (1. weights, 2. lrq, 3. bias)!
+      return(do.call(make_parspace, c(w_par, lrq_par, b_par)))
+    },
+    get_parnames = function(x = "all") {
+      if (x == "weights") {
+        return(head(self$get_parnames(), self$natt()))
+      } else if (x == "biases") {
+        return(tail(self$get_parnames(), -(self$natt() + 3L)))
       } else {
-        'choice'
+        return(super$get_parnames(x))
       }
     },
-    inferdiscount = function(criterion, discount, showmsg) {
-      if ( !is.null(discount) ) {
+    infer_discount = function(discount, criterion, mode, showmsg) {
+      if ( length(discount) == 0 ) {
         return(discount)
-      }  else if (self$type != 'judgment') {
+      }  else if (mode != "continuous") {
         discount <- which(!duplicated(criterion))[2] + 1
-        if ( showmsg ) {
+        if (showmsg == TRUE) {
           message('Parameter estimates improve if first few trials are ignored. Discounting trial 1 to ', discount, '.\nTo avoid, set "discount=0"')
         }
         return(discount)
       }    
     },
-    settype = function(x) {
-      x <- match.arg(x, c('judgment', 'choice', 'valuebasedchoice'))
-      self$type <- x
-      self$pred <- NULL
-    },
     parGrid = function(offset) {
-      allowedparm <- self$allowedparm
+      parspace <- self$parspace
       offset <- c(offset, w = .1, b = .1)
       return(MakeGridList(
         names = self$freenames,
-        ll = setNames(allowedparm[, 'll'], rownames(allowedparm)),
-        ul = setNames(allowedparm[, 'ul'], rownames(allowedparm)),
+        ll = setNames(parspace[, 'll'], rownames(parspace)),
+        ul = setNames(parspace[, 'ul'], rownames(parspace)),
         nsteps = list(w = 4, b = 4, r = 3, q = 3, lambda = 4, tau = 4, sigma = 4),
-        sumto = list('w' = self$weightnames, 'b' = self$biasnames),
+        sumto = list('w' = self$parnamesWeights, 'b' = self$parnamesBias),
         regular = TRUE,
         offset = offset))
     },
     eqfun = function() {
-      allowed <- rownames(self$allowedparm)
-      free_weights <- any(self$weightnames %in% self$freenames)
-      free_bias <- any(self$biasnames %in% self$freenames)
-      weight_eqfun <- function(pars, self) {
-        return(sum(pars[self$weightnames]))
-      }
-      bias_eqfun <- function(pars, self) {
-        return(sum(pars[self$biasnames]))
-      }
-      both_eqfun <- function(pars, self) {
-        return(c(sum(pars[self$weightnames]), sum(pars[self$biasnames])))
-      }
-      if ( free_weights & !free_bias ) {
-        return( list(eqfun = weight_eqfun, eqb = 1) )
-      } else if ( !free_weights & free_bias ) {
-        return( list(eqfun = bias_eqfun, eqb = 1) )
-      } else if ( free_weights & free_bias ) {
-        return( list(eqfun = both_eqfun, eqb = c(1,1)) )
-      } else {
-        return(NULL)
-      }
-    },
-    getinput = function(f = self$formula, d) {
-      f <- delete.response(terms(as.Formula(f)))
-      f <- update(f, new = drop.terms(f, length(attr(f, 'term.labels'))))
-      f <- terms(f)
-      f <- if (self$type == 'choice') {
-        return(super$getinput(f, d))
-      } else {
-        f <- update(f, new = drop.terms(f, length(attr(f, 'term.labels'))))
-        return(super$getinput(f, d))
-      }
-    },
-    predict = function(newdata, learnto = max(self$learntrials), firstout = if (missing(newdata)) { 1 } else { (nrow(self$input) + 1) } ) {
-      if ( missing(newdata) & !is.null(self$pred) ) {
-        return(self$pred)
-      }
-      parameter <- self$parm
-      features <- self$input
-      criterion <- self$criterion
-      cost <- self$cost
-      lastlearntrial <- learnto
-
-      if ( !missing(newdata) ) {
-        d <- as.data.frame(newdata)
-        f <- as.Formula(self$formula)
-        if ( learnto > max(self$learntrials) ) {
-          criterion <- c(criterion, get_all_vars(formula(f, lhs=0, rhs=2), d)[,1])
-        } else {
-          criterion <- c(criterion, rep(0, nrow(newdata)))
-        }
-        if ( length(f)[2] > 2 ) {
-          cost <- c(cost, get_all_vars(formula(f, lhs=0, rhs=3), d)[,1])
-          if (firstout > 1) {
-            cost <- tail(cost, -(firstout-1))
-          }
-        }
-        features <- abind(features, self$getinput(self$formula, newdata), along = 1)
-      }
-      parameter <- ifelse(is.na(parameter), self$allowedparm[names(parameter), 'na'], parameter)
-      parameter <- unlist(parameter)
-      .a <- list(
-        values = as.double(criterion),
-        features = matrix(features, ncol = dim(features)[2]),
-        w = as.double(parameter[self$weightnames]),
-        r = as.double(parameter['r']),
-        q = as.double(parameter['q']),
-        b = if (self$type != 'choice' ) { NA } else { as.double(parameter[self$biasnames]) },
-        lambda = as.double(parameter['lambda']),
-        lastLearnTrial = lastlearntrial,
-        firstOutTrial = firstout)
-      out <- do.call(ebm_cpp, .a)
-
-      if (self$type == 'valuebasedchoice') {
-        out <- cbind(out,cost) #todo JJ: change to handle > 1 option
-      }
-      out <- as.matrix(super$applychoicerule(out))[,1]
-      if ( missing(newdata) ) {
-        self$pred <- out
-      }
-      return(out)
-    },
+      allowed <- rownames(self$parspace)
+      free_weights <- any(self$parnamesWeights %in% self$get_parnames('free'))
+      free_bias <- any(self$parnamesBias %in% self$get_parnames('free'))
+      return(super$makeSumConstraints(list(free_weights, free_bias), c(1,1)))
+      # weight_eqfun <- function(pars, self) {
+      #   return(sum(pars[self$parnamesWeights]))
+      # }
+      # bias_eqfun <- function(pars, self) {
+      #   return(sum(pars[self$parnamesBias]))
+      # }
+      # both_eqfun <- function(pars, self) {
+      #   return(c(sum(pars[self$parnamesWeights]), sum(pars[self$parnamesBias])))
+      # }
+      # if ( free_weights & !free_bias ) {
+      #   return( list(eqfun = weight_eqfun, eqb = 1) )
+      # } else if ( !free_weights & free_bias ) {
+      #   return( list(eqfun = bias_eqfun, eqb = 1) )
+      # } else if ( free_weights & free_bias ) {
+      #   return( list(eqfun = both_eqfun, eqb = c(1,1)) )
+      # } else {
+      #   return(NULL)
+      # }
+    },    
     print = function(digits = 2) {
       super$print(digits = digits)
     })
 )
+

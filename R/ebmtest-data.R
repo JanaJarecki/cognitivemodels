@@ -7,8 +7,8 @@
 #'   \item angle. feature value of the angle feature
 #'   \item size. feature value of the size feature
 #'   \item N. How often the feature combination occured.
-#'   \item obs_cat. How often a category 1 response was observed given this feature combination.
-#'   \item pobs. Probability that a category 1 response was observed given this feature combination (obs_cat / N)
+#'   \item obs_cat. How often a category 1 mode was observed given this feature combination.
+#'   \item pobs. Probability that a category 1 mode was observed given this feature combination (obs_cat / N)
 #'   \item true_cat. True category label of this feature combination (0 or 1)
 #' }
 #' @name nosofsky1989

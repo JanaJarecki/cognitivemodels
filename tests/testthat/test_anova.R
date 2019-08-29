@@ -15,21 +15,21 @@ fml <- pobs ~ angle + size | true_cat
 # no constraints
 m1 <- ebm(fml,
            data = fitdata,
-           fixed = list(q = 2, r = 2),
+           fix = list(q = 2, r = 2),
            type = 'choice',
            fit.options = list(n = nn, newdata = d),
            discount = 0)
 # weights constrained
 m2 <- ebm(fml,
          data = fitdata,
-         fixed = list(q = 2, r = 2, angle = .5, size = .5),
+         fix = list(q = 2, r = 2, angle = .5, size = .5),
          type = 'choice',
          fit.options = list(n = nn, newdata = d),
          discount = 0)
 # bias constrained
 m3 <- ebm(fml,
           data = fitdata,
-          fixed = list(q = 2, r = 2, b0 = .5, b1 = .5),
+          fix = list(q = 2, r = 2, b0 = .5, b1 = .5),
           type = 'choice',
           fit.options = list(n = nn, newdata = d),
           discount = 0)
@@ -55,7 +55,7 @@ test_that("Anova Table", {
 # models <- list(A = m1, B = m2, C = m3)
 # digits <- 2
 # res <- sapply(models, function(x) c(
-#   npar = x$nparm('free'),
+#   npar = x$npar('free'),
 #   LogLik = x$logLik(),
 #   AIC = x$AIC(),
 #   BIC = x$BIC(),
