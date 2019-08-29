@@ -342,3 +342,8 @@ test_that("Sum constraints equal identities", {
   expect_equivalent(M$ncon(), 3L)
   expect_equivalent(M$ncon(), M$npar("fix"))
 })
+
+test_that("Zero RHS of formula", {
+  expect_equal(Cogscimodel$new( ~ x1, D, mode = "discrete")$get_res(), NULL)
+  expect_equivalent(Cogscimodel$new(y ~ x1, D, mode = "discrete")$get_res(), D[, "y", drop=FALSE])
+})

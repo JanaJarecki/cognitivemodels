@@ -63,7 +63,7 @@ Cogscimodel <- R6Class(
     gofval = NULL,
     stimnames = character(),
     options = list(),
-    initialize = function(formula, data, parspace, fix = NULL, choicerule =  NULL, title = NULL, discount = NULL, mode = NULL, options = NULL) {
+    initialize = function(formula, data, parspace = make_parspace(), fix = NULL, choicerule =  NULL, title = NULL, discount = NULL, mode = NULL, options = NULL) {
       # get call
       self$call <- if ( deparse(sys.call()[[1]]) == 'super$initialize' ) {
         rlang::call_standardise(sys.calls()[[sys.nframe()-3]])
@@ -145,7 +145,11 @@ Cogscimodel <- R6Class(
         return(self$res)
       } else {
         f <- as.Formula(f)
-        return(get_all_vars(formula(f, rhs = 0), d))
+        if (length(f)[1] > 0) {
+          return(get_all_vars(formula(f, rhs = 0), d))
+        } else {
+          return(NULL)
+        }    
       }
     },
     # Sets the mode
@@ -448,12 +452,14 @@ Cogscimodel <- R6Class(
       return(rbinom(pred[,1], size = 1, prob=pred))
     },
     infer_mode = function(y) {
-        message("Inferring 'mode' ... ")
-        if ( !is.factor(y) & any(floor(y) != y) | length(unique(y)) > 2 ) {
-          cat("  ... as 'continuous'. Change mode by setting mode = \"discrete\".)\n")
+      if(is.null(y)) {
+        stop('Argument "mode" is missing (what the model predicts). Please "mode" to ="discrete" or ="continuous".')
+      }
+      if ( !is.factor(y) & any(floor(y) != y) | length(unique(y)) > 2 ) {
+        message('Inferring mode from response variable ... "continuous". Change by setting mode="discrete".')
           return("continuous")
         } else {
-          cat("... as 'discrete'. Change mode by setting mode = \"continuous\".\n")
+          message('Inferring mode from response variable ... "discrete". Change by setting mode="continuous".')
           return("discrete")
         }
     },
