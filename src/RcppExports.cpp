@@ -7,21 +7,22 @@
 using namespace Rcpp;
 
 // ebm_cpp
-Rcpp::NumericVector ebm_cpp(Rcpp::NumericVector values, Rcpp::NumericMatrix features, Rcpp::NumericVector w, double r, double q, double lambda, Rcpp::NumericVector b, int lastLearnTrial, int firstOutTrial);
-RcppExport SEXP _cogscimodels_ebm_cpp(SEXP valuesSEXP, SEXP featuresSEXP, SEXP wSEXP, SEXP rSEXP, SEXP qSEXP, SEXP lambdaSEXP, SEXP bSEXP, SEXP lastLearnTrialSEXP, SEXP firstOutTrialSEXP) {
+Rcpp::NumericVector ebm_cpp(Rcpp::NumericVector criterion, Rcpp::NumericMatrix features, Rcpp::NumericVector w, double r, double q, double lambda, Rcpp::NumericVector b, Rcpp::NumericVector wf, int lastLearnTrial, int firstOutTrial);
+RcppExport SEXP _cogscimodels_ebm_cpp(SEXP criterionSEXP, SEXP featuresSEXP, SEXP wSEXP, SEXP rSEXP, SEXP qSEXP, SEXP lambdaSEXP, SEXP bSEXP, SEXP wfSEXP, SEXP lastLearnTrialSEXP, SEXP firstOutTrialSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type values(valuesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type criterion(criterionSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type features(featuresSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type w(wSEXP);
     Rcpp::traits::input_parameter< double >::type r(rSEXP);
     Rcpp::traits::input_parameter< double >::type q(qSEXP);
     Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type b(bSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type wf(wfSEXP);
     Rcpp::traits::input_parameter< int >::type lastLearnTrial(lastLearnTrialSEXP);
     Rcpp::traits::input_parameter< int >::type firstOutTrial(firstOutTrialSEXP);
-    rcpp_result_gen = Rcpp::wrap(ebm_cpp(values, features, w, r, q, lambda, b, lastLearnTrial, firstOutTrial));
+    rcpp_result_gen = Rcpp::wrap(ebm_cpp(criterion, features, w, r, q, lambda, b, wf, lastLearnTrial, firstOutTrial));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -65,7 +66,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_cogscimodels_ebm_cpp", (DL_FUNC) &_cogscimodels_ebm_cpp, 9},
+    {"_cogscimodels_ebm_cpp", (DL_FUNC) &_cogscimodels_ebm_cpp, 10},
     {"_cogscimodels_lexicographic", (DL_FUNC) &_cogscimodels_lexicographic, 1},
     {"_cogscimodels_indicators", (DL_FUNC) &_cogscimodels_indicators, 2},
     {"_cogscimodels_shortfall_cpp", (DL_FUNC) &_cogscimodels_shortfall_cpp, 5},

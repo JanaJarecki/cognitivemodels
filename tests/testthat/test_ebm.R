@@ -1,107 +1,117 @@
 context("ebm")
 library(cogscimodels)
 
+
 # Nosofsky, R. M. (1989). Further tests of an exemplar-similarity approach to relating identification and categorization. Perception & Psychophysics, 45, 279–290. doi:10.3758/BF03204942
+
 # From Table 3 and Figure 2
 # Model parameter from Table 5 "size", pred from Fig. 5 "size"
+# # Fitted parameter from the paper for 4 conditions (size, angle, criss, diag)
+# size = c(lambda=1.60,angle=.10,size=.90,b0=.50,b1=.50,r=2,q=2)
+# angle = c(lambda=3.20,angle=.98,size=.02,b0=.43, b1=.57,r=2,q=2)
+# criss = c(lambda=1.62,angle=.80,size=.20,b0=.45, b1=.55,r=2,q=2)
+# diag =  c(lambda=2.42,angle=.81,size=.19,b0=.49, b1=.51,r=2,q=2)
+
 data(nosofsky1989)
 d <- nosofsky1989
-# Fitted parameter from the paper for 4 conditions (size, angle, criss, diag)
-par <- rbind(size = c(lambda=1.60,angle=.10,size=.90,b0=.50,b1=.50,r=2,q=2),
-              angle = c(lambda=3.20,angle=.98,size=.02,b0=.43, b1=.57,r=2,q=2),
-              criss = c(lambda=1.62,angle=.80,size=.20,b0=.45, b1=.55,r=2,q=2),
-              diag =  c(lambda=2.42,angle=.81,size=.19,b0=.49, b1=.51,r=2,q=2))
+test_d <- d[1:16,]
+test_d$true_cat <- NA
 
-test_that('Parameter estimates in size condition', {
-  dd <- d[d$condition == "size", ]
-  nn <- dd$N
-  keep <- !is.na(dd$true_cat)
-  # no constraints
-  model <- ebm(pobs ~ angle + size,
-               data = dd[keep, ],
+test_that("Discrete model's prediction identities in SIZE condition", {
+  target <- 1 - c(.99,.99,.99,.99,.86,.84,.81,.83,.31,.33,.28,.28,.03,.02,.01,.02) # pr(cat = 0) in paper
+  # learning data:
+  dd <- d[d$condition == "size" & !is.na(d$true_cat), ]
+  model <- ebm(~ angle + size,
+               data = dd,
                criterion = ~true_cat,
+               fix = c(angle=.10,size=.90,lambda=1.60,b0=.5,b1=.5,q=2,r=2),
+               mode = "discrete",
+               discount = 0)
+  expect_equivalent(model$predict(newdata=test_d), target, tol = .01)
+})
+
+test_that("Discrete model's prediction identities in ANGLE condition", {
+  target <- 1L - c(94,56,19,01,96,62,23,03,92,55,14,01,98,56,13,01) / 100 # Pr(cat == 0) in angle condition in the paper
+  dd <- d[d$condition == "angle" & !is.na(d$true_cat), ]
+  model <- ebm(obs_cat ~ angle + size,
+               data = dd,
+               criterion = ~true_cat,
+               fix = c(lambda=3.20,angle=.98,size=.02,b0=.43, b1=.57,r=2,q=2),
+               mode = "discrete",
+               discount = 0)
+  expect_equivalent(model$predict(newdata=test_d), target, tol = .01)
+})
+
+  
+test_that("Parameter estimates in SIZE condition", {
+  # unconstrainted
+  dd <- d[d$condition == "size" & !is.na(d$true_cat), ]
+  fitd <- d[d$condition == "size",]
+  model <- ebm(pobs ~ angle + size,
+               data = dd,
+               criterion = ~ true_cat,
                fix = list(q = 2, r = 2),
                mode = "discrete",
-               options = list(fit_data = dd, fit_n = nn),
-               discount = 0L)
-  expect_equal(coef(model), c(angle=.10,size=.90,lambda=1.60,b0=.50,b1=.50), tol = .01)
+               options = list(fit_data = fitd, fit_n = fitd$N),
+               discount = 0)
+  expect_equal(model$coef(), c(angle=.10, size=.90, lambda=1.60, b0=.50, b1=.50), tol = .01)
   expect_equal(model$npar("free"), 3L)
   # weights constrained
   model <- ebm(pobs ~ angle + size,
-               data = dd[keep, ],
+               data = dd,
                criterion = ~ true_cat,
                fix = list(q = 2, r = 2, angle = .5, size = .5),
                mode = "discrete",
-               options = list(fit_data = dd, fit_n = nn),
+               options = list(fit_data = fitd, fit_n = fitd$N),
                discount = 0)
   expect_equal(model$coef(), c(lambda=2.40, b0=.49, b1=.51), tol = .01)
   expect_equal(model$npar("free"), 2L)
-
-
   # bias constrained
   model <- ebm(pobs ~ angle + size,
-               data = dd[keep, ],
+               data = dd,
                criterion = ~ true_cat,
                fix = list(q = 2, r = 2, b0 = .5, b1 = .5),
-               mode = 'discrete',
-               options = list(fit_data = dd, fit_n = nn),
+               mode = "discrete",
+               options = list(fit_data = fitd, fit_n = fitd$N),
                discount = 0)
   expect_equal(model$coef(), c(angle=.10, size=.90, lambda=1.60), tol = .01)
   expect_equal(model$npar("free"), 2L)
   })
 
-test_that('Parameter estimates in diag condition', {
-  dd <- d[d$condition == "diag", ]
-  nn <- dd$N
-  keep <- !is.na(dd$true_cat)
+test_that("Parameter estimates in DIAG condition", {
+  dd <- d[d$condition == "diag" & !is.na(d$true_cat), ]
+  fitd <- d[d$condition == "diag",]
   # No constraints
   model <- ebm(pobs ~ angle + size,
-               data = dd[keep, ],
+               data = dd,
                criterion = ~ true_cat,
                fix = list(q = 2, r = 2),
                mode = "discrete",
-               options = list(fit_data = dd, fit_n = nn),
+               options = list(fit_data = fitd, fit_n = fitd$N),
                discount = 0)
-  expect_equal(coef(model), c(angle=.81,size=.19,lambda=2.42,b0=.49,b1=.51), tol = .01)
+  expect_equal(coef(model), c(angle=.81,size=.19,lambda=2.42,b0=.49,b1=.51), tol = .1)
   # weights constrained
   model <- ebm(pobs ~ angle + size,
-               data = dd[keep, ],
+               data = dd,
                criterion = ~ true_cat,
                fix = list(q = 2, r = 2, angle = .5, size = .5),
                mode = "discrete",
-               options = list(fit_data = dd, fit_solver = "solnp", fit_n = nn),
+               options = list(fit_data = fitd, fit_n = fitd$N),
                discount = 0)
-  expect_equal(coef(model), c(lambda=1.81, b0=.48, b1=.52), tol = .05)
+  expect_equal(coef(model), c(lambda=1.81, b0=.48, b1=.52), tol = .04)
   # bias constrained
   model <- ebm(pobs ~ angle + size,
-               data = dd[keep, ],
-               criterion = ~true_cat,
+               data = dd,
+               criterion = ~ true_cat,
                fix = list(q = 2, r = 2, b0 = .5, b1 = .5),
                mode = "discrete",
-               options = list(fit_data = dd, fit_solver = "solnp", fit_n = nn),
+               options = list(fit_data = fitd, fit_n = fitd$N),
                discount = 0)
   expect_equal(coef(model), c(angle=.81, size=0.19, lambda=2.42), tol = .01)
   })
 
 
-# test_that('EBM [choice] predictions', {
-#   gc()
-#   #
-#   # Size condition
-#   # --------------------------------------------------------------------------
-  # dd <- d[d$condition == "size", ]
-  # keep <- !is.na(dd$true_cat)
-  # nn <- dd$N
-  # model <- ebm(obs_cat ~ angle + size,
-  #              data = dd[keep, ],
-  #              criterion = ~true_cat,
-  #              fix = c(angle=.10,size=.90,lambda=1.60,b0=.5,b1=.5,q=2,r=2),
-  #              mode = "discrete",
-  #              discount = 0)
-  # round(model$predict(newdata = dd), 4)
-
-#   psize <- 1-c(.99,.99,.99,.99,.86,.84,.81,.83,.31,.33,.28,.28,.03,.02,.01,.02)
-#   expect_equal(model$predict(dd), psize, tol = .01)
+#   
 
 #   expect_equal(cogsciutils::SSE(d$obs_cat_size/d$N_size, model$predict(d), n = d$N_size), 0.015, tol = .001)
 #   expect_equal(cogsciutils::Loglikelihood(d$obs_cat_size/d$N_size, model$predict(d), n = nn, pdf = 'binomial', binomial.coef = TRUE, mode = 'd'), -40.08, tol = 0.02)
@@ -115,7 +125,7 @@ test_that('Parameter estimates in diag condition', {
 #   # --------------------------------------------------------------------------
 #   # Model parameter from Table 5 "angle", pred from Fig. 5 "angle"
 #   model <- ebm(~ angle + size | true_cat_angle, data = d[!is.na(d$true_cat_angle),], fix = as.list(par['angle',]), mode = 'c', discount = 0)
-#   pangle <- c(94,56,19,01,96,62,23,03,92,55,14,01,98,56,13,01)/100 # 
+#    # 
 #   expect_equal(1-model$predict(d), pangle, tol = .01)
 #   model$setPar(c('lambda' = 3.57, 'size' = .50, 'angle' = .50, 'b0' = .45, 'b1' = .55))
 #   expect_equal(1-model$predict(d[14,]), .18, tol = .1)

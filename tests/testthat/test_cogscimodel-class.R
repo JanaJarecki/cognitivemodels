@@ -279,19 +279,19 @@ test_that("Grid nsteps with parameters between 0 - 1", {
   PS <- make_parspace(a=c(0,1), b=c(0,1), c=c(0,1), d=c(0,1), e = c(0,1))
   O <- list(fit_solver = c("grid", "solnp"))
   M <- Cogscimodel$new(y ~ x1, D, PS[1,], mode = "discrete", options = O)
-  expect_equivalent(M$options$fit_grid_nsteps, 3)
+  expect_equivalent(M$options$fit_control$nsteps, 3)
 
   M <- Cogscimodel$new(y ~ x1, D, PS[1:2,], mode = "discrete", options = O)
-  expect_equivalent(M$options$fit_grid_nsteps, rep(3,2))
+  expect_equivalent(M$options$fit_control$nsteps, rep(3,2))
 
   M <- Cogscimodel$new(y ~ x1, D, PS[1:3,], mode = "discrete", options = O)
-  expect_equivalent(M$options$fit_grid_nsteps, rep(3,3))
+  expect_equivalent(M$options$fit_control$nsteps, rep(3,3))
 
   M <- Cogscimodel$new(y ~ x1, D, PS[1:4,], mode = "discrete", options = O)
-  expect_equivalent(M$options$fit_grid_nsteps, rep(4,4))
+  expect_equivalent(M$options$fit_control$nsteps, rep(4,4))
 
   M <- Cogscimodel$new(y ~ x1, D, PS[1:5,], mode = "discrete", options = O)
-  expect_equivalent(M$options$fit_grid_nsteps, rep(5,5))
+  expect_equivalent(M$options$fit_control$nsteps, rep(5,5))
 })
 
 test_that("Grid nsteps with parameters between 0 - 20", {
@@ -299,20 +299,17 @@ test_that("Grid nsteps with parameters between 0 - 20", {
   O <- list(fit_solver = c("grid", "solnp"))
 
   M <- Cogscimodel$new(y ~ x1, D, PS[1:2,], mode = "discrete", options = O)
-  expect_equivalent(M$options$fit_grid_nsteps, c(3,5))
+  expect_equivalent(M$options$fit_control$nsteps, c(3,5))
 
   M <- Cogscimodel$new(y ~ x1, D, PS[1:3,], mode = "discrete", options = O)
-  expect_equivalent(M$options$fit_grid_nsteps, c(3,5,3))
+  expect_equivalent(M$options$fit_control$nsteps, c(3,5,3))
 
   M <- Cogscimodel$new(y ~ x1, D, PS[1:4,], mode = "discrete", options = O)
-  expect_equivalent(M$options$fit_grid_nsteps, c(4,6,4,8))
+  expect_equivalent(M$options$fit_control$nsteps, c(4,6,4,8))
 
   M <- Cogscimodel$new(y ~ x1, D, PS[1:5,], mode = "discrete", options = O)
-  expect_equivalent(M$options$fit_grid_nsteps, c(5,7,5,10,5))
+  expect_equivalent(M$options$fit_control$nsteps, c(5,7,5,10,5))
 })
-
-
-
 
 test_that("Sum constraints equal identities", {
   PS <- make_parspace(a=c(0,1), b=c(0,1), c=c(0,1), d=c(0,1))
@@ -323,22 +320,22 @@ test_that("Sum constraints equal identities", {
   expect_equivalent(M$ncon(), M$npar("fix"))
 
   M <- Cogscimodel$new(y ~ x1, D, PS, fix=list(a=0.5), mode = "discrete")
-  expect_equivalent(M$make_constraints(), L_constraint(L = rbind(c(1,0,0,0)), rhs = 0.5, dir = "==", names = rownames(PS)))
+  expect_equivalent(M$make_constraints(), L_constraint(L = rbind(a=c(1,0,0,0)), rhs = 0.5, dir = "=="))
   expect_equivalent(M$ncon(), 1L)
   expect_equivalent(M$ncon(), M$npar("fix"))
 
   M <- Cogscimodel$new(y ~ x1, D, PS, fix=list(a=0.5, b=0.7), mode = "discrete")
-  expect_equivalent(M$make_constraints(), L_constraint(L = rbind(c(1,0,0,0), c(0,1,0,0)), rhs = c(0.5, 0.7), dir = c("==", "=="), names = rownames(PS)))
+  expect_equivalent(M$make_constraints(), L_constraint(L = rbind(a=c(1,0,0,0), b=c(0,1,0,0)), rhs = c(0.5, 0.7), dir = c("==", "==")))
   expect_equivalent(M$ncon(), 2L)
   expect_equivalent(M$ncon(), M$npar("fix"))
 
   M <- Cogscimodel$new(y ~ x1, D, PS, fix =list(a="d", b=0.5), mode="discrete")
-  expect_equivalent(M$make_constraints(), L_constraint(L = rbind(c(0,1,0,0), c(1,0,0,-1)), rhs = c(0.5, 0), dir = c("==", "=="), names = rownames(PS)))
+  expect_equivalent(M$make_constraints(), rbind(L_constraint(rbind(b=c(0,1,0,0)), "==", 0.5), L_constraint(rbind(c(1,0,0,-1)), "==", 0)))
   expect_equivalent(M$ncon(), 2L)
   expect_equivalent(M$ncon(), M$npar("fix"))
 
   M <- Cogscimodel$new(y ~ x1, D, PS, fix=list(a=1,b=0.99,c="d"), mode = "discrete")
-  expect_equivalent(M$make_constraints(), L_constraint(L = rbind(c(1,0,0,0), c(0,1,0,0), c(0,0,1,-1)), rhs = c(1, 0.99, 0), dir = c("==", "==", "=="), names = rownames(PS)))
+  expect_equivalent(M$make_constraints(), rbind(L_constraint(rbind(a=c(1,0,0,0),b=c(0,1,0,0)), c("==","=="), c(1,0.99)), L_constraint(rbind(c(0,0,1,-1)), "==", 0)))
   expect_equivalent(M$ncon(), 3L)
   expect_equivalent(M$ncon(), M$npar("fix"))
 })

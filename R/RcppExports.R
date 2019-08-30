@@ -3,20 +3,23 @@
 
 #' Exemplar-based prediction computation
 #' 
-#' @param values numeric vector with experienced values
-#' @param features numeric matrix with feature values
+#' @param criterion numeric vector with experienced criterion
+#' @param features numeric matrix with feature criterion
 #' @param w numeric vector of weights (model parameter)
 #' @param r square root in distance metic (model parameter)
 #' @param q exponent in distance metric (model parameter)
 #' @param lambda sensitivity (model parameter)
 #' @param b bias parameter vector for classification (model parameter), must be NA for judgments
+#' @param fw weight vector with a weight for each feature combination
 #' @param lastLearnTrial integer last trial of learning phase
 #' @param firstOutTrial integer first trial of output, starting the predictions later
 #' @examples
 #' # none
 #' @export
-ebm_cpp <- function(values, features, w, r, q, lambda, b, lastLearnTrial, firstOutTrial) {
-    .Call(`_cogscimodels_ebm_cpp`, values, features, w, r, q, lambda, b, lastLearnTrial, firstOutTrial)
+NULL
+
+ebm_cpp <- function(criterion, features, w, r, q, lambda, b, wf, lastLearnTrial, firstOutTrial) {
+    .Call(`_cogscimodels_ebm_cpp`, criterion, features, w, r, q, lambda, b, wf, lastLearnTrial, firstOutTrial)
 }
 
 lexicographic <- function(I) {

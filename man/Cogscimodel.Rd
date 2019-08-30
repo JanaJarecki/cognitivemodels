@@ -13,44 +13,36 @@ Cogscimodel$new(formula, data, parspace)
 
 \item{data}{A data.frame containing \code{formula}'s variables.}
 
-\item{parspace}{(optional, \bold{required} to add model parameters) A amtrix with the parameter space: a \code{n x 4} matrix with columns named \code{"ll","ul","init","na"}. Easy to create using \link{make_parspace}, e.g. \code{make_parspace(alpha=c(0,1))}. The matrix' row names are parameter names, columns contain the lower limit, upper limit, starting value in fitting, and (optional) a value that makes a parameter have zero effect, which can be NA. See details.}
+\item{parspace}{(optional, \bold{required} to add model parameters) A amtrix with the parameter space: a \code{n x 4} matrix with columns named \code{"lb","ub","start","na"}. Easy to create using \link{make_parspace}, e.g. \code{make_parspace(alpha=c(0,1))}. The matrix' row names are parameter names, columns contain the lower limit, upper limit, starting value in fitting, and (optional) a value that makes a parameter have zero effect, which can be NA. See details.}
 
-\item{fix}{(optional)  A list with parameter constraints (e.g., \code{list(beta = 1)}). Allowed are numbers, strings, and NA. Supplying
-\code{list(alpha=0.5, beta="alpha", gamma=NA)} constrains the parameters alpha, beta, and gamma as follows
+\item{fix}{(optional) Parameter constraints. Can be \code{"start"} or a list with \code{parname=value}-pairs. Parameter names see below under "parameter space".
 \itemize{
-\item{\code{alpha=0.5}}{: fix alpha to 0.5.}
-\item{\code{beta="alpha"}}{: fix beta to the value of alpha; alpha may be a free or fixed model parameter in \code{parspace}.}
-\item{\code{delta=NA}}{: ignore delta if it can be ignored by setting delta equal to the value in the column "na" of \code{parspace}, given that parspace has a value in the column "na" for delta.}
+\item{\code{"start"} constrains all available parameters to their starting values. Useful for model testing.}
+\item{\code{parname = 0.5} constrains a parameter to 0.5.}
+\item{\code{parname = "p2"} constrains a parameter to another model parameter \code{p2}.}
+\item{\code{parname = NA} tells the model to omit a parameter, if possible.}
 }}
 
-\item{choicerule}{(optional, default \code{NULL}) String specifying the choice rule, allowed are \code{NULL}, \code{"softmax"}, \code{"eps"}, and other values of the argument \code{type} to \link[cogsciutils]{choicerule}.}
+\item{choicerule}{(optional) String specifying the choice rule (default \code{NULL}), allowed are \code{NULL}, \code{"softmax"}, \code{"eps"}, and other values of the argument \code{type} to \link[cogsciutils]{choicerule}.}
 
-\item{model}{(optional, default is the class name) A string, the model's name.}
+\item{title}{(optional, default is the class name) A string, the model's name.}
 
-\item{discount}{(optional, default \code{0}) An integer or integer vector, which or how many many trials to discount.}
+\item{mode}{A string. Allowed are \code{"discrete"}, \code{"continuous"}, specifies the model's response mode. Discrete responses are binary (0 or 1), continuous responses are numbers with a normal error.}
 
-\item{options}{(optional)
-An object of class "cogscimodel_options" which contains options, generate it using \link{cogscimodel_options} using one of these options
-\describe{
-   \item{\code{fit_measure}}{(default: \code{"loglikelihood"}). When fitting, which fit measure to use? See \link[cogsciutils]{gof}'s argument \code{type}.}
-   \item{\code{fit_data}}{(default: \code{data}). When fitting, which data other than to fit the model to? Useful if you fit to other data than you predict.}
-   \item{\code{fit_n}}{(default: \code{1}). When fitting, the number of observations underlying each data point in \code{fit_data}. If this data is aggregated data, change this argument.}
-   \item{\code{fit_roi_solver}}{(default: \code{"auto"}). When fitting with the \link{http://roi.r-forge.r-project.org/index.html}{ROI pakage}, which solver to use for the parameter estimation problem.}
-   \item{\code{fit_grid_nbest}}{(default: \code{self$npar("free")}, no. of free parameters) When fitting with grid search followed by a solver, how many best grid-search solutions to use as starting parameters with the solver?}
-\item{\code{fit_options}}{(default: \code{NULL}). Other options, see \link[cogsciutils]{gof}.}
-}}
+\item{discount}{(optional) An integer or integer vector (default \code{0}), ddefining which or how many, starting from trial 1, to discount when fitting.}
+
+\item{options}{(optional) Options to control the parameter fitting methods, see the "Options" section of \code{\link{cogscimodel}}.}
 
 \item{x}{named vector with parameter values, names must be one in \code{parspace}
 Get parameter
 Set data to ignore when fitting}
 
 \item{x}{intteger or integer vector, rows to discount
-Sets fit options
 Remove choicerule
 Number of free parameter}
 
 \item{x}{String specifying which
-Number of trials/observations in the data
+Number of trials/reservations in the data
 Number of alternatives available
 Transforms predictions with choicerule}
 
@@ -65,13 +57,20 @@ Class for cognitive models
 \details{
 \code{parspace}. It is optional to define a value that makes the parameter have zero effect in the column called "na" in \code{parspace}. For example, a parameter \code{b} in \code{b*x}, has no-effect  when setting \code{b=0}. The no-effect value can be \code{NA}.
 
+\bold{fix}
+ Supplying \code{list(alpha=0.5, beta="alpha", gamma=NA)} constrains the parameters alpha, beta, and gamma as follows
+\itemize{
+\item{\code{alpha=0.5}}{: fix alpha to 0.5.}
+\item{\code{beta="alpha"}}{: fix beta to the value of alpha; alpha may be a free or fixed model parameter in \code{parspace}.}
+\item{\code{delta=NA}}{: ignore delta if it can be ignored by setting delta equal to the value in the column "na" of \code{parspace}, given that parspace has a value in the column "na" for delta.}
+}
 You can ignore a model parameter by setting it to \code{NA} in \code{fix}, in this case your \code{parspace} needs to contain a value in the column na nullifying the effect of the parameter.
 }
 \examples{
 Cogscimodel$new(
     formula = y ~ x,
     data = data.frame(y=1:2, x=3:4),
-    parspace = rbind(alpha = c('ul'=0, 'll'=1, 'init'=.5)),
+    parspace = rbind(alpha = c("ub"=0, "lb"=1, "start"=.5)),
     title = 'name of my model'))
 }
 \keyword{datasets}

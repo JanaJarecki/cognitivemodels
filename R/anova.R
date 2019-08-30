@@ -73,6 +73,9 @@ anova.cogscimodellist <- function(models, model.names = NULL) {
   llks <- lapply(models, logLik)
   npar <- vapply(models, function(x) ifelse(inherits(x, "cogscimodel"), x$npar('free'), x$rank), 0L)
   data <- lapply(calls, `[[`, "data")
+  
+  ## TODO: make this work with the fit_data argument?
+
   ## Order models by increasing number of prameters
   ii <- order(npar)
   models <- models[ii]
@@ -80,7 +83,7 @@ anova.cogscimodellist <- function(models, model.names = NULL) {
   npar <- npar[ii]
   calls <- lapply(models, getCall)
   aic <- if( any(nobs/npar < 40) ) {
-    bottomnote <- "AIC = AICc because a model has npar/nobs<40"
+    bottomnote <- "AIC = AICc because a model has npar/nobs < 40"
     vapply(models, AICc, 1)
   } else {
     vapply(models, AIC, 1)
@@ -110,7 +113,7 @@ anova.cogscimodellist <- function(models, model.names = NULL) {
                     check.names = FALSE)
 
   # Check for nested models: do all models have the same name
-  is.nested <- ( length( Reduce(intersect, lapply(models, function(x) x$model)) ) == 1 )
+  is.nested <- ( length( Reduce(intersect, lapply(models, function(x) x$title)) ) == 1 )
   if ( is.nested ) {
     chisq <- 2 * pmax(0, c(NA, diff(llk)))
     dfChisq <- c(NA, diff(npar))

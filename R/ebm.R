@@ -43,22 +43,17 @@ Ebm <- R6Class('ebm',
     parnamesBias = NULL,
     parnamesWeights = NULL,
     initialize = function(formula, data, criterion, mode = NULL, fix = NULL, learntrials = NULL, discount = NULL, choicerule = NULL, options = list()) {
-
-      self$learntrials <- if ( is.null(learntrials) ) { seq_len(nrow(data)) } else { learntrials }
       self$formulaCriterion <- criterion
-      self$criterion <- super$get_input(f = criterion, d = data)
-      mode <- if (is.null(mode)) { super$infer_mode(self$criterion) } else { mode }
-      parspace <- self$make_parspace(
-          formula = formula,
-          criterion = self$criterion, 
-          mode = mode)
-      self$infer_discount(
-          discount = discount,
-          criterion = self$criterion,
-          mode = mode,
-          showmsg = all(rownames(parspace) %in% names(fix))
-        )
-
+      self$learntrials <- if ( is.null(learntrials) ) { seq_len(nrow(data)) } else { learntrials }
+      criterion <- self$get_more_input(d=data)
+      if (is.null(mode)) {
+        mode <- super$infer_mode(criterion)
+      }
+      parspace <- self$make_parspace(formula = formula, criterion = criterion, mode = mode)
+      if (is.null(discount)) {
+        discount <- self$infer_discount(discount = discount, criterion = criterion, mode = mode, showmsg = !all(rownames(parspace) %in% names(fix)))
+      }
+      
       super$initialize(
         formula = formula,
         data = data,
@@ -76,54 +71,56 @@ Ebm <- R6Class('ebm',
         self$fit()
       }
     },
-    predict = function(newdata, learnto = max(self$learntrials), firstout = if (missing(newdata)) { 1 } else { (self$nobs() + 1) } ) {
-      input <- self$input
-      criterion <- self$criterion
-      lastlearntrial <- learnto
-
-      if (!missing(newdata)) {
-        input <- abind::abind(input, self$get_input(f = self$formula, d = newdata), along = 1)
-        if ( learnto > max(self$learntrials) ) {
-          criterion <- abind::abind(criterion, super$get_input(f = self$formulaCriterion, d = newdata), along = 1)
-        } else {
-          criterion <- abind::abind(criterion, array(0, dim = c(nrow(newdata), dim(criterion)[2:3])), along = 1)
-        }
+    get_more_input = function(d) {
+      return(super$get_input(f = chr_as_rhs(self$formulaCriterion), d = d, na.action = NULL))
+    },
+    make_prediction = function(type, input, more_input, isnew = FALSE, s = NULL, ...) {
+      self$pred_types <- c("response", "value")
+      par <- self$get_par()
+      na <- self$natt()[1]
+      learnto = max(self$learntrials)
+      firstout = ifelse(isnew, self$nobs() + 1L, 1L)
+      criterion <- more_input
+      if (isnew == TRUE) {
+        criterion <- c(self$more_input[, , s], c(more_input))
+        input <- rbind(self$input[,,s], input)
       }
-
-      parameter <- self$get_par()
-
-      .args <- list(
-        values = as.double(criterion),
-        features = matrix(input, ncol = self$natt()),
-        w = as.double(parameter[seq_len(self$natt())]),
-        r = as.double(parameter['r']),
-        q = as.double(parameter['q']),
-        b = if (self$mode == "continuous") {
-          NA
-          } else {
-            as.double(tail(parameter, -(self$natt() + 3)))
-          },
-        lambda = as.double(parameter['lambda']),
-        lastLearnTrial = lastlearntrial,
-        firstOutTrial = firstout)
-      out <- do.call(ebm_cpp, args = .args, envir = parent.frame())
-      out <- round(out, 1e9)
-      out <- as.matrix(super$apply_choicerule(out))[,1]
-
-      return(out)
+      b <- if (self$mode == "continuous") { NA } else {
+            as.double(tail(par, -(na + 3))) }
+      exemplar_w <- as.numeric(!is.na(criterion)) # exemplar weights
+      criterion[is.na(criterion)] <- 0L
+      return(ebm_cpp(
+        criterion = as.double(criterion),
+        features = matrix(input, ncol = na),
+        w = as.double(par[seq.int(na)]),
+        wf = as.double(exemplar_w),
+        lambda = as.double(par["lambda"]),
+        r = as.double(par["r"]),
+        q = as.double(par["q"]),
+        b = b,
+        lastLearnTrial = learnto,
+        firstOutTrial = firstout
+        ))
+    },
+    get_stimnames = function() {
+      stimname <- paste0("pred_", all.vars(self$formulaCriterion[[2]]))
+      if (self$mode == "continuous") {
+        return(stimname)
+      } else {
+        return(paste0(rep(stimname, self$nstim()), unique(self$more_input)[1]))
+      }
     },
     make_constraints = function() {
       parnames <- self$get_parnames()
       parnames_fix <- self$get_parnames("fix")
-      con <- super$make_constraints()
-
+      # initialize constraintss with NULL
+      con_w <- con_b <- NULL
       if (!all(self$get_parnames("weights") %in% parnames_fix)) {
         con_w <- L_constraint(
           L = as.integer(parnames %in% self$get_parnames("weights")),
           dir = "==",
           rhs = 1L,
           names = parnames)
-        con <- rbind(con, con_w)
       }
       if (!all(self$get_parnames("biases") %in% parnames_fix)) {
         con_b <- L_constraint(
@@ -131,9 +128,8 @@ Ebm <- R6Class('ebm',
           dir = "==",
           rhs = 1L,
           names = parnames)
-        con <- rbind(con, con_b)
       }
-      return(con)
+      return(.combine_constraints(con_w, con_b, super$make_constraints()))
     },
     make_parspace = function(formula, criterion, mode) {
       # parameter that are NOT dynamic
@@ -175,7 +171,7 @@ Ebm <- R6Class('ebm',
         return(discount)
       }    
     },
-    parGrid = function(offset) {
+    make_pargrid = function(offset) {
       parspace <- self$parspace
       offset <- c(offset, w = .1, b = .1)
       return(MakeGridList(

@@ -50,7 +50,6 @@ cpt <- function(formula, data = NULL, ref, fix = list(), choicerule = NULL, weig
 Cpt <- R6Class("cpt",
   inherit = Cogscimodel,
   public = list(
-    ref = "matrix",
     formulaRef = NULL,
     wfun = NULL,
     vfun = NULL,
@@ -66,7 +65,6 @@ Cpt <- R6Class("cpt",
         stop('Ignoring parameters by setting them NA is not (yet) implemented.', call.=FALSE)
       }
       self$formulaRef <- if (is.numeric(ref)) { ref } else { chr_as_rhs(ref) }
-      self$ref <- if (is.numeric(ref)) { as.matrix(ref) } else { self$get_input(f=self$ref, d=data) }
       self$set_weightingfun(weighting)
       self$set_valuefun(value)
 
@@ -96,35 +94,27 @@ Cpt <- R6Class("cpt",
         self$fit()
       }
     },
-    predict = function(type = c("response", "value"), action = NULL, newdata = NULL) {
-      parameters <- self$get_par()
-      type <- match.arg(type)
-
-      if (is.null(newdata) | missing(newdata)) {
-        input <- self$input
-        ref <- self$ref
+    get_more_input = function(d) {
+      fr <- self$formulaRef
+      if (is.numeric(fr)) {
+        ref <- array(fr, dim = c(nrow(d), self$natt()[1]/2, self$nstim()))
       } else {
-        input <- self$get_input(f = self$formula, d = newdata)
-        ref <- if (!is.numeric(self$ref)) { self$get_input(f = self$formulaRef, d = newdata) } else { as.matrix(self$ref) }
+        ref <- super$get_input(f = chr_as_rhs(fr), d = d)
       }
-
-      v <- sapply(seq.int(self$nstim()),
-        FUN = function(s, x_mat, p_mat, r_mat, par, iter) {
-          .args <- c(as.list(par), list(p = p_mat[, , s], x = x_mat[, , s] - r_mat[, iter[s]]))
-          rowSums(do.call(self$wfun, args = .args) * do.call(self$vfun, args = .args))
-        },
-        x_mat = self$get_x(input),
-        p_mat = self$get_p(input),
-        r_mat = as.matrix(ref),
-        par = parameters,
-        iter = if (ncol(ref) < self$nstim()) { rep(1L, self$nstim()) } else { seq.int(self$nstim()) }
-      )
-
-      v <- matrix(v, nc=self$nstim(), dimnames=list(NULL,self$get_stimnames()))
-
-      switch (type,
-        mode = super$apply_choicerule(v),
-        value = v)
+      return(ref)
+    },
+    make_prediction = function(type, input, more_input, ...) {
+      type <- match.arg(type, c("response", "value"))
+      par <- self$get_par()
+      no <- self$nobs()
+      ns <- self$nstim()
+      na <- self$natt()[1]
+      X <- input[,  seq(1, na, 2), drop = FALSE] #1., 3., 5. input
+      P <- input[, -seq(1, na, 2), drop = FALSE] #2., 4., 6. input
+      X <- X - more_input # more_input = reference point
+      # Cumulative prospect theory
+      #    sum(w(...) * v(...))
+      return(rowSums(self$wfun(x=X, p=P, gammap=par["gammap"], gamman=par["gamman"]) * self$vfun(x=X, alpha = par["alpha"], beta = par["beta"], lambda = par["lambda"])))
     },
     set_formula = function(f) {
       f <- as.Formula(f)
@@ -142,14 +132,6 @@ Cpt <- R6Class("cpt",
           }
         })
       self$formula <- update(f, as.formula(paste(".", paste(fs, collapse = " | "))))
-    },
-    get_x = function(x) {
-      # TODO: make this compatible for different # of features
-      return(x[,  seq(1, self$natt()[1], 2), , drop = FALSE])
-    },
-    get_p = function(x) {
-      # TODO: make this compatible for different # of features
-      return(x[, -seq(1, self$natt()[1], 2), , drop = FALSE])
     },
     set_weightingfun = function(type) {
       if (type == "TK1992") {
@@ -206,7 +188,7 @@ Cpt <- R6Class("cpt",
       self$vfun <- vfun
     },
     check_input = function() {
-      P <- self$get_p(self$input)
+      P <- self$input[, seq(2, self$natt()[1], 2), ]
       f <- self$formula
       fs <- lapply(seq.int(length(f)[2]), function(x) attr(terms(formula(f, lhs=0, rhs=x, drop=FALSE)), "term.labels"))
       pvars <- lapply(fs, function(x) x[seq(2, length(x), 2)] )

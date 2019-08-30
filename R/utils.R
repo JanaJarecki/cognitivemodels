@@ -40,10 +40,14 @@ make_grid_id_list <- function(names, nsteps = list(), ub = list(), lb = list(), 
   offset <- as.list(offset)
   ub <- ub[which(names(ub) %in% names)]
   lb <- lb[which(names(lb) %in% names)]
-  if ( length(offset) == 1 ) {
+  if (length(offset) == 1) {
     offset <- rep(offset, length(ub))
   }
-  offset <- setNames(offset, names(ub))
+  offset <- setNames(offset, names)
+  if (length(nsteps) == 1L) {
+    nsteps <- rep(nsteps, length(names))
+  }
+  nsteps <- setNames(nsteps, names)
   sumto <- Filter(Negate(is.null), sumto)
   sumto <- Filter(function(z) all(z %in% names), sumto)
   nsteps <- nsteps[which(names(nsteps) %in% c(names, names(sumto)))]
@@ -227,12 +231,12 @@ chr_as_rhs <- function(x) {
 #"                 delta = c(1,2,0))
 #" 
 #" 
-#" ## Dynamically define new parameter "gamma" and "delta"
-#" ## with the same definition (ub, lb, init, na)
-#" def <- c(lb = 0, ub = 1, init = 0.5, na = 0)
-#" deflist <- list("gamma" = def, "delta" = def)
-#" do.call(make_parspace, deflist)
-#" @export
+#' ## Dynamically define new parameter "gamma" and "delta"
+#' ## with the same definition (ub, lb, init, na)
+#' def <- c(lb = 0, ub = 1, init = 0.5, na = 0)
+#' deflist <- list("gamma" = def, "delta" = def)
+#' do.call(make_parspace, deflist)
+#' @export
 make_parspace <- function(...) {
   dotargs <- list(...)
 
@@ -273,3 +277,14 @@ make_parspace <- function(...) {
 }
 
 
+
+#' Combine multiple constraints of type "constraint" from ROI
+#' Combine constraints, ignore \code{NULL} constraints
+#' 
+#' @par ... Objects of the class "constraint" from the ROI package (see \link[ROI]{L_constraint})
+#' @value An object of class "constraint" with all constraints or \code{NULL} if all \code{...} are \code{NULL}.
+.combine_constraints <- function(...) {
+  constr <- list(...)
+  constr <- Filter(Negate(is.null), constr)
+  do.call(rbind, constr)
+}
