@@ -27,3 +27,16 @@ indicators <- function(features, splitcriteria) {
     .Call(`_cogscimodels_indicators`, features, splitcriteria)
 }
 
+#' Exemplar-based prediction computation
+#' 
+#' @param x numeric matrix with outcomes
+#' @param p numeric matrix with probabilities
+#' @param w numeric vector with aspiration leel
+#' @param beta parameter
+#' @param delta parameter
+#' '
+#' @export
+shortfall_cpp <- function(x, p, a, beta, delta) {
+    .Call(`_cogscimodels_shortfall_cpp`, x, p, a, beta, delta)
+}
+

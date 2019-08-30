@@ -48,11 +48,27 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// shortfall_cpp
+Rcpp::NumericVector shortfall_cpp(Rcpp::NumericMatrix x, Rcpp::NumericMatrix p, Rcpp::NumericVector a, double beta, double delta);
+RcppExport SEXP _cogscimodels_shortfall_cpp(SEXP xSEXP, SEXP pSEXP, SEXP aSEXP, SEXP betaSEXP, SEXP deltaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type x(xSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type p(pSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type a(aSEXP);
+    Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< double >::type delta(deltaSEXP);
+    rcpp_result_gen = Rcpp::wrap(shortfall_cpp(x, p, a, beta, delta));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_cogscimodels_ebm_cpp", (DL_FUNC) &_cogscimodels_ebm_cpp, 9},
     {"_cogscimodels_lexicographic", (DL_FUNC) &_cogscimodels_lexicographic, 1},
     {"_cogscimodels_indicators", (DL_FUNC) &_cogscimodels_indicators, 2},
+    {"_cogscimodels_shortfall_cpp", (DL_FUNC) &_cogscimodels_shortfall_cpp, 5},
     {NULL, NULL, 0}
 };
 

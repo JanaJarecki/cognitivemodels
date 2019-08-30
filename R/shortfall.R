@@ -1,6 +1,7 @@
 #' Shortfall Risky Choice Model
 #' 
 #' @importFrom stringr str_extract
+#' @importFrom Rcpp sourceCpp
 #' @inheritParams Cogscimodel
 #' @description Fits the shortfall model, a cognitive model for risky choices. It trades off a risky option's expected value with a \eqn{\beta}-weighted measure of risk; risk being the chance of falling short of a \eqn{\delta}-weighted aspiration level (based on Andraszewicz, von Helversen, and Rieskamp). Model inputs are the risky options and the aspiration level. The value \eqn{v} of option \eqn{o}, with free parameters \eqn{\delta, \beta}, is
 #' \deqn{v(o) = EV(o) - \beta R(o)}
@@ -15,26 +16,7 @@
 #' @author Jana B. Jarecki, \email{jj@janajarecki.com}
 #' @details Risk-sensitive foraging means you have, for instance, four choices between the same two risky lotteries and after the four choices you need to have accumulated at least 12 points to get a reward. The optimal solution to this choice problem relies on dynamic programming. The function creates all possible future states given the possible remaining trials, and predicts the optimal choice polica or the expected value of chosing either option given a certain state and a certain time horizon.
 #' @examples
-# #' # Tversky, A., & Kahneman, D. (1992). Advances in prospect theory: cumulative representation of uncertainty. Journal of Risk and Uncertainty, 5, 297–323. doi:10.1007/BF00122574
-# p. 313
-#' dt <- data.frame(
-#'   x1 = c(100, -100),
-#'   px = 1,
-#'   x2 = 0,
-#'   y1 = c(200, -200),
-#'   py = c(.71,.64),
-#'   y2 = 0,
-#'   rp = 1)
-#' 
-#' # Make the model, add fix parameters (don't fit)
-#' M <- cpt(rp ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py),
-#'          nopt = 2, nout = 2, ref = 0, choicerule = "softmax", data = dt,
-#'          fix = list(alpha = 0.88, beta = 0.88, lambda = 2.25,
-#'          gammap = 0.61, gamman = 0.69, tau = 1))
-#' # View the model
-#' M
-#' M$predict("value") # predict values
-#' M$predict("mode") # predict choices after soft-max
+#' # None yet
 #' @export
 shortfall <- function(formula, asp, data, fix = list(), choicerule, options) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
@@ -51,7 +33,7 @@ Shortfall <- R6Class("shortfall",
       self$formulaAsp <- chr_as_rhs(asp)
       self$asplevel <- self$get_input(f = self$formulaAsp, d = data)
       parspace <- make_parspace(
-        beta  = c(0, 15, 1, 0),
+        beta  = c(0, 10, 1, 0),
         delta = c(0, 1, .5, 1)
         )
 
@@ -64,7 +46,9 @@ Shortfall <- R6Class("shortfall",
         choicerule = choicerule,
         discount = 0,
         mode = "discrete",
-        options = c(options, list(fit_solver = c("grid", "solnp"))))
+        options = c(options, list(fit_solver = c("grid", "solnp")))
+        # Note: keep "grid" as first solver!
+      )
 
       if (self$npar("free") > 0L) {
         message("Fitting free parameters ", .brackify(self$get_parnames("free")))
@@ -73,48 +57,52 @@ Shortfall <- R6Class("shortfall",
     },
     predict = function(type = c("response", "values"), action = NULL, newdata = NULL) {
       type <- match.arg(type)
-      parameters <- self$get_par()
-      beta  <- parameters["beta"]
-      delta <- parameters["delta"]
 
       if (is.null(newdata)) {
-        input <- self$input
-        asplevel <- self$asplevel
+        D <- self$input
+        A <- self$asplevel
       } else {
-        input <- self$get_input(f = self$formula, d = newdata)
-        asplevel <- self$get_input(f = self$formulaAsp, d = newdata)
+        D <- self$get_input(f = self$formula, d = newdata)
+        A <- self$get_input(f = self$formulaAsp, d = newdata)
       }
 
-      
-      #Todo: make this flexible to handle different stimuli with feature lengths
-      X <- input[,  seq(1, self$natt()[1], 2), , drop = FALSE]
-      P <- input[, -seq(1, self$natt()[1], 2), , drop = FALSE]
+      ## ---- function -----
+      # Sum_i pi * xi - beta * Sum_i pi * max{delta * a - xi, 0}
+      # where
+      # xi := outcome numnber i of the option
+      # pi :=  probability of the ith outcome
+      # a := aspiration level for the option
+      # beta, delta are free parameter
 
+      par <- self$get_par()
       ns <- self$nstim()
-      EV <- sapply(1:ns, function(s) {
-        rowSums(X[, , s] * P[, , s])
-      })
-      R <- sapply(1:ns, function(s, asplevel, iter) {
-        X[] <- delta * asplevel[, , iter[s]] - X[, , s]
-        X[X < 0L] <- 0L
-        rowSums(X[, , s] * P[, , s])
-      },
-      asplevel = asplevel,
-      iter = if (dim(asplevel)[3] == 1) { rep(1L,ns) } else { seq.int(ns) })
-      # if there is only one aspiration level for all options use the iterator
+      na <- self$natt()[1] ## TODO: make this work with unequal number of attributes per stim.
 
-      v <- EV - beta * R
-      colnames(v) <- self$get_stimnames()
+      no <- self$nobs()
+      R <- array(0, dim=c(no,ns), dimnames=list(NULL, self$get_stimnames()))
+      X <- D[,  seq(1, na, 2), , drop = FALSE]
+      P <- D[, -seq(1, na, 2), , drop = FALSE]
+      A <- if (length(A) != no * ns) { array(A, dim = c(no,ns)) } else { A }
+      
+      for (s in 1:ns) {
+        R[, s] <- shortfall_cpp(
+          x = matrix(X[, , s], nrow = no),
+          p = matrix(P[, , s], nrow = no),
+          a = as.double(A[, , s]),
+          beta = as.double(par["beta"]),
+          delta = as.double(par["delta"])
+          )
+      }
 
       return(switch(type,
-        response = super$apply_choicerule(v),
-        values = v))
+        response = super$apply_choicerule(R),
+        values = R))
     },
     check_input = function() {
       if (!all(self$natt() %% 2 == 0L)) {
         stop("Formula needs an even number of right-hand elements, but has ", .brackify(self$natt()), ' elements.')
       }
-      if (!all((rowSums(self$input[, -seq(1, self$natt()[1], 2), ]) == self$nstim()))) {
+      if (!all((rowSums(self$input[, -seq(1, self$natt()[1], 2), , drop = FALSE]) == self$nstim()))) {
         stop('Probabilities (which are the 2nd, 4th, 6th... element of right side of "formula") must sum to 1, but the following variables in your data do NOT sum to 1: ', .brackify(attr(terms(self$formula), "term.labels")[seq(1, self$natt()[1], 2)]), '. Check the probability variables in "formula" and in "data".')
       }
 
