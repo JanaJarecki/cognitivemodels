@@ -73,6 +73,9 @@ Hm1988 <- R6Class("hm1988",
         time_state_names <- attr(terms(formula), "term.labels")
         data <- env$makeData(time_state_names)
       }
+      self$env <- env
+      self$makeValueMat()
+      self$makeEVMat()
       super$initialize(
         formula = formula,
         data = data,
@@ -82,14 +85,7 @@ Hm1988 <- R6Class("hm1988",
         title = "Optimal RSFT Model (Houston & McNamara, 1988)",
         discount = 0,
         mode = "discrete",
-        options = options)
-      self$env <- env
-      self$makeValueMat()
-      self$makeEVMat()
-      if (self$npar("free") > 0) {
-          message("Fitting free parameter ", .brackify(self$get_names("free")))
-          self$fit(c("grid", "solnp"))
-       }
+        options = options)  
       },
       predict = function(type = c("response", "values", "ev", "pstates"), action = NULL, newdata = NULL) {
         type = match.arg(type)
