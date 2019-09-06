@@ -41,7 +41,7 @@
 #' summary(M)
 #' anova(M)
 #' @export
-cpt <- function(formula, data = NULL, ref, fix = list(), choicerule = NULL, weighting = c('TK1992'), value = c('TK1992')) {
+cpt <- function(formula, data = NULL, ref, fix = list(), choicerule = NULL, weighting = c('TK1992'), value = c('TK1992'), options = NULL) {
   message("This function is experimental and still under development.")
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   return(do.call(what = Cpt$new, args = .args, envir = parent.frame()))
@@ -88,11 +88,6 @@ Cpt <- R6Class("cpt",
         options = c(options, list(fit_solver = "grid")),
         parspace = parspace       
         )
-
-      if (self$npar("free") > 0L) {
-        message("Fitting free parameters ", .brackify(self$get_parnames("free")))
-        self$fit()
-      }
     },
     get_more_input = function(d) {
       fr <- self$formulaRef
@@ -104,7 +99,6 @@ Cpt <- R6Class("cpt",
       return(ref)
     },
     make_prediction = function(type, input, more_input, ...) {
-      type <- match.arg(type, c("response", "value"))
       par <- self$get_par()
       no <- self$nobs()
       ns <- self$nstim()
@@ -114,7 +108,10 @@ Cpt <- R6Class("cpt",
       X <- X - more_input # more_input = reference point
       # Cumulative prospect theory
       #    sum(w(...) * v(...))
-      return(rowSums(self$wfun(x=X, p=P, gammap=par["gammap"], gamman=par["gamman"]) * self$vfun(x=X, alpha = par["alpha"], beta = par["beta"], lambda = par["lambda"])))
+      return(rowSums(
+        self$wfun(x=X, p=P, gammap=par["gammap"], gamman=par["gamman"]) * 
+        self$vfun(x=X, alpha = par["alpha"], beta = par["beta"], lambda = par["lambda"]))
+      )
     },
     set_formula = function(f) {
       f <- as.Formula(f)
@@ -131,7 +128,7 @@ Cpt <- R6Class("cpt",
             fs[[i]]
           }
         })
-      self$formula <- update(f, as.formula(paste(".", paste(fs, collapse = " | "))))
+      self$formula <- update(f, as.formula(paste(fs, collapse = " | ")))
     },
     set_weightingfun = function(type) {
       if (type == "TK1992") {
@@ -140,9 +137,9 @@ Cpt <- R6Class("cpt",
           if(dim(p)[2] != 2) {
             stop('Probabilities ("p" in the cpt weighting function) need 2 columns, but has ', ncol(p), ".")
         }
-        px <- cbind(p, x)
-        id <- as.numeric(factor(apply(px, 1, paste, collapse=''), ordered = TRUE))
-        px <- cbind(px, id)
+        id <- apply(cbind(p, x), 1, paste, collapse = "")
+        id <- match(id, unique(id))
+        px <- cbind(p, x, id)
         p_unique <- p[!duplicated(id), , drop = F]
         x_unique <- x[!duplicated(id), , drop = F]
         out <- t(sapply(1:nrow(p_unique), function(.rowid, x, p) {
@@ -182,13 +179,14 @@ Cpt <- R6Class("cpt",
     set_valuefun = function(type) {
       if (type == "TK1992") {
         vfun <- function(x, alpha, beta, lambda, ...) {
-          return(replace(x^alpha, x < 0, (-lambda * (-x[x < 0])^beta)))
+          x <- replace(x^alpha, x < 0, (-lambda * (-x[x < 0])^beta))
+          return(x)
         }
       } 
       self$vfun <- vfun
     },
     check_input = function() {
-      P <- self$input[, seq(2, self$natt()[1], 2), ]
+      P <- self$input[, seq(2, self$natt()[1], 2), , drop = FALSE]
       f <- self$formula
       fs <- lapply(seq.int(length(f)[2]), function(x) attr(terms(formula(f, lhs=0, rhs=x, drop=FALSE)), "term.labels"))
       pvars <- lapply(fs, function(x) x[seq(2, length(x), 2)] )
