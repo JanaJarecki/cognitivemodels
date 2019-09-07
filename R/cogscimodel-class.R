@@ -635,7 +635,7 @@ Cogscimodel <- R6Class(
       par_fix <- self$get_parnames("fix")
       if (all(par_in_c %in% par_fix) & all(C$dir == "==")) {
         which_par <- "free" # only fit free parameter
-        # this is to make the grid solvers more efficient if we have no
+        # this is to make the (ROI) solvers more efficient if we have no
         # other constraints than the equality- or constant constraints
       } else {
         which_par <- "all"
@@ -670,7 +670,10 @@ Cogscimodel <- R6Class(
       if (all(par == 0L) & is.null(names(par))) {
         par <- self$get_start() # hack because ROI solver strips names
       }
-      self$set_par(x = par, check = FALSE)
+      if (any(par < self$get_lb() | par > self$get_ub())) {
+        return(-1e10)
+      }
+      tmp <- self$set_par(x = par, check = TRUE)
       # check = FALSE is a hack because ROI tests the `objective` function by passing a vector of 0 without names problem: we check names
       .args <- list(
         type = self$options$fit_measure,
