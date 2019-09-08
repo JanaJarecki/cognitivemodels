@@ -158,11 +158,12 @@ Cogscimodel <- R6Class(
         })
 
       # Finally we format the RES object a bit
-      RES <- matrix(RES, nrow = dim(input)[1])
+      RES <- matrix(unlist(RES), nrow = dim(input)[1])
       colnames(RES) <- paste("pred", self$prednames[1:ncol(RES)], sep="_")
 
       # And we apply the choice rule if needed
       type <- try(match.arg(type, c("response", "value")), silent = TRUE)
+      # hack to allow for more types than the two
       if (inherits(type, "try-error")) {
         type <- "response"
       }
@@ -648,7 +649,6 @@ Cogscimodel <- R6Class(
 
       } else if (all(solver == "grid")) {
         fit <- self$fit_grid(which_par = which_par, ...)
-
       } else  if (all(solver == c("grid", "solnp"))) {
         grid_solution <- self$fit_grid()
         fits <- apply(grid_solution$solution, 1, self$fit_solnp, which_par = which_par, ...)
