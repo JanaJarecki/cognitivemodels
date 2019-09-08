@@ -6,7 +6,7 @@
 \title{Class for cognitive models}
 \format{An object of class \code{R6ClassGenerator} of length 24.}
 \usage{
-Cogscimodel$new(formula, data, parspace)
+Cogscimodel
 }
 \arguments{
 \item{formula}{A formula (e.g., \code{y ~ x1 + x2}).}
@@ -52,7 +52,7 @@ Compute goodness of fit}
 \item{type}{string, fit measure to use, e.g. 'loglikelihood', allowed types see \link[cogsciutils]{gof}}
 }
 \description{
-Class for cognitive models
+Cogscimodel$new(formula, data, parspace)
 }
 \details{
 \code{parspace}. It is optional to define a value that makes the parameter have zero effect in the column called "na" in \code{parspace}. For example, a parameter \code{b} in \code{b*x}, has no-effect  when setting \code{b=0}. The no-effect value can be \code{NA}.
