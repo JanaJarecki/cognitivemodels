@@ -13,8 +13,8 @@
 #' }
 #' @name nosofsky1989
 #'
-#' @docType data#'
-#' @usage data(nosofsky1989)#'
+#' @docType data
+#' 
 #' @format An object of class \code{"data.frame"}.#'
 #' @keywords datasets
 #' @references Nosofsky, R. M. (1989). Further tests of an exemplar-similarity approach to relating identification and categorization. Perception & Psychophysics, 45, 279–290. doi:10.3758/BF03204942

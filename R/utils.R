@@ -186,21 +186,22 @@ chr_as_rhs <- function(x) {
 }
 
 
-#" Define parameter for cognitive models
-#" 
-#" @usage make_parspace(...)
-#" @param ... Parameters and their ranges, e.g., \code{make_parspace(theta = c(ub=-1, lb=1, init=0, na=0), gamma = c(0,2,1,NA))}. See details and examples.#" 
-#" The general schema per parameter is a named vector \code{parametername = c(ub = #, lb = #, init = #, na = #)}
-#" \describe{
-#"    \item{\code{"lb"}}{Lower limit, smallest allowed value}
-#"    \item{\code{"ub"}}{Upper limit, highest allowed value}
-#"    \item{\code{"start"} (optional)}{Initial value for fitting}
-#"    \item{\code{"na"} (optional)}{Value the parameter takes if it should have no effect, can be \code{NA}}
-#" }
-#" @return A matrix with as many rows as parameters, where rownames are paramter names and four columns lb, ub, init, na define the lower limit, upper limit, initial value and null-effect-value (optional) for each parameter.
-#" @details \code{"lb"} and \code{"ub"} are the smallest and largest value allowed for the parameter, \code{"start"} is the initial value when fitting the parameter, \code{"na"} is an optional value the parameter takes if it should have no effect.
-#" 
-#" To define a parameter \eqn{\alpha} with \eqn{0 \le \alpha \le 1} use one argument, \code{alpha = c(0,1)}. To define an additional parameter \eqn{\beta} with \eqn{2 \le \beta \le 9} use two arguments, \code{alpha = c(0,1), beta = c(2,9)}, and so forth. You can specify an initial value for the parameter used in fitting as third element of vectors.
+#' Define parameter for cognitive models
+#' 
+#' This function returns a n x 4 matrix with the parameter bounds, starting value, and no-effect value of parameters
+#' 
+#' @param ... Parameters and their ranges, e.g., \code{make_parspace(theta = c(ub=-1, lb=1, init=0, na=0), gamma = c(0,2,1,NA))}. See details and examples.#" 
+#' The general schema per parameter is a named vector \code{parametername = c(ub = #, lb = #, init = #, na = #)}
+#' \describe{
+#'    \item{\code{"lb"}}{Lower limit, smallest allowed value}
+#'    \item{\code{"ub"}}{Upper limit, highest allowed value}
+#'    \item{\code{"start"} (optional)}{Initial value for fitting}
+#'    \item{\code{"na"} (optional)}{Value the parameter takes if it should have no effect, can be \code{NA}}
+#' }
+#' @return A matrix with as many rows as parameters, where rownames are paramter names and four columns lb, ub, init, na define the lower limit, upper limit, initial value and null-effect-value (optional) for each parameter.
+#' @details \code{"lb"} and \code{"ub"} are the smallest and largest value allowed for the parameter, \code{"start"} is the initial value when fitting the parameter, \code{"na"} is an optional value the parameter takes if it should have no effect.
+#' 
+#' To define a parameter \eqn{\alpha} with \eqn{0 \le \alpha \le 1} use one argument, \code{alpha = c(0,1)}. To define an additional parameter \eqn{\beta} with \eqn{2 \le \beta \le 9} use two arguments, \code{alpha = c(0,1), beta = c(2,9)}, and so forth. You can specify an initial value for the parameter used in fitting as third element of vectors.
 #" 
 #" @examples 
 #" ## Define a parameter "p" that can range from 0-1

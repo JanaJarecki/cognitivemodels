@@ -1,5 +1,7 @@
 #' Risk-sensitive foraging fast and frugal tree
 #' 
+#' rsfft()
+#' 
 #' @keywords internal
 #' @import arrangements
 #' @useDynLib cogscimodels, .registration = TRUE

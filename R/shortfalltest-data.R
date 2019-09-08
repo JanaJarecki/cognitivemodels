@@ -7,8 +7,6 @@
 #'
 #' @docType data
 #'
-#' @usage data(shortfalltest)
-#'
 #' @format An object of class \code{"data.table"}; see \code{\link[qtl]{fread}}.
 #'
 #' @keywords datasets

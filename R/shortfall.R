@@ -1,5 +1,7 @@
 #' Shortfall Risky Choice Model
 #' 
+#' shortfall(formula, data)
+#' 
 #' @importFrom stringr str_extract
 #' @importFrom Rcpp sourceCpp
 #' @inheritParams Cogscimodel

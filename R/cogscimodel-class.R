@@ -1,5 +1,7 @@
 #' Class for cognitive models
 #' 
+#' Cogscimodel$new(formula, data, parspace)
+#' 
 #' @import Rsolnp
 #' @import ROI
 #' @import ROI.plugin.optimx
@@ -10,7 +12,7 @@
 #' @import R6
 #' @import Formula
 #' @importFrom rlang call_standardise
-#' @usage Cogscimodel$new(formula, data, parspace)
+#' 
 #' @param formula A formula (e.g., \code{y ~ x1 + x2}).
 #' @param data A data.frame containing \code{formula}'s variables.
 #' @param parspace  (optional, \bold{required} to add model parameters) A amtrix with the parameter space: a \code{n x 4} matrix with columns named \code{"lb","ub","start","na"}. Easy to create using \link{make_parspace}, e.g. \code{make_parspace(alpha=c(0,1))}. The matrix' row names are parameter names, columns contain the lower limit, upper limit, starting value in fitting, and (optional) a value that makes a parameter have zero effect, which can be NA. See details.
