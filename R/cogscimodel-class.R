@@ -808,11 +808,11 @@ Cogscimodel <- R6Class(
       # Constraints for par. that are set equal to the value of another par.
       if (self$npar("equal") > 0) {
         p <- self$get_par()
-        this_pn <- self$get_parnames("equal")
-        this_p <- unlist(self$par[this_pn])
+        this_pn <- self$get_parnames("equal") # constrained par
+        this_vn <- unlist(self$par[this_pn]) # name of par to which 'this_pn' is con
         cons2 <- L_constraint(
           L = t(sapply(seq_along(this_pn), function(i) {
-                as.integer(pn %in% this_pn[i]) - as.integer(pn %in% this_p[i])
+                as.integer(pn %in% this_pn[i]) - as.integer(pn %in% this_vn[i])
             })),
           rhs = rep(0L, length(this_pn)),
           dir = rep("==", length(this_pn))
