@@ -1,15 +1,16 @@
 #' Exemplar-based Cognitive Models
 #' 
-#' \code{ebm()} fits exemplar-based models, \code{gcm()} fits a generalized context model (Medin & Schaffer, 1978; Nosofsky, 1986) for categorization, \code{ebmcj()} fits an exemplar-based multi-cue jdugment model (Juslin et al., 2003) for value judgments.
+#' \code{ebm()} fits exemplar-based models, \code{gcm()} fits a generalized context model (Medin & Schaffer, 1978; Nosofsky, 1986), \code{ebmcj()} fits an exemplar-based judgment model (Juslin et al., 2003).
 #' 
+#' @rdname ebm
 #' 
 #' @import Rcpp
 #' @import combinat
 #' @useDynLib cogscimodels, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
 #' @importFrom abind abind
+#' 
 #' @inheritParams Cogscimodel
-
 #' @param formula A formula specifying  participants' responses ~ stimulus 
 #'    features (e.g., \code{y ~ f1 + f2}).
 #' @param criterion A formula specifying the class or criterion feedback (e.g., \code{~ feedback}), note the "\code{~}".
@@ -17,17 +18,19 @@
 #' @return An exemplar-based model; a model \code{M} can be viewed with
 #'   \code{summary(M)}, or \code{anova(M)}.
 #' 
-#' @author Jana B. Jarecki, \email{jj@janajarecki.com}
-#' @references {Medin, D. L., & Schaffer, M. M. (1978). Context theory of classification learning. Psychological Review, 85, 207-238. doi:10.1037//0033-295X.85.3.207}
-#' @references {Nosofsky, R. M. (1986). Attention, similarity, and the identification-categorization relationship. Journal of Experimental Psychology: General, 115, 39-57. doi:10.1037/0096-3445.115.1.39}
-#' @references {Juslin, P., Olsson, H., & Olsson, A.-C. (2003). Exemplar effects in categorization and multiple-cue judgment. Journal of Experimental Psychology: General, 132, 133–156. doi:10.1037/0096-3445.132.1.133}
-#' @details If \code{mode} is missing it will be inferred from the RHS of \code{formula}.
+#' @references {Medin, D. L., & Schaffer, M. M. (1978). Context theory of classification learning. \emph{Psychological Review, 85}, 207-238. \url{http://dx.doi.org/10.1037//0033-295X.85.3.207}}
+#' @references {Nosofsky, R. M. (1986). Attention, similarity, and the identification-categorization relationship. \emph{Journal of Experimental Psychology: General, 115}, 39-57. \url{http://dx.doi.org/10.1037/0096-3445.115.1.39}}
+#' @references {Juslin, P., Olsson, H., & Olsson, A.-C. (2003). Exemplar effects in categorization and multiple-cue judgment. \emph{Journal of Experimental Psychology: General, 132}, 133-156. \url{http://dx.doi.org/10.1037/0096-3445.132.1.133}}
 #' 
-#' When making predictions for new data (by \code{predict(newdata = ....)}) the model works like this:
+#' @details
+#' If \code{mode} is missing it will be inferred from the RHS of \code{criterion} or \code{class}.
+#' 
+#' The model can predict new data (\code{predict(M, newdata = ....)}), and this is how it works:
 #' \itemize{
-#'  \item{If the \code{criterion} variable in the new data is \code{NA}, predictions for new data are based on all exemplars for which a criterion existed in the originally-supplied \code{data}.}
-#'  \item{If the \code{criterion} variable in the new data has non-\code{NA} values, predictions for the first new data are based on all the originally-supplied \code{data}; but predictions for later new data are based on the exemplars in the old and new data (in other words, exemplar memory is extended with the new data and criterion, without re-fitting parameters).}
+#'  \item{If \code{newdata}'s \code{criterion} has only \code{NA}s, the model predicts using the old data (the originally-supplied \code{data} argument) as exemplar-memory. Parameters are not re-fit.}
+#'  \item{If \code{newdata}'s' \code{criterion} has also non-\code{NA}s, the model predicts the first new data row using the old data, but predictions for subsequent new data use also the criterion in new data. In other words, exemplar memory is \emph{extended} by exemplars in new data for which a criterion exists. Parameters are not re-fit.}
 #' }
+#' 
 #' @section Parameter Space:
   #'  \tabular{lrcllr}{\verb{   }
   #'  \strong{Name} \tab \verb{   }\strong{LB} \tab  \strong{-} \tab \strong{UB}\verb{   } \tab \strong{Description} \tab \strong{Start Value} \cr\verb{   }
@@ -37,18 +40,65 @@
   #' \code{r} \tab 0 \tab-\tab 2 \tab Exponent in the decay functio, 1 yieldes = exponential decay, 2 yields gaussian decay \tab 1.5
   #'}
 #' \verb{   }where \emph{LB, UB} = inclusive bounds and \emph{Start Value} = starting value for fitting.
+#' 
 #' @examples 
-#' No examples yet
-#' @export
-ebm <- function(formula, criterion, data, mode, fix = NULL, options = NULL, ...) {
-   .args <- as.list(rlang::call_standardise(match.call())[-1])
-   return(do.call(what = Ebm$new, args = .args, envir = parent.frame()))
-}
+#' # Make some fake data
+#' D <- data.frame(f1 = c(0,0,1,1,2,2,0,1,2),     # feature 1
+#'                 f2 = c(0,1,2,0,1,2,0,1,2),     # feature 2
+#'                 cl = c(0,1,0,0,1,0,NA,NA,NA),  # criterion/class
+#'                  y = c(0,0,0,1,1,1,0,1,1))     # participant's responses
+#' 
+#' M <- gcm(y ~ f1+f2, class= ~cl, D, fix="start") # GCM, par. fixed to start val.
+#' 
+#' predict(M)                                     # predict 'pred_f', pr(cl=1 | features, trial)
+#' M$predict()                                    # -- (same) --
+#' summary(M)                                     # summary
+#' anova(M)                                       # anova-like table
+#' logLik(M)                                      # Log likelihood
+#' M$logLik()                                     # -- (same) --
+#' M$MSE()                                        # mean-squared error
+#' M$npar()                                       # 7 parameters
+#' M$get_par()                                    # parameter values
+#' M$coef()                                       # 0 free parameters
+#' 
+#' 
+#' ### Specify models
+#' # -------------------------------
+#' gcm(y ~ f1 + f2, class = ~cl, D)                    # GCM (has bias parameter)
+#' ebm(y~f1+f2, criterion=~cl, D, mode="discrete")     # -- (same) --
+#' ebmcj(y ~ f1 + f2, criterion = ~cl, D)              # Judgment EBM  (no bias par.)
+#' ebm(y~f1+f2, criterion=~cl, D, mode="continuous")   # -- (same) --
+#' 
+#' 
+#' ### Specify parameter estimation
+#' # -------------------------------
+#' gcm(y~f1+f2, ~cl, D, fix="start")               # fix all par to start val. 
+#' gcm(y~f1+f2, ~cl, D, fix=list(b0=0.5, b1=0.5))  # fix 'bias' par. to 0.5, fit 5 par
+#' gcm(y~f1+f2, ~cl, D, fix=list(f1=0.9,f2=0.1))   # fix attention 'f1' to 90 %  f1 & fit 5 par
+#' gcm(y~f1+f2, ~cl, D, fix=list(q=2, r=2))        # fix 'q', 'q' to 2 & fit 5 par
+#' gcm(y~f1+f2, ~cl, D, fix=list(q=1, r=1))        # fix 'q', 'r' to 1 & fit 5 par
+#' gcm(y~f1+f2, ~cl, D, fix=list(lambda=2))        # fix 'lambda' to 2 & fit 6 par
 
-#' Exemplar-based Judgment Model 
+
+#' @export
+gcm <- function(formula, class, data, fix = NULL, options = NULL, ...) {
+   .args <- as.list(rlang::call_standardise(match.call())[-1])
+   names(.args)[which(names(.args) == "class")] <- "criterion" # rename class to criterion
+   .args[["mode"]] <- "discrete"
+   return(do.call(what = Ebm$new, args = .args, envir = parent.frame()))
+} 
+
+
+#' Exemplar-based Cognitive Models 
+#' 
 #' @inheritParams ebm
 #' @rdname ebm
+#' 
 #' @details \code{ebmcj()} calls \link{ebm} with \code{mode = "continuous"}.
+#' 
+#' @examples
+#' gcmcj(y ~ f1 + f2, D)
+#' 
 #' @export
 ebmcj <- function(formula, criterion, data, fix = NULL, options = NULL, ...) {
    .args <- as.list(rlang::call_standardise(match.call())[-1])
@@ -57,25 +107,26 @@ ebmcj <- function(formula, criterion, data, fix = NULL, options = NULL, ...) {
 }
 
 #' Exemplar-based Cognitive Models 
+#' 
 #' @inheritParams ebm
 #' @rdname ebm
-#' @param class A formula (\code{~ classvar}) that specifies the variable of the class feedback. Note: \code{NA} values are retained, assuming a partial feedback paradigm.
+#' 
+#' @param class A formula specifying the class feedback (e.g., \code{~ cl}), note the "\code{~}". \code{NA} values are retained, assuming a partial feedback paradigm.
+#' 
 #' @details \code{gcm()} \link{ebm} with \code{mode = "discrete"}.
+#' 
 #' @section Parameter Space:
 #' The \code{gcm()} and \code{ebm(mode = "discrete")} have as many response bias parameters as there are category labels. For example if the categories are 0 or 1:
   #' \verb{   }\tabular{lrcllr}{\verb{   }
   #'  \strong{Name} \tab \verb{   }\strong{LB} \tab  \strong{-} \tab \strong{UB}\verb{   } \tab \strong{Description} \tab \strong{Start Value} \cr\verb{   }
   #' \code{b0, b1} \tab 0 \tab-\tab 1 \tab Response bias towards each category, sum to 1. Note: names are \code{b}+unique \code{class} labels.\tab 1 / n classes
   #' }
-#' @examples
-#' None yet
 #' @export
-gcm <- function(formula, class, data, fix = NULL, options = NULL, ...) {
+ebm <- function(formula, criterion, data, mode, fix = NULL, options = NULL, ...) {
    .args <- as.list(rlang::call_standardise(match.call())[-1])
-   names(.args)[which(names(.args) == "class")] <- "criterion" # rename class to criterion
-   .args[["mode"]] <- "discrete"
    return(do.call(what = Ebm$new, args = .args, envir = parent.frame()))
 }
+
 
 
 Ebm <- R6Class('ebm',
@@ -97,6 +148,9 @@ Ebm <- R6Class('ebm',
       parspace <- self$make_parspace(formula = formula, criterion = criterion, mode = mode)
       if (is.null(discount)) {
         discount <- self$infer_discount(discount = discount, criterion = criterion, mode = mode, showmsg = !all(rownames(parspace) %in% names(fix)))
+      }
+      if (mode == "continuous") {
+        options <- c(options, list(fit_measure = "mse"))
       }
       
       super$initialize(
