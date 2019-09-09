@@ -1,36 +1,132 @@
-#' Exemplar-based cognitive model
+#' Exemplar-based Cognitive Models
+#' 
+#' \code{ebm()} fits exemplar-based models, \code{gcm()} fits a generalized context model (Medin & Schaffer, 1978; Nosofsky, 1986), \code{ebmcj()} fits an exemplar-based judgment model (Juslin et al., 2003).
+#' 
+#' @rdname ebm
 #' 
 #' @import Rcpp
 #' @import combinat
 #' @useDynLib cogscimodels, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
 #' @importFrom abind abind
+#' 
 #' @inheritParams Cogscimodel
-#' @description Fits an exemplar-based model, which is also known as generalized context model (GCM, Medin & Schaffer, 1978; Nosofsky, 1986). The model predicts the value of a current stimulus from the values of previous stimuli, weighted by the similarity between the current and the previous stimuli's features. This model can be used to fit judgments (continuous) or categorization (discrete) modes.
-#' @param formula A formula (e.g., \code{class ~ f1 + f2}, or probably \code{judgment ~ dim1 + dim2 + dim3}) specifying the observed data and the feature variables.
-#' @param criterion A formula (e.g., \code{~ true_class} or \code{~ true_value}) specifying the true class or criterion, note the "\code{~}".
+#' @param formula A formula specifying  participants' responses ~ stimulus 
+#'    features (e.g., \code{y ~ f1 + f2}).
+#' @param criterion A formula specifying the class or criterion feedback (e.g., \code{~ feedback}), note the "\code{~}".
 #' @param ... other arguments from other functions, currently ignored.
-#' @return An exemplar-based model; a model \code{M} can be viewed with \code{summary(M)}, or \code{anova(M)}.
-#' @author Jana B. Jarecki, \email{jj@janajarecki.com}
-#' @references {Medin, D. L., & Schaffer, M. M. (1978). Context theory of classification learning. Psychological Review, 85, 207-238. doi:10.1037//0033-295X.85.3.207}
-#' @references {Nosofsky, R. M. (1986). Attention, similarity, and the identification-categorization relationship. Journal of Experimental Psychology: General, 115, 39-57. doi:10.1037/0096-3445.115.1.39}
-#' @references {Juslin, P., Olsson, H., & Olsson, A.-C. (2003). Exemplar effects in categorization and multiple-cue judgment. Journal of Experimental Psychology: General, 132, 133–156. doi:10.1037/0096-3445.132.1.133}
-#' @details If \code{type} is missing it will be inferred.
-#' @section Parameter Space of the Model:
+#' @return An exemplar-based model; a model \code{M} can be viewed with
+#'   \code{summary(M)}, or \code{anova(M)}.
+#' 
+#' @references {Medin, D. L., & Schaffer, M. M. (1978). Context theory of classification learning. \emph{Psychological Review, 85}, 207-238. \url{http://dx.doi.org/10.1037//0033-295X.85.3.207}}
+#' @references {Nosofsky, R. M. (1986). Attention, similarity, and the identification-categorization relationship. \emph{Journal of Experimental Psychology: General, 115}, 39-57. \url{http://dx.doi.org/10.1037/0096-3445.115.1.39}}
+#' @references {Juslin, P., Olsson, H., & Olsson, A.-C. (2003). Exemplar effects in categorization and multiple-cue judgment. \emph{Journal of Experimental Psychology: General, 132}, 133-156. \url{http://dx.doi.org/10.1037/0096-3445.132.1.133}}
+#' 
+#' @details
+#' If \code{mode} is missing it will be inferred from the RHS of \code{criterion} or \code{class}.
+#' 
+#' The model can predict new data (\code{predict(M, newdata = ....)}), and this is how it works:
 #' \itemize{
-  #' \item{n weights}{n attribute weights (range: 0-1, sum to 1), the parameter names equal the RHS of \code{formula}.}
-  #' \item{lambda}{Sensitivity (range: 0.001-10), higher values mean more discriminability within the psychological space.}
-  #' \item{r}{Exponent in the decay function (range: 1-2), a value of 1 yields exponential decay, 2 yields Gaussian decay.}
-  #' \item{q}{}
-  #' \item{m biases}{Bias towards categories (range: 0-1, sums to 1), the parameter names are \code{bx, by} were x,y are the categories}
+#'  \item{If \code{newdata}'s \code{criterion} has only \code{NA}s, the model predicts using the old data (the originally-supplied \code{data} argument) as exemplar-memory. Parameters are not re-fit.}
+#'  \item{If \code{newdata}'s' \code{criterion} has also non-\code{NA}s, the model predicts the first new data row using the old data, but predictions for subsequent new data use also the criterion in new data. In other words, exemplar memory is \emph{extended} by exemplars in new data for which a criterion exists. Parameters are not re-fit.}
 #' }
+#' 
+#' @section Parameter Space:
+  #'  \tabular{lrcllr}{\verb{   }
+  #'  \strong{Name} \tab \verb{   }\strong{LB} \tab  \strong{-} \tab \strong{UB}\verb{   } \tab \strong{Description} \tab \strong{Start Value} \cr\verb{   }
+  #' \code{f1, f2} \tab 0 \tab-\tab 1 \tab Attention weights, sum to 1. Note: parameter names are equal to the LHS of \code{formula} \tab 1 / n features \cr\verb{   }
+  #' \code{lambda} \tab 0.001 \tab-\tab 10 \tab Sensitivity, higher values increase the discriminability in the psychological space \tab 0.5 \cr\verb{   }
+  #' \code{q} \tab 0 \tab-\tab 2 \tab Exponent in the distance metric, 1 yields city-block, 2 yields Euclidean metric \tab 1.5 \cr\verb{   }
+  #' \code{r} \tab 0 \tab-\tab 2 \tab Exponent in the decay functio, 1 yieldes = exponential decay, 2 yields gaussian decay \tab 1.5
+  #'}
+#' \verb{   }where \emph{LB, UB} = inclusive bounds and \emph{Start Value} = starting value for fitting.
+#' 
 #' @examples 
-#' No examples yet
+#' # Make some fake data
+#' D <- data.frame(f1 = c(0,0,1,1,2,2,0,1,2),     # feature 1
+#'                 f2 = c(0,1,2,0,1,2,0,1,2),     # feature 2
+#'                 cl = c(0,1,0,0,1,0,NA,NA,NA),  # criterion/class
+#'                  y = c(0,0,0,1,1,1,0,1,1))     # participant's responses
+#' 
+#' M <- gcm(y ~ f1+f2, class= ~cl, D, fix="start") # GCM, par. fixed to start val.
+#' 
+#' predict(M)                                     # predict 'pred_f', pr(cl=1 | features, trial)
+#' M$predict()                                    # -- (same) --
+#' summary(M)                                     # summary
+#' anova(M)                                       # anova-like table
+#' logLik(M)                                      # Log likelihood
+#' M$logLik()                                     # -- (same) --
+#' M$MSE()                                        # mean-squared error
+#' M$npar()                                       # 7 parameters
+#' M$get_par()                                    # parameter values
+#' M$coef()                                       # 0 free parameters
+#' 
+#' 
+#' ### Specify models
+#' # -------------------------------
+#' gcm(y ~ f1 + f2, class = ~cl, D)                    # GCM (has bias parameter)
+#' ebm(y~f1+f2, criterion=~cl, D, mode="discrete")     # -- (same) --
+#' ebmcj(y ~ f1 + f2, criterion = ~cl, D)              # Judgment EBM  (no bias par.)
+#' ebm(y~f1+f2, criterion=~cl, D, mode="continuous")   # -- (same) --
+#' 
+#' 
+#' ### Specify parameter estimation
+#' # -------------------------------
+#' gcm(y~f1+f2, ~cl, D, fix="start")               # fix all par to start val. 
+#' gcm(y~f1+f2, ~cl, D, fix=list(b0=0.5, b1=0.5))  # fix 'bias' par. to 0.5, fit 5 par
+#' gcm(y~f1+f2, ~cl, D, fix=list(f1=0.9,f2=0.1))   # fix attention 'f1' to 90 %  f1 & fit 5 par
+#' gcm(y~f1+f2, ~cl, D, fix=list(q=2, r=2))        # fix 'q', 'q' to 2 & fit 5 par
+#' gcm(y~f1+f2, ~cl, D, fix=list(q=1, r=1))        # fix 'q', 'r' to 1 & fit 5 par
+#' gcm(y~f1+f2, ~cl, D, fix=list(lambda=2))        # fix 'lambda' to 2 & fit 6 par
+
+
 #' @export
-ebm <- function(formula, data, criterion, fix, mode, ...) {
+gcm <- function(formula, class, data, fix = NULL, options = NULL, ...) {
+   .args <- as.list(rlang::call_standardise(match.call())[-1])
+   names(.args)[which(names(.args) == "class")] <- "criterion" # rename class to criterion
+   .args[["mode"]] <- "discrete"
+   return(do.call(what = Ebm$new, args = .args, envir = parent.frame()))
+} 
+
+
+#' Exemplar-based Cognitive Models 
+#' 
+#' @inheritParams ebm
+#' @rdname ebm
+#' 
+#' @details \code{ebmcj()} calls \link{ebm} with \code{mode = "continuous"}.
+#' 
+#' @examples
+#' gcmcj(y ~ f1 + f2, D)
+#' 
+#' @export
+ebmcj <- function(formula, criterion, data, fix = NULL, options = NULL, ...) {
+   .args <- as.list(rlang::call_standardise(match.call())[-1])
+   .args[["mode"]] <- "continuous"
+   return(do.call(what = Ebm$new, args = .args, envir = parent.frame()))
+}
+
+#' Exemplar-based Cognitive Models 
+#' 
+#' @inheritParams ebm
+#' @rdname ebm
+#' 
+#' @param class A formula specifying the class feedback (e.g., \code{~ cl}), note the "\code{~}". \code{NA} values are retained, assuming a partial feedback paradigm.
+#' 
+#' @details \code{gcm()} \link{ebm} with \code{mode = "discrete"}.
+#' 
+#' @section Parameter Space:
+#' The \code{gcm()} and \code{ebm(mode = "discrete")} have as many response bias parameters as there are category labels. For example if the categories are 0 or 1:
+  #' \verb{   }\tabular{lrcllr}{\verb{   }
+  #'  \strong{Name} \tab \verb{   }\strong{LB} \tab  \strong{-} \tab \strong{UB}\verb{   } \tab \strong{Description} \tab \strong{Start Value} \cr\verb{   }
+  #' \code{b0, b1} \tab 0 \tab-\tab 1 \tab Response bias towards each category, sum to 1. Note: names are \code{b}+unique \code{class} labels.\tab 1 / n classes
+  #' }
+#' @export
+ebm <- function(formula, criterion, data, mode, fix = NULL, options = NULL, ...) {
    .args <- as.list(rlang::call_standardise(match.call())[-1])
    return(do.call(what = Ebm$new, args = .args, envir = parent.frame()))
 }
+
 
 
 Ebm <- R6Class('ebm',
@@ -53,6 +149,9 @@ Ebm <- R6Class('ebm',
       if (is.null(discount)) {
         discount <- self$infer_discount(discount = discount, criterion = criterion, mode = mode, showmsg = !all(rownames(parspace) %in% names(fix)))
       }
+      if (mode == "continuous") {
+        options <- c(options, list(fit_measure = "mse"))
+      }
       
       super$initialize(
         formula = formula,
@@ -65,11 +164,6 @@ Ebm <- R6Class('ebm',
         mode = mode,
         options = c(options, list(fit_solver = "solnp"))
       )
-
-      if ( self$npar('free') > 0 ) {
-        message('Fitting free parameter ', .brackify(self$get_parnames('free')))
-        self$fit()
-      }
     },
     get_more_input = function(d) {
       return(super$get_input(f = chr_as_rhs(self$formulaCriterion), d = d, na.action = NULL))
@@ -77,11 +171,13 @@ Ebm <- R6Class('ebm',
     make_prediction = function(type, input, more_input, isnew = FALSE, s = NULL, ...) {
       self$pred_types <- c("response", "value")
       par <- self$get_par()
-      na <- self$natt()[1]
-      learnto = max(self$learntrials)
-      firstout = ifelse(isnew, self$nobs() + 1L, 1L)
       criterion <- more_input
+      na <- self$natt()[1]
+      learnto <- max(self$learntrials)
+      firstout <- 1L
+
       if (isnew == TRUE) {
+        firstout <- self$nobs() + firstout
         criterion <- c(self$more_input[, , s], c(more_input))
         input <- rbind(self$input[,,s], input)
       }
@@ -90,17 +186,17 @@ Ebm <- R6Class('ebm',
       exemplar_w <- as.numeric(!is.na(criterion)) # exemplar weights
       criterion[is.na(criterion)] <- 0L
       return(ebm_cpp(
-        criterion = as.double(criterion),
-        features = matrix(input, ncol = na),
-        w = as.double(par[seq.int(na)]),
-        wf = as.double(exemplar_w),
-        lambda = as.double(par["lambda"]),
-        r = as.double(par["r"]),
-        q = as.double(par["q"]),
-        b = b,
-        lastLearnTrial = learnto,
-        firstOutTrial = firstout
-        ))
+            criterion = as.double(criterion),
+            features = matrix(input, ncol = na),
+            w = as.double(par[seq.int(na)]),
+            wf = as.double(exemplar_w),
+            lambda = as.double(par["lambda"]),
+            r = as.double(par["r"]),
+            q = as.double(par["q"]),
+            b = b,
+            lastLearnTrial = learnto,
+            firstOutTrial = firstout)
+        )
     },
     get_stimnames = function() {
       stimname <- paste0("pred_", all.vars(self$formulaCriterion[[2]]))
@@ -142,6 +238,7 @@ Ebm <- R6Class('ebm',
       nw <- length(w_names)
       w_par <- setNames(lapply(1:nw, function(.) c(0.001,1,1/nw,1)), w_names)
       # dynamic bias parameter names
+      b_par <- NULL
       if (mode == "discrete") {
         b_names <- paste0("b", sort(unique(criterion)))
         nb <- length(b_names)
@@ -182,31 +279,7 @@ Ebm <- R6Class('ebm',
         sumto = list('w' = self$parnamesWeights, 'b' = self$parnamesBias),
         regular = TRUE,
         offset = offset))
-    },
-    eqfun = function() {
-      allowed <- rownames(self$parspace)
-      free_weights <- any(self$parnamesWeights %in% self$get_parnames('free'))
-      free_bias <- any(self$parnamesBias %in% self$get_parnames('free'))
-      return(super$makeSumConstraints(list(free_weights, free_bias), c(1,1)))
-      # weight_eqfun <- function(pars, self) {
-      #   return(sum(pars[self$parnamesWeights]))
-      # }
-      # bias_eqfun <- function(pars, self) {
-      #   return(sum(pars[self$parnamesBias]))
-      # }
-      # both_eqfun <- function(pars, self) {
-      #   return(c(sum(pars[self$parnamesWeights]), sum(pars[self$parnamesBias])))
-      # }
-      # if ( free_weights & !free_bias ) {
-      #   return( list(eqfun = weight_eqfun, eqb = 1) )
-      # } else if ( !free_weights & free_bias ) {
-      #   return( list(eqfun = bias_eqfun, eqb = 1) )
-      # } else if ( free_weights & free_bias ) {
-      #   return( list(eqfun = both_eqfun, eqb = c(1,1)) )
-      # } else {
-      #   return(NULL)
-      # }
-    },    
+    },  
     print = function(digits = 2) {
       super$print(digits = digits)
     })

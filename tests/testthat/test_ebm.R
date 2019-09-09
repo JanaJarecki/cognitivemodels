@@ -28,6 +28,11 @@ test_that("Discrete model's prediction identities in SIZE condition", {
                mode = "discrete",
                discount = 0)
   expect_equivalent(model$predict(newdata=test_d), target, tol = .01)
+
+  # model2 <- start(data=dd) %+%
+  #   gcm(~angle+size, class=~true_cat, fix=c(angle=.10,size=.90,lambda=1.60,b0=.5,b1=.5,q=2,r=2), discount=0L) %>%
+  #   end()
+  #  expect_equivalent(model2$predict(newdata=test_d), model$predict(newdata=test_d))
 })
 
 test_that("Discrete model's prediction identities in ANGLE condition", {
@@ -56,6 +61,29 @@ test_that("Parameter estimates in SIZE condition", {
                discount = 0)
   expect_equal(model$coef(), c(angle=.10, size=.90, lambda=1.60, b0=.50, b1=.50), tol = .01)
   expect_equal(model$npar("free"), 3L)
+
+  # model2 <- start_model(data = dd) %+%
+  #   gcm(pobs ~ angle + size, ~true_cat, dd, list(q=2, r=2)) %>%
+  #   end_model(list(fit_data = fitd, fit_n = fitd$N))
+  # expect_equal(model$coef(), model2$coef())
+
+  # fun1 <- function() { gcm(pobs ~ angle + size,
+  #              data = dd,
+  #              criterion = ~ true_cat,
+  #              fix = list(q = 2, r = 2),
+  #              options = list(fit_data = fitd, fit_n = fitd$N),
+  #              discount = 0) }
+  # fun2 <- function() { start_model(data = dd) %+%
+  #   gcm(pobs ~ angle + size, ~true_cat, data=dd, list(q=2, r=2)) %>%
+  #   end_model(list(fit_data = fitd, fit_n = fitd$N)) }
+
+  
+  # # Benchmarking the two models
+  # # are calls to self$ expensive?
+  # # is setting newdata e xpensive?
+  # microbenchmark(model$fit(), model2$fit(), times=20L)
+
+
   # weights constrained
   model <- ebm(pobs ~ angle + size,
                data = dd,
@@ -110,6 +138,20 @@ test_that("Parameter estimates in DIAG condition", {
   expect_equal(coef(model), c(angle=.81, size=0.19, lambda=2.42), tol = .01)
   })
 
+
+test_that("Parameter estimates with softmax", {
+  d <- data.frame(
+    f1    = c(0,1,0,1,0,1,0,1),
+    f2    = c(1,0,1,0,1,0,1,0),
+    f3    = c(1,1,1,1,1,1,1,1),
+    ca    = c(1,0,1,0,1,0,1,0),
+    yrand = c(1,1,0,0,1,1,0,0),
+    yperf = c(1,0,1,0,1,0,1,0))
+  # M <- start(d = d) %+%
+  #   ebmcj(~ f1 + f2 + f3, criterion = ~ ca, fix = c(lambda=1,r=1,q=1,f1=1/3,f2=1/3,f3=1/3)) %+%
+  #   softmax(yperf ~ pred_f) %>%
+  #   end(options = list(fit_solver = "solnp"))  
+})
 
 #   
 

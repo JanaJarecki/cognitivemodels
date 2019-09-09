@@ -55,7 +55,7 @@ Rcpp::NumericVector ebm_cpp(
   Rcpp::NumericVector res(ntrials);
 
   int i = 0; //a counter that starts at 0
-  res[i] = NA_REAL; //initialize first result to NA
+  res[i] = (max(criterion) - min(criterion)) / 2.0; //initialize first result to NA
 
   firstOutTrial = (firstOutTrial == 1) ? firstOutTrial : firstOutTrial - 1;
   i = (firstOutTrial == 1) ? 1 : 0; //start at 1 if we predict all trials, otherweise at 0
