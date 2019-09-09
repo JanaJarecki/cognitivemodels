@@ -92,7 +92,7 @@ Baseline <- R6Class("baseline",
       if (is.null(newdata) | missing(newdata)) {
         D <- self$input
       } else {
-        D <- self$getInput(f = self$formula, f = newdata)
+        D <- self$get_input(f = self$formula, d = newdata)
       }
       out <- switch(self$type,
         constant = self$const,
