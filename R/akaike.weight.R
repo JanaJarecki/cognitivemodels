@@ -17,6 +17,10 @@ akaike.weight <- function(x, measure = c("aic", "loglikelihood")) {
   }
   x <- as.numeric(x)
   best <- ifelse(measure == "aic", base::min(x), base::max(x))
-  deltas <- (x - best) * -0.5^(measure == "aic") 
+  deltas <- (x - best) * (-0.5)^(measure == "aic")
+
+  # The next line ensures we don't have too large numbers, running into NAs
+  deltas <- deltas - max(deltas) # shift (exp is shift invariant)
+
   return(as.vector(exp(deltas) / sum(exp(deltas))))
 }
