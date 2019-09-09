@@ -89,8 +89,8 @@ Cogscimodel <- R6Class(
       } else {
         rlang::call_standardise(sys.call(sys.nframe()-1L))
       }
-      if (all(is.numeric(fix))) {
-        fix <- as.list(fix)
+      if (!is.list(fix) & all(!is.numeric(fix))) {
+        stop("'fix' must be a list -> use list(...) instead of ", .abbrDeparse(fix), ".")
       }
       f <- as.Formula(formula)
       choicerule <- if (!is.null(choicerule)) match.arg(choicerule, c("softmax", "argmax", "luce", "epsilon"))
@@ -346,10 +346,9 @@ Cogscimodel <- R6Class(
       self$set_parspace(rbind(parspace, morepar))
     },
     init_fix = function(fix) {
-      fix <- as.list(fix)
       if (length(fix) == 0L) {
         return(NULL)
-      } else if (fix[[1]] == "start" & length(fix) == 1L) {
+      } else if (c(fix[1]) == "start" & length(fix) == 1L) {
         return(setNames(self$parspace[, "start"], rownames(self$parspace)))
       } else {
         return(fix)
@@ -917,11 +916,11 @@ Cogscimodel <- R6Class(
       })
     },
     check_fix = function(fix) {
-      if ( length(fix) > 0 ) {
+      if (length(fix) > 0L) {
         if (all(is.numeric(fix))) {
           fix <- as.list(fix)
         }
-        if (!is.list(fix)) {
+        if (is.list(fix) == FALSE) {
           stop("'fix' needs to be a list, but is a ", typeof(fix), ".")
         }
 
@@ -932,7 +931,7 @@ Cogscimodel <- R6Class(
         if ( !all( names(fix) %in% rownames(parspace)) ) {
           stop("Check the parameter names in 'fix'. Some parameters in 'fix' ", .brackify(dQuote(setdiff(names(fix), rownames(parspace)))), " are not in the model's parameter space, which contains the following parameter ", .brackify(dQuote(rownames(parspace))), ".", call.=FALSE)
         }
-        if ( !all(fix[names(fix) %in% self$get_parnames('equal')] %in% self$get_parnames() ) ) {
+        if ( !all(fix[names(fix) %in% self$get_parnames("equal")] %in% self$get_parnames() ) ) {
           stop("Check equality constraints in 'fix'. The equality constraints ", .brackify(
             apply(cbind(self$get_parnames('equal'), self$par[self$get_parnames('equal')]), 1, paste, collapse="=")[fix[names(fix) %in% self$get_parnames('equal')] %in% self$get_parnames()]
             ), " are not valid, because you can only constrain parameters to equal the model's parameter space, which contains the following parameters ", .brackify(rownames(parspace)), ".", call.=FALSE)
