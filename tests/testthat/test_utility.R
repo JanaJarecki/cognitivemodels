@@ -33,6 +33,7 @@ test_that("Power utility: predicted value identities", {
   expect_equal(ce(M$predict(), -1), c(25, 16.67, 12.50), tol = 0.001)
 })
 
+
 # test_that("Exponential utility: predicted value identities", {
 #   M <- utility_exp(~ x | x2, D, list(alpha = 0.064))
 #   ce <- function(pred, pow, p = D[, c("p", "p2")]) {

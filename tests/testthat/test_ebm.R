@@ -59,6 +59,7 @@ test_that("Parameter estimates in SIZE condition", {
                mode = "discrete",
                options = list(fit_data = fitd, fit_n = fitd$N),
                discount = 0)
+
   expect_equal(model$coef(), c(angle=.10, size=.90, lambda=1.60, b0=.50, b1=.50), tol = .01)
   expect_equal(model$npar("free"), 3L)
 
@@ -139,19 +140,19 @@ test_that("Parameter estimates in DIAG condition", {
   })
 
 
-test_that("Parameter estimates with softmax", {
-  d <- data.frame(
-    f1    = c(0,1,0,1,0,1,0,1),
-    f2    = c(1,0,1,0,1,0,1,0),
-    f3    = c(1,1,1,1,1,1,1,1),
-    ca    = c(1,0,1,0,1,0,1,0),
-    yrand = c(1,1,0,0,1,1,0,0),
-    yperf = c(1,0,1,0,1,0,1,0))
-  # M <- start(d = d) %+%
-  #   ebmcj(~ f1 + f2 + f3, criterion = ~ ca, fix = c(lambda=1,r=1,q=1,f1=1/3,f2=1/3,f3=1/3)) %+%
-  #   softmax(yperf ~ pred_f) %>%
-  #   end(options = list(fit_solver = "solnp"))  
-})
+# test_that("Parameter estimates with softmax", {
+#   d <- data.frame(
+#     f1    = c(0,1,0,1,0,1,0,1),
+#     f2    = c(1,0,1,0,1,0,1,0),
+#     f3    = c(1,1,1,1,1,1,1,1),
+#     ca    = c(1,0,1,0,1,0,1,0),
+#     yrand = c(1,1,0,0,1,1,0,0),
+#     yperf = c(1,0,1,0,1,0,1,0))
+#   # M <- start(d = d) %+%
+#   #   ebmcj(~ f1 + f2 + f3, criterion = ~ ca, fix = c(lambda=1,r=1,q=1,f1=1/3,f2=1/3,f3=1/3)) %+%
+#   #   softmax(yperf ~ pred_f) %>%
+#   #   end(options = list(fit_solver = "solnp"))  
+# })
 
 #   
 
