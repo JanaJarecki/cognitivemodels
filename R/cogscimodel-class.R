@@ -89,7 +89,7 @@ Cogscimodel <- R6Class(
       } else {
         rlang::call_standardise(sys.call(sys.nframe()-1L))
       }
-      if (!is.list(fix) & all(!is.numeric(fix))) {
+      if (length(fix) & !is.list(fix) & all(!is.numeric(fix))) {
         stop("'fix' must be a list -> use list(...) instead of ", .abbrDeparse(fix), ".")
       }
       f <- as.Formula(formula)
@@ -194,7 +194,7 @@ Cogscimodel <- R6Class(
       f <- as.Formula(f)
       no <- nrow(d) # n observations
       ns <- length(f)[2] # n stimuli
-      na <- sapply(1:ns, function(i) length(attr(terms(formula(f, lhs=i, rhs=i)), "term.labels"))) # n attributes per stimulus
+      na <- sapply(1:ns, function(i) length(attr(terms(formula(f, lhs=0L, rhs=i)), "term.labels"))) # n attributes per stimulus
       arr <- array(NA, dim = c(no, max(na), ns))
       for (s in seq_len(ns)) {
         try(arr[, , s][] <- as.matrix(model.frame(formula(f, lhs=0, rhs=s), data = d, ...)))
@@ -327,10 +327,7 @@ Cogscimodel <- R6Class(
     # INITIALIZE methods
     # -------------------------------------------------------------------------
     init_parspace = function(parspace, choicerule) {
-      if (is.null(mode)) {
-        stop("init_parspace() must be called after init_mode()")
-      }
-      
+      if (is.null(mode)) { stop("init_parspace() must be called after init_mode()") }
       morepar <- NULL
       if (!is.null(choicerule)) {
         morepar <- if (choicerule == "softmax") {
@@ -355,9 +352,7 @@ Cogscimodel <- R6Class(
       }
     },
     init_parnames = function(parspace, fix, choicerule) {
-      if (is.null(self$parspace)) {
-        stop("init_parnames() must be called after init_parspace(). --> move init_parnames after init_parspace.")
-      }
+      if (is.null(self$parspace)) { stop("init_parnames() must be called after init_parspace(). --> move init_parnames after init_parspace.") }
       parnames <- rownames(parspace)
       fixednames <- names(fix)
       self$parnames[["all"]] <- parnames
@@ -375,12 +370,8 @@ Cogscimodel <- R6Class(
       }
     },
     init_par = function(parspace, fix) {
-      if ( is.null(self$parspace) ) {
-        stop("init_par() must be called after init_parspace() -> move init_par() down.")
-      }
-      if ( is.null(self$parnames) ) {
-        stop("init_par() must be called after init_parnames() -> move init_par() down.")
-      }
+      if (is.null(self$parspace)) { stop("init_par() must be called after init_parspace() -> move init_par() down.") }
+      if (is.null(self$parnames)) { stop("init_par() must be called after init_parnames() -> move init_par() down.") }
       par <- as.list(self$parspace[, "start"])
       names(par) <- self$get_parnames(x = "all")
       self$par <- par
@@ -396,6 +387,20 @@ Cogscimodel <- R6Class(
           cpn <- c(cpn, tail(setdiff(self$get_parnames()[j], cpn), 1L))
         }
         self$parnames[["constrained"]] <- cpn
+        # Check for fully-constrained problem (e.g. a = 1 and b = "a")
+        # -> n x n constraints
+        A <- as.matrix(C$L)
+        i_constr <- which(1:C$L$ncol %in% C$L$j)
+        A <- A[, i_constr, drop = FALSE] # remove unconstrained elements    
+        if (ncol(A) == nrow(A)) { # quadratic > fully-constrained
+          ss <- solve(A, C$rhs) # solve linear system
+          pn <- self$get_parnames()
+          ss <- setNames(ss, pn[i_constr])
+          new_fix <- c(as.list(ss), self$par[self$get_parnames("fix")])
+          new_fix <- new_fix[!duplicated(names(new_fix))]
+          self$init_parnames(parspace=self$parspace, fix=new_fix,choicerule=self$choicerule)
+          self$init_par(parspace=self$parspace,fix=new_fix)
+        }
       }
     },
     init_mode = function(mode = NULL) {
@@ -436,21 +441,6 @@ Cogscimodel <- R6Class(
       }
       self$options <- do.call(cogscimodel_options, args = .args)
       },
-    # getfreepar = function() {
-    #   self$get_par('free')
-    # },
-    # getfixpar = function() {
-    #   self$get_par('fix')
-    # },
-    # getconstrpar = function() {
-    #   self$get_par('constrained')
-    # },
-    # getchoicerulepar = function() {
-    #   self$get_par('choicerule')
-    # },
-    #
-    #
-    #
     # lm-like methods
     # -------------------------------------------------------------------------
     #' Number of free parameter
@@ -460,11 +450,9 @@ Cogscimodel <- R6Class(
       if (class(ans) == "try-error") { # not "free"
         return(length(self$get_parnames(x)))
       } else {
+        # TODO: throw error/stop if a model has more constraints than parameters
         npar <- length(self$get_parnames()) - self$ncon()
-        if (npar < 0) {
-          # TODO: throw error/stop if a model has more constraints than parameters
-          message("There may be many constraints on the parameter.")
-        }
+        if (npar < 0) { message("There may be many constraints on the parameter.") }
         return(npar)
       }
     },
@@ -508,27 +496,13 @@ Cogscimodel <- R6Class(
         par[i] <- self$parspace[i, "na"]
       }
 
-      # Ignored parameter
+      # Equal-to-another-parameter parameter
       i <- names(par) %in% self$get_parnames("equal")
       all_par <- self$par
       i_values <- unlist( all_par[ unlist(par[self$get_parnames("equal")]) ] )
       if ( sum(i) > 0 ) {
         par[i] <- i_values
       }
-
-      # # Equality-constrained parameter
-      # #   a) equal to a free parameter
-      # i <- self$get_parnames('equal')
-      # equal_in_fix <- par[ na.omit(match( x, names(x) )) ]
-      # if ( length(equal_in_fix) > 0 ) {
-      #   x[sapply(x, is.character)] <- equal_in_fix 
-      # }
-
-      # #   b) equal to a free parameter
-      # equal_in_free <- self$parspace[ na.omit(match( x, rownames(self$parspace) )) , "start"]
-      # if ( length(equal_in_free) > 0) {
-      #   x[sapply(x, is.character)] <- equal_in_free 
-      # }
       return(par)
     },
     #' Transforms predictions with choicerule
@@ -551,14 +525,11 @@ Cogscimodel <- R6Class(
       return(rbinom(pred[,1], size = 1, prob=pred))
     },
     infer_mode = function(y) {
-      if(is.null(y)) {
-        stop('Argument "mode" is missing (what the model predicts). Please "mode" to ="discrete" or ="continuous".')
-      }
-      if ( !is.factor(y) & any(floor(y) != y) | length(unique(y)) > 2 ) {
+      if (is.null(y)) { stop('Argument "mode" is missing (what the model predicts). Please "mode" to ="discrete" or ="continuous".') }
+      if (!is.factor(y) & any(floor(y) != y) | length(unique(y)) > 2) {
         message('Inferring mode from response variable ... "continuous". Change by setting mode="discrete".')
           return("continuous")
-        } else {
-          message('Inferring mode from response variable ... "discrete". Change by setting mode="continuous".')
+        } else { message('Inferring mode from response variable ... "discrete". Change by setting mode="continuous".')
           return("discrete")
         }
     },
@@ -571,9 +542,8 @@ Cogscimodel <- R6Class(
     #' Compute goodness of fit
     #' @param type string, fit measure to use, e.g. 'loglikelihood', allowed types see \link[cogsciutils]{gof}
     gof = function(type, n = self$options$fit_n, newdata = self$options$fit_data, discount = FALSE, ...) {
-      if (length(self$get_res()) == 0L) {
-        stop("Tried computing model fit, but didn't find a response variable. ", 'Check if "formula" has a left-hand side?', call.=FALSE)
-      }
+      if (length(self$get_res()) == 0L) { stop("Tried computing model fit, but didn't find a response variable. ", 'Check if "formula" has a left-hand side?', call.=FALSE) }
+
       if (is.null(newdata) | missing(newdata)) {
         obs <- as.matrix(self$get_res())
         pred <- as.matrix(self$predict())
@@ -771,9 +741,8 @@ Cogscimodel <- R6Class(
     make_pargrid = function(
       offset = self$options$fit_grid_offset,
       nsteps = self$options$fit_control$nsteps,  ...) {
-      if (!is.null(self$make_constraints())) {
-          message('Note: fit_solver = "grid" does NOT respect linear or quadratic constraints -> maybe change the solver by using options = list(fit_solver = ...) like fit_solver = "solnp" or "optimx".')
-      }
+      if (!is.null(self$make_constraints())) { message('Note: fit_solver="grid" does NOT respect linear or quadratic constraints -> consider a differnt solver. To this end use: options = list(fit_solver = " "), e.g, "solnp" or "optimx".') }
+
       return(make_grid_id_list(
         names = self$get_parnames("free"),
         lb = self$get_lb("free"),
@@ -783,9 +752,8 @@ Cogscimodel <- R6Class(
         ...))
     },
     make_random_par = function(parspace) {
-      if (!is.null(self$make_constraints())) {
-          message('Note: fit_solver = "grid" does NOT respect linear or quadratic constraints -> maybe change the solver by using options = list(fit_solver = ...) like fit_solver = "solnp" or "optimx".')
-      }
+      if (!is.null(self$make_constraints())) { message('Note: fit_solver="grid" does NOT respect linear or quadratic constraints -> consider a differnt solver. To this end use: options = list(fit_solver = " "), e.g, "solnp" or "optimx".') }
+
       # TODO: check this fun, it's experimental (5^? more? see literature)
       n <- log(5^nrow(parspace))
       par <- apply(parspace, 1, function(i) runif(n, min = i["lb"], max = i["ub"]))
@@ -798,7 +766,7 @@ Cogscimodel <- R6Class(
       # Constraints for par. that are set equal to a constant, numerical value
       if (self$npar("constant") > 0) {
         this_pn <- self$get_parnames("constant")
-        cons1 <- L_constraint(
+        cons1 <- ROI::L_constraint(
           L = t(sapply(this_pn, function(x) as.integer(pn %in% x))),
           rhs = self$get_par()[this_pn],
           dir = rep("==", length(this_pn))
@@ -809,7 +777,7 @@ Cogscimodel <- R6Class(
         p <- self$get_par()
         this_pn <- self$get_parnames("equal") # constrained par
         this_vn <- unlist(self$par[this_pn]) # name of par to which 'this_pn' is con
-        cons2 <- L_constraint(
+        cons2 <- ROI::L_constraint(
           L = t(sapply(seq_along(this_pn), function(i) {
                 as.integer(pn %in% this_pn[i]) - as.integer(pn %in% this_vn[i])
             })),
@@ -817,8 +785,7 @@ Cogscimodel <- R6Class(
           dir = rep("==", length(this_pn))
           )
       }
-      # Returns NULL if cons1 & cons2 are NULL
-      # or one constraint that combines both
+      # either NULL or a combined constraint
       return(.combine_constraints(cons1, cons2))
     },
     #
