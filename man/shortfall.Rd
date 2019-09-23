@@ -4,7 +4,7 @@
 \alias{shortfall}
 \title{Shortfall Risky Choice Model}
 \usage{
-shortfall(formula, asp, data, fix = list(), choicerule)
+shortfall(formula, asp, data, fix = list(), choicerule, options)
 }
 \arguments{
 \item{formula}{A \link{formula} defining the observations and stimuli in data. Stimuli are defined by outcomes and probabilities, separated by a pipe (\code{|}), like this: \code{mode ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py)}, where x1 and x2 are the first option's outcomes, px is the probability Pr(x1), y1 and y2 are the second option's outcomes, and py is the probability Pr(y1).}
@@ -13,15 +13,17 @@ shortfall(formula, asp, data, fix = list(), choicerule)
 
 \item{data}{A data.frame containing \code{formula}'s variables.}
 
-\item{fix}{(optional)  A list with parameter constraints (e.g., \code{list(beta = 1)}). Allowed are numbers, strings, and NA. Supplying
-\code{list(alpha=0.5, beta="alpha", gamma=NA)} constrains the parameters alpha, beta, and gamma as follows
+\item{fix}{(optional) Parameter constraints. Can be \code{"start"} or a list with \code{parname=value}-pairs. Parameter names see below under "parameter space".
 \itemize{
-\item{\code{alpha=0.5}}{: fix alpha to 0.5.}
-\item{\code{beta="alpha"}}{: fix beta to the value of alpha; alpha may be a free or fixed model parameter in \code{parspace}.}
-\item{\code{delta=NA}}{: ignore delta if it can be ignored by setting delta equal to the value in the column "na" of \code{parspace}, given that parspace has a value in the column "na" for delta.}
+\item{\code{"start"} constrains all available parameters to their starting values. Useful for model testing.}
+\item{\code{parname = 0.5} constrains a parameter to 0.5.}
+\item{\code{parname = "p2"} constrains a parameter to another model parameter \code{p2}.}
+\item{\code{parname = NA} tells the model to omit a parameter, if possible.}
 }}
 
-\item{choicerule}{(optional, default \code{NULL}) String specifying the choice rule, allowed are \code{NULL}, \code{"softmax"}, \code{"eps"}, and other values of the argument \code{type} to \link[cogsciutils]{choicerule}.}
+\item{choicerule}{(optional) String specifying the choice rule (default \code{NULL}), allowed are \code{NULL}, \code{"softmax"}, \code{"eps"}, and other values of the argument \code{type} to \link[cogsciutils]{choicerule}.}
+
+\item{options}{(optional) Options to control the parameter fitting methods, see the "Options" section of \code{\link{cogscimodel}}.}
 }
 \value{
 An object of class R6 holding the model, it has free parameters. A model object \code{M} can be viewed with \code{M}, predictions can be made with \code{M$predict()} for choice predictions, and \code{M$predict("ev")} for the expected value of the optimal choice and \code{M$predict("value", 1:2)} for the expected value of all choices.
@@ -33,27 +35,12 @@ Fits the shortfall model, a cognitive model for risky choices. It trades off a r
 where the parameter \eqn{\beta} represents risk aversion (\eqn{0 \le \beta \le 15}), the parameter \eqn{\delta} represents weight of the aspiration level (\eqn{0 \le \delta \le 1}).
 }
 \details{
+shortfall(formula, data)
+
 Risk-sensitive foraging means you have, for instance, four choices between the same two risky lotteries and after the four choices you need to have accumulated at least 12 points to get a reward. The optimal solution to this choice problem relies on dynamic programming. The function creates all possible future states given the possible remaining trials, and predicts the optimal choice polica or the expected value of chosing either option given a certain state and a certain time horizon.
 }
 \examples{
-dt <- data.frame(
-  x1 = c(100, -100),
-  px = 1,
-  x2 = 0,
-  y1 = c(200, -200),
-  py = c(.71,.64),
-  y2 = 0,
-  rp = 1)
-
-# Make the model, add fix parameters (don't fit)
-M <- cpt(rp ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py),
-         nopt = 2, nout = 2, ref = 0, choicerule = "softmax", data = dt,
-         fix = list(alpha = 0.88, beta = 0.88, lambda = 2.25,
-         gammap = 0.61, gamman = 0.69, tau = 1))
-# View the model
-M
-M$predict("value") # predict values
-M$predict("mode") # predict choices after soft-max
+# None yet
 }
 \references{
 Andraszewicz, S. (2014). Quntitative [ie Quantitative] analysis

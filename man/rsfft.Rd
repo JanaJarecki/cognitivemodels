@@ -11,19 +11,19 @@ rsfft(formula = NULL, sbt = NULL, nopt = NULL, nout = NULL,
 \arguments{
 \item{formula}{A formula (e.g., \code{y ~ x1 + x2}).}
 
-\item{fix}{(optional)  A list with parameter constraints (e.g., \code{list(beta = 1)}). Allowed are numbers, strings, and NA. Supplying
-\code{list(alpha=0.5, beta="alpha", gamma=NA)} constrains the parameters alpha, beta, and gamma as follows
+\item{fix}{(optional) Parameter constraints. Can be \code{"start"} or a list with \code{parname=value}-pairs. Parameter names see below under "parameter space".
 \itemize{
-\item{\code{alpha=0.5}}{: fix alpha to 0.5.}
-\item{\code{beta="alpha"}}{: fix beta to the value of alpha; alpha may be a free or fixed model parameter in \code{parspace}.}
-\item{\code{delta=NA}}{: ignore delta if it can be ignored by setting delta equal to the value in the column "na" of \code{parspace}, given that parspace has a value in the column "na" for delta.}
+\item{\code{"start"} constrains all available parameters to their starting values. Useful for model testing.}
+\item{\code{parname = 0.5} constrains a parameter to 0.5.}
+\item{\code{parname = "p2"} constrains a parameter to another model parameter \code{p2}.}
+\item{\code{parname = NA} tells the model to omit a parameter, if possible.}
 }}
 
 \item{data}{A data.frame containing \code{formula}'s variables.}
 
-\item{choicerule}{(optional, default \code{NULL}) String specifying the choice rule, allowed are \code{NULL}, \code{"softmax"}, \code{"eps"}, and other values of the argument \code{type} to \link[cogsciutils]{choicerule}.}
+\item{choicerule}{(optional) String specifying the choice rule (default \code{NULL}), allowed are \code{NULL}, \code{"softmax"}, \code{"eps"}, and other values of the argument \code{type} to \link[cogsciutils]{choicerule}.}
 }
 \description{
-Risk-sensitive foraging fast and frugal tree
+rsfft()
 }
 \keyword{internal}
