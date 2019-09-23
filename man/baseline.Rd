@@ -8,9 +8,9 @@
 \usage{
 baseline_const(formula, data, const, ...)
 
-baseline_mean(formula, data, ...)
+baseline_mean(formula, data, mode, ...)
 
-baseline(formula, data, type, const, ...)
+baseline(formula, data, type, const, mode, ...)
 }
 \arguments{
 \item{formula}{A formula specifying the observed variable as left hand (e.g., \code{y ~ .}). Note the "\code{~}" and "\code{.}", please.}
@@ -18,6 +18,8 @@ baseline(formula, data, type, const, ...)
 \item{data}{A data.frame containing \code{formula}'s variables.}
 
 \item{const}{(optional, \bold{required} if \code{type = "constant"}) A number with the prediction of the model, must be a probability.}
+
+\item{mode}{A string. Allowed are \code{"discrete"}, \code{"continuous"}, specifies the model's response mode. Discrete responses are binary (0 or 1), continuous responses are numbers with a normal error.}
 
 \item{type}{A string, can be \code{"constant", "mean"} specifying the type of baseline model (see details).}
 }

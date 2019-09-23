@@ -6,8 +6,8 @@
 \alias{bayes_dirichlet}
 \title{Bayesian Inference Cognitive Model}
 \usage{
-bayes(formula, data, fix = list(), format = c("raw", "count"),
-  type = NULL, discount = 0L, options = list(), ...)
+bayes(formula, data, fix = list(), format = c("raw", "count",
+  "cumulative"), type = NULL, discount = 0L, options = list(), ...)
 
 bayes_beta(formula, data, fix = NULL, format = NULL, ...)
 
@@ -26,7 +26,7 @@ bayes_dirichlet(formula, data, fix = NULL, format = NULL, ...)
 \item{\code{parname = NA} tells the model to omit a parameter, if possible.}
 }}
 
-\item{format}{A string (default \code{"raw"}). Can be \code{"raw"} or \code{"count"}, \code{"raw"} means data are occurrence indicators (1=event, 0=no event); \code{"counts"} means data are cumulative frequencies of events.}
+\item{format}{A string (default \code{"raw"}) with the data format. Can be \code{"raw"}, \code{"cummulative"}, \code{"count"}, where \code{"raw"} means data are occurrence indicators (1=event, 0=no event); \code{"cumulative"} means data are cumulative event frequencies (1,2,2,...), and code{"count"} means data are non-ordered event frequencies (10,2,5,...).}
 
 \item{type}{(optional) A string, \code{"beta-binomial"} or \code{"dirichlet-multinomial"}, specifying the type of inference. Can be abbreviated. Will be inferred if missing.}
 
@@ -115,6 +115,7 @@ bayes(y ~ a, D, c(a=1.5, b=0.5))                 # prior belief: "a" more likely
 bayes(y ~ a, D, c(priorpar = c(1.5, 0.5)))       # -- (same) --
 bayes(y ~ a, D, c(a = 0.1, b=0.9))               # prior belief: "b" more likely
 bayes(y ~ a, D, c(priorpar = c(0.1, 1.9)))       # -- (same) --
+
 }
 \references{
 {Griffiths, T. L., & Yuille, A. (2008). Technical Introduction: A primer on probabilistic inference. In N. Chater & M. Oaksford (Eds.), \emph{The Probabilistic Mind: Prospects for Bayesian Cognitive Science (pp. 1 - 2)}. Oxford University Press. \url{https://doi.org/10.1093/acprof:oso/9780199216093.003.0002}}

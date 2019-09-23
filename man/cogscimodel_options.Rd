@@ -4,9 +4,10 @@
 \alias{cogscimodel_options}
 \title{Options for Cogscimodels}
 \usage{
-cogscimodel_options(fit = TRUE, fit_measure = "loglikelihood",
-  fit_n = 1L, fit_data = NULL, fit_solver = "auto",
-  fit_grid_offset = 0L, fit_control = list(), fit_args = list())
+cogscimodel_options(lb = NULL, ub = NULL, start = NULL, fit = TRUE,
+  fit_measure = "loglikelihood", fit_n = 1L, fit_data = NULL,
+  fit_solver = "auto", fit_grid_offset = 0L, fit_control = list(),
+  fit_args = list())
 }
 \arguments{
 \item{fit}{Logical (default \code{TRUE}), \code{FALSE} omits parameter fitting. Useful for testing models.}

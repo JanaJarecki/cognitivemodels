@@ -69,11 +69,11 @@ This is how the model predicts and treats observations:
 
 \examples{
 # Make some fake data
-D <- data.frame(a = c(.3,.4,.5),       # value of option A
+D <- data.frame(a = c(.1,.4,.5),       # value of option A
                 b = c(.7,.6,.5),       # value of option B
-                y = c(1,1,0))          # respondent's choice (0=A, 1=B)
+                y = c(0,1,1))          # respondent's choice (0=A, 1=B)
 
-M <- softmax(y ~ a | b, D, c(tau=1))   # creates soft-max model
+M <- softmax(y ~ a | b, D, c(tau=1))   # creates soft-max model w tau=1
 
 predict(M)                             # predict action selection
 M$predict()                            # -- (same) --
@@ -88,15 +88,15 @@ logLik(M)                              # log likelihood
 
 ### Parameter specification and fitting
 # -------------------------------------
-softmax(y ~ a | b, fix = "start")      # fix 'tau' to its start value
-softmax(y ~ a | b, fix = c(tau=0.2))   # fix 'tau' to 0.2
-softmax(y ~ a | b)                     # fit 'tau' to data y
+softmax(y ~ a | b, D, fix="start")     # fix 'tau' to its start value
+softmax(y ~ a | b, D, fix=c(tau=0.2))  # fix 'tau' to 0.2
+softmax(y ~ a | b, D)                  # fit 'tau' to data y in D
 
 
 ### The different choice rules
 # -----------------------------------
-softmax(y ~ a | b, fix = c(tau=0.5))   # fix 'tau' to 0.5
-softmax(y ~ a | b)                     # fit 'tau' to y
+softmax(y ~ a | b, D,  fix=c(tau=0.5)) # fix 'tau' to 0.5
+softmax(y ~ a | b, D)                  # fit 'tau' to y
 epsilon_greedy(y~a | b, D, c(eps=0.1)) # fix 'eps' to 10 \%
 epsilon_greedy(y~a | b, D )            # fit 'eps' to y
 epsilon(y ~ a | b, D, c(eps=0.1))      # fix 'eps' to 0.1
