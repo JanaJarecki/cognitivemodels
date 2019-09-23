@@ -300,14 +300,18 @@ Bayes <- R6Class("Bayes",
       parnames <- self$get_parnames()
       parnames_fix <- self$get_parnames("fix")
       parnames_priors <- self$get_parnames("priors")
-      con <- NULL
-      if (!all(parnames_priors %in% parnames_fix)) {
-        con <- L_constraint(
-          L = as.integer(parnames %in% parnames_priors),
-          dir = "==",
-          rhs = length(parnames_priors))
-      }
-      return(.combine_constraints(con, super$make_constraints()))
+      a <- cumsum(self$natt())
+      a0 <- cumsum(self$natt())-1
+      id <- lapply(1:self$nstim(), function(i) a0[i]:a[i])
+      C <- lapply(id, function(i) {
+        if (!all(parnames_priors[i] %in% parnames_fix)) {
+          L_constraint(
+            L = as.integer(parnames %in% parnames_priors[i]),
+            dir = "==",
+            rhs = length(parnames_priors[i]))
+        }
+      })
+      return(do.call(.combine_constraints, c(C, list(super$make_constraints()))))
     },
     check_input = function() {
       # This function is called automatically at the end of initialize()
