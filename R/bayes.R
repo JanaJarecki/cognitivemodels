@@ -3,11 +3,11 @@
 #' \code{bayes()} fits a Bayesian cognitive model, updating beliefs about discrete-event probabilities from  event frequencies, \code{bayes_beta()} is for binomial events, \code{bayes_dirichlet()} is for categorical/multinomial events.
 #' 
 #' @useDynLib cogscimodels, .registration = TRUE
-#' @import rje rdirichlet
+#' @importFrom gtools rdirichlet
 #' 
 #' @inheritParams Cogscimodel
 #' @param formula A formula specifying reported beliefs ~ event + event ... (e.g., \code{y ~ coin_heads + coin_tails}).
-#' @param format A string (default \code{"raw"}). Can be \code{"raw"} or \code{"count"}, \code{"raw"} means data are occurrence indicators (1=event, 0=no event); \code{"counts"} means data are cumulative frequencies of events.
+#' @param format A string (default \code{"raw"}) with the data format. Can be \code{"raw"}, \code{"cummulative"}, \code{"count"}, where \code{"raw"} means data are occurrence indicators (1=event, 0=no event); \code{"cumulative"} means data are cumulative event frequencies (1,2,2,...), and code{"count"} means data are non-ordered event frequencies (10,2,5,...).
 #' @param type (optional) A string, \code{"beta-binomial"} or \code{"dirichlet-multinomial"}, specifying the type of inference. Can be abbreviated. Will be inferred if missing.
 #' @param ... other arguments from other functions, currently ignored.
 #' 
@@ -86,8 +86,9 @@
 #' bayes(y ~ a, D, c(priorpar = c(1.5, 0.5)))       # -- (same) --
 #' bayes(y ~ a, D, c(a = 0.1, b=0.9))               # prior belief: "b" more likely
 #' bayes(y ~ a, D, c(priorpar = c(0.1, 1.9)))       # -- (same) --
+#' 
 #' @export
-bayes <- function(formula, data, fix = list(), format = c("raw", "count"), type = NULL, discount = 0L, options = list(), ...) {
+bayes <- function(formula, data, fix = list(), format = c("raw", "count", "cumulative"), type = NULL, discount = 0L, options = list(), ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   return(do.call(what = Bayes$new, args = .args, envir = parent.frame()))
 }
@@ -121,7 +122,7 @@ Bayes <- R6Class("Bayes",
     format = NULL,
     priornames = NULL,
     npred = NULL,
-    initialize = function(formula, data, type = NULL, format = c("raw", "count"), fix = list(), choicerule = NULL, mode = "continuous", discount = 0, options = list(), ...) {
+    initialize = function(formula, data, type = NULL, format = c("raw", "cumulative", "count"), fix = list(), choicerule = NULL, mode = "continuous", discount = 0, options = list(), ...) {
       self$format <- match.arg(format)
       self$priordist <- self$infer_priordist(type = type, f=formula)
       self$init_npred(f=formula)
@@ -149,9 +150,11 @@ Bayes <- R6Class("Bayes",
       self$prednames <- self$get_prednames()
       par <- self$get_par()
       na <- self$natt()[1]
-      no <- self$nobs()
-      # shift input by 1 lag
-      input <- rbind(0L, input[-nrow(input), , drop = FALSE])
+      no <- self$nobs()     
+      if (self$format != "count") {
+        # shift input by 1 lag
+        input <- rbind(0L, input[-nrow(input), , drop = FALSE])
+      }
       # Compute posterior parameter
       posteriorpar <- self$update_priorpar(data = input, priorpar = par[-1L][(1:na) + na * (s-1L)], delta = par["delta"])
 
@@ -212,8 +215,8 @@ Bayes <- R6Class("Bayes",
       fs <- lapply(1:length(trms), function(i) {
         x <- trms[[i]]
         if (length(x) == 1) {
-          if (self$format == "count") {
-            stop('"formula" needs > 1 right-hand side variables if format is count, but "formula" has 1 RHS (', .abbrDeparse(f), "). RHS of formula needs to contain a variable for the count of every possible outcome, like: y ~ count_0 + count_1.")
+          if (self$format != "raw") {
+            stop('"formula" needs > 1 right-hand side variables (unless format is "raw"), but "formula" has only 1 RHS (', .abbrDeparse(f), "). -> Add another variable to the formula to specify the counts of the other possible event(s), like: y ~ count_0 + count_1.")
           }
           update(fs[[i]], as.formula(paste0("~ . + I(1-", x, ")")))
           } else {
@@ -225,7 +228,7 @@ Bayes <- R6Class("Bayes",
     posterior_draw = function(t, par, ndraws) {
       dist <- self$priordist
       if (dist == "dirichlet-multinomial" | dist == "beta-binomial") {
-        return(matrix(rje::rdirichlet(ndraws, par), nrow = 1L))
+        return(matrix(gtools::rdirichlet(ndraws, par), nrow = 1L))
       }  
     },
     posterior_max = function(par, ...) {

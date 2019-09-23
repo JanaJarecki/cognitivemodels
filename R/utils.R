@@ -131,7 +131,7 @@ get_id_in_grid <- function(id, grid) {
 #" @param offset adjust max and min minus this value
 .grid <- function(rsum, ncol, nrow, regular = TRUE, nstep = NULL, offset = 0) {
   nrow <- if( missing(nrow) ) { round(sqrt(10^ncol*2)) }
-  nsteps <- if ( is.null(nstep) ) { 4 } else { nstep }
+  nstep <- if ( is.null(nstep) ) { 4 } else { nstep }
   mat <- if (regular) {
     t(combinat::xsimplex(ncol, nstep, fun = function(i) i/sum(i)))
   } else {
@@ -146,9 +146,9 @@ get_id_in_grid <- function(id, grid) {
 }
 
 
-##
+# ==========================================================================
 # Utilities for parsing, printing cogscimodels
-# --------------------------------------------------------------------------
+# ==========================================================================
 
 # deparse(.) returning \bold{one} string
 # @note Protects against the possibility that results from deparse() will be
@@ -165,8 +165,10 @@ get_id_in_grid <- function(id, grid) {
   return(exp(deltas) / sum(exp(deltas)))
 }
 
-# creates a directory for a new cogscimodel
-# @param path Path to the file
+#' creates a directory for a new cogscimodel
+#' 
+#' @param path Path to the file
+#' @noRd
 .safe.dir.create <- function(path) {
   if (!dir.exists(path) && !dir.create(path)) {
     stop(gettextf("Cannot create directory '%s'", path), domain = NA)
@@ -175,7 +177,7 @@ get_id_in_grid <- function(id, grid) {
 
 #' Convert a character to formula
 #' Checks if x is a character and if so converts it into RHS formula
-#' @par x A string or RHS formula
+#' @parm x A string or RHS formula
 #' @export
 chr_as_rhs <- function(x) {
   if (is.character(x)) { 
@@ -282,8 +284,8 @@ make_parspace <- function(...) {
 #' Combine multiple constraints of type "constraint" from ROI
 #' Combine constraints, ignore \code{NULL} constraints
 #' 
-#' @par ... Objects of the class "constraint" from the ROI package (see \link[ROI]{L_constraint})
-#' @value An object of class "constraint" with all constraints or \code{NULL} if all \code{...} are \code{NULL}.
+#' @param ... Objects of the class "constraint" from the ROI package (see \link[ROI]{L_constraint})
+#' @return An object of class "constraint" with all constraints or \code{NULL} if all \code{...} are \code{NULL}.
 .combine_constraints <- function(...) {
   constr <- list(...)
   constr <- Filter(Negate(is.null), constr)

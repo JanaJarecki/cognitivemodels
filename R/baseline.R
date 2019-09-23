@@ -50,7 +50,7 @@ baseline_const <- function(formula, data, const, ...) {
 #' @rdname baseline
 #' 
 #' @export
-baseline_mean <- function(formula, data, ...) {
+baseline_mean <- function(formula, data, mode, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args$type <- "mean"
    return(do.call(what = Baseline$new, args = .args, envir = parent.frame()))
@@ -61,7 +61,7 @@ baseline_mean <- function(formula, data, ...) {
 #' @rdname baseline
 #' 
 #' @export
-baseline <- function(formula, data, type, const, ...) {
+baseline <- function(formula, data, type, const, mode, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
    return(do.call(what = Baseline$new, args = .args, envir = parent.frame()))
 }
@@ -71,7 +71,7 @@ Baseline <- R6Class("baseline",
   public = list(
     type = NULL,
     const = NULL,
-    initialize = function(formula, data, type, const, ...) {
+    initialize = function(formula, data, type, const, mode, ...) {
       self$type <- match.arg(type, c("constant", "mean"))
       if (self$type == "mean") {
         ps <- make_parspace(m = range(super$get_res(f=formula, d=data)))
@@ -84,7 +84,7 @@ Baseline <- R6Class("baseline",
         formula = update(formula, formula[1:2]),
         parspace = ps,
         data = data,
-        mode = "discrete",
+        mode = mode,
         options = list(fit = FALSE))
     },
     predict = function(type = c("response"), newdata = NULL) {

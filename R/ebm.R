@@ -268,15 +268,15 @@ Ebm <- R6Class('ebm',
         return(discount)
       }    
     },
-    make_pargrid = function(offset) {
+    make_pargrid = function(offset, nsteps = self$options$fit_control$nsteps) {
       parspace <- self$parspace
       offset <- c(offset, w = .1, b = .1)
-      return(MakeGridList(
-        names = self$freenames,
-        ll = setNames(parspace[, 'll'], rownames(parspace)),
-        ul = setNames(parspace[, 'ul'], rownames(parspace)),
-        nsteps = list(w = 4, b = 4, r = 3, q = 3, lambda = 4, tau = 4, sigma = 4),
-        sumto = list('w' = self$parnamesWeights, 'b' = self$parnamesBias),
+      return(make_grid_id_list(
+        names = self$get_parnames("free"),
+        lb = self$get_lb("free"),
+        ub = self$get_ub("free"),
+        nsteps = c(list(w = 4, b = 4), r = 3, q = 3, lambda = 4, tau = 4, sigma = 4),
+        sumto = list("w" = self$get_parnames("weights"), "b" = self$get_parnames("biases")),
         regular = TRUE,
         offset = offset))
     },  

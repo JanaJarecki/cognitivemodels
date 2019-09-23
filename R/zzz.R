@@ -12,6 +12,9 @@
 #' @param fit_args A list of arguments to be passed to the fit solver, \code{"fit_solver"} being used, see the respective pages of the solvers.
 #' @export
 cogscimodel_options = function(
+  lb = NULL,
+  ub = NULL,
+  start = NULL,
   fit = TRUE,
   fit_measure = "loglikelihood",
   fit_n = 1L,
@@ -22,8 +25,12 @@ cogscimodel_options = function(
   fit_args = list()) {
   fit_control <- c(fit_control, list(trace=0L, nbest=1L, nsteps=20))
   fit_control <- fit_control[!duplicated(names(fit_control))]
+  fit_measure <- match.arg(fit_measure, c("loglikelihood", "mse", "wmse", "rmse", "sse", "wsse", "mape", "mdape", "accuracy"))
 
   out <- .named_list(
+    lb,
+    ub,
+    start,
     fit,
     fit_measure,
     fit_n,

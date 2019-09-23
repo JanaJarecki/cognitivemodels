@@ -85,7 +85,7 @@ Softmax <- R6Class("softmax",
         title = "Softmax",
         formula = formula,
         data = data,
-        parspace = make_parspace(tau = c(0.0001,10,1,NA)),
+        parspace = make_parspace(tau = c(0.0001,10,2,NA)),
         mode = "discrete",
         fix = fix,
         options = options)
