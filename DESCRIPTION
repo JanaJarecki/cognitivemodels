@@ -20,7 +20,8 @@ Imports:
     reshape2,
     abind,
     knitr,
-    rlang
+    rlang,
+    magrittr
 Remotes:
   janajarecki/cogsciutils
 LinkingTo:
