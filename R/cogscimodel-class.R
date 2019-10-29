@@ -37,7 +37,7 @@ Cogscimodel <- R6Class(
     discount = 'numeric',
     gofvalue = NULL,
     fit.options = NULL,
-    initialize = function(formula, data, allowedparm, fixed = NULL, choicerule =  NULL, model = NULL, discount = NULL, response = c('discrete', 'continuous'), fit.options = list()) {
+    initialize = function(formula, data, allowedparm, fixed = NULL, choicerule =  NULL, model = NULL, discount = NULL, response = c('discrete', 'continuous'), fit.options = list(control = list(outer.iter = 400, inner.iter = 2000))) {
       self$model <- model
       f <- Formula(formula)
       self$formula <- f
