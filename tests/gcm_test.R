@@ -29,7 +29,7 @@ dt <- data.table(response = sample(c(0, 1), size = n, replace = TRUE),
 dt[, true_cat := ifelse(abs(f1 - f2) < 0.5, 1, 0)]
 formula <- response ~ f1 + f2
 
-args <- list(formula = formula, cat = ~ true_cat, metric = "d", fixed = c(c = 1, r = 1, p = 1, tau = 1), choicerule = "soft")
+args <- list(formula = formula, cat = ~ true_cat, metric = "mah", fixed = c(c = 1, r = 1, p = 1, tau = 1), choicerule = "soft")
 m <- do.call(gcm, c(args, data = list(dt), discount = 0))
 
 # devtools::load_all()

@@ -155,9 +155,14 @@ Gcm <- R6Class("gcm",
                      }
                      id <- input_id[trial]
                      
-                     effective_trial <- trial - is.null(newdata)
-                     sim_to_cat1 <- stimulus_frequencies[, effective_trial, 2] %*% sim_mat[id, ]
-                     total_sim <- rowSums(stimulus_frequencies[, effective_trial, ]) %*% sim_mat[id, ]
+                     if(self$metric == "mahalanobis") {
+                       sim_to_cat1 <- sim_mat[id, 2]
+                       total_sim <- sum(sim_mat[id, ])
+                     } else {
+                       effective_trial <- trial - is.null(newdata)
+                       sim_to_cat1 <- stimulus_frequencies[, effective_trial, 2] %*% sim_mat[id, ]
+                       total_sim <- rowSums(stimulus_frequencies[, effective_trial, ]) %*% sim_mat[id, ]
+                     }
                      
                      sim_to_cat1/total_sim
                    })
