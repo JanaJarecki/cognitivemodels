@@ -14,7 +14,7 @@ Gcm <- R6Class("gcm",
                  stimulus_frequencies = NULL,
                  fixed = NULL, 
                  gofvalue = NULL,
-                 initialize = function(formula, data, cat, metric = c("minkowski", "discrete", "threshold"), fixed, choicerule, discount) {
+                 initialize = function(formula, data, cat, metric = c("minkowski", "discrete", "threshold", "mahalanobis"), fixed, choicerule, discount) {
                    self$cat <- get_all_vars(cat, data)[, 1] # true cat
                    self$metric <- match.arg(metric)
                    self$ndim <- length(attr(terms(formula), "term.labels"))
@@ -32,7 +32,7 @@ Gcm <- R6Class("gcm",
                    allowedparm[, "init"] <- c(rep(1/self$ndim, self$ndim), 2.5, 1, 1)
                    allowedparm[, "na"] <- c(rep(1/self$ndim, self$ndim), 1, 1, 1)
                    if(self$metric == "threshold") {
-                     allowedparm <- rbind(allowedparm, gamma = c(0, self$nval - 2, 1, 1))
+                     allowedparm <- rbind(allowedparm, gamma = c(0, self$nval - 2, 1, 0))
                    }
                    
                    super$initialize(formula = formula, data = data, fixed = as.list(fixed), model = "gcm", discount = discount, choicerule = choicerule, allowedparm = allowedparm, response = "discrete")
@@ -42,6 +42,35 @@ Gcm <- R6Class("gcm",
                  },
                  make_weight_names = function(ndim = self$ndim) {
                    return(c(paste0("w", 1:ndim)))
+                 },
+                 cum_mean_by_cat = function(z, c, c_value) {
+                   return( round(cumsum(z * (c == c_value))/cumsum(c == c_value), 2) )
+                 },
+                 cum_median_by_cat = function(z, c, c_value) {
+                   return( sapply(1:length(z), function(i) median(z[1:length(z) <= i & c == c_value])) )
+                 },
+                 make_prototype = function(f = self$input, c = self$cat, fun = self$cum_median_by_cat, last_only = TRUE) {
+                   # f = feature values; c = categories; fun = aggregation function
+                   x1 <- apply(f, 2, function(z) {
+                     do.call(fun, list(z = z, c = c, c_value = 1))
+                   })
+                   
+                   x0 <- apply(f, 2, function(z) {
+                     do.call(fun, list(z = z, c = c, c_value = 0))
+                   })
+                   
+                   # rownames(x1) <- apply(x1, 1, paste0, collapse = "")
+                   # rownames(x0) <- apply(x0, 1, paste0, collapse = "")
+                   gc()
+
+                   if(last_only) {
+                     return( as.data.table(rbind(tail(x0, 1), tail(x1, 1))) )
+                   } else {
+                     return( list(x0, x1) )
+                   }
+                 },
+                 calc_cov = function(f = self$input, c = self$cat) {
+                   return(list(var(f[c == 0, ]), var(f[c == 1, ])))
                  },
                  calc_stimulus_frequencies = function() {
                    id <- self$input_id
@@ -55,7 +84,7 @@ Gcm <- R6Class("gcm",
                    res <- array(res, dim = c((nrow(res)/2), 2, ncol(res)), dimnames = list(levels(id), c(0,1), 1:ncol(res)))
                    return(aperm(res, c(1, 3, 2)))
                  },
-                 calc_similarity_matrix = function(x, y){
+                 calc_similarity_matrix = function(x, y, cov = NULL){
                    # x: matrix with features of every trial, e.g., learningset
                    # y: matrix with feature combinations to which the similarity should be calculated; e.g., prototypes
                    x <- as.data.frame(unique(x))
@@ -79,7 +108,11 @@ Gcm <- R6Class("gcm",
                      z <- pairs[, pair]
                      probe <- x[z[1], ]
                      exemplar <- y[z[2], ]
-                     distance <- self$calc_distance(probe = probe, exemplar = exemplar)
+                     if(!is.null(cov)) {
+                       distance <- self$calc_distance(probe = probe, exemplar = exemplar, cov = cov[[z[2]]])
+                     } else {
+                       distance <- self$calc_distance(probe = probe, exemplar = exemplar)
+                     }
                      
                      c <- self$parm[["c"]]
                      p <- self$parm[["p"]]
@@ -109,7 +142,13 @@ Gcm <- R6Class("gcm",
                      n <- nrow(input)
                    }
                    ### ONLY FOR GCM
-                   sim_mat <- self$calc_similarity_matrix(x = rbind(self$input, input), y = self$input)
+                   if(self$metric == "mahalanobis") {
+                     means <- self$make_prototype()
+                     cov <- self$calc_cov()
+                     sim_mat <- self$calc_similarity_matrix(x = rbind(self$input, input), y = means, cov = cov)
+                   } else {
+                     sim_mat <- self$calc_similarity_matrix(x = rbind(self$input, input), y = self$input)
+                   }
                    res <- sapply(1:n, function(trial) {
                      if(trial == 1 & is.null(newdata)) {
                        return(1/length(unique(self$cat)))
@@ -125,7 +164,7 @@ Gcm <- R6Class("gcm",
                    res <- self$applychoicerule(res)
                    return(res)
                  },
-                 calc_distance = function(probe, exemplar, r = self$parm[["r"]], w = self$parm[1:self$ndim], gamma = NULL){
+                 calc_distance = function(probe, exemplar, r = self$parm[["r"]], w = self$parm[1:self$ndim], gamma = NULL, cov = NULL){
                    w <- unlist(w)
                    dist <- as.numeric(probe - exemplar)
                    if(self$metric == "minkowski"){
@@ -138,6 +177,9 @@ Gcm <- R6Class("gcm",
                      gamma <- self$parm[["gamma"]]
                      dist <- w %*% as.numeric(dist > gamma) # Vector multiplication
                    }
+                   if(self$metric == "mahalanobis"){
+                     dist <- mahalanobis(x = probe, center = unlist(c(exemplar)), cov = cov)
+                   }
                    return(dist)
                  },
                  eqfun = function() {
@@ -146,7 +188,7 @@ Gcm <- R6Class("gcm",
                        sum(pars[1:self$ndim])
                      },
                      eqB = 1
-                     )
+                   )
                    )
                  },
                  parGrid = function(offset) {
@@ -183,9 +225,9 @@ gcm <- function(formula, data, cat, metric = c("minkowski", "discrete", "thresho
   obj <- Gcm$new(formula = formula, data = data, cat = cat, metric = metric, fixed = fixed, choicerule = choicerule, discount = discount)
   if(length(obj$freenames) > 0) {
     if(obj$metric == "threshold") {
-      gofs <- vector("numeric", length = obj$nval - 1)
+      gofs <- vector("numeric", length = obj$nval - 2)
       parms <- matrix(nrow = obj$nval - 1, ncol = length(obj$parm), dimnames = list(NULL, names(obj$parm)))
-      for(i in 1:(obj$nval - 1)) {
+      for(i in 1:(obj$nval - 2)) {
         obj$parm$gamma <- i - 1
         obj$fit(type = "solnp")
         gofs[i] <- obj$gofvalue
