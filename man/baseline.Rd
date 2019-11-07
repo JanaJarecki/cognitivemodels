@@ -3,14 +3,26 @@
 \name{baseline_const}
 \alias{baseline_const}
 \alias{baseline_mean}
+\alias{baseline_mean_c}
+\alias{baseline_mean_d}
 \alias{baseline}
+\alias{baseline_c}
+\alias{baseline_}
 \title{Baseline cognitive models}
 \usage{
-baseline_const(formula, data, const, ...)
+baseline_const(formula, data, const, mode, ...)
 
 baseline_mean(formula, data, mode, ...)
 
+baseline_mean_c(formula, data, ...)
+
+baseline_mean_d(formula, data, ...)
+
 baseline(formula, data, type, const, mode, ...)
+
+baseline_c(formula, data, type, const, mode = "continuous", ...)
+
+baseline_(formula, data, type, const, mode, ...)
 }
 \arguments{
 \item{formula}{A formula specifying the observed variable as left hand (e.g., \code{y ~ .}). Note the "\code{~}" and "\code{.}", please.}

@@ -8,7 +8,7 @@
 #' @details The argument \code{terminal.fitness} must be a function with exactly two arguments \code{budget} and \code{state}, that returns for each budget and state the terminal reward.
 #' @export 
 rsenvironment <- function(budget, ..., n.trials, initial.state, terminal.fitness = function(state, budget) { as.numeric(state >= budget) } ) {
-  Rsenvironment$new(n.trials = n.trials, terminal.fitness, budget = budget, initial.state = initial.state, ...)
+  Rsenvironment$new(n.trials = n.trials, terminal.fitness = terminal.fitness, budget = budget, initial.state = initial.state, ...)
 }
 
 Rsenvironment <- R6Class("rsenvironment",
@@ -72,19 +72,39 @@ Rsenvironment <- R6Class("rsenvironment",
            return(x)
         },
         makeStateTrialMat = function() {
-          outcomes <- c(unique(self$environment[, 2, ][self$environment[, 1, ] > 0]))
-          ans <- list(self$initial.state)
-          for (i in self$trials + 1) {
-              ans[[i]] <- unique(self$absorbing.states(c(outer(ans[[i-1]], outcomes, `+`)))[,1])
+          # Correct X for Pr(x) = 0 probabilities and store
+          # only the unique outcomes
+          x <- self$environment[, 2, ]
+          p <- self$environment[, 1, ]
+          outcomes <- c(unique(x[p > 0]))
+          # Initialize the result
+          ans <- list(unname(self$initial.state))
+          # For all trials from 2 to t+1
+          trials_plus <- self$trials + 1
+          # Store the unique cummulative outcomes for trials 2 to t + 1
+          for (i in trials_plus) {
+            possible_x <- c(outer(ans[[i-1]], outcomes, `+`))
+            # apply absorbing states
+            possible_x <- self$absorbing.states(possible_x)[,1]
+            # store in the list
+            ans[[i]] <- unique(possible_x)
           }
-          ans <- lapply(ans, sort)        
+          # sort outcomes
+          ans <- lapply(ans, sort)
+          # Transform list into a matrix n(sates) x n(trials)
           ans <- sapply(ans, "[", i = seq_len(max(sapply(ans, length))))
+          # Name matrix columns by the trime horizon
           colnames(ans) <- rev(seq_len(ncol(ans))-1)
+          # Store result
           self$stateTrialMat <- ans
         },
         makeTransitionMatrix = function() {
           states <- self$states
-          T <- array(0, dim = c(length(states), length(states), self$n.trials, self$n.actions), dimnames = list(states, states, self$trials, self$actions))
+          # Initialize the 4 D transition matrix
+          # n(states) x n(states) x n(trials) x n(actions)
+          T <- array(0L,
+            dim = c(length(states), length(states), self$n.trials, self$n.actions),
+            dimnames = list(states, states, self$trials, self$actions))
           for(i in self$actions) {
             for(t in self$trials) {
               for(s1 in c(na.omit(self$stateTrialMat[, t]))) {
@@ -103,6 +123,7 @@ Rsenvironment <- R6Class("rsenvironment",
             T[s1, ,t , ] <- 0
             T[s1, s2, t, ] <- 1
           }
+          # Store the results
           self$T <- T
         },
         makeStateTrialActionMat = function(x = NA, states, trials) {

@@ -95,8 +95,8 @@ bayes(~a,   D, fix = "start")                    # -- (same) --
 
 ### Parameter fitting
 ---------------------
-# Adding y as the observed variable for par. fitting
-bayes(y ~ a + b, D, fix = "start")               # "start" -> fix all par., fit none 
+# Use a response variable, y, to which we fit parameter
+bayes(y ~ a + b, D, fix = "start")               # "start" fixes all par., fit none 
 bayes(y ~ a + b, D, fix = list(delta=1))         # fix delta, fit priors 
 bayes(y ~ a + b, D, fix = list(a=1, b=1))        # fix priors, fit delta 
 bayes(y ~ a + b, D, fix = list(delta=1, a=1))    # fix delta & prior on "a"

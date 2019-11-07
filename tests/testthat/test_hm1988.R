@@ -4,46 +4,72 @@ library(cogscimodels)
 # Houston, A. I., & McNamara, J. M. (1988). A framework for the functional analysis of behaviour. Behavioural and Brain Science, 11, 117–163. doi:10.1017/S0140525X00053061
 # p. 118 - 119
 test_that("Values of hm1988", {
-  env <- rsenvironment(
-    budget = 12,
-    n.trials = 4,
-    initial.state = 11,
-    a1 = matrix(c(0.1, 0.8, 0.1, 0, 1, 2), nc = 2),
-    a2 = matrix(c(0.4, 0.2, 0.4, 0, 1, 2), nc = 2))
-  mod <- hm1988(env = env, choicerule = "argmax")
+  D11 <- D10 <- D9 <- data.frame(
+    a1   = 0,    a2 = 1,    a3 = 2,
+    pa11 = 0.1, pa12 = 0.8, pa13 = 0.1,
+    pa21 = 0.4, pa22 = 0.2, pa23 = 0.4,
+    b = 12,
+    nt = 4,
+    init = 11,
+    s = 11,
+    t = 4:1)
+  D10$s <- D10$init <- 10
+  D9$s <- D9$init <- 9
+  # initial status = 11
   val11 <- cbind(a1=c(0.9, 0.99, 0.999, 0.9999),
                  a2=c(0.6, 0.96, 0.996, 0.9996)) # Table 1
-  nd <-  data.frame(timehorizon = 1:4, state = 11)
-  mod <- hm1988(env = env, choicerule = "arg")
-  expect_equal(mod$predict("value", newdata = nd, 1:2), val11)
-  expect_equal(mod$predict("response", newdata = nd), rep(1,4))
+  .args <- list(formula = ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = ~b, ntrials = ~nt, state = ~s, initstate = ~init, trial=~t, data = D11, choicerule = "argmax")
+  M <- do.call(hm1988, .args)
+  expect_equal(M$predict("value", action = 1:2), val11)
+  expect_equal(M$predict("response", action = 1:2), cbind(a1=rep(1,4), a2=0))
+  .args$data <- .args$data[1,]
+  M1 <- do.call(hm1988, .args)
+  expect_equal(M1$predict("value", action = 1:2), val11[1,,drop=FALSE])
+  expect_equal(M1$predict("response", action = 1:2), cbind(a1=1, a2=0))
 
-  env <- rsenvironment(
-    budget = 12,
-    n.trials = 4,
-    initial.state = 10,
-    a1 = matrix(c(0.1, 0.8, 0.1, 0, 1, 2), nc = 2),
-    a2 = matrix(c(0.4, 0.2, 0.4, 0, 1, 2), nc = 2))
-  mod <- hm1988(env = env, choicerule = "arg")
+  # initial status = 10
   val10 <- cbind(a1=c(0.1, 0.86, 0.978, 0.997),
                  a2=c(0.4, 0.74, 0.942, 0.991)) # Table 1
-  nd$state <- 10
-  expect_equal(mod$predict("v", newdata = nd, 1:2), val10)
-  expect_equal(mod$predict("r", newdata = nd), c(0, rep(1,3)))
+  .args$data <- D10
+  M <- do.call(hm1988, .args)
+  expect_equal(M$predict("value", action = 1:2), val10)
+  expect_equal(M$predict("response", action = 1:2), cbind(a1=c(0,1,1,1), a2=c(1,0,0,0)))
+  .args$data <- .args$data[1,]
+  M1 <- do.call(hm1988, .args)
+  expect_equal(M1$predict("value", action = 1:2), val10[1,,drop=FALSE])
+  expect_equal(M1$predict("response", action = 1:2), cbind(a1=0, a2=1))
 
-  env <- rsenvironment(
-    budget = 12,
-    n.trials = 4,
-    initial.state = 9,
-    a1 = matrix(c(0.1, 0.8, 0.1, 0, 1, 2), nc = 2),
-    a2 = matrix(c(0.4, 0.2, 0.4, 0, 1, 2), nc = 2))
-  mod <- hm1988(env = env, choicerule = "arg")
+  # initial status = 9
   val9 <- cbind(a1=c(0, 0.41, 0.831, 0.9654),
                 a2=c(0, 0.44, 0.744, 0.9276)) # Table 1
-  nd$state <- 9
-  expect_equal(mod$predict("v", newdata =nd, 1:2), val9)
-  expect_equal(mod$predict("r", newdata = nd), c(0.5, 0, rep(1,2)))
+  .args$data <- D9
+  M <- do.call(hm1988, .args)
+  expect_equal(M$predict("value", action = 1:2), val9)
+  expect_equal(M$predict("response", action = 1:2), cbind(a1=c(0.5,0,1,1), a2=c(0.5,1,0,0)))
+  .args$data <- .args$data[1,]
+  M1 <- do.call(hm1988, .args)
+  expect_equal(M1$predict("value", action = 1:2), val9[1,,drop=FALSE])
+  expect_equal(M1$predict("response", action = 1:2), cbind(a1=0.5, a2=0.5))
+
+  # multiple values / multiple environments
+  D <- rbind(D11,D10,D9)
+  .args$data <- D
+  M <- do.call(hm1988, .args)
+  expect_equal(M$predict("values", action = 1:2), rbind(val11,val10,val9))
+
+  new_order <- sample(1:nrow(D)) # test shuffled order
+  .args$data <- D[new_order,]
+  M <- do.call(hm1988, .args)
+  expect_equal(M$predict("values", action = 1:2), rbind(val11,val10,val9)[new_order,])
+  .args$choicerule = "softmax"
+  .args$data$y = cr_argmax(rbind(val11,val10,val9)[new_order,1])
+  .args$formula <- y ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23
+  
+  M <-do.call(hm1988, .args)
+
 })
+
+
 
 # # Searcy, G. D., & Pietras, C. J. (2011). Optimal risky choice in humans: effects of amount of variability. Behavioural Processes, 87, 88–99. doi:10.1016/j.beproc.2011.01.008
 # # Experiment 1

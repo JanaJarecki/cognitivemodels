@@ -66,8 +66,8 @@
 #' 
 #' ### Parameter fitting
 #' ---------------------
-#' # Adding y as the observed variable for par. fitting
-#' bayes(y ~ a + b, D, fix = "start")               # "start" -> fix all par., fit none 
+#' # Use a response variable, y, to which we fit parameter
+#' bayes(y ~ a + b, D, fix = "start")               # "start" fixes all par., fit none 
 #' bayes(y ~ a + b, D, fix = list(delta=1))         # fix delta, fit priors 
 #' bayes(y ~ a + b, D, fix = list(a=1, b=1))        # fix priors, fit delta 
 #' bayes(y ~ a + b, D, fix = list(delta=1, a=1))    # fix delta & prior on "a"
@@ -147,7 +147,6 @@ Bayes <- R6Class("Bayes",
     make_prediction = function(type, input, s, ndraws = 3, ...) {
       type <- match.arg(type, c("response", "mean", "max", "sd", "draws", "posteriorpar"))
       if (type=="response") type <- "mean"
-      self$prednames <- self$get_prednames()
       par <- self$get_par()
       na <- self$natt()[1]
       no <- self$nobs()     
@@ -177,7 +176,7 @@ Bayes <- R6Class("Bayes",
       f <- as.Formula(f)
       self$npred <- vapply(1:length(f)[2], function(i) length(attr(terms(formula(f, lhs=0, rhs=i)), "term.labels")), 1L)
     },
-    get_prednames = function() {
+    make_prednames = function() {
       nn <- self$get_parnames()[-1]
       natt <- self$natt()
       npred <- self$npred

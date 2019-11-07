@@ -81,9 +81,9 @@ test_that('par methods with 0 parameter', {
   expect_equal(M$get_parnames(), NULL)
 })
 
-M <- Cogscimodel$new(y~x1, D, make_parspace(alpha=c(0,1)), mode="discrete")
+M <- Cogscimodel$new(y~x1, D, make_parspace(alpha=c(0,1)), mode="discrete", options = list(fit=FALSE))
 test_that('par methods with 1 parameter', {
-  # expect_equal(M$npar(), npar(M))
+  expect_equal(M$npar(), npar(M))
   expect_equal(M$npar(), M$npar('free'))
   expect_equal(M$npar(), 1)
   expect_equal(M$npar(), M$npar('free'))
@@ -103,7 +103,7 @@ test_that('par methods with 1 parameter', {
   expect_equal(M$get_parnames('constrained'), NULL)
 })
 
-M <- Cogscimodel$new(y~x1, D, make_parspace(a=c(0,1), b=c(0,1)), mode="discrete")
+M <- Cogscimodel$new(y~x1, D, make_parspace(a=c(0,1), b=c(0,1)), mode="discrete", options = list(fit = FALSE))
 test_that('par methods with 2 parameters', {
   # expect_equal(M$npar(), npar(M))
   expect_equal(M$npar(), M$npar('free'))
@@ -126,7 +126,7 @@ test_that('par methods with 2 parameters', {
 })
 
 
-M <- Cogscimodel$new(y~x1, D, make_parspace(a=c(0,1), b=c(0,1)), fix=c(a=1), mode="discrete")
+M <- Cogscimodel$new(y~x1, D, make_parspace(a=c(0,1), b=c(0,1)), fix=c(a=1), mode="discrete", options = list(fit = FALSE))
 test_that('par methods with 2 parameters, 1 fixed', {
   # expect_equal(M$npar(), npar(M))
   expect_equal(M$npar(), 2)
@@ -179,7 +179,7 @@ test_that('par methods with 2 parameters, 2 fixed', {
   expect_equal(M$get_parnames('constrained'), character(0))
 })
 
-M <- Cogscimodel$new(y~x1, D, make_parspace(a=c(0,1), b=c(0,1)), fix=list(b='a'), mode="discrete")
+M <- Cogscimodel$new(y~x1, D, make_parspace(a=c(0,1), b=c(0,1)), fix=list(b='a'), mode="discrete", options = list(fit = FALSE))
 test_that('par methods with 2 parameters, 1 equality-constrained', {
   # expect_equal(M$npar(), npar(M))
   expect_equal(M$npar(), 2)
@@ -187,7 +187,7 @@ test_that('par methods with 2 parameters, 1 equality-constrained', {
   expect_equal(M$npar('free'), 1)
   expect_equal(M$npar('fix'), 1)
   expect_equal(M$npar('equal'), 1)
-  expect_equal(M$npar('constrained'), 1)
+  expect_equal(M$npar('constrained'), 2)
   expect_equal(M$npar('ignored'), 0)
   expect_equal(M$npar('constant'), 0)
   expect_equal(M$ncon(), 1L)
@@ -202,11 +202,11 @@ test_that('par methods with 2 parameters, 1 equality-constrained', {
   expect_equal(M$get_parnames('fix'), c('b'))
   expect_equal(M$get_parnames('free'), c('a'))
   expect_equal(M$get_parnames('equal'), c('b'))
-  expect_equal(M$get_parnames('constrained'), c('b'))
+  expect_equal(M$get_parnames('constrained'), c('b','a'))
   expect_equal(M$get_parnames('constant'), character(0))
 })
 
-M <- Cogscimodel$new(y~x1, D, make_parspace(a=c(0,1), b=c(0,1), c=c(-2,2), d=c(-2,0)), fix=list(b='a', d='c'), mode="discrete")
+M <- Cogscimodel$new(y~x1, D, make_parspace(a=c(0,1), b=c(0,1), c=c(-2,2), d=c(-2,0)), fix=list(b='a', d='c'), mode="discrete", options = list(fit = FALSE))
 test_that('par methods with 4 parameters, 2 equality-constrained', {
   # expect_equal(M$npar(), npar(M))
   expect_equal(M$npar(), 4)
@@ -215,7 +215,7 @@ test_that('par methods with 4 parameters, 2 equality-constrained', {
   expect_equal(M$npar('fix'), 2)
   expect_equal(M$npar('constant'), 0)
   expect_equal(M$npar('equal'), 2)
-  expect_equal(M$npar('constrained'), 2)
+  expect_equal(M$npar('constrained'), 4)
   expect_equal(M$npar('ignored'), 0)
   expect_equal(M$ncon(), 2L)
 
@@ -230,11 +230,10 @@ test_that('par methods with 4 parameters, 2 equality-constrained', {
   expect_equal(M$get_parnames('fix'), c('b','d'))
   expect_equal(M$get_parnames('free'), c('a','c'))
   expect_equal(M$get_parnames('equal'), M$get_parnames('fix'))
-  expect_equal(M$get_parnames('constrained'), M$get_parnames('fix'))
   expect_equal(M$get_parnames('constant'), character(0))
 })
 
-M <- Cogscimodel$new(y~x1, D, make_parspace(a=c(0,1), b=c(0,1), c=c(-2,2), d=c(-2,0)), fix=list(a=1, b='a', d='c'), mode="discrete")
+M <- Cogscimodel$new(y~x1, D, make_parspace(a=c(0,1), b=c(0,1), c=c(-2,2), d=c(-2,0)), fix=list(a=1, b='a', d='c'), mode="discrete", options = list(fit = FALSE))
 test_that('par methods with 4 parameters, 1 fix to a number, 2 equality-constrained', {
   # expect_equal(M$npar(), npar(M))
   expect_equal(M$npar(), 4)
@@ -242,7 +241,7 @@ test_that('par methods with 4 parameters, 1 fix to a number, 2 equality-constrai
   expect_equal(M$npar('free'), 1)
   expect_equal(M$npar('fix'), 3)
   expect_equal(M$npar('equal'), 2)
-  expect_equal(M$npar('constrained'), 2)
+  expect_equal(M$npar('constrained'), 4)
   expect_equal(M$npar('ignored'), 0)
   expect_equal(M$npar('constant'), 1)
   expect_equal(M$ncon(), 3L)
@@ -250,7 +249,6 @@ test_that('par methods with 4 parameters, 1 fix to a number, 2 equality-constrai
   expect_equal(M$get_par(), c(a=1,b=1,c=0,d=0))
   expect_equal(M$get_par('fix'), c(a=1,b=1,d=0))
   expect_equal(M$get_par('equal'), c(b=1,d=0))
-  expect_equal(M$get_par('constrained'), M$get_par('equal'))
   expect_equal(M$get_par('free'), c(c=0))
   expect_equal(M$get_par('ignored'), NULL)
   expect_equal(M$get_par('constant'), c(a=1))
@@ -259,7 +257,6 @@ test_that('par methods with 4 parameters, 1 fix to a number, 2 equality-constrai
   expect_equal(M$get_parnames('fix'), c('a','b','d'))
   expect_equal(M$get_parnames('free'), c('c'))
   expect_equal(M$get_parnames('equal'), c('b','d'))
-  expect_equal(M$get_parnames('constrained'), M$get_parnames('equal'))
   expect_equal(M$get_parnames('ignored'), character(0))
   expect_equal(M$get_parnames('constant'), c('a'))
 })
@@ -277,7 +274,7 @@ test_that('Error messages', {
 
 test_that("Grid nsteps with parameters between 0 - 1", {
   PS <- make_parspace(a=c(0,1), b=c(0,1), c=c(0,1), d=c(0,1), e = c(0,1))
-  O <- list(fit_solver = c("grid", "solnp"))
+  O <- list(fit_solver = c("grid", "solnp"), fit = FALSE)
   M <- Cogscimodel$new(y ~ x1, D, PS[1,], mode = "discrete", options = O)
   expect_equivalent(M$options$fit_control$nsteps, 3)
 
@@ -296,7 +293,7 @@ test_that("Grid nsteps with parameters between 0 - 1", {
 
 test_that("Grid nsteps with parameters between 0 - 20", {
   PS <- make_parspace(a=c(0,1), b=c(0,10), c=c(0,1), d=c(0,20), e = c(0,1))
-  O <- list(fit_solver = c("grid", "solnp"))
+  O <- list(fit_solver = c("grid", "solnp"), fit = FALSE)
 
   M <- Cogscimodel$new(y ~ x1, D, PS[1:2,], mode = "discrete", options = O)
   expect_equivalent(M$options$fit_control$nsteps, c(3,5))
@@ -314,27 +311,27 @@ test_that("Grid nsteps with parameters between 0 - 20", {
 test_that("Sum constraints equal identities", {
   PS <- make_parspace(a=c(0,1), b=c(0,1), c=c(0,1), d=c(0,1))
 
-  M <- Cogscimodel$new(y ~ x1, D, PS, mode = "discrete")
+  M <- Cogscimodel$new(y ~ x1, D, PS, mode = "discrete", options = list(fit = FALSE))
   expect_equivalent(M$make_constraints(), NULL)
   expect_equivalent(M$ncon(), 0L)
   expect_equivalent(M$ncon(), M$npar("fix"))
 
-  M <- Cogscimodel$new(y ~ x1, D, PS, fix=list(a=0.5), mode = "discrete")
+  M <- Cogscimodel$new(y ~ x1, D, PS, fix=list(a=0.5), mode = "discrete", options = list(fit = FALSE))
   expect_equivalent(M$make_constraints(), L_constraint(L = rbind(a=c(1,0,0,0)), rhs = 0.5, dir = "=="))
   expect_equivalent(M$ncon(), 1L)
   expect_equivalent(M$ncon(), M$npar("fix"))
 
-  M <- Cogscimodel$new(y ~ x1, D, PS, fix=list(a=0.5, b=0.7), mode = "discrete")
+  M <- Cogscimodel$new(y ~ x1, D, PS, fix=list(a=0.5, b=0.7), mode = "discrete", options = list(fit = FALSE))
   expect_equivalent(M$make_constraints(), L_constraint(L = rbind(a=c(1,0,0,0), b=c(0,1,0,0)), rhs = c(0.5, 0.7), dir = c("==", "==")))
   expect_equivalent(M$ncon(), 2L)
   expect_equivalent(M$ncon(), M$npar("fix"))
 
-  M <- Cogscimodel$new(y ~ x1, D, PS, fix =list(a="d", b=0.5), mode="discrete")
+  M <- Cogscimodel$new(y ~ x1, D, PS, fix =list(a="d", b=0.5), mode="discrete", options = list(fit = FALSE))
   expect_equivalent(M$make_constraints(), rbind(L_constraint(rbind(b=c(0,1,0,0)), "==", 0.5), L_constraint(rbind(c(1,0,0,-1)), "==", 0)))
   expect_equivalent(M$ncon(), 2L)
   expect_equivalent(M$ncon(), M$npar("fix"))
 
-  M <- Cogscimodel$new(y ~ x1, D, PS, fix=list(a=1,b=0.99,c="d"), mode = "discrete")
+  M <- Cogscimodel$new(y ~ x1, D, PS, fix=list(a=1,b=0.99,c="d"), mode = "discrete", options = list(fit = FALSE))
   expect_equivalent(M$make_constraints(), rbind(L_constraint(rbind(a=c(1,0,0,0),b=c(0,1,0,0)), c("==","=="), c(1,0.99)), L_constraint(rbind(c(0,0,1,-1)), "==", 0)))
   expect_equivalent(M$ncon(), 3L)
   expect_equivalent(M$ncon(), M$npar("fix"))

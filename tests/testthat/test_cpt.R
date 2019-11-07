@@ -15,10 +15,10 @@ tk_par <- c(alpha = 0.88, beta = 0.88, lambda = 2.25, gammap = 0.61, gamman = 0.
 
 test_that("Prediction identitites to Tversky & Kahneman (1992)", {
   model <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt, fix = tk_par)
-  expect_equal(model$predict('value')[1,'x'], c('x'=57), tol = .01)
-  expect_equal(model$predict('value')[1,'y'], c('y'=57), tol = .1)
-  expect_equal(model$predict('value')[2,'x'], c('x'=-129), tol = .01)
-  expect_equal(model$predict('value')[2,'y'], c('y'=-129), tol = .01)
+  expect_equal(model$predict('value')[1,'pr_x'], c('pr_x'=57), tol = .01)
+  expect_equal(model$predict('value')[1,'pr_y'], c('pr_y'=57), tol = .1)
+  expect_equal(model$predict('value')[2,'pr_x'], c('pr_x'=-129), tol = .01)
+  expect_equal(model$predict('value')[2,'pr_y'], c('pr_y'=-129), tol = .01)
 })
 
 test_that("Prediction identities", {

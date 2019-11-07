@@ -176,8 +176,10 @@ get_id_in_grid <- function(id, grid) {
 }
 
 #' Convert a character to formula
+#' 
 #' Checks if x is a character and if so converts it into RHS formula
-#' @parm x A string or RHS formula
+#' 
+#' @param x A string or RHS formula
 #' @export
 chr_as_rhs <- function(x) {
   if (is.character(x)) { 
@@ -290,4 +292,45 @@ make_parspace <- function(...) {
   constr <- list(...)
   constr <- Filter(Negate(is.null), constr)
   do.call(rbind, constr)
+}
+
+
+# ==========================================================================
+# Tools to handle formulas
+# ==========================================================================
+
+#' LHS of a formula
+#' 
+#' Returns the left-hand side variables of a formula as strings
+#' or NULL if the formula has none
+#' 
+#' @param formula Objects of class "formula"
+#' @param n Integer, the nth LHS-variable is returned, defaults to all LHS
+#' @return the right-hand side of the formula or \code{NULL} is no RHS exists
+#' @noRd
+.lhs_var <- function(formula, n = NULL) {
+  if (attr(terms(as.formula(formula)), which = "response")) {
+    return(all.vars(formula(Formula::as.Formula(formula), lhs = 1, rhs = 0)))
+  } else {
+    return(NULL)
+  }
+}
+
+
+#' List of RHSs of a formula
+#' 
+#' Returns a list with all right-hand side variables, by-separators |, of a formula as strings
+#' or NULL if the formula has none
+#' 
+#' @param formula Objects of class "formula"
+#' @param n Integer, the nth RHS-variable is returned, defaults to all RHS
+#' @return the right-hand side of the formula or \code{NULL} is no RHS exists
+#' @noRd
+.rhs_var <- function(formula, n = NULL) {
+  formula <- Formula::as.Formula(formula)
+  if (length(attr(terms(formula), which = "term.labels"))) {
+    return(lapply(1:length(formula)[2], function(i) all.vars(formula(formula, lhs = 0, rhs = i))))
+  } else {
+    return(NULL)
+  }
 }

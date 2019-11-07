@@ -1,7 +1,7 @@
 Package: cogscimodels
 Type: Package
 Title: Cognitive Model Estimation and Prediction
-Version: 1.0.1
+Version: 1.0.2
 Date: 2019-03-12
 Author: Jana B. Jarecki
 Maintainer: Jana B. Jarecki <jj@janajarecki.com>
@@ -9,7 +9,7 @@ Description: Implementation of cognitive models, includes a general class cognit
 License: GPL (>= 2)
 Imports: 
     Rcpp (>= 1.0.1),
-    cogsciutils (>= 1.0.4),
+    cogsciutils (>= 1.0.5),
     Formula,
     R6,
     Rsolnp,

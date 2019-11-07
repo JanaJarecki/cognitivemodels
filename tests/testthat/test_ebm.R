@@ -21,13 +21,13 @@ test_that("Discrete model's prediction identities in SIZE condition", {
   target <- 1 - c(.99,.99,.99,.99,.86,.84,.81,.83,.31,.33,.28,.28,.03,.02,.01,.02) # pr(cat = 0) in paper
   # learning data:
   dd <- d[d$condition == "size" & !is.na(d$true_cat), ]
-  model <- ebm(~ angle + size,
+  model <- ebm(formula = ~ angle + size,
                data = dd,
                criterion = ~true_cat,
                fix = c(angle=.10,size=.90,lambda=1.60,b0=.5,b1=.5,q=2,r=2),
                mode = "discrete",
                discount = 0)
-  expect_equivalent(model$predict(newdata=test_d), target, tol = .01)
+  expect_equivalent(model$predict(newdata = test_d), target, tol = .01)
 
   # model2 <- start(data=dd) %+%
   #   gcm(~angle+size, class=~true_cat, fix=c(angle=.10,size=.90,lambda=1.60,b0=.5,b1=.5,q=2,r=2), discount=0L) %>%
@@ -52,14 +52,12 @@ test_that("Parameter estimates in SIZE condition", {
   # unconstrainted
   dd <- d[d$condition == "size" & !is.na(d$true_cat), ]
   fitd <- d[d$condition == "size",]
-  model <- ebm(pobs ~ angle + size,
+  model <- gcm(pobs ~ angle + size,
                data = dd,
                criterion = ~ true_cat,
                fix = list(q = 2, r = 2),
-               mode = "discrete",
                options = list(fit_data = fitd, fit_n = fitd$N),
                discount = 0)
-
   expect_equal(model$coef(), c(angle=.10, size=.90, lambda=1.60, b0=.50, b1=.50), tol = .01)
   expect_equal(model$npar("free"), 3L)
 
@@ -111,13 +109,13 @@ test_that("Parameter estimates in DIAG condition", {
   dd <- d[d$condition == "diag" & !is.na(d$true_cat), ]
   fitd <- d[d$condition == "diag",]
   # No constraints
-  model <- ebm(pobs ~ angle + size,
+  model <- gcm(pobs ~ angle + size,
                data = dd,
                criterion = ~ true_cat,
                fix = list(q = 2, r = 2),
-               mode = "discrete",
                options = list(fit_data = fitd, fit_n = fitd$N),
-               discount = 0)
+               discount = 0
+               )
   expect_equal(coef(model), c(angle=.81,size=.19,lambda=2.42,b0=.49,b1=.51), tol = .1)
   # weights constrained
   model <- ebm(pobs ~ angle + size,
@@ -129,11 +127,10 @@ test_that("Parameter estimates in DIAG condition", {
                discount = 0)
   expect_equal(coef(model), c(lambda=1.81, b0=.48, b1=.52), tol = .04)
   # bias constrained
-  model <- ebm(pobs ~ angle + size,
+  model <- gcm(pobs ~ angle + size,
                data = dd,
                criterion = ~ true_cat,
                fix = list(q = 2, r = 2, b0 = .5, b1 = .5),
-               mode = "discrete",
                options = list(fit_data = fitd, fit_n = fitd$N),
                discount = 0)
   expect_equal(coef(model), c(angle=.81, size=0.19, lambda=2.42), tol = .01)

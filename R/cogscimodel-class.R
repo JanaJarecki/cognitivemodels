@@ -113,14 +113,14 @@ Cogscimodel <- R6Class(
 
 
       # Initialize values of parameter
-      self$init_mode(mode=mode)
+      self$init_mode(mode = mode)
       self$init_parspace(parspace=parspace, choicerule=choicerule, options=options)
       fix <- self$init_fix(fix)
       self$init_parnames(parspace=self$parspace,fix=fix,choicerule=choicerule)
       self$init_par(parspace=self$parspace, fix=fix)
       self$init_constraints()
       self$init_stimnames()
-      self$prednames <- self$get_prednames()
+      self$init_prednames()
       self$init_options(options)
       # Checks
       # ! after setting formula, parspace, choicerule, etc.
@@ -130,7 +130,7 @@ Cogscimodel <- R6Class(
       if ((self$options$fit == TRUE) & (self$npar("free") > 0L)) {
         message("Fitting free parameters ",
           .brackify(self$get_parnames("free")),
-          " by ", ifelse(grepl("loglikelihood|accuracy", self$options$fit_measure), "maximizing ", "minimizing "), self$options$fit_measure, " with ", self$options$fit_solver)
+          " by ", ifelse(grepl("loglikelihood|accuracy", self$options$fit_measure), "maximizing ", "minimizing "), self$options$fit_measure, " with ", paste(self$options$fit_solver, collapse=", "))
         self$fit()
       }
     },
@@ -167,7 +167,7 @@ Cogscimodel <- R6Class(
 
       # Finally we format the RES object a bit
       RES <- matrix(unlist(RES), nrow = dim(input)[1])
-      colnames(RES) <- paste("pred", self$prednames[1:ncol(RES)], sep="_")
+      colnames(RES) <- self$prednames[1:ncol(RES)]
 
       # And we apply the choice rule if needed
       type <- try(match.arg(type, c("response", "value")), silent = TRUE)
@@ -300,13 +300,16 @@ Cogscimodel <- R6Class(
       self$parspace <- x
     },
     set_stimnames = function(x) {
-      self$stimnames <- as.character(x)[seq_len(self$nstim())]
+      self$stimnames <- as.character(x)
     },
     get_stimnames = function(f = self$formula) {
-      return(self$stimnames)
+      return(self$stimnames[seq_len(self$nstim())])
+    },
+    set_prednames = function(x) {
+      self$prednames <- as.character(x)
     },
     get_prednames = function() {
-      return(self$stimnames)
+      return(self$prednames)
     },
     #' Set data to ignore when fitting
     #' @param x intteger or integer vector, rows to discount
@@ -361,11 +364,15 @@ Cogscimodel <- R6Class(
       }
       parspace <- rbind(parspace, cr_par, sigma_par)
       
-      parspace[names(options$lb), "lb"] <- options$lb
-      parspace[names(options$ub), "ub"] <- options$ub
-      parspace[names(options$start), "lb"] <- options$start
-      parspace[, "start"] <- rowMeans(parspace[, c("lb", "ub")])
-      parspace[, "start"] <- rowMeans(parspace[, c("lb", "ub")])
+      if (length(options$lb)) {
+        parspace[names(options$lb), "lb"] <- options$lb
+      }
+      if (length(options$ub)) {
+        parspace[names(options$ub), "ub"] <- options$ub
+      }
+      not_btw <- (!parspace[intersect(names(options$lb),names(options$ub)), "start"] %between% list(options$lb, options$ub))
+      parspace[not_btw, "start"] <- rowMeans(parspace[not_btw, c("lb", "ub"), drop=FALSE])
+      parspace[names(options$start), "start"] <- options$start
       
       self$set_parspace(parspace)
     },
@@ -439,9 +446,10 @@ Cogscimodel <- R6Class(
       self$set_mode(mode)
     },
     init_stimnames = function() {
-      f <- self$formula
-      ss <- sapply(1:length(f)[2], function(i) attr(terms(formula(f, lhs=0, rhs=i)), "term.labels")[1])
-      self$set_stimnames(abbreviate(ss, minlength=1))
+      self$set_stimnames(abbreviate(self$make_stimnames(), minlength = 1,use.classes = FALSE))
+    },
+    init_prednames = function() {
+      self$set_prednames(paste0("pr_", abbreviate(self$make_prednames(), minlength = 1)))
     },
     init_options = function(...) {
       .args <- as.list(...)
@@ -571,7 +579,7 @@ Cogscimodel <- R6Class(
     #' Compute goodness of fit
     #' @param type string, fit measure to use, e.g. 'loglikelihood', allowed types see \link[cogsciutils]{gof}
     gof = function(type, n = self$options$fit_n, newdata = self$options$fit_data, discount = FALSE, ...) {
-      if (length(self$get_res()) == 0L) { stop("Tried computing model fit, but didn't find a response variable. ", 'Check if "formula" has a left-hand side?', call.=FALSE) }
+      if (length(self$get_res()) == 0L) { stop("Tried computing model fit, but didn't find data to fit the model to. ", 'Check if "formula" has a left-hand side?', call.=FALSE) }
 
       if (is.null(newdata) | missing(newdata)) {
         obs <- as.matrix(self$get_res())
@@ -606,7 +614,7 @@ Cogscimodel <- R6Class(
       if (self$mode == "continuous" & type == "loglikelihood") {
         .args[["sigma"]] <- self$get_par()["sigma"]
       }
-      gof <- try(do.call(gof, args = .args, envir = parent.frame()))
+      gof <- try(do.call(cogsciutils::gof, args = .args, envir = parent.frame()))
       if (inherits(gof, "try-error")) {
         cat("Therefore could not compute the ", type, " in gof().\n")
       } else {
@@ -653,7 +661,7 @@ Cogscimodel <- R6Class(
       C <- self$constraints
       par_in_c <- self$get_parnames()[C$L$j]
       par_fix <- self$get_parnames("fix")
-      if (all(par_in_c %in% par_fix) & all(C$dir == "==")) {
+      if (length(par_fix) & all(par_in_c %in% par_fix) & all(C$dir == "==")) {
         which_par <- "free" # only fit free parameter
         # this is to make the (ROI) solvers more efficient if we have no
         # other constraints than the equality- or constant constraints
@@ -794,10 +802,32 @@ Cogscimodel <- R6Class(
         objval = objvals[best_ids])
       )
     },
+    #
+    #
+    #
+    #
+    #
+    #
+    make_stimnames = function() {
+      f <- as.Formula(self$formula)
+      sn <- lapply(1:length(f)[2], function(i) attr(terms(formula(f, lhs=0, rhs=i)), "term.labels"))
+      sn <- sapply(sn, paste0, collapse = "")
+      while (any(grepl(" ", sn))) {
+        sn <- gsub(" ", "", sn)
+      }
+      return(sn)
+    },
+    make_prednames = function() {
+      if (self$mode == "discrete") {
+        return(self$stimnames)
+      } else {
+        return(.lhs_var(self$formula))
+      }
+    },
     make_pargrid = function(
       offset = self$options$fit_grid_offset,
       nsteps = self$options$fit_control$nsteps,  ...) {
-      if (!is.null(self$constraints)) { message('Note: fit_solver="grid" does NOT respect linear or quadratic constraints -> consider a differnt solver. To this end use: options = list(fit_solver = " "), e.g, "solnp" or "optimx".') }
+      if (!is.null(self$constraints)) { warning('Note: fit_solver="grid" does not respect linear or quadratic constraints, maybe change the solver. To this end use: options = list(fit_solver = ...), e.g, "solnp" or "optimx".') }
 
       return(make_grid_id_list(
         names = self$get_parnames("free"),
@@ -993,48 +1023,56 @@ Cogscimodel <- R6Class(
 
 
 # Define S3 methods
+#' @export
+nobs.cogscimodel <- function(obj, ...) {
+  return(obj$nobs())
+}
+#' @export
+npar.cogscimodel <- function(obj, ...) {
+  return(obj$npar())
+}
+#' @export
 coef.cogscimodel <- function(obj, ...) {
   do.call(obj$coef, list(...))
 }
-predict.cogscimodel <- function(obj, ...) {
-  do.call(obj$predict, list(...))
-}
+#' @export
 logLik.cogscimodel <- function(obj, ...) {
   obj$logLik(...)
 }
-SSE.cogscimodel <- function(obj, ...) {
-  ojb$SSE()
-}
 #' @export
-MSE <- function(x) UseMethod("MSE", x)
-
+SSE.cogscimodel <- function(obj, ...) {
+  obj$SSE()
+}
 #' @export
 MSE.cogscimodel <- function(obj, ...) {
   obj$MSE()
 }
+#' @export
 AIC.cogscimodel <- function(obj, ...) {
   obj$AIC(...)
 }
+#' @export
 AICc.cogscimodel <- function(obj, ...) {
   obj$AICc(...)
 }
+#' @export
 BIC.cogscimodel <- function(obj, ...) {
   return(obj$BIC(...))
 }
+#' @export
 RMSE.cogscimodel <- function(obj, ...) {
   return(obj$RMSE())
 }
+#' @export
 summary.cogscimodel <- function(obj, ...) {
   return(obj$summary())
 }
+#' @export
 nstim.cogscimodel <- function(obj, ...) {
   return(obj$nstim())
 }
 nres.cogscimodel <- function(obj, ...) {
   return(obj$nres())
-}
-nobs.cogscimodel <- function(obj, ...) {
-  return(obj$nobs())
 }
 natt.cogscimodel <- function(obj, ...) {
   return(obj$natt())

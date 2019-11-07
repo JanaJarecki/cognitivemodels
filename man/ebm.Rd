@@ -2,13 +2,16 @@
 % Please edit documentation in R/ebm.R
 \name{gcm}
 \alias{gcm}
-\alias{ebmcj}
+\alias{ebm_j}
+\alias{mem}
 \alias{ebm}
 \title{Exemplar-based Cognitive Models}
 \usage{
 gcm(formula, class, data, fix = NULL, options = NULL, ...)
 
-ebmcj(formula, criterion, data, fix = NULL, options = NULL, ...)
+ebm_j(formula, criterion, data, fix = NULL, options = NULL, ...)
+
+mem(formula, criterion, data, options = NULL, ...)
 
 ebm(formula, criterion, data, mode, fix = NULL, options = NULL, ...)
 }
@@ -52,7 +55,9 @@ The model can predict new data (\code{predict(M, newdata = ....)}), and this is 
  \item{If \code{newdata}'s' \code{criterion} has also non-\code{NA}s, the model predicts the first new data row using the old data, but predictions for subsequent new data use also the criterion in new data. In other words, exemplar memory is \emph{extended} by exemplars in new data for which a criterion exists. Parameters are not re-fit.}
 }
 
-\code{ebmcj()} calls \link{ebm} with \code{mode = "continuous"}.
+\code{ebm_j()} calls \link{ebm} with \code{mode = "continuous"}.
+
+\code{mem()} calls \link{ebm_j} with weights fixed to be equal and \code{r=2, p=2}.
 
 \code{gcm()} \link{ebm} with \code{mode = "discrete"}.
 }
@@ -113,6 +118,8 @@ gcm(y~f1+f2, ~cl, D, fix=list(q=2, r=2))        # fix 'q', 'q' to 2 & fit 5 par
 gcm(y~f1+f2, ~cl, D, fix=list(q=1, r=1))        # fix 'q', 'r' to 1 & fit 5 par
 gcm(y~f1+f2, ~cl, D, fix=list(lambda=2))        # fix 'lambda' to 2 & fit 6 par
 gcmcj(y ~ f1 + f2, D)
+
+mem(y ~ f1 + f2, D)
 
 }
 \references{

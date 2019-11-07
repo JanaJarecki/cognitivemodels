@@ -95,6 +95,7 @@ Cpt <- R6Class("cpt",
         ref <- array(fr, dim = c(nrow(d), self$natt()[1]/2, self$nstim()))
       } else {
         ref <- super$get_input(f = chr_as_rhs(fr), d = d)
+        ref <- array(ref, dim = c(nrow(d), self$natt()[1]/2, self$nstim()))
       }
       return(ref)
     },

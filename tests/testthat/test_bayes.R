@@ -9,14 +9,14 @@ test_that('Predicted Values for 1 row, 2 alternatives', {
   m1 <- bayes(~ x + y, data = D[1,],  fix = fp[1:3])
   m2 <- bayes(~ x + y, D[1,], fix=list(delta=1, priorpar=c(1,1)))
   m3 <- bayes_beta(~ x + y, D[1,], fix = fp[1:3])
-  mc <- bayes(~ x + y, data = DC[1,], fix = fp[1:3], format = "count")
-  mc2 <- bayes_beta(~ x + y, data = DC[1,], fix = fp[1:3], format = "count")
-  expect_equal(m1$predict("mean"), cbind(pred_x=c(.5), pred_y=c(.5)))
+  mc <- bayes(~ x + y, data = DC[1,], fix = fp[1:3], format = "cumulative")
+  mc2 <- bayes_beta(~ x + y, data = DC[1,], fix = fp[1:3], format = "cumulative")
+  expect_equal(m1$predict("mean"), cbind(pr_x=c(.5), pr_y=c(.5)))
   expect_equal(m1$predict("mean"), m2$predict("mean"))
   expect_equal(m1$predict("mean"), m3$predict("mean"))
   expect_equal(m1$predict("mean"), mc$predict("mean"))
   expect_equal(m1$predict("mean"), mc2$predict("mean"))
-  expect_equal(m1$predict("max"), cbind(pred_x=c(NaN), pred_y=c(NaN)))
+  expect_equal(m1$predict("max"), cbind(pr_x=c(NaN), pr_y=c(NaN)))
   expect_equal(m1$predict("max"), m2$predict("max"))
   expect_equal(m1$predict("max"), m3$predict("max"))
   expect_equal(m1$predict("max"), mc$predict("max"))
@@ -28,42 +28,46 @@ test_that('Predicted Values for 2 Alternatives', {
   m1 <- bayes(~ x + y, data = D,  fix = fp[1:3])
   m2 <- bayes(~ x + y, D, fix=list(delta=1, priorpar=c(1,1)))
   m3 <- bayes_beta(~ x + y, D, fix = fp[1:3])
-  mc <- bayes(~ x + y, data = DC, fix = fp[1:3], format = "count")
-  mc2 <- bayes_beta(~ x + y, data = DC, fix = fp[1:3], format = "count")
-  expect_equal(m1$predict("mean"), cbind(pred_x=c(.5,1/3,1/4,2/5), pred_y=c(.5,2/3,3/4,3/5)))
+  mc <- bayes(~ x + y, data = DC, fix = fp[1:3], format = "cumulative")
+  mc2 <- bayes_beta(~ x + y, data = DC, fix = fp[1:3], format = "cumulative")
+  mcc <- bayes(~ x + y, data = DC, fix = fp[1:3], format = "count")
+  expect_equal(m1$predict("mean"), cbind(pr_x=c(.5,1/3,1/4,2/5), pr_y=c(.5,2/3,3/4,3/5)))
   expect_equal(m1$predict("mean"), m2$predict("mean"))
   expect_equal(m1$predict("mean"), m3$predict("mean"))
   expect_equal(m1$predict("mean"), mc$predict("mean"))
   expect_equal(m1$predict("mean"), mc2$predict("mean"))
-  expect_equal(m1$predict("max"), cbind(pred_x=c(NA,0,0,1/3), pred_y=c(NA,1,1,2/3)))
+  expect_equal(m1$predict("mean")[-1,], mcc$predict("mean")[-4,])
+  expect_equal(m1$predict("max"), cbind(pr_x=c(NA,0,0,1/3),pr_y=c(NA,1,1,2/3)))
   expect_equal(m1$predict("max"), m2$predict("max"))
   expect_equal(m1$predict("max"), m3$predict("max"))
   expect_equal(m1$predict("max"), mc$predict("max"))
   expect_equal(m1$predict("max"), mc2$predict("max"))
+  expect_equal(m1$predict("max")[-1,], mcc$predict("max")[-4,])
 })
 
 test_that("Predicted Values for 1 Alternative", {
   m1 <- bayes(~ x, data = D,  fix = fp[c(1,2,5)])
   m2 <- bayes(~ x, D, fix=list(delta=1, priorpar=c(1,1)))
   m3 <- bayes_beta(~ x, D, fix = fp[c(1,2,5)])
-  expect_equivalent(m1$predict("mean"), cbind(pred_x = c(.5,1/3,1/4,2/5)))
+  expect_equivalent(m1$predict("mean"), cbind(pr_x = c(.5,1/3,1/4,2/5)))
   expect_equal(m1$predict("mean"), m2$predict("mean"))
   expect_equal(m1$predict("mean"), m3$predict("mean"))
 
-  expect_equivalent(m1$predict("max"), cbind(pred_x = c(NA,0,0,1/3)))
+  expect_equivalent(m1$predict("max"), cbind(pr_x = c(NA,0,0,1/3)))
   expect_equal(m1$predict("max"), m2$predict("max"))
   expect_equal(m1$predict("max"), m3$predict("max"))
+
 })
 
 test_that("Predicted Values for 2 Stimuli a 1 Alternative", {
   m1 <- bayes(~ x | y, data = D,  fix = fp[-4])
   m2 <- bayes(~ x | y, D, fix=list(delta=1, priorpar=c(1,1,1,1)))
   expect_equivalent(m1$predict("mean"),
-    cbind(pred_x=c(.5,1/3,1/4,2/5), pred_y=c(.5,2/3,3/4,3/5)))
+    cbind(pr_x=c(.5,1/3,1/4,2/5), pr_y=c(.5,2/3,3/4,3/5)))
   expect_equal(m1$predict("mean"), m2$predict("mean"))
   
   expect_equivalent(m1$predict("max"),
-    cbind(pred_x = c(NA,0,0,1/3), pred_y = c(NA,1,1,2/3)))
+    cbind(pr_x = c(NA,0,0,1/3), pr_y = c(NA,1,1,2/3)))
   expect_equal(m1$predict("max"), m2$predict("max"))
 })
 
@@ -71,11 +75,11 @@ test_that("Predicted Values for 2 Stimuli a 1 Alternative", {
   m1 <- bayes(~ x + z | y, data = D,  fix = fp[-5])
   m2 <- bayes(~ x + z | y, D, fix=list(delta=1, priorpar=c(1,1,1,1)))
   expect_equivalent(m1$predict("mean"),
-    cbind(pred_x=c(.5,.5,.5,2/3), pred_z=c(.5,.5,.5,1/3), pred_y=c(.5,2/3,3/4,.6)))
+    cbind(pr_x=c(.5,.5,.5,2/3), pred_z=c(.5,.5,.5,1/3), pr_y=c(.5,2/3,3/4,.6)))
   expect_equal(m1$predict("mean"), m2$predict("mean"))
   
   expect_equal(m1$predict("max"),
-    cbind(pred_x = c(NA,NA,NA,1), pred_z = c(NA,NA,NA,0), pred_y=c(NA,1,1,2/3)))
+    cbind(pr_x = c(NA,NA,NA,1), pr_z = c(NA,NA,NA,0), pr_y=c(NA,1,1,2/3)))
   expect_equal(m1$predict("max"), m2$predict("max"))
 })
 

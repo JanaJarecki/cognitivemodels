@@ -36,7 +36,7 @@
 #' @family Cognitive models
 #'  
 #' @export
-baseline_const <- function(formula, data, const, ...) {
+baseline_const <- function(formula, data, const, mode, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args$type <- "constant"
    return(do.call(what = Baseline$new, args = .args, envir = parent.frame()))
@@ -59,10 +59,50 @@ baseline_mean <- function(formula, data, mode, ...) {
 #' Baseline cognitive models
 #' 
 #' @rdname baseline
+#' @export
+baseline_mean_c <- function(formula, data, ...) {
+  .args <- as.list(rlang::call_standardise(match.call())[-1])
+  .args$mode <- "continuous"
+   return(do.call(what = Baseline$new, args = .args, envir = parent.frame()))
+}
+
+#' Baseline cognitive models
+#' 
+#' @rdname baseline
+#' @export
+baseline_mean_d <- function(formula, data, ...) {
+  .args <- as.list(rlang::call_standardise(match.call())[-1])
+  .args$mode <- "discrete"
+   return(do.call(what = Baseline$new, args = .args, envir = parent.frame()))
+}
+
+#' Baseline cognitive models
+#' 
+#' @rdname baseline
 #' 
 #' @export
 baseline <- function(formula, data, type, const, mode, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
+   return(do.call(what = Baseline$new, args = .args, envir = parent.frame()))
+}
+
+#' Baseline cognitive models
+#' 
+#' @rdname baseline
+#' @export
+baseline_c <- function(formula, data, type, const, mode = "continuous", ...) {
+  .args <- as.list(rlang::call_standardise(match.call())[-1])
+  .args$mode <- "continuous"
+   return(do.call(what = Baseline$new, args = .args, envir = parent.frame()))
+}
+
+#' Baseline cognitive models
+#' 
+#' @rdname baseline
+#' @export
+baseline_ <- function(formula, data, type, const, mode, ...) {
+  .args <- as.list(rlang::call_standardise(match.call())[-1])
+  .args$mode <- "discrete"
    return(do.call(what = Baseline$new, args = .args, envir = parent.frame()))
 }
 

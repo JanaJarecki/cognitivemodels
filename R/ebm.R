@@ -94,16 +94,35 @@ gcm <- function(formula, class, data, fix = NULL, options = NULL, ...) {
 #' @inheritParams ebm
 #' @rdname ebm
 #' 
-#' @details \code{ebmcj()} calls \link{ebm} with \code{mode = "continuous"}.
+#' @details \code{ebm_j()} calls \link{ebm} with \code{mode = "continuous"}.
 #' 
 #' @examples
 #' gcmcj(y ~ f1 + f2, D)
 #' 
 #' @export
-ebmcj <- function(formula, criterion, data, fix = NULL, options = NULL, ...) {
+ebm_j <- function(formula, criterion, data, fix = NULL, options = NULL, ...) {
    .args <- as.list(rlang::call_standardise(match.call())[-1])
    .args[["mode"]] <- "continuous"
    return(do.call(what = Ebm$new, args = .args, envir = parent.frame()))
+}
+
+#' Exemplar-based Cognitive Models 
+#' 
+#' @inheritParams ebm
+#' @rdname ebm
+#' 
+#' @details \code{mem()} calls \link{ebm_j} with weights fixed to be equal and \code{r=2, p=2}.
+#' 
+#' @examples
+#' mem(y ~ f1 + f2, D)
+#' 
+#' @export
+mem <- function(formula, criterion, data, options = NULL, ...) {
+   .args <- as.list(rlang::call_standardise(match.call())[-1])
+   weights <- lapply(.rhs_var(formula), function(x) setNames(rep(1/length(x), length(x)), x))
+   .args[["fix"]] <- c(list(r = 1L, q = 1L), unlist(weights))
+   .args[["mode"]] <- "continuous"
+   return(do.call(what = ebm_j, args = .args, envir = parent.frame()))
 }
 
 #' Exemplar-based Cognitive Models 
@@ -198,13 +217,12 @@ Ebm <- R6Class('ebm',
             firstOutTrial = firstout)
         )
     },
-    get_stimnames = function() {
-      stimname <- paste0("pred_", all.vars(self$formulaCriterion[[2]]))
-      if (self$mode == "continuous") {
-        return(stimname)
-      } else {
-        return(paste0(rep(stimname, self$nstim()), unique(self$more_input)[1]))
+    make_prednames = function() {
+      sn <- paste0(all.vars(self$formulaCriterion[[2]]))
+      if (self$mode == "discrete") {
+        sn <- paste0(sn, unique(self$more_input))
       }
+      return(sn)
     },
     make_constraints = function() {
       parnames <- self$get_parnames()
@@ -284,4 +302,3 @@ Ebm <- R6Class('ebm',
       super$print(digits = digits)
     })
 )
-

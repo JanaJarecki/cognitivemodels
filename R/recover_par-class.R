@@ -5,7 +5,6 @@
 #' @import R6
 #' @import ggplot2
 #' @import data.table
-#' @import patchwork
 #' @param model An object of class \link{Cognitivemodel}.
 #' @param nruns (optional, default 100) Integer, how often to repeat the recovery per set of true parameter?
 #' @param nsteps (optional, default 3) list with steps by which to vary each parameter.

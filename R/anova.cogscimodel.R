@@ -10,7 +10,7 @@
 #' None yet.
 #' @export
 anova.cogscimodel <- function(object, ...) {
-  ## check for multiple objects, this is from anova.glm
+  ## check for multiple objects, this is like in anova.glm
 
   dotargs <- list(...)
   named <- if (is.null(names(dotargs))) {
@@ -83,7 +83,7 @@ anova.cogscimodellist <- function(models, model.names = NULL) {
   llks <- llks[ii]
   npar <- npar[ii]
   calls <- lapply(models, getCall)
-  aic <- if( any(nobs/npar < 40) ) {
+  aic <- if (any(nobs/npar < 40)) {
     bottomnote <- "AIC = AICc because a model has npar/nobs < 40"
     vapply(models, AICc, 1)
   } else {

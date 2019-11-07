@@ -2,12 +2,13 @@
 % Please edit documentation in R/utils.R
 \name{chr_as_rhs}
 \alias{chr_as_rhs}
-\title{Convert a character to formula
-Checks if x is a character and if so converts it into RHS formula}
+\title{Convert a character to formula}
 \usage{
 chr_as_rhs(x)
 }
+\arguments{
+\item{x}{A string or RHS formula}
+}
 \description{
-Convert a character to formula
 Checks if x is a character and if so converts it into RHS formula
 }

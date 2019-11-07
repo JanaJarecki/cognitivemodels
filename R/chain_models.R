@@ -31,7 +31,7 @@ Cogscimodelstack <- R6Class("cogscimodelstack",
     },
     predict = function(type = "response", newdata = NULL, ...) {
       if (length(newdata) > 0L) {
-        data <- newdata
+        data <- as.data.frame(newdata)
       } else {
         data <- self$data
       }
@@ -39,7 +39,7 @@ Cogscimodelstack <- R6Class("cogscimodelstack",
       nm <- self$nmod
       for (m in 1L:nm) {
         M <- self$models[[m]]
-        if (m > 1) {
+        if (m > 1 & length(newdata) == 0L) {
           M$set_input(d = data)
           M$set_more_input(d = data)
         }
@@ -78,8 +78,7 @@ Cogscimodelstack <- R6Class("cogscimodelstack",
         stop("The model has been completed by end_model(), add the new sub-model before the the call to end_model().", call.=FALSE)
       }
       n <- self$nmod + 1L
-      self$data <- self$add_data(i = n, check = TRUE)
-      
+      self$data <- self$add_data(i = n, check = TRUE)      
       x <- substitute(x)
       CALL <- self$call_to_list(x)
       self$last_call <- as.call(CALL)
@@ -94,8 +93,7 @@ Cogscimodelstack <- R6Class("cogscimodelstack",
       self$fixes[[n]] <- M$par[M$get_parnames("fix")]
       self$models[[n]] <- M
       self$nmod <- n
-      self$functions[[n]] <- function(pred, data, par) pred
-
+      self$functions[[n]] <- function(pred, data, par) { return(pred) }
       return(invisible(self))
     },
     add_data = function(i, check = FALSE) {
@@ -112,7 +110,7 @@ Cogscimodelstack <- R6Class("cogscimodelstack",
         stop("'fun' must be a function, but '", .abbrDeparse(fun), "'' is a ", class(fun), ".")
       }
       m <- self$nmod
-      if (!identical(self$functions[[m]], function(pred, data, par) pred, ignore.environment = TRUE)) { stop("Can't add 2 functions after another, fun() %>% fun() is not possible -> Combine the functions into one.")
+      if (!identical(self$functions[[m]], function(pred, data, par) { return(pred) }, ignore.environment = TRUE)) { stop("Can't add 2 functions after another, fun() %>% fun() is not possible -> Combine the functions into one.")
       }
       self$functions[[m]] <- fun
       # TODO: add checks for fun() arguments data, par
@@ -171,42 +169,25 @@ Cogscimodelstack <- R6Class("cogscimodelstack",
     }
     )
   )
-
-
-#' @export
-add_model <- function(x, ...) UseMethod("add_model", x)
-
 #' @export
 add_model.cogscimodelstack = function(obj, ...) {
   return(obj$add_model(...))
 }
-
-#' @export
-fun <- function(x, ...) UseMethod("fun", x)
-
 #' @export
 fun.cogscimodelstack = function(obj, ...) {
   return(obj$add_fun(...))
 }
-
-#' @export
-end <- function(x, ...) UseMethod("end", x)
 #' @export
 end.cogscimodelstack = function(obj, ...) {
   return(obj$end(...))
 }
-
-#' @export
-`+.cogscimodelstack` <- function(e1, e2) {
-  x_name <- .abbrDeparse(substitute(e2))
-  return(e1$add_model(e2, x_name = x_name))
-}
-
-#' @export
-`%+%` <- function(x, ...) UseMethod("%+%", x)
-
 #' @export
 `%+%.cogscimodelstack` <- function(obj, ...) {
   x_name <- .abbrDeparse(substitute(...))
   return(obj$add_model(..., x_name = x_name))
 }
+# #' @export
+# `+.cogscimodelstack` <- function(e1, e2) {
+#   x_name <- .abbrDeparse(substitute(e2))
+#   return(e1$add_model(e2, x_name = x_name))
+# }
