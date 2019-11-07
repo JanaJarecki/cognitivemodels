@@ -545,11 +545,11 @@ Cogscimodel <- R6Class(
     #' Transforms predictions with choicerule
     #' @param x string, choice rules, see \link[cogsciutils]{choicerule}
     apply_choicerule = function(x) {
-      if ( is.null(self$choicerule) ) {
+      if (is.null(self$choicerule)) {
         return(x)
       } else {
         args <- c(list(x = x, type = self$choicerule), as.list(self$get_par('choicerule')))
-        x[] <- do.call(cogsciutils::choicerule, args)
+        x[] <- do.call(cogsciutils::choicerule, args)[,1:ncol(x), drop = FALSE]
         return(x)
       }
     },
