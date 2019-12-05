@@ -1,14 +1,21 @@
-#' Start chain of cogscimodels
+#' Add components to a model
+#'
+#' `cogscimodel()` initializes a cogscimodel object. It can be used to
+#' declare the input data being used by the model.
 #' 
+#' `cogscimodel()` is used to construct the initial model object,
+#' and is almost always followed by `%+%` to add a component to the
+#' model.
+#' 
+#' @importFrom magrittr "%>%"
 #' @param data a data.frame holding the variables that the first model uses
 #' 
 #' @export
-start <- function(data, ...) {
-  return(Cogscimodelstack$new(data = data, ...))
+cogscimodel <- function(data, ...) {
+  return(Csm$new(data = data, ...))
 }
 
-
-Cogscimodelstack <- R6Class("cogscimodelstack",
+Csm <- R6Class("csm",
   inherit = Cogscimodel,
   public = list(
     titels = list(),
@@ -128,13 +135,14 @@ Cogscimodelstack <- R6Class("cogscimodelstack",
       nm <- self$nmod
       self$options <- options
       title <- paste0(self$titels, collapse=" > ")
+      # inherit mode of last model
       mode <- self$models[[nm]]$mode
       parspace <- do.call(rbind, lapply(self$models, function(m) m$parspace))
       fix <- as.list(unlist(Filter(length, self$fixes), recursive = FALSE))
       self$last_call[[1]] <- paste0(self$titels, collapse="+")
       self$last_call$fix <- fix
       self$last_call <- as.call(self$last_call)
-      # TODO: put some sanitize names code here
+      # TODO: put some sanitize names code here for the model names
       self$super_initialized <- TRUE
       super$initialize(
         formula = self$models[[length(self$models)]]$formula,
@@ -170,24 +178,21 @@ Cogscimodelstack <- R6Class("cogscimodelstack",
     )
   )
 #' @export
-add_model.cogscimodelstack = function(obj, ...) {
-  return(obj$add_model(...))
-}
-#' @export
-fun.cogscimodelstack = function(obj, ...) {
-  return(obj$add_fun(...))
-}
-#' @export
-end.cogscimodelstack = function(obj, ...) {
-  return(obj$end(...))
-}
-#' @export
-`%+%.cogscimodelstack` <- function(obj, ...) {
+`%+%.csm` <- function(obj, ...) {
   x_name <- .abbrDeparse(substitute(...))
   return(obj$add_model(..., x_name = x_name))
 }
+#' @export
+end.csm = function(obj, ...) {
+  return(obj$end())
+}
+#' @export
+fun.csm = function(obj, ...) {
+  return(obj$add_fun(...))
+}
+# # This does not work (yet)
 # #' @export
-# `+.cogscimodelstack` <- function(e1, e2) {
-#   x_name <- .abbrDeparse(substitute(e2))
-#   return(e1$add_model(e2, x_name = x_name))
+# `+.csm` <- function(e1, e2) {
+#   e2name <- .abbrDeparse(e2)
+#   return(e1$add_model(e2, x_name = e2name))
 # }
