@@ -4,25 +4,24 @@
 \alias{hm1988}
 \title{Houston & McNamara's (1988) dynamic optimization model for risk-sensitive foraging problems in discrete time}
 \usage{
-hm1988(formula, state, budget, trial, ntrials, initstate, data, choicerule,
-  fix = list(), options = NULL, fitnessfun = NULL)
+hm1988(
+  formula,
+  state,
+  budget,
+  trial,
+  ntrials,
+  initstate,
+  data,
+  choicerule,
+  fix = list(),
+  options = NULL,
+  fitnessfun = NULL
+)
 }
 \arguments{
 \item{formula}{(optional) object of class \link[stats]{formula}, e.g. \code{choice ~ timehorizon + state}, defines how the variables are called in the data.}
 
 \item{data}{(optional) data frame}
-
-\item{choicerule}{(optional) String specifying the choice rule (default \code{NULL}), allowed are \code{NULL}, \code{"softmax"}, \code{"eps"}, and other values of the argument \code{type} to \link[cogsciutils]{choicerule}.}
-
-\item{fix}{(optional) Parameter constraints. Can be \code{"start"} or a list with \code{parname=value}-pairs. Parameter names see below under "parameter space".
-\itemize{
-\item{\code{"start"} constrains all available parameters to their starting values. Useful for model testing.}
-\item{\code{parname = 0.5} constrains a parameter to 0.5.}
-\item{\code{parname = "p2"} constrains a parameter to another model parameter \code{p2}.}
-\item{\code{parname = NA} tells the model to omit a parameter, if possible.}
-}}
-
-\item{options}{(optional) Options to control the parameter fitting methods, see the "Options" section of \code{\link{cogscimodel}}.}
 
 \item{env}{object of class \link{rsenvironment}, see example. It specifies the risky and safe option, the number of trials, the state, and requirement (aka budget).}
 }

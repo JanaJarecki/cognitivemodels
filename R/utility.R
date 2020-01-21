@@ -108,12 +108,11 @@ Utility <- R6Class("utility",
         #
         # Note: we're using the fact that x^0  = 1 below
         # Note: use sign(r) because  -x^r returns NA for very small r < 0
-        return(
-          replace(
+        res <- replace(
             x = (sign(rp) * input^rp)^(rp != 0L) * (log(input)^(rp == 0L)),
             list = (input < 0),
             values = -((-1)^(rn < 0L) * ((-1L*input[input < 0L])^rn)^(rn != 0L) * log(input)^(rn == 0L))
-            ))
+            )
       } else if (type == "exponential") {
         r <- par["r"]
         # Utility:
@@ -123,10 +122,9 @@ Utility <- R6Class("utility",
         #                   exp(-rx)      if r < 0
         # Note: we're using the fact that x^0  = 1 below
         # Note: use sign(rp) because  -x^a returns NA for very small a < 0
-        return(
-          (sign(rp) + sign(rp) * -exp(-r * input))^(rp != 0L) * input^(rp==0L)
-        )
+        res <-  (sign(rp) + sign(rp) * -exp(-r * input))^(rp != 0L) * input^(rp==0L)
       }
+      return(replace(res, res == -Inf, min(res[res>-Inf])-1))
     }
     )
 )

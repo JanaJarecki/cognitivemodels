@@ -76,9 +76,9 @@ Cpt <- R6Class("cpt",
         gamman  = c(0,  2, 1,   1L),
         lambda  = c(0, 10, 1.5, 1L)
         )
-
+      formula <- self$sanitize_formula(f = formula)
       super$initialize(
-        title = paste0("Cumulative prospect theory (", unique(c(weighting, value)), ")"),
+        title = paste0("CPT (", unique(c(weighting, value)), ")"),
         formula = formula,
         data = data,
         fix = fix,
@@ -89,20 +89,20 @@ Cpt <- R6Class("cpt",
         parspace = parspace       
         )
     },
-    get_more_input = function(d) {
+    get_more_input = function(d = data.frame()) {
       fr <- self$formulaRef
       if (is.numeric(fr)) {
-        ref <- array(fr, dim = c(nrow(d), self$natt()[1]/2, self$nstim()))
+        ref <- array(fr, dim = c(nrow(d), self$natt()[1]/2, self$nstim))
       } else {
         ref <- super$get_input(f = chr_as_rhs(fr), d = d)
-        ref <- array(ref, dim = c(nrow(d), self$natt()[1]/2, self$nstim()))
+        ref <- array(ref, dim = c(nrow(d), self$natt()[1]/2, self$nstim))
       }
       return(ref)
     },
     make_prediction = function(type, input, more_input, ...) {
       par <- self$get_par()
-      no <- self$nobs()
-      ns <- self$nstim()
+      no <- self$nobs
+      ns <- self$nstim
       na <- self$natt()[1]
       X <- input[,  seq(1, na, 2), drop = FALSE] #1., 3., 5. input
       P <- input[, -seq(1, na, 2), drop = FALSE] #2., 4., 6. input
@@ -114,7 +114,7 @@ Cpt <- R6Class("cpt",
         self$vfun(x=X, alpha = par["alpha"], beta = par["beta"], lambda = par["lambda"]))
       )
     },
-    set_formula = function(f) {
+    sanitize_formula = function(f) {
       f <- as.Formula(f)
       fs <- lapply(seq.int(length(f)[2]), function(x) formula(f, lhs=0, rhs=x, drop=FALSE))
       trms <- lapply(fs, function(x) attr(terms(x), "term.labels"))
@@ -129,7 +129,7 @@ Cpt <- R6Class("cpt",
             fs[[i]]
           }
         })
-      self$formula <- update(f, as.formula(paste(fs, collapse = " | ")))
+      return(update(f, as.formula(paste(fs, collapse = " | "))))
     },
     set_weightingfun = function(type) {
       if (type == "TK1992") {
@@ -187,6 +187,7 @@ Cpt <- R6Class("cpt",
       self$vfun <- vfun
     },
     check_input = function() {
+      if (length(self$input) == 0) { return() }
       P <- self$input[, seq(2, self$natt()[1], 2), , drop = FALSE]
       f <- self$formula
       fs <- lapply(seq.int(length(f)[2]), function(x) attr(terms(formula(f, lhs=0, rhs=x, drop=FALSE)), "term.labels"))

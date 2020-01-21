@@ -56,7 +56,7 @@ Shortfall <- R6Class("shortfall",
       )
 
       if (self$npar("free") > 0L) {
-        message("Fitting free parameters ", .brackify(self$get_parnames("free")))
+        message("Fitting free parameters ", .brackify(private$get_parnames("free")))
         self$fit()
       }
     },
@@ -65,8 +65,8 @@ Shortfall <- R6Class("shortfall",
       # based on a formula stored in self$formulaAsp
       # which we assign in the initialize() function above
       aspiration <- super$get_input(f = self$formulaAsp, d = d) 
-      if (length(aspiration) != nrow(d)*self$nstim()) {
-        aspiration <- array(aspiration, dim = c(nrow(d), 1, self$nstim()))
+      if (length(aspiration) != nrow(d)*self$nstim) {
+        aspiration <- array(aspiration, dim = c(nrow(d), 1, self$nstim))
       }
       return(aspiration)
     },
@@ -107,7 +107,7 @@ Shortfall <- R6Class("shortfall",
       # this check ensures that the probabilitites in the
       # inpt sum to 1
       # probabilities are the 2nd, 4th, 6th ... column of the input
-      if (!all((rowSums(self$input[, -seq(1, self$natt()[1], 2), , drop = FALSE]) == self$nstim()))) {
+      if (!all((rowSums(self$input[, -seq(1, self$natt()[1], 2), , drop = FALSE]) == self$nstim))) {
         stop('Probabilities (which are the 2nd, 4th, 6th... element of right side of "formula") must sum to 1, but the following variables in your data do NOT sum to 1: ', .brackify(attr(terms(self$formula), "term.labels")[seq(1, self$natt()[1], 2)]), '. Check the probability variables in "formula" and in "data".')
       }
 

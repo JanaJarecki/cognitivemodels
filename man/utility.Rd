@@ -5,33 +5,31 @@
 \alias{utility}
 \title{Utility Models}
 \usage{
-utility_pow(formula, data, fix = list(), choicerule = NULL,
-  mode = NULL, discount = 0, options = list(), ...)
+utility_pow(
+  formula,
+  data,
+  fix = list(),
+  choicerule = NULL,
+  mode = NULL,
+  discount = 0,
+  options = list(),
+  ...
+)
 
-utility(formula, data, type = c("power"), fix = list(),
-  choicerule = NULL, mode = NULL, discount = 0, options = list(),
-  ...)
+utility(
+  formula,
+  data,
+  type = c("power"),
+  fix = list(),
+  choicerule = NULL,
+  mode = NULL,
+  discount = 0,
+  options = list(),
+  ...
+)
 }
 \arguments{
 \item{formula}{A formula specifying responses ~ values (e.g, \code{y ~ x1 | x2}).}
-
-\item{data}{A data.frame containing \code{formula}'s variables.}
-
-\item{fix}{(optional) Parameter constraints. Can be \code{"start"} or a list with \code{parname=value}-pairs. Parameter names see below under "parameter space".
-\itemize{
-\item{\code{"start"} constrains all available parameters to their starting values. Useful for model testing.}
-\item{\code{parname = 0.5} constrains a parameter to 0.5.}
-\item{\code{parname = "p2"} constrains a parameter to another model parameter \code{p2}.}
-\item{\code{parname = NA} tells the model to omit a parameter, if possible.}
-}}
-
-\item{choicerule}{(optional) String specifying the choice rule (default \code{NULL}), allowed are \code{NULL}, \code{"softmax"}, \code{"eps"}, and other values of the argument \code{type} to \link[cogsciutils]{choicerule}.}
-
-\item{mode}{A string. Allowed are \code{"discrete"}, \code{"continuous"}, specifies the model's response mode. Discrete responses are binary (0 or 1), continuous responses are numbers with a normal error.}
-
-\item{discount}{(optional) An integer or integer vector (default \code{0}), ddefining which or how many, starting from trial 1, to discount when fitting.}
-
-\item{options}{(optional) Options to control the parameter fitting methods, see the "Options" section of \code{\link{cogscimodel}}.}
 
 \item{type}{A string. Currently only \code{"power"} for power utility.}
 }

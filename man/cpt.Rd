@@ -4,31 +4,27 @@
 \alias{cpt}
 \title{Kahneman & Tversky's (1992) cumulative prospect theory model}
 \usage{
-cpt(formula, data = NULL, ref, fix = list(), choicerule = NULL,
-  weighting = c("TK1992"), value = c("TK1992"), options = NULL)
+cpt(
+  formula,
+  data = NULL,
+  ref,
+  fix = list(),
+  choicerule = NULL,
+  weighting = c("TK1992"),
+  value = c("TK1992"),
+  options = NULL
+)
 }
 \arguments{
 \item{formula}{Object of class \link{formula} (e.g, \code{y ~ x1 + p1 + x2 | y1 + py + y2}) specifying the observed variables and the gambles. Gambles must be in the form X+P+X+P+..., the last P can be omitted (X+P+X) and will be inferred (e.g. \code{y ~ x1 + p1 + x2 + I(1-p1)}). A pipe (\code{|}) separates multiple gambles (e.g., two gambles: \code{y ~ x1 + p1 + x2 | z1 + pz + z2}).}
 
-\item{data}{A data.frame containing \code{formula}'s variables.}
-
 \item{ref}{A Integer, numeric matrix, or formula defining the reference point. If it is a formula (e.g, \code{~z}) the reference point is a variable in \code{data}.}
-
-\item{fix}{(optional) Parameter constraints. Can be \code{"start"} or a list with \code{parname=value}-pairs. Parameter names see below under "parameter space".
-\itemize{
-\item{\code{"start"} constrains all available parameters to their starting values. Useful for model testing.}
-\item{\code{parname = 0.5} constrains a parameter to 0.5.}
-\item{\code{parname = "p2"} constrains a parameter to another model parameter \code{p2}.}
-\item{\code{parname = NA} tells the model to omit a parameter, if possible.}
-}}
 
 \item{choicerule}{(optional) choierule, for instance \code{"softmax"}, allowed values are listed in \code{type} under \code{\link[cogsciutils]{choicerule}}.}
 
 \item{weighting}{(optional) weighting function. Currently the one used in Kahneman & Tversky (1992), \code{"KT1992"}, is possible.}
 
 \item{value}{(optional) value function. Currently, only the one used by Kahneman & Tversky (1992), \code{"KT1992"}, is possible.}
-
-\item{options}{(optional) Options to control the parameter fitting methods, see the "Options" section of \code{\link{cogscimodel}}.}
 }
 \value{
 An object of class R6 holding the model, it has free parameters. A model object \code{M} can be viewed with \code{M}, predictions can be made with \code{M$predict()} for choice predictions, and \code{M$predict("ev")} for the expected value of the optimal choice and \code{M$predict("value", 1:2)} for the expected value of all choices.
@@ -40,7 +36,7 @@ Fits the cumulative prospect theory model.
 Fits cumulative prospect theory.
 }
 \examples{
-## Tversky, A., & Kahneman, D. (1992). Advances in prospect theory: cumulative representation of uncertainty. Journal of Risk and Uncertainty, 5, 297–323. doi:10.1007/BF00122574
+## Tversky, A., & Kahneman, D. (1992). Advances in prospect theory: cumulative representation of uncertainty. Journal of Risk and Uncertainty, 5, 297â€“323. doi:10.1007/BF00122574
 dt <- data.frame(
   x1 = c(100, -100),
   px = 1,

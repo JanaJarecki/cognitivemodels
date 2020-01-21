@@ -2,12 +2,21 @@
 % Please edit documentation in R/zzz.R
 \name{cogscimodel_options}
 \alias{cogscimodel_options}
-\title{Options for Cogscimodels}
+\title{This is the list of options that can be used in cogscimodels. Pass them as list to the argument options in cogscimodels.}
 \usage{
-cogscimodel_options(lb = NULL, ub = NULL, start = NULL, fit = TRUE,
-  fit_measure = "loglikelihood", fit_n = 1L, fit_data = NULL,
-  fit_solver = "auto", fit_grid_offset = 0L, fit_control = list(),
-  fit_args = list())
+cogscimodel_options(
+  lb = NULL,
+  ub = NULL,
+  start = NULL,
+  fit = TRUE,
+  fit_measure = "loglikelihood",
+  fit_n = 1L,
+  fit_data = NULL,
+  fit_solver = "auto",
+  fit_grid_offset = 0L,
+  fit_control = list(),
+  fit_args = list()
+)
 }
 \arguments{
 \item{fit}{Logical (default \code{TRUE}), \code{FALSE} omits parameter fitting. Useful for testing models.}

@@ -4,9 +4,13 @@
 \alias{rsenvironment}
 \title{Class for risk-sensitive foraging environments}
 \usage{
-rsenvironment(budget, ..., n.trials, initial.state,
-  terminal.fitness = function(state, budget) {     as.numeric(state >=
-  budget) })
+rsenvironment(
+  budget,
+  ...,
+  n.trials,
+  initial.state,
+  terminal.fitness = function(state, budget) {     as.numeric(state >= budget) }
+)
 }
 \arguments{
 \item{budget}{Numeric, minimum requirement.}

@@ -1,18 +1,18 @@
 # ==========================================================================
-# Choce rule models: softmax, argmax, luce
+# Choce Rule models: softmax, argmax, luce
 # ==========================================================================
 
 
-#' Decision rule models (action selection, choice rules)
+#' Models for Choice Rules (decision rules for action selection)
 #' 
-#' Models of action selection: \code{softmax()} is soft-max, \code{argmax()} is maximizing, \code{epsilon_greedy()} is epsilon-greedy, \code{epsilon()} is probabilistic-epsilon, \code{luce()} is proportional (Luce's rule).
+#' \code{softmax()} soft-maximizes, \code{argmax()} maximizes deterministically, \code{epsilon_greedy()} is epsilon-greedy, \code{epsilon()} is probabilistic-epsilon, \code{luce()} selects proportionally (Luce's rule).
 #' 
 #' @importFrom cogsciutils cr_softmax
 #' @importFrom cogsciutils cr_epsilon
 #' @importFrom cogsciutils cr_argmax
 #' @importFrom cogsciutils cr_luce
 #' 
-#' @inheritParams Cogscimodel
+#' @inheritParams cogscimodel
 #' @rdname choicerules
 #' @param formula A \code{\link{formula}} like responses ~ action-values (e.g.,  \code{y ~ a | b}). \emph{Note}, that bars (\code{|}) separate different actions.
 #' 
@@ -74,227 +74,121 @@
 #' softmax(y ~ a | b, D)                  # fit 'tau' to y
 #' @export
 softmax <- function(formula, data, fix = list(), options = NULL) {
-   return(do.call(what = Softmax$new, args = as.list(match.call()[-1]), envir = parent.frame()))
+  .args <- as.list(match.call()[-1])
+  .args[["type"]] <- "softmax"
+   return(do.call(what = Choicerule$new, args = .args, envir = parent.frame()))
 }
 
-Softmax <- R6Class("softmax",
-  inherit = Cogscimodel,
-  public = list(
-    initialize = function(formula, fix = NULL, data = NULL, options = list()) {
-      super$initialize(
-        title = "Softmax",
-        formula = formula,
-        data = data,
-        parspace = make_parspace(tau = c(0.0001,10,2,NA)),
-        mode = "discrete",
-        fix = fix,
-        options = options)
-    },
-    predict = function(type = c("response"), newdata = NULL) {
-      type <- match.arg(type)
-      if (is.null(newdata) | missing(newdata)) {
-        D <- self$input
-      } else {
-        D <- self$get_input(d = newdata)
-      }
-      `colnames<-`(
-        matrix(
-          cogsciutils::cr_softmax(
-            abind::adrop(aperm(D, c(1,3,2)), 3),
-            tau = self$get_par()
-            ),
-          nrow = dim(D)[1]
-          ),
-        paste0("pred_", self$get_stimnames())
-        )
-    }
-  )
-)
 
-#' @rdname choicerules
-#' 
+#' @rdname choicerules#' 
 #' @family Choicerules for cognitive models
-#' 
 #' @details
 #' \code{epsilon_greedy()} picks the best action with probability \eqn{1 - \epsilon}, and with \eqn{\epsilon} it picks randomly from all actions, including the best.
-#' 
 #' @examples
 #' epsilon_greedy(y~a | b, D, c(eps=0.1)) # fix 'eps' to 10 %
 #' epsilon_greedy(y~a | b, D )            # fit 'eps' to y
 #' @export
 epsilon_greedy <- function(formula, data, fix = list(), options = NULL) {
-  return(do.call(what = Epsilon_greedy$new, args = as.list(match.call()[-1]), envir = parent.frame()))
+  .args <- as.list(match.call()[-1])
+  .args[["type"]] <- "epsilongreedy"
+   return(do.call(what = Choicerule$new, args = .args, envir = parent.frame()))
 }
-
-Epsilon_greedy <- R6Class("epsilon_greedy",
-  inherit = Cogscimodel,
-  public = list(
-    initialize = function(formula, data, fix = NULL, ..., options = list()) {
-      super$initialize(
-        title = "Epsilon-argmax",
-        formula = formula,
-        data = data,
-        fix = fix,
-        parspace = make_parspace(eps = c(0,1,0.5,0)),
-        mode = "discrete",
-        options = options)
-    },
-    predict = function(type = c("response"), newdata = NULL) {
-      if (is.null(newdata) | missing(newdata)) {
-        D <- self$input
-      } else {
-        D <- self$get_input(d = newdata)
-      }
-      nr <- self$nobs()
-      `colnames<-`(
-        matrix(
-          data = cogsciutils::cr_epsilon(
-            x = matrix(
-              data = cogsciutils::cr_argmax(abind::adrop(aperm(D,c(1,3,2)),3)),
-              nrow = nr),
-            eps = self$get_par()),
-          nrow = nr),
-        paste0("pred_", self$get_stimnames())
-      )
-    }
-  )
-)
-
 
 
 #' @inheritParams softmax
-#' @rdname choicerules
-#' 
+#' @rdname choicerules#' 
 #' @family Choicerules for cognitive models
-#' 
 #' @details
 #' \code{epsilon()} picks action \eqn{i} with probability \eqn{(1 - \epsilon)*p(i)} and with \eqn{\epsilon} it picks randomly from all actions. For \eqn{\epsilon = 0} it gives \eqn{p(i)}, that is the  original probabilistic policy.
-#' 
 #' @examples
 #' epsilon(y ~ a | b, D, c(eps=0.1))      # fix 'eps' to 0.1
 #' epsilon(y ~ a | b, D)                  # fit 'eps' to y
 #' @export
-epsilon <- function(formula, data, fix = list(), options=NULL) {
-  return(do.call(what = Epsilon$new, args = as.list(match.call()[-1]), envir = parent.frame()))
+epsilon <- function(formula, data, fix = list(), options = NULL) {
+  .args <- as.list(match.call()[-1])
+  .args[["type"]] <- "epsilon"
+   return(do.call(what = Choicerule$new, args = .args, envir = parent.frame()))
 }
-
-Epsilon <- R6Class("epsilon",
-  inherit = Cogscimodel,
-  public = list(
-    initialize = function(formula, data, fix = NULL, options=list()) {
-      super$initialize(
-        title = "Softmax",
-        formula = formula,
-        data = data,
-        parspace = make_parspace(eps = c(0, 1, 0.5, NA)),
-        mode = "discrete",
-        fix = fix,
-        options = options)
-    },
-    predict = function(type = c("response"), newdata = NULL) {
-      if (is.null(newdata) | missing(newdata)) {
-        D <- self$input
-      } else {
-        D <- self$get_input(d = newdata)
-      }
-      `colnames<-`(
-        matrix(cogsciutils::cr_epsilon(
-          abind::adrop(aperm(D, c(1,3,2)), 3),
-          eps = self$get_par()
-          ),
-        nrow = dim(D)[1]
-        ),
-        paste0("pred_", self$get_stimnames())
-        )
-    }
-  )
-)
-
-
 
 #' @rdname choicerules
 #' @family Choicerules for cognitive models
-#' 
-#' @details
-#' \code{argmax()} picks the best action with probability \eqn{1}. Ties are broken by random predictions: it gives \eqn{1 / m} if \eqn{m} actions have equal values.
-#' 
-#' @examples
-#' argmax(y ~ a | b, D)                   # arg max
-#' @export
-argmax <- function(formula, data, ...) {
-  return(do.call(what = Argmax$new, args = as.list(match.call()[-1]), envir = parent.frame()))
-}
-
-Argmax <- R6Class("argmax",
-  inherit = Cogscimodel,
-  public = list(
-    initialize = function(formula, data, ..., options = list()) {
-      super$initialize(
-        title = "Argmax",
-        formula = formula,
-        data = data,
-        mode = "discrete",
-        options = options)
-    },
-    predict = function(type = c("response"), newdata = NULL) {
-      if (is.null(newdata) | missing(newdata)) {
-        D <- self$input
-      } else {
-        D <- self$get_input(d = newdata)
-      }
-      `colnames<-`(
-        matrix(
-          cogsciutils::cr_argmax(
-            abind::adrop(aperm(D, c(1,3,2)), 3)
-          ),
-        nrow = dim(D)[1]
-        ),
-        paste0("pred_", self$get_stimnames())
-      )
-    }
-  )
-)
-
-#' @rdname choicerules
-#' 
-#' @family Choicerules for cognitive models
-#' 
 #' @details
 #' \code{luce()} picks action \eqn{i} with probability \eqn{v(i) / \sum v}.
-#' 
 #' @examples
 #' luce(y ~ a | b, D)                     # Luce's choice rule
 #' @export
 luce <- function(formula, data, ...) {
-  return(do.call(what = Luce$new, args = as.list(match.call()[-1]), envir = parent.frame()))
+  .args <- as.list(match.call()[-1])
+  .args[["type"]] <- "luce"
+   return(do.call(what = Choicerule$new, args = .args, envir = parent.frame()))
 }
 
-Luce <- R6Class("luce",
+#' @rdname choicerules
+#' @family Choicerules for cognitive models
+#' @details
+#' \code{argmax()} picks the highest-values action with probability 1, and in case of ties it picks equi-probable
+#' @examples
+#' argmx(y ~ a | b, D)                    # Argmax choice rule
+#' @export
+argmax <- function(formula, data, ...) {
+  .args <- as.list(match.call()[-1])
+  .args[["type"]] <- "argmax"
+   return(do.call(what = Choicerule$new, args = .args, envir = parent.frame()))
+}
+
+
+#' @noRd
+#' @export
+Choicerule <- R6Class("choicerule",
   inherit = Cogscimodel,
   public = list(
-    initialize = function(formula, data, ..., options = list()) {
+    type = NULL,
+    initialize = function(formula, data = NULL, type, fix = NULL, options=list()) {
+      type <- match.arg(type, c("softmax", "argmax", "luce", "epsilon", "epsilongreedy"))
+      self$type <- type
+      parspace <- switch(type,
+        epsilon =       make_parspace(eps = c(0,1,0.5,0)),
+        epsilongreedy = make_parspace(eps = c(0,1,0.5,0)),
+        softmax =       make_parspace(tau = c(0.0001,10,2,NA)),
+        make_parspace()
+      )
       super$initialize(
-        title = "Luce",
+        title = type,
         formula = formula,
         data = data,
+        parspace = parspace,
         mode = "discrete",
-        options = options)
+        fix = fix,
+        options = options,
+        choicerule = NULL
+      )
     },
-    predict = function(type = "response", newdata = NULL) {
+    predict = function(type = c("response"), newdata = NULL) {
       if (is.null(newdata) | missing(newdata)) {
         D <- self$input
       } else {
-        D <- self$get_input(d = newdata)
+        D <- private$get_input(d = newdata)
       }
-      `colnames<-`(
-        matrix(
-          cogsciutils::cr_luce(
-            abind::adrop(aperm(D, c(1,3,2)), 3)
-            ),
-          nrow = nrow(D)
-          ),
-        paste0("pred_", self$get_stimnames())
+      fun <- switch(self$type,
+        softmax = cogsciutils::cr_softmax,
+        argmax = cogsciutils::cr_argmax,
+        luce = cogsciutils::cr_luce,
+        epsilon = cogsciutils::cr_epsilon,
+        epsilongreedy = function(x, eps) {
+          cogsciutils::cr_epsilon(
+            x = matrix(
+              data = cogsciutils::cr_argmax(x),
+              nrow = self$nobs),
+            eps = self$get_par())
+        }
       )
+      .args <- list(x = abind::adrop(aperm(D, c(1,3,2)), 3))
+      .args <- c(.args, self$par)
+
+      res <- do.call(what = fun, args = .args, envir = parent.frame())
+      res <- matrix(res, nrow = dim(D)[1])
+      colnames(res) <- paste0("pr_", private$get_stimnames())
+      return(res[, 1:ncol(res)])
     }
   )
 )

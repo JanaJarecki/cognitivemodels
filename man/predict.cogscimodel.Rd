@@ -4,8 +4,7 @@
 \alias{predict.cogscimodel}
 \title{Predictions from Cognitive Models}
 \usage{
-\method{predict}{cogscimodel}(obj, ..., type = "response",
-  newdata = NULL)
+\method{predict}{cogscimodel}(obj, ..., type = "response", newdata = NULL)
 }
 \arguments{
 \item{obj}{A cognitive models with class cogscimodel}

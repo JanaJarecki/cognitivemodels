@@ -6,33 +6,27 @@
 \alias{bayes_dirichlet}
 \title{Bayesian Inference Cognitive Model}
 \usage{
-bayes(formula, data, fix = list(), format = c("raw", "count",
-  "cumulative"), type = NULL, discount = 0L, options = list(), ...)
+bayes(
+  formula,
+  data = data.frame(),
+  fix = list(),
+  format = c("raw", "count", "cumulative"),
+  type = NULL,
+  discount = 0L,
+  options = list(),
+  ...
+)
 
-bayes_beta(formula, data, fix = NULL, format = NULL, ...)
+bayes_beta(formula, data = data.frame(), fix = NULL, format = NULL, ...)
 
 bayes_dirichlet(formula, data, fix = NULL, format = NULL, ...)
 }
 \arguments{
 \item{formula}{A formula specifying reported beliefs ~ event + event ... (e.g., \code{y ~ coin_heads + coin_tails}).}
 
-\item{data}{A data.frame containing \code{formula}'s variables.}
-
-\item{fix}{(optional) Parameter constraints. Can be \code{"start"} or a list with \code{parname=value}-pairs. Parameter names see below under "parameter space".
-\itemize{
-\item{\code{"start"} constrains all available parameters to their starting values. Useful for model testing.}
-\item{\code{parname = 0.5} constrains a parameter to 0.5.}
-\item{\code{parname = "p2"} constrains a parameter to another model parameter \code{p2}.}
-\item{\code{parname = NA} tells the model to omit a parameter, if possible.}
-}}
-
 \item{format}{A string (default \code{"raw"}) with the data format. Can be \code{"raw"}, \code{"cummulative"}, \code{"count"}, where \code{"raw"} means data are occurrence indicators (1=event, 0=no event); \code{"cumulative"} means data are cumulative event frequencies (1,2,2,...), and code{"count"} means data are non-ordered event frequencies (10,2,5,...).}
 
 \item{type}{(optional) A string, \code{"beta-binomial"} or \code{"dirichlet-multinomial"}, specifying the type of inference. Can be abbreviated. Will be inferred if missing.}
-
-\item{discount}{(optional) An integer or integer vector (default \code{0}), ddefining which or how many, starting from trial 1, to discount when fitting.}
-
-\item{options}{(optional) Options to control the parameter fitting methods, see the "Options" section of \code{\link{cogscimodel}}.}
 
 \item{...}{other arguments from other functions, currently ignored.}
 }

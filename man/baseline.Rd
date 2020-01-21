@@ -7,31 +7,27 @@
 \alias{baseline_mean_d}
 \alias{baseline}
 \alias{baseline_c}
-\alias{baseline_}
+\alias{baseline_d}
 \title{Baseline cognitive models}
 \usage{
-baseline_const(formula, data, const, mode, ...)
+baseline_const(formula, data = NULL, const, mode, ...)
 
-baseline_mean(formula, data, mode, ...)
+baseline_mean(formula, data = NULL, mode, ...)
 
-baseline_mean_c(formula, data, ...)
+baseline_mean_c(formula, data = NULL, ...)
 
-baseline_mean_d(formula, data, ...)
+baseline_mean_d(formula, data = NULL, ...)
 
-baseline(formula, data, type, const, mode, ...)
+baseline(formula, data = NULL, type, const, mode, ...)
 
-baseline_c(formula, data, type, const, mode = "continuous", ...)
+baseline_c(formula, data = NULL, type, const, ...)
 
-baseline_(formula, data, type, const, mode, ...)
+baseline_d(formula, data = NULL, type, const, ...)
 }
 \arguments{
 \item{formula}{A formula specifying the observed variable as left hand (e.g., \code{y ~ .}). Note the "\code{~}" and "\code{.}", please.}
 
-\item{data}{A data.frame containing \code{formula}'s variables.}
-
 \item{const}{(optional, \bold{required} if \code{type = "constant"}) A number with the prediction of the model, must be a probability.}
-
-\item{mode}{A string. Allowed are \code{"discrete"}, \code{"continuous"}, specifies the model's response mode. Discrete responses are binary (0 or 1), continuous responses are numbers with a normal error.}
 
 \item{type}{A string, can be \code{"constant", "mean"} specifying the type of baseline model (see details).}
 }

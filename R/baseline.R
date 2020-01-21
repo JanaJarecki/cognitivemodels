@@ -36,7 +36,7 @@
 #' @family Cognitive models
 #'  
 #' @export
-baseline_const <- function(formula, data, const, mode, ...) {
+baseline_const <- function(formula, data = NULL, const, mode, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args$type <- "constant"
    return(do.call(what = Baseline$new, args = .args, envir = parent.frame()))
@@ -50,7 +50,7 @@ baseline_const <- function(formula, data, const, mode, ...) {
 #' @rdname baseline
 #' 
 #' @export
-baseline_mean <- function(formula, data, mode, ...) {
+baseline_mean <- function(formula, data = NULL, mode, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args$type <- "mean"
    return(do.call(what = Baseline$new, args = .args, envir = parent.frame()))
@@ -60,7 +60,7 @@ baseline_mean <- function(formula, data, mode, ...) {
 #' 
 #' @rdname baseline
 #' @export
-baseline_mean_c <- function(formula, data, ...) {
+baseline_mean_c <- function(formula, data = NULL, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args$mode <- "continuous"
    return(do.call(what = Baseline$new, args = .args, envir = parent.frame()))
@@ -70,7 +70,7 @@ baseline_mean_c <- function(formula, data, ...) {
 #' 
 #' @rdname baseline
 #' @export
-baseline_mean_d <- function(formula, data, ...) {
+baseline_mean_d <- function(formula, data = NULL, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args$mode <- "discrete"
    return(do.call(what = Baseline$new, args = .args, envir = parent.frame()))
@@ -81,7 +81,7 @@ baseline_mean_d <- function(formula, data, ...) {
 #' @rdname baseline
 #' 
 #' @export
-baseline <- function(formula, data, type, const, mode, ...) {
+baseline <- function(formula, data = NULL, type, const, mode, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
    return(do.call(what = Baseline$new, args = .args, envir = parent.frame()))
 }
@@ -90,7 +90,7 @@ baseline <- function(formula, data, type, const, mode, ...) {
 #' 
 #' @rdname baseline
 #' @export
-baseline_c <- function(formula, data, type, const, mode = "continuous", ...) {
+baseline_c <- function(formula, data = NULL, type, const, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args$mode <- "continuous"
    return(do.call(what = Baseline$new, args = .args, envir = parent.frame()))
@@ -100,7 +100,7 @@ baseline_c <- function(formula, data, type, const, mode = "continuous", ...) {
 #' 
 #' @rdname baseline
 #' @export
-baseline_ <- function(formula, data, type, const, mode, ...) {
+baseline_d <- function(formula, data = NULL, type, const, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args$mode <- "discrete"
    return(do.call(what = Baseline$new, args = .args, envir = parent.frame()))
@@ -111,7 +111,7 @@ Baseline <- R6Class("baseline",
   public = list(
     type = NULL,
     const = NULL,
-    initialize = function(formula, data, type, const, mode, ...) {
+    initialize = function(formula, data = NULL, type, const, mode, ...) {
       self$type <- match.arg(type, c("constant", "mean"))
       if (self$type == "mean") {
         ps <- make_parspace(m = range(super$get_res(f=formula, d=data)))
@@ -132,14 +132,14 @@ Baseline <- R6Class("baseline",
       if (is.null(newdata) | missing(newdata)) {
         D <- self$input
       } else {
-        D <- self$get_input(f = self$formula, d = newdata)
+        D <- private$get_input(f = self$formula, d = newdata)
       }
       out <- switch(self$type,
         constant = self$const,
         mean = apply(self$res, 2, mean))
       `colnames<-`(
-        matrix(out, nrow = nrow(D), ncol = self$nres()),
-        paste0("pred_", self$get_stimnames())
+        matrix(out, nrow = nrow(D), ncol = self$nres),
+        paste0("pred_", private$get_stimnames())
         )
     }
   )

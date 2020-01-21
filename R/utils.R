@@ -1,16 +1,50 @@
-# Exact variance between two gambles (without N-1 correction)
+
+# ==========================================================================
+# Package: Cogscimodels
+# File: utils.R
+# Author: Jana B. Jarecki
+# Changed: 2019-12-13
+# ==========================================================================
+
+# ==========================================================================
+# Cogscimodel utilities and helper functions
+# ==========================================================================
+
+#' Vectorized Multinomial Draws
+#' 
+#' @param probs Matrix of probabilities
+#' @param m number of samples for each row of \code{probs}
+#' @noRd
+rmultinom2 <- function (probs, m) { 
+  # Courtsey: This code comes from the Hmisc package
+  # Draws from multinomial distribution
+  # If probs is a matrix of m probabilities of n observations 
+  # where each row sums to one, the function returns the cell 
+  # counts corresponding to multinomial draws
+  d <- dim(probs)
+  n <- d[1]
+  k <- d[2]
+  lev <- dimnames(probs)[[2]]
+  if (!length(lev)) lev <- 1:k
+  ran <- matrix(lev[1], ncol = m, nrow = n)
+  z <- apply(probs, 1, sum)
+  if (any(abs(z - 1) > 1e-05))
+    stop("Error in multinom: probabilities do not sum to 1")
+  U <- apply(probs, 1, cumsum)
+  for (i in 1:m) {
+    un <- rep(runif(n), rep(k, n))
+    ran[, i] <- lev[1 + apply(un > U, 2, sum)]
+  }
+  return(ran)
+}
+
+# Variance of probabilistically-described gambles (without N-1 correction)
 varG <- function(p, x) {
   if ( is.matrix(p)) {
     return(sapply(1:dim(p)[1], function(i) varG(p[i, ], x[i, ])))
   }
   ev <- c(x %*% p)
   p %*% ((x - ev)^2)
-}
-
-# Whenever you use C++ code in your package, you need to clean up after yourself when your package is unloaded
-# see http://r-pkgs.had.co.nz/src.html#cpp
-.onUnload <- function (libpath) {
-  library.dynam.unload("cogscimodels", libpath)
 }
 
 # Make a named list
@@ -261,7 +295,7 @@ make_parspace <- function(...) {
       } else if (all(c("ub", "lb") %in% n)) {
         x[intersect(c("lb", "ub", "start", "na"), n)]
       } else {
-        stop('Parameter definition must be named "lb", "ub", start", "na" but names contain ', .brackify[x], ".")
+        stop("Parameter definition must be named <'lb', 'ub', 'start', 'na'> but names contain: ", .brackify[x], ".")
       }
     }, c(lb=0, ub=0, start=0, na=0))
 
@@ -333,4 +367,55 @@ make_parspace <- function(...) {
   } else {
     return(NULL)
   }
+}
+
+
+
+
+#' Prints the constraints of a cogscimodel nicely
+#' or NULL if the formula has none
+#' 
+#' @param latex (optional) if \code{TRUE} formats them for LaTeX documents
+print.csm_constraint = function(x, latex = FALSE) {
+  ROI:::print.constraint(x)
+  if (length(x) == 0) return(NULL)
+  A <- as.matrix(x$L)
+  b <- x$rhs
+  # We use the side-effect of printing in showEqn()
+  sapply(1:x$L$nrow, function(i) {
+    cat("  ")
+    matlib::showEqn(
+      A = A[i, A[i, ] != 0L, drop=FALSE],
+      b = b[i],
+      vars = x$names[A[i, ] != 0L],
+      latex = latex)
+  })
+  return(x)
+}
+
+#' Simplify constraints
+#' 
+#' Simplify a constraint by removing the fully-determined parameter
+#' 
+#' @param x An object of type L_constraint from the package ROI
+#' @export
+.simplify_constraints <- function(x) {
+  if (length(x) == 0) { return(x) }
+  A <- as.matrix(x$L)
+  rhs <- x$rhs
+  # Get parameter that are under-determined by constraints x
+  qrcoef <- qr.coef(qr(A), rhs)
+  # candidates for a solution
+  ids <- which(qrcoef == 0 | is.na(qrcoef))
+  # which rows of A to keep
+  .rows <- rowSums(A[, ids, drop = FALSE]) != 0
+  .cols <- colSums(A[.rows, , drop = FALSE]) | !colSums(A)
+
+  C <- ROI::L_constraint(
+    L = A[.rows, .cols, drop = FALSE],
+    dir = x$dir[.rows],
+    rhs = x$rhs[.rows],
+    names = x$names[.cols])
+  class(C) <- c("csm_constraint", class(C))
+  return(C)
 }

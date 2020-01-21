@@ -157,16 +157,20 @@ Ebm <- R6Class('ebm',
     learntrials = NULL,
     parnamesBias = NULL,
     parnamesWeights = NULL,
-    initialize = function(formula, data, criterion, mode = NULL, fix = NULL, learntrials = NULL, discount = NULL, choicerule = NULL, options = list()) {
+    initialize = function(formula, data = NULL, criterion, mode = NULL, fix = NULL, learntrials = NULL, discount = NULL, choicerule = NULL, options = list()) {
+      if (is.null(data)) data <- data.frame()
       self$formulaCriterion <- criterion
       self$learntrials <- if ( is.null(learntrials) ) { seq_len(nrow(data)) } else { learntrials }
-      criterion <- self$get_more_input(d=data)
+      criterion <- private$get_more_input(d=data)
       if (is.null(mode)) {
         mode <- super$infer_mode(criterion)
       }
-      parspace <- self$make_parspace(formula = formula, criterion = criterion, mode = mode)
+      parspace <- private$make_parspace(
+        formula = formula,
+        criterion = criterion,
+        mode = mode)
       if (is.null(discount)) {
-        discount <- self$infer_discount(discount = discount, criterion = criterion, mode = mode, showmsg = !all(rownames(parspace) %in% names(fix)))
+        discount <- private$infer_discount(discount = discount, criterion = criterion, mode = mode, showmsg = !all(rownames(parspace) %in% names(fix)))
       }
       if (mode == "continuous") {
         options <- c(options, list(fit_measure = "mse"))
@@ -179,29 +183,29 @@ Ebm <- R6Class('ebm',
         parspace = parspace,
         choicerule = choicerule,
         discount = discount,
-        title = paste0('Exemplar-based model'),
+        title = paste0('Exemplar-based'),
         mode = mode,
         options = c(options, list(fit_solver = "solnp"))
       )
-    },
-    get_more_input = function(d) {
-      return(super$get_input(f = chr_as_rhs(self$formulaCriterion), d = d, na.action = NULL))
     },
     make_prediction = function(type, input, more_input, isnew = FALSE, s = NULL, ...) {
       self$pred_types <- c("response", "value")
       par <- self$get_par()
       criterion <- more_input
-      na <- self$natt()[1]
+      na <- self$natt[1]
       learnto <- max(self$learntrials)
       firstout <- 1L
 
       if (isnew == TRUE) {
-        firstout <- self$nobs() + firstout
+        firstout <- self$nobs + firstout
         criterion <- c(self$more_input[, , s], c(more_input))
         input <- rbind(self$input[,,s], input)
       }
-      b <- if (self$mode == "continuous") { NA } else {
-            as.double(tail(par, -(na + 3))) }
+      b <- if (self$mode == "continuous") {
+            NA
+          } else {
+            as.double(tail(par, -(na + 3)))
+          }
       exemplar_w <- as.numeric(!is.na(criterion)) # exemplar weights
       criterion[is.na(criterion)] <- 0L
       return(ebm_cpp(
@@ -216,6 +220,11 @@ Ebm <- R6Class('ebm',
             lastLearnTrial = learnto,
             firstOutTrial = firstout)
         )
+    }
+  ),
+  private = list(
+    get_more_input = function(d) {
+      return(private$get_input(f = chr_as_rhs(self$formulaCriterion), d = d, na.action = NULL))
     },
     make_prednames = function() {
       sn <- paste0(all.vars(self$formulaCriterion[[2]]))
@@ -225,20 +234,20 @@ Ebm <- R6Class('ebm',
       return(sn)
     },
     make_constraints = function() {
-      parnames <- self$get_parnames()
-      parnames_fix <- self$get_parnames("fix")
+      parnames <- private$get_parnames()
+      parnames_fix <- private$get_parnames("fix")
       # initialize constraintss with NULL
       con_w <- con_b <- NULL
-      if (!all(self$get_parnames("weights") %in% parnames_fix)) {
+      if (!all(private$get_parnames("weights") %in% parnames_fix)) {
         con_w <- L_constraint(
-          L = as.integer(parnames %in% self$get_parnames("weights")),
+          L = as.integer(parnames %in% private$get_parnames("weights")),
           dir = "==",
           rhs = 1L,
           names = parnames)
       }
-      if (!all(self$get_parnames("biases") %in% parnames_fix)) {
+      if (!all(private$get_parnames("biases") %in% parnames_fix)) {
         con_b <- L_constraint(
-          L = as.integer(parnames %in% self$get_parnames("biases")),
+          L = as.integer(parnames %in% private$get_parnames("biases")),
           dir = "==",
           rhs = 1L,
           names = parnames)
@@ -260,7 +269,7 @@ Ebm <- R6Class('ebm',
       if (mode == "discrete") {
         b_names <- paste0("b", sort(unique(criterion)))
         nb <- length(b_names)
-        b_par <- setNames(lapply(1:nb, function(.) c(0.001,1,1/nb,1)), b_names)
+        b_par <- setNames(lapply(1:nb, function(.) c(0,1,1/nb,1)), b_names)
       }
       # Note:
       # Do not change the order (1. weights, 2. lrq, 3. bias)!
@@ -268,9 +277,9 @@ Ebm <- R6Class('ebm',
     },
     get_parnames = function(x = "all") {
       if (x == "weights") {
-        return(head(self$get_parnames(), self$natt()))
+        return(head(super$get_parnames(), self$natt))
       } else if (x == "biases") {
-        return(tail(self$get_parnames(), -(self$natt() + 3L)))
+        return(tail(super$get_parnames(), -(self$natt + 3L)))
       } else {
         return(super$get_parnames(x))
       }
@@ -290,15 +299,12 @@ Ebm <- R6Class('ebm',
       parspace <- self$parspace
       offset <- c(offset, w = .1, b = .1)
       return(make_grid_id_list(
-        names = self$get_parnames("free"),
-        lb = self$get_lb("free"),
-        ub = self$get_ub("free"),
+        names = private$get_parnames("free"),
+        lb = private$get_lb("free"),
+        ub = private$get_ub("free"),
         nsteps = c(list(w = 4, b = 4), r = 3, q = 3, lambda = 4, tau = 4, sigma = 4),
-        sumto = list("w" = self$get_parnames("weights"), "b" = self$get_parnames("biases")),
+        sumto = list("w" = private$get_parnames("weights"), "b" = private$get_parnames("biases")),
         regular = TRUE,
         offset = offset))
-    },  
-    print = function(digits = 2) {
-      super$print(digits = digits)
     })
 )

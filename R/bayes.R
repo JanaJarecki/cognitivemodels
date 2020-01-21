@@ -88,7 +88,7 @@
 #' bayes(y ~ a, D, c(priorpar = c(0.1, 1.9)))       # -- (same) --
 #' 
 #' @export
-bayes <- function(formula, data, fix = list(), format = c("raw", "count", "cumulative"), type = NULL, discount = 0L, options = list(), ...) {
+bayes <- function(formula, data = data.frame(), fix = list(), format = c("raw", "count", "cumulative"), type = NULL, discount = 0L, options = list(), ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   return(do.call(what = Bayes$new, args = .args, envir = parent.frame()))
 }
@@ -98,7 +98,7 @@ bayes <- function(formula, data, fix = list(), format = c("raw", "count", "cumul
 #' @rdname bayes
 #' @details \code{bayes_beta()} calls \link{bayes} with \code{type = "beta-binomial"}.
 #' @export
-bayes_beta <- function(formula, data, fix = NULL, format = NULL, ...) {
+bayes_beta <- function(formula, data = data.frame(), fix = NULL, format = NULL, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   return(do.call(what = Bayes$new, args = .args, envir = parent.frame()))
 }
@@ -113,8 +113,6 @@ bayes_dirichlet <- function(formula, data, fix = NULL, format = NULL, ...) {
   return(do.call(what = Bayes$new, args = .args, envir = parent.frame()))
 }
 
-
-
 Bayes <- R6Class("Bayes",
   inherit = Cogscimodel,
   public = list(
@@ -122,7 +120,7 @@ Bayes <- R6Class("Bayes",
     format = NULL,
     priornames = NULL,
     npred = NULL,
-    initialize = function(formula, data, type = NULL, format = c("raw", "cumulative", "count"), fix = list(), choicerule = NULL, mode = "continuous", discount = 0, options = list(), ...) {
+    initialize = function(formula, data = data.frame(), type = NULL, format = c("raw", "cumulative", "count"), fix = list(), choicerule = NULL, mode = "continuous", discount = 0, options = list(), ...) {
       self$format <- match.arg(format)
       self$priordist <- self$infer_priordist(type = type, f=formula)
       self$init_npred(f=formula)
@@ -131,7 +129,7 @@ Bayes <- R6Class("Bayes",
       if (grepl("^l", options$fit_measure) & options$fit==TRUE) {
         stop("Sorry, for bayes(), log likelihood is not yet implemented as fit measure.")
       }
-
+      formula <- self$sanitize_formula(f = formula)
       super$initialize(
         title = "Bayesian model",
         formula = formula,
@@ -149,7 +147,7 @@ Bayes <- R6Class("Bayes",
       if (type=="response") type <- "mean"
       par <- self$get_par()
       na <- self$natt()[1]
-      no <- self$nobs()     
+      no <- self$nobs    
       if (self$format != "count") {
         # shift input by 1 lag
         input <- rbind(0L, input[-nrow(input), , drop = FALSE])
@@ -177,10 +175,10 @@ Bayes <- R6Class("Bayes",
       self$npred <- vapply(1:length(f)[2], function(i) length(attr(terms(formula(f, lhs=0, rhs=i)), "term.labels")), 1L)
     },
     make_prednames = function() {
-      nn <- self$get_parnames()[-1]
+      nn <- private$get_parnames()[-1]
       natt <- self$natt()
       npred <- self$npred
-      tmp <- unlist(lapply(1:self$nstim(), function(i) {
+      tmp <- unlist(lapply(1:self$nstim, function(i) {
         if (npred[i] == 1) { c(TRUE, FALSE) } else { rep(TRUE, npred[i]) } }))
       return(nn[tmp])
     },
@@ -207,7 +205,7 @@ Bayes <- R6Class("Bayes",
         return(priorpar + delta * data)
       }
     },
-    set_formula = function(f) {
+    sanitize_formula = function(f) {
       f <- as.Formula(f)
       fs <- lapply(seq.int(length(f)[2]), function(x) formula(f, lhs=0, rhs=x, drop = FALSE))
       trms <- lapply(fs, function(x) attr(terms(x), "term.labels"))
@@ -222,7 +220,7 @@ Bayes <- R6Class("Bayes",
             fs[[i]]
           }
         })
-      self$formula <- update(f, as.formula(paste("", paste(fs, collapse = " | "))))
+      return(update(f, as.formula(paste("", paste(fs, collapse = " | ")))))
     },
     posterior_draw = function(t, par, ndraws) {
       dist <- self$priordist
@@ -296,12 +294,12 @@ Bayes <- R6Class("Bayes",
       # note: priors depend on the type of prior distribution
       # (beta distribution, dirichlet distribution, etc.)
       # therefore we make prior parameter dynamically
-      parnames <- self$get_parnames()
-      parnames_fix <- self$get_parnames("fix")
-      parnames_priors <- self$get_parnames("priors")
+      parnames <- private$get_parnames()
+      parnames_fix <- private$get_parnames("fix")
+      parnames_priors <- private$get_parnames("priors")
       a <- cumsum(self$natt())
       a0 <- cumsum(self$natt())-1
-      id <- lapply(1:self$nstim(), function(i) a0[i]:a[i])
+      id <- lapply(1:self$nstim, function(i) a0[i]:a[i])
       C <- lapply(id, function(i) {
         if (!all(parnames_priors[i] %in% parnames_fix)) {
           L_constraint(

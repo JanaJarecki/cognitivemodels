@@ -1,7 +1,7 @@
 Package: cogscimodels
 Type: Package
 Title: Cognitive Model Estimation and Prediction
-Version: 1.0.2
+Version: 1.0.3
 Date: 2019-03-12
 Author: Jana B. Jarecki
 Maintainer: Jana B. Jarecki <jj@janajarecki.com>
@@ -29,7 +29,7 @@ LinkingTo:
   RcppArmadillo
 Encoding: UTF-8
 NeedsCompilation: yes
-RoxygenNote: 6.1.1.9000
+RoxygenNote: 7.0.2
 Suggests: 
     testthat
 VignetteBuilder: knitr

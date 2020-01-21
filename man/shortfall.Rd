@@ -10,20 +10,6 @@ shortfall(formula, asp, data, fix = list(), choicerule, options)
 \item{formula}{A \link{formula} defining the observations and stimuli in data. Stimuli are defined by outcomes and probabilities, separated by a pipe (\code{|}), like this: \code{mode ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py)}, where x1 and x2 are the first option's outcomes, px is the probability Pr(x1), y1 and y2 are the second option's outcomes, and py is the probability Pr(y1).}
 
 \item{asp}{A \link{formula} defining the aspiration level in data, e.g., (\code{~aspirlev}), strings will be reformulated.}
-
-\item{data}{A data.frame containing \code{formula}'s variables.}
-
-\item{fix}{(optional) Parameter constraints. Can be \code{"start"} or a list with \code{parname=value}-pairs. Parameter names see below under "parameter space".
-\itemize{
-\item{\code{"start"} constrains all available parameters to their starting values. Useful for model testing.}
-\item{\code{parname = 0.5} constrains a parameter to 0.5.}
-\item{\code{parname = "p2"} constrains a parameter to another model parameter \code{p2}.}
-\item{\code{parname = NA} tells the model to omit a parameter, if possible.}
-}}
-
-\item{choicerule}{(optional) String specifying the choice rule (default \code{NULL}), allowed are \code{NULL}, \code{"softmax"}, \code{"eps"}, and other values of the argument \code{type} to \link[cogsciutils]{choicerule}.}
-
-\item{options}{(optional) Options to control the parameter fitting methods, see the "Options" section of \code{\link{cogscimodel}}.}
 }
 \value{
 An object of class R6 holding the model, it has free parameters. A model object \code{M} can be viewed with \code{M}, predictions can be made with \code{M$predict()} for choice predictions, and \code{M$predict("ev")} for the expected value of the optimal choice and \code{M$predict("value", 1:2)} for the expected value of all choices.

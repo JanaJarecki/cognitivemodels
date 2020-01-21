@@ -4,24 +4,17 @@
 \alias{rsfft}
 \title{Risk-sensitive foraging fast and frugal tree}
 \usage{
-rsfft(formula = NULL, sbt = NULL, nopt = NULL, nout = NULL,
-  fix = NULL, data = NULL, env = NULL, choicerule,
-  terminal.fitness.fun)
-}
-\arguments{
-\item{formula}{A formula (e.g., \code{y ~ x1 + x2}).}
-
-\item{fix}{(optional) Parameter constraints. Can be \code{"start"} or a list with \code{parname=value}-pairs. Parameter names see below under "parameter space".
-\itemize{
-\item{\code{"start"} constrains all available parameters to their starting values. Useful for model testing.}
-\item{\code{parname = 0.5} constrains a parameter to 0.5.}
-\item{\code{parname = "p2"} constrains a parameter to another model parameter \code{p2}.}
-\item{\code{parname = NA} tells the model to omit a parameter, if possible.}
-}}
-
-\item{data}{A data.frame containing \code{formula}'s variables.}
-
-\item{choicerule}{(optional) String specifying the choice rule (default \code{NULL}), allowed are \code{NULL}, \code{"softmax"}, \code{"eps"}, and other values of the argument \code{type} to \link[cogsciutils]{choicerule}.}
+rsfft(
+  formula = NULL,
+  sbt = NULL,
+  nopt = NULL,
+  nout = NULL,
+  fix = NULL,
+  data = NULL,
+  env = NULL,
+  choicerule,
+  terminal.fitness.fun
+)
 }
 \description{
 rsfft()

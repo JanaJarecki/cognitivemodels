@@ -21,23 +21,9 @@ features (e.g., \code{y ~ f1 + f2}).}
 
 \item{class}{A formula specifying the class feedback (e.g., \code{~ cl}), note the "\code{~}". \code{NA} values are retained, assuming a partial feedback paradigm.}
 
-\item{data}{A data.frame containing \code{formula}'s variables.}
-
-\item{fix}{(optional) Parameter constraints. Can be \code{"start"} or a list with \code{parname=value}-pairs. Parameter names see below under "parameter space".
-\itemize{
-\item{\code{"start"} constrains all available parameters to their starting values. Useful for model testing.}
-\item{\code{parname = 0.5} constrains a parameter to 0.5.}
-\item{\code{parname = "p2"} constrains a parameter to another model parameter \code{p2}.}
-\item{\code{parname = NA} tells the model to omit a parameter, if possible.}
-}}
-
-\item{options}{(optional) Options to control the parameter fitting methods, see the "Options" section of \code{\link{cogscimodel}}.}
-
 \item{...}{other arguments from other functions, currently ignored.}
 
 \item{criterion}{A formula specifying the class or criterion feedback (e.g., \code{~ feedback}), note the "\code{~}".}
-
-\item{mode}{A string. Allowed are \code{"discrete"}, \code{"continuous"}, specifies the model's response mode. Discrete responses are binary (0 or 1), continuous responses are numbers with a normal error.}
 }
 \value{
 An exemplar-based model; a model \code{M} can be viewed with

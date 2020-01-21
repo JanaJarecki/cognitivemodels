@@ -1,6 +1,21 @@
-#' Options for Cogscimodels
-#' 
-#' This is the list of options that can be used in cogscimodels. Pass them as list to the argument options in cogscimodels.
+# ==========================================================================
+# Package: Cogscimodels
+# File zzz.R
+# Author: Jana B. Jarecki
+# Changed: 2019-12-13
+# ==========================================================================
+
+.onUnload <- function (libpath) {
+  # Whenever you use C++ code in your package, you need to clean up after yourself when your package is unloaded
+  # see http://r-pkgs.had.co.nz/src.html#cpp
+  library.dynam.unload("cogscimodels", libpath)
+}
+
+
+# ==========================================================================
+# Cogscimodel options
+# ==========================================================================
+ #' This is the list of options that can be used in cogscimodels. Pass them as list to the argument options in cogscimodels.
 #' 
 #' @param fit Logical (default \code{TRUE}), \code{FALSE} omits parameter fitting. Useful for testing models.
 #' @param fit_measure A string (default \code{"loglikelihood"}), fit measure to use, can be one of \code{types} in the function \code{\link[cogsciutils]{gof}}, e.g. \code{"mse"}, \code{"sse"}.

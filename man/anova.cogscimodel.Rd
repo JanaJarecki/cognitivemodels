@@ -10,8 +10,6 @@
 }
 \arguments{
 \item{object, ...}{Objects of class \code{cogscimodel}, typically the result of a call to one fo the models. (Or a list of \code{objects} for the \code{"cogscimodellist"} method.)}
-
-\item{object, ...}{Objects of class \code{cogscimodel}, typically the result of a call to one fo the models. (Or a list of \code{objects} for the \code{"cogscimodellist"} method.)}
 }
 \value{
 An anova-style table
