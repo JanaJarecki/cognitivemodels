@@ -16,40 +16,40 @@ test_that("Values of hm1988", {
   D10$s <- D10$init <- 10
   D9$s <- D9$init <- 9
   # initial status = 11
-  val11 <- cbind(a1=c(0.9, 0.99, 0.999, 0.9999),
-                 a2=c(0.6, 0.96, 0.996, 0.9996)) # Table 1
+  val11 <- cbind(a1pa1=c(0.9, 0.99, 0.999, 0.9999),
+                 a1pa2=c(0.6, 0.96, 0.996, 0.9996)) # Table 1
   .args <- list(formula = ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = ~b, ntrials = ~nt, state = ~s, initstate = ~init, trial=~t, data = D11, choicerule = "argmax")
   M <- do.call(hm1988, .args)
   expect_equal(M$predict("value", action = 1:2), val11)
-  expect_equal(M$predict("response", action = 1:2), cbind(a1=rep(1,4), a2=0))
+  expect_equal(M$predict("response", action = 1:2), cbind(a1pa1=rep(1,4), a1pa2=0))
   .args$data <- .args$data[1,]
   M1 <- do.call(hm1988, .args)
   expect_equal(M1$predict("value", action = 1:2), val11[1,,drop=FALSE])
-  expect_equal(M1$predict("response", action = 1:2), cbind(a1=1, a2=0))
+  expect_equal(M1$predict("response", action = 1:2), cbind(a1pa1=1, a1pa2=0))
 
   # initial status = 10
-  val10 <- cbind(a1=c(0.1, 0.86, 0.978, 0.997),
-                 a2=c(0.4, 0.74, 0.942, 0.991)) # Table 1
+  val10 <- cbind(a1pa1=c(0.1, 0.86, 0.978, 0.997),
+                 a1pa2=c(0.4, 0.74, 0.942, 0.991)) # Table 1
   .args$data <- D10
   M <- do.call(hm1988, .args)
   expect_equal(M$predict("value", action = 1:2), val10)
-  expect_equal(M$predict("response", action = 1:2), cbind(a1=c(0,1,1,1), a2=c(1,0,0,0)))
+  expect_equal(M$predict("response", action = 1:2), cbind(a1pa1=c(0,1,1,1), a1pa2=c(1,0,0,0)))
   .args$data <- .args$data[1,]
   M1 <- do.call(hm1988, .args)
   expect_equal(M1$predict("value", action = 1:2), val10[1,,drop=FALSE])
-  expect_equal(M1$predict("response", action = 1:2), cbind(a1=0, a2=1))
+  expect_equal(M1$predict("response", action = 1:2), cbind(a1pa1=0, a1pa2=1))
 
   # initial status = 9
-  val9 <- cbind(a1=c(0, 0.41, 0.831, 0.9654),
-                a2=c(0, 0.44, 0.744, 0.9276)) # Table 1
+  val9 <- cbind(a1pa1=c(0, 0.41, 0.831, 0.9654),
+                a1pa2=c(0, 0.44, 0.744, 0.9276)) # Table 1
   .args$data <- D9
   M <- do.call(hm1988, .args)
   expect_equal(M$predict("value", action = 1:2), val9)
-  expect_equal(M$predict("response", action = 1:2), cbind(a1=c(0.5,0,1,1), a2=c(0.5,1,0,0)))
+  expect_equal(M$predict("response", action = 1:2), cbind(a1pa1=c(0.5,0,1,1), a1pa2=c(0.5,1,0,0)))
   .args$data <- .args$data[1,]
   M1 <- do.call(hm1988, .args)
   expect_equal(M1$predict("value", action = 1:2), val9[1,,drop=FALSE])
-  expect_equal(M1$predict("response", action = 1:2), cbind(a1=0.5, a2=0.5))
+  expect_equal(M1$predict("response", action = 1:2), cbind(a1pa1=0.5, a1pa2=0.5))
 
   # multiple values / multiple environments
   D <- rbind(D11,D10,D9)

@@ -58,14 +58,14 @@ hm1988 <- function(formula, state, budget, trial, ntrials, initstate, data, choi
 Hm1988 <- R6Class("hm1988",
   inherit = Cogscimodel,
   public = list(
-    formula_bstntis = NULL,
+    s_t_b_s0_T_var = NULL,
     environments = NULL,
     fitnessfun = NULL,
     envid = NULL,
     EV = NULL,
     V = NULL,
     env = "rsenvironment",
-    initialize = function(formula, state, budget, trial, ntrials, initstate, data, fix = list(), choicerule = NULL, options = list(), fitnessfun = NULL) {
+    initialize = function(formula, state, budget, trial, ntrials, initstate = 0, data, fix = list(), choicerule = NULL, options = list(), fitnessfun = function(state, budget) { as.numeric(state >= budget) }) {
       if (missing(formula)) {
         formula <- ~ timehorizon + state
       }
@@ -73,12 +73,9 @@ Hm1988 <- R6Class("hm1988",
         time_state_names <- attr(terms(formula), "term.labels")
         data <- env$makeData(time_state_names)
       }
-      if (is.null(fitnessfun)) {
-        fitnessfun <- function(state, budget) { as.numeric(state >= budget) }
-      }
       self$fitnessfun <- fitnessfun
       data <- as.data.frame(data)
-      self$formula_bstntis <- update(budget, as.formula(paste("~ .", state, trial, ntrials, initstate, sep = "+")))
+      self$s_t_b_s0_T_var <- list(state, trial, budget, initstate, ntrials)
       self$init_environments(f = formula, d = data)
       self$V <- lapply(unique(self$envid), function(i)
         self$make_value_mat(e = self$environments[[i]]))
@@ -95,10 +92,10 @@ Hm1988 <- R6Class("hm1988",
         mode = "discrete",
         options = options)  
       },
-      get_more_input = function(d) {
-         return(model.frame(formula = self$formula_bstntis, data = d))
-      },
       predict = function(type = c("response", "values", "ev", "pstates"), action = NULL, newdata = NULL) {
+        if (!is.null(newdata)) {
+          stop("New data is not (yet) implemented.")
+        }
         type = match.arg(type)
         pred <- data.table(envid = self$envid)
         pred[, order := .I]
@@ -114,19 +111,18 @@ Hm1988 <- R6Class("hm1988",
         # }
         # input <- if ( is.null(newdata) ) { self$input } else { self$get_input(self$formula, newdata) }
       },
-      make_prediction = function(envid, type, action=NULL) {
+      make_prediction = function(envid, type, action = NULL) {
         env <- self$environments[[envid]]
         V <- self$V[[envid]]
         EV <- self$EV[[envid]]
         action <- if ( is.null(action) & env$n.actions == 2) { 1 } else { self$stimnames }
-        b_s_t_nt_is <- self$more_input[self$envid == envid, ]
-        # Store the states
-        states <- b_s_t_nt_is[, 2]
-        # This is the time horizon, not the trials
-        trials <- b_s_t_nt_is[, 4] - b_s_t_nt_is[, 3] + 1
+        s_t_b_s0_T <- self$more_input[self$envid == envid, ]
+        # Store the separate variables
+        states <- s_t_b_s0_T[, 1, drop = FALSE]
+        timehorizon <- s_t_b_s0_T[, 5] - s_t_b_s0_T[, 2] + 1
         rows <- match(states, env$states)
-        cols <- match(trials, rev(env$trials))
-        acts <- rep(seq_len(env$n.actions), each = length(trials))
+        cols <- match(timehorizon, rev(env$trials))
+        acts <- rep(seq_len(env$n.actions), each = length(timehorizon))
 
         if (type == "response" | type == "values") {
           v <- V[cbind(rows, cols, acts)]
@@ -147,30 +143,39 @@ Hm1988 <- R6Class("hm1988",
       init_environments = function(f, d) {
         # Number of risky choice options
         n <- length(all.vars(formula(as.Formula(f), lhs=0, rhs=1)))
+        d <- cbind(
+          private$get_more_input(d = d),
+          get_all_vars(formula = f, data = d)
+        )
+        # variable name of state, trial, budget, init state, num trials
+        vars <- names(d)[1:5]
         # Names of the budget, n(trials), initial state
-        b_name  <- all.vars(self$formula_bstntis)[1]
-        nt_name <- all.vars(self$formula_bstntis)[4] 
-        is_name <- all.vars(self$formula_bstntis)[5]
-        # Formula of them
-        f_bsnt <- as.formula(paste("~", paste(all.vars(self$formula_bstntis)[c(1,4,5)], collapse="+")))
-        f2 <- update(f, as.formula(paste("NULL ~ . +", f_bsnt[2])))
+        # b_name  <- all.vars(self$formula_bstntis)[1]
+        # nt_name <- all.vars(self$formula_bstntis)[4] 
+        # is_name <- all.vars(self$formula_bstntis)[5]
+        # # Formula of them
+        # f_bsnt <- as.formula(paste("~", paste(all.vars(self$formula_bstntis)[c(1,4,5)], collapse="+")))
+        # f2 <- update(f, as.formula(paste("NULL ~ . +", f_bsnt[2])))
         # Store the respective data
-        d <- get_all_vars(formula = f2, data = d)
-        d <- as.data.table(d)
         d[, envid := match(apply(.SD, 1, paste, collapse=""), unique(apply(.SD, 1, paste, collapse="")))]
         unique_d <- unique(d)
-        input <- super$get_input(f = f, d = unique_d)
+        unique_input <- super$get_input(f = f, d = as.data.frame(unique_d))
         # Store an environment in the list
-        self$environments <- lapply(unique_d$envid, function(i) {
-          this <- which(unique_d$envid == i)
-          rsenvironment(
-            budget = unlist(unique_d[this, ..b_name]),
-            n.trials = unlist(unique_d[this, ..nt_name]),
-            initial.state = unlist(unique_d[this, ..is_name]),
-            A = t(matrix(input[this, , 1], nr=2))[, 2:1, drop = FALSE],
-            B = t(matrix(input[this, , 2], nr=2))[, 2:1, drop = FALSE],
-            terminal.fitness = self$fitnessfun
-          )})
+        no <- dim(unique_input)[3]
+        self$environments <- lapply(unique_d$envid, function(i, vars) {
+          .row <- which(unique_d$envid == i)
+          .args <- list(
+            budget = unlist(unique_d[.row, vars[3], with = FALSE]),
+            n.trials = unlist(unique_d[.row, vars[5], with = FALSE]),
+            initial.state = unlist(unique_d[.row, vars[4], with = FALSE]),
+            terminal.fitness = self$fitnessfun)
+          .oargs <- lapply(1:no, function(o, .row, input) {
+              t(matrix(unique_input[.row, , o], nr = 2))[, 2:1, drop = FALSE]
+              }, .row = .row, input = input)
+          names(.oargs) <- paste0("o", 1:no)
+          .args <- c(.args, .oargs)
+          do.call(rsenvironment, .args)
+        }, vars = vars)
         # store environment id to match the order in the data from different environments later
         self$envid <- d$envid
       },
@@ -210,5 +215,19 @@ Hm1988 <- R6Class("hm1988",
         return(EV)
         #self$EV <- EV
       }
+  ),
+  # private functions
+  private = list(
+    get_more_input = function(d) {
+      input <- lapply(self$s_t_b_s0_T_var, function(v, d) {
+          if (is.character(v)) v <- chr_to_rhs(v)
+          if (is.numeric(v)) {
+            return(v[seq.int(nrow(d))])
+          } else if (inherits(v, "formula")) {
+            return(get_all_vars(v, data = d)[,1])
+          }
+      }, d = d)
+      return(as.data.table(input))
+    }
   )
 )
