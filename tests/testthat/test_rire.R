@@ -1,0 +1,2 @@
+context("rire")
+library(cogscimodels)

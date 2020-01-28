@@ -1,0 +1,35 @@
+Package: cogscimodels
+Type: Package
+Title: Cognitive Model Estimation and Prediction
+Version: 1.0.3
+Date: 2019-03-12
+Author: Jana B. Jarecki
+Maintainer: Jana B. Jarecki <jj@janajarecki.com>
+Description: Implementation of cognitive models, includes a general class cognitive models that has methods to fit free parameters to data and, can apply choicerules, and various goodness-of-fit measures (loglikelihood, MSE, etc.). The interface is similar to the lm() interface. So far an exemplar model "emb" (generalized context model) is included.
+License: GPL (>= 2)
+Imports: 
+    Rcpp (>= 1.0.1),
+    cogsciutils (>= 1.0.6),
+    Formula,
+    R6,
+    Rsolnp,
+    stringr,
+    arrangements,
+    combinat,
+    quadprog,
+    reshape2,
+    abind,
+    knitr,
+    rlang,
+    magrittr
+Remotes:
+  janajarecki/cogsciutils
+LinkingTo:
+  Rcpp,
+  RcppArmadillo
+Encoding: UTF-8
+NeedsCompilation: yes
+RoxygenNote: 7.0.2
+Suggests: 
+    testthat
+VignetteBuilder: knitr
