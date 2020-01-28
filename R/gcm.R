@@ -14,12 +14,14 @@ Gcm <- R6Class("gcm",
                  stimulus_frequencies = NULL,
                  fixed = NULL, 
                  gofvalue = NULL,
+                 apply_ws_first = NULL,
                  initialize = function(formula, data, cat, metric = c("minkowski", "discrete", "threshold", "mahalanobis"), fixed, choicerule, discount) {
                    self$cat <- get_all_vars(cat, data)[, 1] # true cat
                    self$metric <- match.arg(metric)
                    self$ndim <- length(attr(terms(formula), "term.labels"))
                    f <- Formula(formula)
                    self$nval <- length(unique(as.vector(as.matrix(get_all_vars(formula(f, lhs=0, rhs=NULL), data)))))
+                   if(self$metric == "mahalanobis") self$apply_ws_first <- TRUE
                    
                    # w = vector with attention weights, sum = 1
                    # c = scalar, sensitivity that discriminate the items on the dimensions
@@ -43,6 +45,10 @@ Gcm <- R6Class("gcm",
                  make_weight_names = function(ndim = self$ndim) {
                    return(c(paste0("w", 1:ndim)))
                  },
+                 apply_ws = function(f = self$input, w = self$parm[1:self$ndim]) {
+                   f <- as.data.frame( t( t(f) * unlist(w) ) )
+                   return(f)
+                 },
                  cum_mean_by_cat = function(z, c, c_value) {
                    return( round(cumsum(z * (c == c_value))/cumsum(c == c_value), 2) )
                  },
@@ -51,6 +57,8 @@ Gcm <- R6Class("gcm",
                  },
                  make_prototype = function(f = self$input, c = self$cat, fun = self$cum_median_by_cat, last_only = TRUE) {
                    # f = feature values; c = categories; fun = aggregation function
+                   if(self$apply_ws_first) f <- self$apply_ws()
+                   
                    x1 <- apply(f, 2, function(z) {
                      do.call(fun, list(z = z, c = c, c_value = 1))
                    })
@@ -70,7 +78,17 @@ Gcm <- R6Class("gcm",
                    }
                  },
                  calc_cov = function(f = self$input, c = self$cat) {
-                   return(list(var(f[c == 0, ]), var(f[c == 1, ])))
+                   if(self$apply_ws_first) f <- self$apply_ws()
+                   n_c <- cbind(cumsum(c == 0), cumsum(c == 1))
+                   return(
+                     lapply(1:nrow(f), function(i) {
+                       prev_f <- f[1:i, , drop = FALSE]
+                       prev_c <- c[1:i]
+                       cov_cat_0 <- ((n_c[i, 1]-1)/n_c[i, 1]) * var(prev_f[prev_c == 0, ])
+                       cov_cat_1 <- ((n_c[i, 2]-1)/n_c[i, 2]) * var(prev_f[prev_c == 1, ])
+                       return(list(cov_cat_0, cov_cat_1))
+                     })
+                   )
                  },
                  calc_stimulus_frequencies = function() {
                    id <- self$input_id
@@ -84,7 +102,7 @@ Gcm <- R6Class("gcm",
                    res <- array(res, dim = c((nrow(res)/2), 2, ncol(res)), dimnames = list(levels(id), c(0,1), 1:ncol(res)))
                    return(aperm(res, c(1, 3, 2)))
                  },
-                 calc_similarity_matrix = function(x, y, cov = NULL){
+                 calc_similarity_matrix = function(x, y, metric = self$metric){
                    # x: matrix with features of every trial, e.g., learningset
                    # y: matrix with feature combinations to which the similarity should be calculated; e.g., prototypes
                    x <- as.data.frame(unique(x))
@@ -108,7 +126,8 @@ Gcm <- R6Class("gcm",
                      z <- pairs[, pair]
                      probe <- x[z[1], ]
                      exemplar <- y[z[2], ]
-                     if(!is.null(cov)) {
+                     if(metric == "mahalanobis") {
+                       # 1. calc_cov, calc_distance, add argument (c = NULL)
                        distance <- self$calc_distance(probe = probe, exemplar = exemplar, cov = cov[[z[2]]])
                      } else {
                        distance <- self$calc_distance(probe = probe, exemplar = exemplar)
@@ -145,7 +164,7 @@ Gcm <- R6Class("gcm",
                    if(self$metric == "mahalanobis") {
                      means <- self$make_prototype()
                      cov <- self$calc_cov()
-                     sim_mat <- self$calc_similarity_matrix(x = rbind(self$input, input), y = means, cov = cov)
+                     sim_mat <- self$calc_similarity_matrix(x = rbind(self$input, input), y = self$input, cov = cov)
                    } else {
                      sim_mat <- self$calc_similarity_matrix(x = rbind(self$input, input), y = self$input)
                    }
@@ -155,11 +174,12 @@ Gcm <- R6Class("gcm",
                      }
                      id <- input_id[trial]
                      
+                     effective_trial <- trial - is.null(newdata)
                      if(self$metric == "mahalanobis") {
+                       # to do: matrix counter (1:T für MOD, rep(1, T) für MINK)
                        sim_to_cat1 <- sim_mat[id, 2]
                        total_sim <- sum(sim_mat[id, ])
                      } else {
-                       effective_trial <- trial - is.null(newdata)
                        sim_to_cat1 <- stimulus_frequencies[, effective_trial, 2] %*% sim_mat[id, ]
                        total_sim <- rowSums(stimulus_frequencies[, effective_trial, ]) %*% sim_mat[id, ]
                      }
@@ -183,7 +203,7 @@ Gcm <- R6Class("gcm",
                      dist <- w %*% as.numeric(dist > gamma) # Vector multiplication
                    }
                    if(self$metric == "mahalanobis"){
-                     dist <- mahalanobis(x = probe, center = unlist(c(exemplar)), cov = cov)
+                     dist <- sqrt(mahalanobis(x = probe, center = unlist(c(exemplar)), cov = cov))
                    }
                    return(dist)
                  },
