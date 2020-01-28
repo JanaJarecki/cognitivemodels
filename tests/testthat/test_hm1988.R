@@ -18,7 +18,7 @@ test_that("Values of hm1988", {
   # initial status = 11
   val11 <- cbind(a1pa1=c(0.9, 0.99, 0.999, 0.9999),
                  a1pa2=c(0.6, 0.96, 0.996, 0.9996)) # Table 1
-  .args <- list(formula = ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = ~b, ntrials = ~nt, state = ~s, initstate = ~init, trial=~t, data = D11, choicerule = "argmax")
+  .args <- list(formula = ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = ~b, ntrials = ~nt, states = ~s, initstate = ~init, trials=~t, data = D11, choicerule = "softmax", fix = list(tau = 0.3))
   M <- do.call(hm1988, .args)
   expect_equal(M$predict("value", action = 1:2), val11)
   expect_equal(M$predict("response", action = 1:2), cbind(a1pa1=rep(1,4), a1pa2=0))
@@ -61,31 +61,92 @@ test_that("Values of hm1988", {
   .args$data <- D[new_order,]
   M <- do.call(hm1988, .args)
   expect_equal(M$predict("values", action = 1:2), rbind(val11,val10,val9)[new_order,])
-  .args$choicerule = "softmax"
-  .args$data$y = cr_argmax(rbind(val11,val10,val9)[new_order,1])
-  .args$formula <- y ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23
-  
-  M <-do.call(hm1988, .args)
-
+  # .args$choicerule = "softmax"
+  # .args$data$y = cr_argmax(rbind(val11,val10,val9)[new_order,1])
+  # .args$formula <- y ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23
+  # .args$fix <- list()
+  # M <-do.call(hm1988, .args)
+  # M$predict()
 })
+
+test_that("Input formats of hm1988", {
+  D <- data.frame(
+    a1   = 0,    a2 = 1,    a3 = 2,
+    pa11 = 0.1, pa12 = 0.8, pa13 = 0.1,
+    pa21 = 0.4, pa22 = 0.2, pa23 = 0.4,
+    s = 11,
+    t = 4:1,
+    init = 10,
+    b = 12,
+    nt = 4)
+  #  full input format
+  M <- hm1988(formula = ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = ~b, ntrials = ~nt, states = ~s, initstate = ~init, trials=~t, data = D, choicerule = "argmax")
+  # Argument 'budget' as number
+  M2 <- hm1988(formula = ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = 12, ntrials = ~nt, states = ~s, initstate = ~init, trials=~t, data = D, choicerule = "argmax")
+  expect_equal(M2$predict("value", 1:2), M$predict("value", 1:2))
+  # Additional argument 'ntrials' as number
+  M2 <- hm1988(formula = ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = 12, ntrials = 4, states = ~s, initstate = ~init, trials=~t, data = D, choicerule = "argmax")
+  expect_equal(M2$predict("value", 1:2), M$predict("value", 1:2))
+  # Additional argument 'initstate' as number
+  M2 <- hm1988(formula = ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = 12, ntrials = 4, states = ~s, initstate = 10, trials=~t, data = D, choicerule = "argmax")
+  expect_equal(M2$predict("value", 1:2), M$predict("value", 1:2))
+  # Additional argument 'states' as number
+  M2 <- hm1988(formula = ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = 12, ntrials = 4, states = 11, initstate = 10, trials=~t, data = D, choicerule = "argmax")
+  expect_equal(M2$predict("value", 1:2), M$predict("value", 1:2))
+  # Additional argument 'states' as number
+  M2 <- hm1988(formula = ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = 12, ntrials = 4, states = 11, initstate = 10, trials = 4:1, data = D, choicerule = "argmax")
+  expect_equal(M2$predict("value", 1:2), M$predict("value", 1:2))
+  # statess NOT supplied
+  # M2 <- hm1988(formula = ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = 12, ntrials = 4, initstate = 10, data = D, choicerule = "argmax")
+  # pp <- cbind(t=M2$get_timehorizons(), s=M2$get_states(), M2$predict("v", 1:2))
+  # dcast(as.data.table(pp), s ~ t, value.var="a1pa2")
+})
+
+
+
+D <- ...
+M <- hm1988(formula = ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = ~b, ntrials = ~nt, states = ~s, initstate = ~init, trials=~t, data = D, choicerule = "softmax", fix = list(tau = 0.3))
+M$predict("value", 1:2) # EV of options
+M$predict("response") # Pr(choice) of options gegeben softmax
+M$set_par(c(tau = .0001))
+coef(M)
+
+
+
+
+
+
+# test_that("Choicerule in hm1988", {
+#   D <- data.frame(
+#     a1   = 0,    a2 = 1,    a3 = 2,
+#     pa11 = 0.1, pa12 = 0.8, pa13 = 0.1,
+#     pa21 = 0.4, pa22 = 0.2, pa23 = 0.4,
+#     s = 11,
+#     t = 4:1,
+#     nt = 4,
+#     choice = 1)
+#   #  full input format
+#   M <- hm1988(formula = choice ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = 12, ntrials = 4, states = ~s, initstate = 10, trials=~t, data = D, choicerule = "softmax", options = list(fit = T))
+# })
+
 
 
 
 # # Searcy, G. D., & Pietras, C. J. (2011). Optimal risky choice in humans: effects of amount of variability. Behavioural Processes, 87, 88–99. doi:10.1016/j.beproc.2011.01.008
 # # Experiment 1
 # budget <- 28 # was 28 and 36
-# env <- rsenvironment(budget = budget, n.trials = 5, initial.state = 0, LV = matrix(c(0.5, 0.5, 4, 8), nc = 2), HV = matrix(c(.5, .5, 0, 12), nc = 2), terminal.fitness = function(state, budget) (state >= budget) * state)
-# model <- hm1988(environment = env, formula = y ~ timehorizon + state)
+# env <- rsenvironment(budget = budget, n.trialss = 5, initial.states = 0, LV = matrix(c(0.5, 0.5, 4, 8), nc = 2), HV = matrix(c(.5, .5, 0, 12), nc = 2), terminal.fitness = function(states, budget) (states >= budget) * states)
+# model <- hm1988(environment = env, formula = y ~ timehorizon + states)
 # round(cbind(model$data, predict(model, "v", 1:2)), 3)
 
 # # Experiment 2: fix instead of low-variance option
 # budget <- 48 # was 28 and 48
-# env <- rsenvironment(budget = budget, n.trials = 5, initial.state = 0, LV = matrix(c(1, 0, 6, 0), nc = 2), HV = matrix(c(.5, .5, 0, 12), nc = 2), terminal.fitness = function(state, budget) (state >= budget) * state)
-# model <- hm1988(environment = env, formula = y ~ timehorizon + state)
+# env <- rsenvironment(budget = budget, n.trialss = 5, initial.states = 0, LV = matrix(c(1, 0, 6, 0), nc = 2), HV = matrix(c(.5, .5, 0, 12), nc = 2), terminal.fitness = function(states, budget) (states >= budget) * states)
+# model <- hm1988(environment = env, formula = y ~ timehorizon + states)
 # round(cbind(model$data, predict(model, "v", 1:2)), 1)
 # # There seems to be an error in Table A.2. Experiment 2 on p. 99 of the paper
-# # Since in trial 3 one can onle have accumulated 0, 6, 12, 18, 24 earnings the max is 2 x 12 = 24.
-# # but the paper says trial 3 accumulated earnings 30
+# # Since in trials 3 one can onle have accumulated 0, 6, 12, 18, 24 earnings the max is 2 x 12 = 24.
+# # but the paper says trials 3 accumulated earnings 30
 
 # # Pietras, C. J., Searcy, G. D., Huitema, B. E., & Brandt, A. E. (2008). Effects of monetary reserves and rate of gain on human risky choice under budget constraints, 78, 358–373. doi:10.1016/j.beproc.2008.01.016
 # initial <- c(pos = 9, neg.rate = 9, neg.reserves = 3, neg.rate.reserves = 3, pos.rate.reserves = 10)
@@ -93,16 +154,16 @@ test_that("Values of hm1988", {
 # LVoptions <- sapply(HVoptions, function(z) mean(z[3:4]))
 # cond <- "neg.rate.reserves"
 
-# env <- rsenvironment(budget = 40, n.trials = 5, initial.state = initial[cond], fix = matrix(c(1, 0, LVoptions[[cond]], 0), nc = 2), Variable = matrix(HVoptions[[cond]], nc = 2), terminal.fitness = function(state, budget) (state >= budget) * state)
-# model <- hm1988(environment = env, formula = y ~ timehorizon + state)
+# env <- rsenvironment(budget = 40, n.trialss = 5, initial.states = initial[cond], fix = matrix(c(1, 0, LVoptions[[cond]], 0), nc = 2), Variable = matrix(HVoptions[[cond]], nc = 2), terminal.fitness = function(states, budget) (states >= budget) * states)
+# model <- hm1988(environment = env, formula = y ~ timehorizon + states)
 # res <- round(cbind(model$data, predict(model, "v", 1:2)), 1)
 # res <- res[res[, 3] != res[, 4], ]
 # cbind(res[, 1:2], x = names(res)[3:4][apply(res[, 3:4], 1, which.max)], res[, 3:4])
 
 
 # # 
-# env <- rsenvironment(budget = 28, n.trials = 5, initial.state = 0, LV = matrix(c(.5, .5, 8, 4), nc = 2), HV = matrix(c(.5, .5, 0, 12), nc = 2), terminal.fitness = function(state, budget) (state >= budget) * state)
-# model <- hm1988(environment = env, formula = y ~ timehorizon + state)
+# env <- rsenvironment(budget = 28, n.trialss = 5, initial.states = 0, LV = matrix(c(.5, .5, 8, 4), nc = 2), HV = matrix(c(.5, .5, 0, 12), nc = 2), terminal.fitness = function(states, budget) (states >= budget) * states)
+# model <- hm1988(environment = env, formula = y ~ timehorizon + states)
 # round(cbind(model$data, predict(model, "v", 1:2)), 2)
 
 

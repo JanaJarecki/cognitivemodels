@@ -8,7 +8,7 @@
 \alias{SSE.cogscimodel}
 \title{Computes Various Model Fit Measures}
 \usage{
-\method{logLik}{cogscimodel}(x)
+\method{logLik}{cogscimodel}(x, ...)
 
 \code{MSE(x)}
 

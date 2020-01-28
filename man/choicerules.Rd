@@ -6,9 +6,9 @@
 \alias{argmax}
 \title{Models for Choice Rules (decision rules for action selection)}
 \usage{
-softmax(formula, data = NULL, fix = list(), options = NULL)
+softmax(formula, data, fix = list(), options = NULL)
 
-luce(formula, data = NULL, ...)
+luce(formula, data, ...)
 
 argmax(formula, data, ...)
 }

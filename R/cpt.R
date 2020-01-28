@@ -42,7 +42,7 @@
 #' anova(M)
 #' @export
 cpt <- function(formula, data = NULL, ref, fix = list(), choicerule = NULL, weighting = c('TK1992'), value = c('TK1992'), options = NULL) {
-  message("This function is experimental and still under development.")
+  warning("This function is experimental and still under development.")
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   return(do.call(what = Cpt$new, args = .args, envir = parent.frame()))
 }
@@ -89,21 +89,11 @@ Cpt <- R6Class("cpt",
         parspace = parspace       
         )
     },
-    get_more_input = function(d = data.frame()) {
-      fr <- self$formulaRef
-      if (is.numeric(fr)) {
-        ref <- array(fr, dim = c(nrow(d), self$natt()[1]/2, self$nstim))
-      } else {
-        ref <- super$get_input(f = chr_as_rhs(fr), d = d)
-        ref <- array(ref, dim = c(nrow(d), self$natt()[1]/2, self$nstim))
-      }
-      return(ref)
-    },
     make_prediction = function(type, input, more_input, ...) {
       par <- self$get_par()
       no <- self$nobs
       ns <- self$nstim
-      na <- self$natt()[1]
+      na <- self$natt[1]
       X <- input[,  seq(1, na, 2), drop = FALSE] #1., 3., 5. input
       P <- input[, -seq(1, na, 2), drop = FALSE] #2., 4., 6. input
       X <- X - more_input # more_input = reference point
@@ -185,10 +175,23 @@ Cpt <- R6Class("cpt",
         }
       } 
       self$vfun <- vfun
+    }
+  ),
+  private = list(
+    get_more_input = function(d = data.frame()) {
+      fr <- self$formulaRef
+      if (is.numeric(fr)) {
+        ref <- array(fr, dim = c(nrow(d), self$natt[1]/2, self$nstim))
+      } else {
+        ref <- super$get_input(f = chr_as_rhs(fr), d = d)
+        ref <- array(ref, dim = c(nrow(d), self$natt[1]/2, self$nstim))
+      }
+      return(ref)
     },
+
     check_input = function() {
       if (length(self$input) == 0) { return() }
-      P <- self$input[, seq(2, self$natt()[1], 2), , drop = FALSE]
+      P <- self$input[, seq(2, self$natt[1], 2), , drop = FALSE]
       f <- self$formula
       fs <- lapply(seq.int(length(f)[2]), function(x) attr(terms(formula(f, lhs=0, rhs=x, drop=FALSE)), "term.labels"))
       pvars <- lapply(fs, function(x) x[seq(2, length(x), 2)] )

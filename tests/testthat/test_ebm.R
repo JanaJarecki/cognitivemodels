@@ -99,6 +99,7 @@ test_that("Parameter estimates in SIZE condition", {
   expect_equal(M$npar("free"), 2L)
   })
 
+# Tests the estimated parameter
 test_that("Parameter estimates in DIAG condition", {
   dd <- d[d$condition == "diag" & !is.na(d$true_cat), ]
   fitd <- d[d$condition == "diag",]
@@ -181,7 +182,8 @@ test_that("Parameter estimates in DIAG condition", {
 #   expect_equal(M$predict(d), pdiag, tol = .02)
 # })
 
-
+# Tests that the model spits out an error
+# if the input is wrong
 test_that('EBM error handlers', {
   d <- as.data.frame(matrix(c(1,1,1,1,0,
                               1,1,1,0,0,

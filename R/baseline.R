@@ -127,19 +127,19 @@ Baseline <- R6Class("baseline",
         mode = mode,
         options = list(fit = FALSE))
     },
-    predict = function(type = c("response"), newdata = NULL) {
-      type <- match.arg(type)
-      if (is.null(newdata) | missing(newdata)) {
+    predict = function(type = "response", newdata = NULL) {
+      type <- match.arg(type, "response")
+      D <- if (is.null(newdata)) {
         D <- self$input
       } else {
-        D <- private$get_input(f = self$formula, d = newdata)
+        private$get_input(f = self$formula, d = newdata)
       }
       out <- switch(self$type,
         constant = self$const,
-        mean = apply(self$res, 2, mean))
+        mean = apply(self$res, 2, mean, simplify = FALSE))
       `colnames<-`(
-        matrix(out, nrow = nrow(D), ncol = self$nres),
-        paste0("pred_", private$get_stimnames())
+        matrix(out, nrow = nrow(D), ncol = self$nstim),
+        paste0("pred_", private$get_stimnames()[1:self$nstim])
         )
     }
   )

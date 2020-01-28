@@ -1,11 +1,14 @@
 #' Houston & McNamara's (1988) dynamic optimization model for risk-sensitive foraging problems in discrete time
 #' 
 #' @import data.table
-#' @param env object of class \link{rsenvironment}, see example. It specifies the risky and safe option, the number of trials, the state, and requirement (aka budget).
-#' @param formula (optional) object of class \link[stats]{formula}, e.g. \code{choice ~ timehorizon + state}, defines how the variables are called in the data.
-
-#' @param data (optional) data frame
 #' @inheritParams Cogscimodel
+#' @param formula An oject of class \link[stats]{formula}, e.g. \code{choice ~ x1 + p1 + x2 + p2 | y1 + q1 + y2 + q2}. Defines the risky options by alternating outcome1 + probability1 + outcome2 + probability2 + .... Different gambles are separated by a \code{"|"}. Leeft-hand-side is optional.
+#' @param data A data frame holding the variables of the gambles in \code{formula}.
+#' @param trials (defauls \code{"all"}) A numeric vector of length \code{nrow(data)}; the current decision trial. Can also be a single number, a formula (e.g., \code{~t} in which case the model takes \code{data$t} as trial), or \code{"all"} (in which case the model predicts for all trials).
+#' @param states (defauls \code{"all"}) A numeric vector of length \code{nrow(data)}; the resource states or point total. Can also be a single number or a formula (e.g., \code{~s} in which case the model takes \code{data$s} as states), or \code{"all"} in which case the model predicts for all possible states.
+#' @param budget A number; the critical state/goal/requirement, that matters in the terminal payout function. Can also be a numeric vector (of length \code{nrow(data)}), or a formula (e.g., \code{~b} in which case the model takes \code{data$b} as budget).
+#' @param ntrials A number; the total number of trials available, must be greater than \code{trial}. Can also be a numeric vector (of length \code{nrow(data)}) or a formula (e.g., \code{~total}) in which case the model takes \code{data$total}).
+#' @param initstate (default 0) A number; the starting state in the first trial. Can also be a numeric vector (of length \code{nrow(data)}) or a formula (e.g., \code{~state0}) in which case the model takes \code{data$state0}).
 #' @references Houston, A. I., & McNamara, J. M. (1988). A framework for the functional analysis of behaviour. Behavioural and Brain Science, 11, 117–163.
 #' @return An object of class R6 holding the model, it has no free parameters. A model object \code{M} can be viewed with \code{M}, predictions can be made with \code{M$predict()} for choice predictions, and \code{M$predict("ev")} for the expected value of the optimal choice and \code{M$predict("value", 1:2)} for the expected value of all choices.
 #' @author Jana B. Jarecki, \email{jj@janajarecki.com}
@@ -50,7 +53,7 @@
 #' M$predict("r", newdata = newdt)
 #' 
 #' @export
-hm1988 <- function(formula, state, budget, trial, ntrials, initstate, data, choicerule, fix = list(), options = NULL, fitnessfun = NULL) {
+hm1988 <- function(formula, trials, states, budget, ntrials, initstate = 0, data = NULL, choicerule = NULL, fix = list(), options = NULL, fitnessfun = NULL) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   return(do.call(what = Hm1988$new, args = .args, envir = parent.frame()))
 }
@@ -65,17 +68,9 @@ Hm1988 <- R6Class("hm1988",
     EV = NULL,
     V = NULL,
     env = "rsenvironment",
-    initialize = function(formula, state, budget, trial, ntrials, initstate = 0, data, fix = list(), choicerule = NULL, options = list(), fitnessfun = function(state, budget) { as.numeric(state >= budget) }) {
-      if (missing(formula)) {
-        formula <- ~ timehorizon + state
-      }
-      if (missing(data)) {
-        time_state_names <- attr(terms(formula), "term.labels")
-        data <- env$makeData(time_state_names)
-      }
-      self$fitnessfun <- fitnessfun
-      data <- as.data.frame(data)
-      self$s_t_b_s0_T_var <- list(state, trial, budget, initstate, ntrials)
+    initialize = function(formula, trials = "all", states = "all", budget, ntrials, initstate = 0, data = NULL, fix = list(), choicerule = "argmax", options = list(), fitnessfun = function(state, budget) { as.numeric(state >= budget) }) {
+      self$fitnessfun <- fitnessfun   
+      self$s_t_b_s0_T_var <- list(states, trials, budget, initstate, ntrials)
       self$init_environments(f = formula, d = data)
       self$V <- lapply(unique(self$envid), function(i)
         self$make_value_mat(e = self$environments[[i]]))
@@ -96,30 +91,34 @@ Hm1988 <- R6Class("hm1988",
         if (!is.null(newdata)) {
           stop("New data is not (yet) implemented.")
         }
-        type = match.arg(type)
-        pred <- data.table(envid = self$envid)
-        pred[, order := .I]
-        out <- pred[, c(list(order = order), as.list(as.data.frame(self$make_prediction(envid = envid[1], type = ..type, action = ..action)))), by = envid][, -1]
-        return(as.matrix(out[order(order), -1]))
-        
-        # if (is.null(newdata)) {
-        #   input <- self$input
-        #   t_s_b_nt <- self$more_input
-        # } else {
-        #   input <- self$get_input(f=self$formula, d=newdata)
-        #   t_s_b_nt <- self$get_more_input(d=newdata)
-        # }
-        # input <- if ( is.null(newdata) ) { self$input } else { self$get_input(self$formula, newdata) }
+        ids <- unique(self$envid)
+        out <- lapply(
+          ids,
+          self$make_prediction,
+          type = match.arg(type),
+          action = action)
+        out <- do.call(rbind, out)
+        if (!(sum(self$more_input[c("states", "trials")] == "all") != 2)) {
+          stop("If 'states' = 'all', then 'trials' must also be 'all'.")
+        } else if (all(self$more_input[c("states", "trials")] == "all")) {
+          order <- seq.int(sum(sapply(self$environments, function(x) nrow(x$makeData(c("t","s"))))))
+        } else {
+          order <- unlist(sapply(ids, function(x) which(self$envid == x)))
+        }
+        # pred <- data.table(envid = self$envid)
+        # pred[, order := .I]
+        # out <- pred[, c(list(order = order), as.list(as.data.frame(self$make_prediction(envid = envid[1], type = ..type, action = ..action)))), by = envid][, -1]
+        # out <- as.matrix(out[order(order), -1])
+        return(cogsciutils:::drop2(out[order(order), , drop = FALSE]))
       },
-      make_prediction = function(envid, type, action = NULL) {
+      make_prediction = function(envid, type, action = NULL, more_input = self$more_input) {
         env <- self$environments[[envid]]
         V <- self$V[[envid]]
         EV <- self$EV[[envid]]
-        action <- if ( is.null(action) & env$n.actions == 2) { 1 } else { self$stimnames }
-        s_t_b_s0_T <- self$more_input[self$envid == envid, ]
-        # Store the separate variables
-        states <- s_t_b_s0_T[, 1, drop = FALSE]
-        timehorizon <- s_t_b_s0_T[, 5] - s_t_b_s0_T[, 2] + 1
+        states <- self$get_states(e = env, id = envid)
+        timehorizon <- self$get_timehorizons(e = env, id = envid)
+        action <- if (is.null(action) & env$n.actions == 2) { 1 } else { self$stimnames }
+        
         rows <- match(states, env$states)
         cols <- match(timehorizon, rev(env$trials))
         acts <- rep(seq_len(env$n.actions), each = length(timehorizon))
@@ -141,22 +140,10 @@ Hm1988 <- R6Class("hm1988",
         }
       },
       init_environments = function(f, d) {
-        # Number of risky choice options
-        n <- length(all.vars(formula(as.Formula(f), lhs=0, rhs=1)))
         d <- cbind(
-          private$get_more_input(d = d),
+          as.data.table(private$get_more_input(d = d))[, 3:5],
           get_all_vars(formula = f, data = d)
         )
-        # variable name of state, trial, budget, init state, num trials
-        vars <- names(d)[1:5]
-        # Names of the budget, n(trials), initial state
-        # b_name  <- all.vars(self$formula_bstntis)[1]
-        # nt_name <- all.vars(self$formula_bstntis)[4] 
-        # is_name <- all.vars(self$formula_bstntis)[5]
-        # # Formula of them
-        # f_bsnt <- as.formula(paste("~", paste(all.vars(self$formula_bstntis)[c(1,4,5)], collapse="+")))
-        # f2 <- update(f, as.formula(paste("NULL ~ . +", f_bsnt[2])))
-        # Store the respective data
         d[, envid := match(apply(.SD, 1, paste, collapse=""), unique(apply(.SD, 1, paste, collapse="")))]
         unique_d <- unique(d)
         unique_input <- super$get_input(f = f, d = as.data.frame(unique_d))
@@ -165,9 +152,9 @@ Hm1988 <- R6Class("hm1988",
         self$environments <- lapply(unique_d$envid, function(i, vars) {
           .row <- which(unique_d$envid == i)
           .args <- list(
-            budget = unlist(unique_d[.row, vars[3], with = FALSE]),
-            n.trials = unlist(unique_d[.row, vars[5], with = FALSE]),
-            initial.state = unlist(unique_d[.row, vars[4], with = FALSE]),
+            budget        = unlist(unique_d[.row, 1]),
+            n.trials      = unlist(unique_d[.row, 3]),
+            initial.state = unlist(unique_d[.row, 2]),
             terminal.fitness = self$fitnessfun)
           .oargs <- lapply(1:no, function(o, .row, input) {
               t(matrix(unique_input[.row, , o], nr = 2))[, 2:1, drop = FALSE]
@@ -179,12 +166,28 @@ Hm1988 <- R6Class("hm1988",
         # store environment id to match the order in the data from different environments later
         self$envid <- d$envid
       },
+      get_states = function(e, x = self$more_input$states, id = self$envid) {
+        if (missing(e)) {
+          return(do.call(c, lapply(self$environments, self$get_states)))
+        }
+        if (x[1] == "all") {
+          return(e$makeData(c("", ""))[,2])
+        } else {
+          return(x[self$envid == id])
+        }
+      },
+      get_timehorizons = function(e, x = self$more_input$trials, nt = self$more_input$ntrials, id = self$envid) {
+        if (missing(e)) {
+          return(do.call(c, lapply(self$environments, self$get_timehorizons)))
+        }
+        if (x[1] == "all") {
+          return(e$makeData(c("", ""))[,1])
+        } else {
+          return((nt - x + 1L)[self$envid == id])
+        }
+      },
       make_value_mat = function(e) {
-        #e <- self$env
         ns <- e$n.states
-        nt <- e$n.trials
-        # fitness <- array(NA, dim = c(ns, nt), dimnames = list(env$states, env$trials))
-        # fitness <- cbind(fitness, env$terminal.fitness(state = env$states, budget = env$budget))
         F <- e$terminal.fitness(state = e$states, budget = e$budget)
         V <- e$makeStateTrialActionMat()
         for(t in rev(e$trials)) {
@@ -194,11 +197,9 @@ Hm1988 <- R6Class("hm1988",
           V[, t, ] <- colSums(aperm(TxF, c(2,1,3,4)))
           F <- apply(V[, t, , drop = FALSE], 1, max)
         }
-        # self$V <- V
         return(V)
       },
       make_ev_mat = function(e, V) {
-        #e <- self$env
         EV <- e$makeStateTrialActionMat()
         P <- t(apply(V, 1, super$apply_choicerule))
         P <- array(P, dim = dim(V), dimnames = dimnames(V))
@@ -219,15 +220,36 @@ Hm1988 <- R6Class("hm1988",
   # private functions
   private = list(
     get_more_input = function(d) {
-      input <- lapply(self$s_t_b_s0_T_var, function(v, d) {
-          if (is.character(v)) v <- chr_to_rhs(v)
+      out <- lapply(self$s_t_b_s0_T_var, function(v, d) {
+          if (is.character(v)) {
+            if (v[1] == "all") {
+              return(v[1])
+            } else {
+              v <- chr_to_rhs(v)
+            }
+          }
           if (is.numeric(v)) {
-            return(v[seq.int(nrow(d))])
+            return(rep(v, nrow(d)/length(v)))
           } else if (inherits(v, "formula")) {
             return(get_all_vars(v, data = d)[,1])
           }
       }, d = d)
-      return(as.data.table(input))
+      names(out) <- c("states", "trials", "budget", "initstate", "ntrials")
+      private$check_more_input(x = out)
+      return(out)
+    },
+    check_more_input = function(x) {
+      if (is.numeric(x$trials)) {
+        if (any(x$trials > x$ntrials)) {
+        stop("All 'ntrials' must be > 'trials'. Check the values in rows:  ", .brackify(which(x$trials > x$ntrials)), ".")
+        }
+        if (any(x$trials <= 0)) {
+          stop("All 'trials' must be > 0. Check the 'trials' in rows:  ", .brackify(which(x$trials <= 0)), ".")
+        }
+        if (any(x$ntrials <= 0)) {
+          stop("All 'ntrials' must be > 0. Check the 'ntrials' in rows:  ", .brackify(which(x$ntrials <= 0)), ".")
+        }
+      }     
     }
   )
 )

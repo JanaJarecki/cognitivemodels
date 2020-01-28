@@ -266,13 +266,13 @@ Cogscimodel <- R6Class(
     set_data = function(data) {
       if (missing(data)) data <- data.frame()
       formula <- self$formula
-      self$input <- private$get_input(f = formula, d = data)
-      self$more_input <- private$get_more_input(d = data)
-      self$res <- private$get_res(f = formula, d = data)
       self$nobs <- nrow(data)
       self$nstim <- length(self$formula)[2]
       self$nres <- max(0, dim(self$res)[2])
       self$natt <- vapply(1:self$nstim, function(i) length(attr(terms(formula(self$formula, lhs=0, rhs=i)), "term.labels")), 1L)
+      self$input <- private$get_input(f = formula, d = data)
+      self$more_input <- private$get_more_input(d = data)
+      self$res <- private$get_res(f = formula, d = data)  
       invisible(return(self))
     },
 
@@ -495,18 +495,25 @@ Cogscimodel <- R6Class(
                   coefficients = coef.table)
       class(ans) <- "summary.cogscimodel"
       return(ans)
+    },
+    pargrid = function(nsteps = NULL, offset = NULL, par = NULL) {
+      return(private$make_pargrid(offset=offset, nsteps=nsteps, par=par))
+    },
+    # Retrieve the call to super
+    getCall = function() {
+      return(self$call)
     }
   ),
+
+
+
+
 
 
 
   # -------------------------------------------------------------------------
   # Private methods
   private = list(
-    # Retrieve the call to super
-    getCall = function() {
-      return(self$call)
-    },
     # Get the inputs to the model
     get_input = function(f = self$formula, d, ...) {
       if (length(d) == 0) {
@@ -862,13 +869,16 @@ Cogscimodel <- R6Class(
         return(.lhs_var(self$formula))
       }
     },
-    make_pargrid = function(offset = self$options$fit_grid_offset, nsteps = self$options$fit_control$nsteps,  ...) {
+    make_pargrid = function(offset = NULL, nsteps = NULL,  par = NULL, ...) {
+      if (is.null(offset)) offset <- self$options$fit_grid_offset
+      if (is.null(nsteps)) nsteps <- self$options$fit_control$nsteps
+      x <- if (is.null(par)) { "free" } else { "all" }
+      par <- if (is.null(par)) { 1:length(private$get_parnames(x)) }
       if (length(.simplify_constraints(self$constraints)) > 0L) { warning('Note: fit_solver="grid" does not respect linear or quadratic constraints, maybe change the solver. To this end use: options = list(fit_solver = ...), e.g, "solnp" or "optimx".') }
-
       return(make_grid_id_list(
-        names = private$get_parnames("free"),
-        lb = private$get_lb("free"),
-        ub = private$get_ub("free"),
+        names = private$get_parnames(x)[par],
+        lb = private$get_lb(x)[par],
+        ub = private$get_ub(x)[par],
         offset = offset,
         nsteps = nsteps,
         ...))

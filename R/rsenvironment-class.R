@@ -188,7 +188,7 @@ Rsenvironment <- R6Class("rsenvironment",
           return(policy)
         },
         makeData = function(colnames) {
-          return(melt(self$stateTrialMat[, self$trials, drop = F], na.rm = TRUE, varnames = c(NA, colnames[1]), value.name = colnames[2])[, -1])
+          return(reshape2::melt(self$stateTrialMat[, self$trials, drop = F], na.rm = TRUE, varnames = c(NA, colnames[1]), value.name = colnames[2])[, -1])
         },
         print = function() {
           cat("rsenvironment",

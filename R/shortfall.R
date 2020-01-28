@@ -54,21 +54,6 @@ Shortfall <- R6Class("shortfall",
         # Note: keep "grid" as first solver! (flat maximum issues)
         options = c(options, list(fit_solver = c("grid", "solnp")))
       )
-
-      if (self$npar("free") > 0L) {
-        message("Fitting free parameters ", .brackify(private$get_parnames("free")))
-        self$fit()
-      }
-    },
-    get_more_input = function(d) {
-      # this retrieves the aspiration level
-      # based on a formula stored in self$formulaAsp
-      # which we assign in the initialize() function above
-      aspiration <- super$get_input(f = self$formulaAsp, d = d) 
-      if (length(aspiration) != nrow(d)*self$nstim) {
-        aspiration <- array(aspiration, dim = c(nrow(d), 1, self$nstim))
-      }
-      return(aspiration)
     },
     make_prediction = function(type = "response", input, more_input, isnew, s, ...) {
       # input contains columns:
@@ -88,7 +73,7 @@ Shortfall <- R6Class("shortfall",
 
       ## TODO: make work with unequal no of attributes/stim
       par <- self$get_par()
-      na <- self$natt()[1]
+      na <- self$natt[1]
       return(shortfall_cpp(
           x = input[,  seq(1, na, 2), drop = FALSE],
           p = input[, -seq(1, na, 2), drop = FALSE],
@@ -96,19 +81,31 @@ Shortfall <- R6Class("shortfall",
           beta = as.double(par["beta"]),
           delta = as.double(par["delta"])
           ))
+    }
+  ),
+  private = list(
+    get_more_input = function(d) {
+      # this retrieves the aspiration level
+      # based on a formula stored in self$formulaAsp
+      # which we assign in the initialize() function above
+      aspiration <- super$get_input(f = self$formulaAsp, d = d) 
+      if (length(aspiration) != nrow(d)*self$nstim) {
+        aspiration <- array(aspiration, dim = c(nrow(d), 1, self$nstim))
+      }
+      return(aspiration)
     },
     check_input = function() {
       # this ensures that the input has an even number of columns
       # since we need x1 px1 x2 px2 .... columns
-      if (!all(self$natt() %% 2 == 0L)) {
-        stop("Formula needs an even number of right-hand elements, but has ", .brackify(self$natt()), ' elements.')
+      if (!all(self$natt %% 2 == 0L)) {
+        stop("Formula needs an even number of right-hand elements, but has ", .brackify(self$natt), ' elements.')
       }
 
       # this check ensures that the probabilitites in the
       # inpt sum to 1
       # probabilities are the 2nd, 4th, 6th ... column of the input
-      if (!all((rowSums(self$input[, -seq(1, self$natt()[1], 2), , drop = FALSE]) == self$nstim))) {
-        stop('Probabilities (which are the 2nd, 4th, 6th... element of right side of "formula") must sum to 1, but the following variables in your data do NOT sum to 1: ', .brackify(attr(terms(self$formula), "term.labels")[seq(1, self$natt()[1], 2)]), '. Check the probability variables in "formula" and in "data".')
+      if (!all((rowSums(self$input[, -seq(1, self$natt[1], 2), , drop = FALSE]) == self$nstim))) {
+        stop('Probabilities (which are the 2nd, 4th, 6th... element of right side of "formula") must sum to 1, but the following variables in your data do NOT sum to 1: ', .brackify(attr(terms(self$formula), "term.labels")[seq(1, self$natt[1], 2)]), '. Check the probability variables in "formula" and in "data".')
       }
 
       super$check_input() # Do not delete this, it runs default sanity checks

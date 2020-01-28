@@ -6,24 +6,32 @@
 \usage{
 hm1988(
   formula,
+  trial,
   state,
   budget,
-  trial,
   ntrials,
-  initstate,
-  data,
-  choicerule,
+  initstate = 0,
+  data = NULL,
+  choicerule = NULL,
   fix = list(),
   options = NULL,
   fitnessfun = NULL
 )
 }
 \arguments{
-\item{formula}{(optional) object of class \link[stats]{formula}, e.g. \code{choice ~ timehorizon + state}, defines how the variables are called in the data.}
+\item{formula}{An oject of class \link[stats]{formula}, e.g. \code{choice ~ x1 + p1 + x2 + p2 | y1 + q1 + y2 + q2}. Defines the risky options by alternating outcome1 + probability1 + outcome2 + probability2 + .... Different gambles are separated by a \code{"|"}. Leeft-hand-side is optional.}
 
-\item{data}{(optional) data frame}
+\item{trial}{A numeric vector of length \code{nrow(data)}; the current decision trial. Can also be a single number or a formula (e.g., \code{~t} in which case the model takes \code{data$t} as trial).}
 
-\item{env}{object of class \link{rsenvironment}, see example. It specifies the risky and safe option, the number of trials, the state, and requirement (aka budget).}
+\item{state}{A numeric vector of length (\code{nrow(data)}); the resource states or point total. Can also be a single number or a formula (e.g., \code{~s} in which case the model takes \code{data$s} as states).}
+
+\item{budget}{A number; the critical state/goal/requirement, that matters in the terminal payout function. Can also be a numeric vector (of length \code{nrow(data)}), or a formula (e.g., \code{~b} in which case the model takes \code{data$b} as budget).}
+
+\item{ntrials}{A number; the total number of trials available, must be greater than \code{trial}. Can also be a numeric vector (of length \code{nrow(data)}) or a formula (e.g., \code{~total}) in which case the model takes \code{data$total}).}
+
+\item{initstate}{(default 0) A number; the starting state in the first trial. Can also be a numeric vector (of length \code{nrow(data)}) or a formula (e.g., \code{~state0}) in which case the model takes \code{data$state0}).}
+
+\item{data}{(optional) A data frame holding the variables in \code{formula}.}
 }
 \value{
 An object of class R6 holding the model, it has no free parameters. A model object \code{M} can be viewed with \code{M}, predictions can be made with \code{M$predict()} for choice predictions, and \code{M$predict("ev")} for the expected value of the optimal choice and \code{M$predict("value", 1:2)} for the expected value of all choices.
