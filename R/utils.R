@@ -419,3 +419,47 @@ print.csm_constraint = function(x, latex = FALSE) {
   class(C) <- c("csm_constraint", class(C))
   return(C)
 }
+
+
+# ==========================================================================
+# Utilities for working with risky gambles
+# ==========================================================================
+#' Gets the outcomes of gambles
+#' 
+#' @param x a risky gamble matrix: x, p, x, p with options in dimension 3
+#' @export
+get_x <- function(x) {
+  return(x[, seq(1, dim(x)[2], 2), , drop = FALSE])
+}
+
+#' Gets the probabilities of gambles
+#' 
+#' @param x a risky gamble matrix: x, p, x, p with options in dimension 3
+#' @export
+get_p <- function(x) {
+  return(x[, seq(2, dim(x)[2], 2), , drop = FALSE])
+}
+
+
+#' Gets the expected value of gambles
+#' 
+#' @param x a risky gamble matrix: x, p, x, p with options in dimension 3
+#' @export
+get_ev <- function(x) {
+  d <- dim(x)[2]
+  apply(x, 3, function(slice) {
+    rowSums(slice[, seq(1, d, 2), drop = FALSE] * slice[, seq(2, d, 2), drop = FALSE])
+  })
+}
+
+
+#' Gets the variance of gambles
+#' 
+#' @param x a risky gamble matrix: x, p, x, p with options in dimension 3
+#' @export
+get_var <- function(x) {
+  d <- dim(x)[2]
+  apply(x, 3, function(slice) cogscimodels:::varG(
+    x = slice[, seq(1, d, 2), drop = FALSE],
+    p = slice[, seq(2, d, 2), drop = FALSE]))
+}
