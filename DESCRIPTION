@@ -21,7 +21,7 @@ Imports:
     abind,
     knitr,
     rlang,
-    magrittr
+    AICcmodavg
 Remotes:
   janajarecki/cogsciutils
 LinkingTo:

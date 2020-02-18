@@ -2,7 +2,7 @@
 #' 
 #' `anova` returns an analysis of deviance table for one or more fitted cogscimodels.
 #'
-#' @import AICcmodavg
+#' @importFrom AICcmodavg AICc
 #' @importFrom cogsciutils akaike_weight
 #' @param object,... Objects of class \code{cogscimodel}, typically the result of a call to one fo the models. (Or a list of \code{objects} for the \code{"cogscimodellist"} method.)
 #' @return An anova-style table
