@@ -26,7 +26,8 @@ Imports:
     ROI.plugin.optimx,
     ROI.plugin.alabama,
     ROI.plugin.deoptim,
-    ROI.plugin.nloptr
+    ROI.plugin.nloptr,
+    matlib
 Remotes:
   janajarecki/cogsciutils
 LinkingTo:
