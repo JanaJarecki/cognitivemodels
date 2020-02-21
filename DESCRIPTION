@@ -22,7 +22,11 @@ Imports:
     knitr,
     rlang,
     AICcmodavg,
-    ROI
+    ROI,
+    ROI.plugin.optimx,
+    ROI.plugin.alabama,
+    ROI.plugin.deoptim,
+    ROI.plugin.nloptr
 Remotes:
   janajarecki/cogsciutils
 LinkingTo:
