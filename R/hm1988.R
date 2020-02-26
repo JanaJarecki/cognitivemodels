@@ -62,6 +62,7 @@ Hm1988 <- R6Class("hm1988",
   inherit = Cogscimodel,
   public = list(
     s_t_b_s0_T_var = NULL,
+    unique_d = NULL,
     environments = NULL,
     fitnessfun = NULL,
     envid = NULL,
@@ -88,35 +89,44 @@ Hm1988 <- R6Class("hm1988",
         options = options)  
       },
       predict = function(type = c("response", "values", "ev", "pstates"), action = NULL, newdata = NULL) {
-        if (!is.null(newdata)) {
-          stop("New data is not (yet) implemented.")
+        type <- match.arg(type)
+        if (is.null(newdata)) {
+          envid <- self$envid
+          more_input <- self$more_input
         }
-        ids <- unique(self$envid)
+        if (!is.null(newdata)) {
+          stop("'newdata' is not yet implemented (sorry).")
+          more_input <- private$get_more_input(d = newdata)
+          d <- cbind(
+            as.data.table(more_input)[, 3:5],
+            get_all_vars(formula = self$formula, data = newdata)
+          )
+          envid <- self$unique_d[d, on = .NATURAL]$envid
+        }
+        ids <- unique(envid)
         out <- lapply(
           ids,
           self$make_prediction,
-          type = match.arg(type),
+          type = type,
           action = action)
         out <- do.call(rbind, out)
-        if (!(sum(self$more_input[c("states", "trials")] == "all") != 2)) {
+
+        if (sum(more_input[c("states", "trials")] == "all") == 1) {
           stop("If 'states' = 'all', then 'trials' must also be 'all'.")
-        } else if (all(self$more_input[c("states", "trials")] == "all")) {
+        } else if (all(more_input[c("states", "trials")] == "all")) {
           order <- seq.int(sum(sapply(self$environments, function(x) nrow(x$makeData(c("t","s"))))))
         } else {
-          order <- unlist(sapply(ids, function(x) which(self$envid == x)))
+          order <- unlist(sapply(ids, function(x) which(envid == x)))
         }
-        # pred <- data.table(envid = self$envid)
-        # pred[, order := .I]
-        # out <- pred[, c(list(order = order), as.list(as.data.frame(self$make_prediction(envid = envid[1], type = ..type, action = ..action)))), by = envid][, -1]
-        # out <- as.matrix(out[order(order), -1])
+
         return(cogsciutils:::drop2(out[order(order), , drop = FALSE]))
       },
       make_prediction = function(envid, type, action = NULL, more_input = self$more_input) {
         env <- self$environments[[envid]]
         V <- self$V[[envid]]
         EV <- self$EV[[envid]]
-        states <- self$get_states(e = env, id = envid)
-        timehorizon <- self$get_timehorizons(e = env, id = envid)
+        states <- self$get_states(e = env, id = envid, x = more_input$states)
+        timehorizon <- self$get_timehorizons(e = env, id = envid, x = more_input$trials, nt = more_input$ntrials)
         action <- if (is.null(action) & env$n.actions == 2) { 1 } else { self$stimnames }
         
         rows <- match(states, env$states)
@@ -146,6 +156,7 @@ Hm1988 <- R6Class("hm1988",
         )
         d[, envid := match(apply(.SD, 1, paste, collapse=""), unique(apply(.SD, 1, paste, collapse="")))]
         unique_d <- unique(d)
+        self$unique_d <- unique_d
         unique_input <- super$get_input(f = f, d = as.data.frame(unique_d))
         # Store an environment in the list
         no <- dim(unique_input)[3]
@@ -171,7 +182,7 @@ Hm1988 <- R6Class("hm1988",
           return(do.call(c, lapply(self$environments, self$get_states)))
         }
         if (x[1] == "all") {
-          return(e$makeData(c("", ""))[,2])
+          return(e$makeData(c("", ""))[, 2])
         } else {
           return(x[self$envid == id])
         }
@@ -181,7 +192,7 @@ Hm1988 <- R6Class("hm1988",
           return(do.call(c, lapply(self$environments, self$get_timehorizons)))
         }
         if (x[1] == "all") {
-          return(e$makeData(c("", ""))[,1])
+          return(e$makeData(c("", ""))[, 1])
         } else {
           return((nt - x + 1L)[self$envid == id])
         }
@@ -231,7 +242,7 @@ Hm1988 <- R6Class("hm1988",
           if (is.numeric(v)) {
             return(rep(v, nrow(d)/length(v)))
           } else if (inherits(v, "formula")) {
-            return(get_all_vars(v, data = d)[,1])
+            return(get_all_vars(v, data = d)[, 1])
           }
       }, d = d)
       names(out) <- c("states", "trials", "budget", "initstate", "ntrials")
