@@ -65,13 +65,11 @@ test_that("Prediction identitites to Tversky & Kahneman (1992)", {
 # 3.1. One-row test set and test sets with different orders
 tk_par <- c(alpha = 0.88, beta = 0.88, lambda = 2.25, gammap = 0.61, gamman = 0.69) 
 D <- data.frame(x1=c(1,2,2),x2=c(2,1,1),p=c(0.66,0.66,0.50))
-sapply(1:2, function(i) {
-  if(i == 1) {
-    print("D is a data.frame")
-  } else {
-    D <- as.matrix(D)
-    print("D is a matrix")
-  }
+form <- c("data frame", "matrix", "data table")
+sapply(1:length(form), function(i) {
+  print(paste0("D is a ", form[i]))
+  if(form[i] == "matrix") D <- as.matrix(D)
+  if(form[i] == "data table") D <- as.data.table(D)
   test_that("Prediction identities", {
     M <- cpt(~x1+p+x2, ref=0L, data=D[1,], fix=tk_par)
     expect_equivalent(M$predict(), 1.285, tol=tol)
