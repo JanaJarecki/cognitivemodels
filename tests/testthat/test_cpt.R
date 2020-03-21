@@ -47,6 +47,9 @@ apply(as.matrix(expand.grid(1:length(tk_par), 1:ncol(pars))), 1, function(i) {
   })
 })
 
+# 1.b. Parameter restrictions
+expect_error(cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt, fix = list(angle = "size")))
+cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt, fix = list(lambda = NA))
 
 test_that("Prediction identities", {
   D <- data.frame(x1=c(1,2,2),x2=c(2,1,1),p=c(0.66,0.66,0.50))
