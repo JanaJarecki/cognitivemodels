@@ -86,6 +86,32 @@ sapply(1:length(form), function(i) {
   })
 })
 
+# 3.2. Formula entry
+test_that("Probaility entry", {
+  M1 <- cpt(rp ~ x1 + px + x2           | y1 + py + y2          , ref = 0, data = dt, fix = tk_par)$predict()
+  M2 <- cpt(rp ~ x1 + px + x2           | y1 + py + y2 + I(1-py), ref = 0, data = dt, fix = tk_par)$predict()
+  M3 <- cpt(rp ~ x1 + px + x2 + I(1-px) | y1 + py + y2          , ref = 0, data = dt, fix = tk_par)$predict()
+  M4 <- cpt(rp ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), ref = 0, data = dt, fix = tk_par)$predict()
+  expect_equal(M1, M2); expect_equal(M1, M3); expect_equal(M2, M3); expect_equal(M1, M4); expect_equal(M2, M4); expect_equal(M3, M4)
+
+  M1 <- cpt(rp ~ x1 + px + x2           | y1 + py + y2          , ref = 0, data = dt[1, ], fix = tk_par)$predict()
+  M2 <- cpt(rp ~ x1 + px + x2           | y1 + py + y2 + I(1-py), ref = 0, data = dt[1, ], fix = tk_par)$predict()
+  M3 <- cpt(rp ~ x1 + px + x2 + I(1-px) | y1 + py + y2          , ref = 0, data = dt[1, ], fix = tk_par)$predict()
+  M4 <- cpt(rp ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), ref = 0, data = dt[2, ], fix = tk_par)$predict()
+  expect_equal(M1, M2); expect_equal(M1, M3); expect_equal(M2, M3)
+  expect_false(isTRUE(all.equal(M1, M4))); expect_false(isTRUE(all.equal(M2, M4))); expect_false(isTRUE(all.equal(M3, M4))) 
+  
+  expect_error( # probabilities don't sum to 1
+    cpt(rp ~ x1 + px + x2 + I(1-py) | y1 + py + y2, ref = 0, data = dt, fix = tk_par)
+  )
+  expect_error(
+    cpt(rp ~ x1 + px + x2 | y1 + py + y2 + I(1-px), ref = 0, data = dt, fix = tk_par)
+  )
+  expect_error(
+    cpt(rp ~ x1 + px + x2 + I(1-py) | y1 + py + y2 + I(1-px), ref = 0, data = dt, fix = tk_par)
+  )
+})
+
 test_that("CPT errors", {
   expect_error( # wrong order, should be x1 + px + x2
     cpt(rp ~ x2 + x1 + px, ref=0, data = dt)
@@ -96,13 +122,13 @@ test_that("CPT errors", {
   expect_error( # Wrong order with last probability submitted
     cpt(rp ~ x2 + x1 + px + I(1-px), ref=0, data = dt)
     )
-  expect_error(
+  expect_error( 
     cpt(rp ~ x2 + x1 + px + I(1-px) | y1 + py + y2, ref=0, data = dt)
     )
   expect_error( # Error in only the second of two RHS
     cpt(rp ~ x1 + px + x2 | y2 + y1 + py, ref=0, choicerule=NULL, data = dt)
     )
-  expect_error(
+  expect_error( 
     cpt(rp ~ x1 + px + x2 + I(1-px) | y2 + y1 + py + I(1-py), ref=0, choicerule=NULL, data = dt)
     )
   expect_error( # Error in both RHSs
