@@ -62,7 +62,7 @@ test_that("Prediction identitites to Tversky & Kahneman (1992)", {
 })
 
 # 3. Formal tests
-# 3.1. One-row test set and test sets with different orders
+# 3.a. One-row test set and test sets with different orders
 tk_par <- c(alpha = 0.88, beta = 0.88, lambda = 2.25, gammap = 0.61, gamman = 0.69) 
 D <- data.frame(x1=c(1,2,2),x2=c(2,1,1),p=c(0.66,0.66,0.50))
 form <- c("data frame", "matrix", "data table")
@@ -86,7 +86,7 @@ sapply(1:length(form), function(i) {
   })
 })
 
-# 3.2. Formula entry
+# 3.b. Formula entry
 test_that("Probaility entry", {
   M1 <- cpt(rp ~ x1 + px + x2           | y1 + py + y2          , ref = 0, data = dt, fix = tk_par)$predict()
   M2 <- cpt(rp ~ x1 + px + x2           | y1 + py + y2 + I(1-py), ref = 0, data = dt, fix = tk_par)$predict()
