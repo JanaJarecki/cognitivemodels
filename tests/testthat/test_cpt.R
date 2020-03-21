@@ -51,6 +51,16 @@ apply(as.matrix(expand.grid(1:length(tk_par), 1:ncol(pars))), 1, function(i) {
 expect_error(cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt, fix = list(angle = "size")))
 cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt, fix = list(lambda = NA))
 
+# 1.c. Equal parameters
+tk_par["gammap"] = tk_par["gamman"]
+M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt, fix = tk_par)
+test_that("Prediction identitites to Tversky & Kahneman (1992)", {
+  expect_equal(M$predict('value')[1,'pr_x'], c('pr_x'=57.5), tol = tol)
+  expect_equal(M$predict('value')[1,'pr_y'], c('pr_y'=63), tol = tol)
+  expect_equal(M$predict('value')[2,'pr_x'], c('pr_x'=-129.5), tol = tol)
+  expect_equal(M$predict('value')[2,'pr_y'], c('pr_y'=-129.9), tol = tol)
+})
+
 test_that("Prediction identities", {
   D <- data.frame(x1=c(1,2,2),x2=c(2,1,1),p=c(0.66,0.66,0.50))
   M <- cpt(~x1+p+x2, ref=0L, data=D[1,], fix=tk_par)
