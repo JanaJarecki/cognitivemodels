@@ -1,12 +1,15 @@
 #' Kahneman & Tversky's (1992) cumulative prospect theory model
+#' 
 #' @importFrom stringr str_extract
 #' @importFrom abind abind
 #' @importFrom data.table %between%
+#' 
 #' @inheritParams Cogscimodel
 #' @description Fits the cumulative prospect theory model.
-#' @param formula Object of class \link{formula} (e.g, \code{y ~ x1 + p1 + x2 | y1 + py + y2}) specifying the observed variables and the gambles. Gambles must be in the form X+P+X+P+..., the last P can be omitted (X+P+X) and will be inferred (e.g. \code{y ~ x1 + p1 + x2 + I(1-p1)}). A pipe (\code{|}) separates multiple gambles (e.g., two gambles: \code{y ~ x1 + p1 + x2 | z1 + pz + z2}).
-#' @param ref A Integer, numeric matrix, or formula defining the reference point. If it is a formula (e.g, \code{~z}) the reference point is a variable in \code{data}.
-#' @param choicerule (optional) choierule, for instance \code{"softmax"}, allowed values are listed in \code{type} under \code{\link[cogsciutils]{choicerule}}.
+#' @templateVar parameter formula
+#' @param formula A \link{formula} such as \code{y ~ x1 + p1 + x2 | y1 + py + y2} specifying the columns in \code{data} that contain outcomes, probabilities and (optional) the observations. Lines (\code{|}) separate different gambles. The formula must alternate outcomes and probabilities (x + p + x2 + p2), the last probability can be omitted.
+#' @templateVar parameter choicerule
+#' @param choicerule (default \code{"softmax"}) A string specifying the choierule of the model, for instance \code{"softmax"}. If \code{NULL}, the model predicts the utility value of the option. Allowed are the values of the \code{type} argument in \code{\link[cogsciutils]{choicerule}}. 
 #' @param weighting (optional) weighting function. Currently the one used in Kahneman & Tversky (1992), \code{"KT1992"}, is possible.
 #' @param value (optional) value function. Currently, only the one used by Kahneman & Tversky (1992), \code{"KT1992"}, is possible.
 #' @references Tversky, A., & Kahneman, D. (1992). Advances in prospect theory: cumulative representation of uncertainty. Journal of Risk and Uncertainty, 5, 297–323. doi:10.1007/BF00122574
@@ -41,7 +44,7 @@
 #' summary(M)
 #' anova(M)
 #' @export
-cpt <- function(formula, data = NULL, ref, fix = list(), choicerule = NULL, weighting = c('TK1992'), value = c('TK1992'), options = NULL) {
+cpt <- function(formula, data = NULL, ref = 0L, fix = list(), choicerule = "softmax", weighting = c('TK1992'), value = c('TK1992'), options = NULL) {
   warning("This function is experimental and still under development.")
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   return(do.call(what = Cpt$new, args = .args, envir = parent.frame()))
@@ -53,7 +56,7 @@ Cpt <- R6Class("cpt",
     formulaRef = NULL,
     wfun = NULL,
     vfun = NULL,
-    initialize = function(formula, ref, fix = NULL, data = NULL, choicerule = NULL, weighting = c('TK1992'), value = c('TK1992'), options = list()) {
+    initialize = function(formula, ref = 0L, fix = NULL, data = NULL, choicerule = NULL, weighting = c('TK1992'), value = c('TK1992'), options = list()) {
       # Ranges of parameters following these studiese
       # 1. International comparison study
       # Rieger, M. O., Wang, M., & Hens, T. (2017). Estimating cumulative prospect theory parameters from an international survey. Theory and Decision, 82, 567–596. doi:10.1007/s11238-016-9582-8
@@ -85,7 +88,7 @@ Cpt <- R6Class("cpt",
         choicerule =  choicerule,        
         discount = 0L,
         mode = "discrete",
-        options = c(options, list(fit_solver = "grid")),
+        options = c(options, list(fit_solver = c("grid", "solnp"))),
         parspace = parspace       
         )
     },
