@@ -45,7 +45,6 @@
 #' anova(M)
 #' @export
 cpt <- function(formula, data = NULL, ref = 0L, fix = list(), choicerule = "softmax", weighting = c('TK1992'), value = c('TK1992'), options = NULL) {
-  warning("This function is experimental and still under development.")
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   return(do.call(what = Cpt$new, args = .args, envir = parent.frame()))
 }
@@ -64,9 +63,6 @@ Cpt <- R6Class("cpt",
       # 2. parameter stability study
       # Glöckner, A., & Pachur, T. (2012). Cognitive models of risky choice: parameter stability and predictive accuracy of prospect theory. Cognition, 123, 21–32. doi:10.1016/j.cognition.2011.12.002
 
-      if ( any(is.na(fix)) ) {
-        stop('Ignoring parameters by setting them NA is not (yet) implemented.', call.=FALSE)
-      }
       self$formulaRef <- if (is.numeric(ref)) { ref } else { chr_as_rhs(ref) }
       self$set_weightingfun(weighting)
       self$set_valuefun(value)
