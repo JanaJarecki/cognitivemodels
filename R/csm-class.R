@@ -387,9 +387,9 @@ Cogscimodel <- R6Class(
       if (self$mode == "continuous" & type == "loglikelihood") {
         .args[["sigma"]] <- self$get_par()["sigma"]
       }
-      gof <- try(do.call(cogsciutils::gof, args = .args, envir = parent.frame()))
+      gof <- try(do.call(cogsciutils::gof, args = .args, envir = parent.frame()), silent = TRUE)
       if (inherits(gof, "try-error")) {
-        cat("Therefore could not compute the ", type, " in gof().\n")
+        stop("Can't compute the ", type, ", because of:\n  ", geterrmessage(), call.= FALSE)
       } else {
         return(gof)
       }

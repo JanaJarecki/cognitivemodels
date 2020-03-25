@@ -5,29 +5,24 @@ Version: 1.0.3
 Date: 2019-03-12
 Author: Jana B. Jarecki
 Maintainer: Jana B. Jarecki <jj@janajarecki.com>
-Description: Implementation of cognitive models, includes a general class cognitive models that has methods to fit free parameters to data and, can apply choicerules, and various goodness-of-fit measures (loglikelihood, MSE, etc.). The interface is similar to the lm() interface. So far an exemplar model "emb" (generalized context model) is included.
+Description: Implementation of cognitive models, includes a general class cognitive models that has methods to fit free parameters to data and, can apply choicerules, and various goodness-of-fit measures (loglikelihood, MSE, etc.). The interface is similar to the lm() interface.
 License: GPL (>= 2)
 Imports: 
-    Rcpp (>= 1.0.1),
-    cogsciutils (>= 1.0.6),
+    abind,
+    AICcmodavg,
+    arrangements,
+    cogsciutils (>= 1.0.7),
+    combinat, 
     Formula,
+    matlib,
+    Rcpp (>= 1.0.1),
+    reshape2,
+    rlang,
     R6,
     Rsolnp,
-    stringr,
-    arrangements,
-    combinat,
-    quadprog,
-    reshape2,
-    abind,
-    knitr,
-    rlang,
-    AICcmodavg,
     ROI,
-    ROI.plugin.optimx,
-    ROI.plugin.alabama,
-    ROI.plugin.deoptim,
-    ROI.plugin.nloptr,
-    matlib
+    quadprog,
+    stringr 
 Remotes:
   janajarecki/cogsciutils
 LinkingTo:
