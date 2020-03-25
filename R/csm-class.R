@@ -280,6 +280,9 @@ Cogscimodel <- R6Class(
     #' @param data A data frame with variables corresponding to the inputs that the model needs
     set_data = function(data) {
       if (missing(data)) data <- data.frame()
+      if (!inherits(data, "data.frame")) {
+        stop("'data' must be a data.frame, but is a ", class(data)[1], "Possible solution is as.data.frame().")
+      }
       formula <- self$formula
       self$nobs <- nrow(data)
       self$nstim <- length(self$formula)[2]
