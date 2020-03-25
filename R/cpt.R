@@ -69,11 +69,11 @@ Cpt <- R6Class("cpt",
 
       # todo: check if 'na' (ignore) values are correct
       parspace <- make_parspace(
-        alpha   = c(0,  2,  .8, 1L),
-        beta    = c(0,  2,  .8, 1L),
-        gammap  = c(0,  2, 1,   1L), 
-        gamman  = c(0,  2, 1,   1L),
-        lambda  = c(0, 10, 1.5, 1L)
+        alpha   = c(0.001,  2,  .8, 1L),
+        beta    = c(0.001,  2,  .8, 1L),
+        gammap  = c(0.001,  2, 1,   1L), 
+        gamman  = c(0.001,  2, 1,   1L),
+        lambda  = c(-10, 10, 1, 1L)
         )
       formula <- self$sanitize_formula(f = formula)
       super$initialize(
