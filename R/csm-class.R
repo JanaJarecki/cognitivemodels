@@ -133,13 +133,13 @@ Cogscimodel <- R6Class(
           }
         }
       }
-      f <- as.Formula(formula) 
+      formula <- as.Formula(formula) 
 
       # Assign variables
       self$title <- title
       choicerule <- if (!is.null(choicerule)) match.arg(choicerule, c("softmax", "argmax", "luce", "epsilon"))
       self$choicerule <- choicerule
-      self$formula <- f
+      self$formula <- formula
       self$set_data(data = data)
       self$discount <- private$init_discount(x = discount)
       
@@ -978,6 +978,7 @@ Cogscimodel <- R6Class(
           stop("Ignoring the parameter ",dQuote(n)," is not possible.\n\nBackground: Ignoring a parameter by setting it to NA only works if the model's 'parspace' has a value in the 'na' column, which is not the case for the parameter ", dQuote(n), " in this model.", call.=FALSE)
         }
         if (!is.na(x[[n]]) & !is.character(x[[n]])) {
+          print(x[n])
           if (x[[n]] < parspace[n, "lb"] | x[[n]] > parspace[n, "ub"]) {
           stop("Parameter ", sQuote(n), " in 'fix' must be between ", parspace[n, "lb"]," and ", parspace[n, "ub"], ", it cannot be ", x[[n]], ".", call.=FALSE)
           }
@@ -992,7 +993,7 @@ Cogscimodel <- R6Class(
           fix <- as.list(fix)
         }
         if (is.list(fix) == FALSE) {
-          stop("'fix' needs to be a list, but is a ", typeof(fix), ".")
+          stop("'fix' must be a list, but it is a ", typeof(fix), ".")
         }
 
         private$check_parnames(fix)
