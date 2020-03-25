@@ -387,9 +387,10 @@ Cogscimodel <- R6Class(
       if (self$mode == "continuous" & type == "loglikelihood") {
         .args[["sigma"]] <- self$get_par()["sigma"]
       }
-      gof <- try(do.call(cogsciutils::gof, args = .args, envir = parent.frame()))
+      gof <- try(do.call(cogsciutils::gof, args = .args, envir = parent.frame()), silent = TRUE)
       if (inherits(gof, "try-error")) {
-        cat("Therefore could not compute the ", type, " in gof().\n")
+        stop("Can't compute ", type, ", because:\n  ", geterrmessage(),
+          call.= FALSE)
       } else {
         return(gof)
       }
@@ -977,8 +978,8 @@ Cogscimodel <- R6Class(
           stop("Ignoring the parameter ",dQuote(n)," is not possible.\n\nBackground: Ignoring a parameter by setting it to NA only works if the model's 'parspace' has a value in the 'na' column, which is not the case for the parameter ", dQuote(n), " in this model.", call.=FALSE)
         }
         if (!is.na(x[[n]]) & !is.character(x[[n]])) {
-          if(x[[n]] < parspace[n, "lb"] | x[[n]] > parspace[n, "ub"]) {
-          stop("Tried to set the parameter ", dQuote(n), " = ", x[[n]], ", but ", dQuote(n), " may only take values from ", parspace[n, "lb"]," to ", parspace[n, "ub"] ," (including the bounds) in this model.", call.=FALSE)
+          if (x[[n]] < parspace[n, "lb"] | x[[n]] > parspace[n, "ub"]) {
+          stop("Parameter ", sQuote(n), " in 'fix' must be between ", parspace[n, "lb"]," and ", parspace[n, "ub"], ", it cannot be ", x[[n]], ".", call.=FALSE)
           }
         }
 
