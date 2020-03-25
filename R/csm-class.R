@@ -352,7 +352,7 @@ Cogscimodel <- R6Class(
     #' @param newdata (optional) A data frame with new data - experimental!
     #' @param ... other arguments (ignored)
     gof = function(type, n = self$options$fit_n, newdata = self$options$fit_data, discount = FALSE, ...) {
-      if (length(self$res) == 0L) { stop("Could not calculate the model fit, because there is no response variable (no observed data. Check if 'formula' has a left-hand side:", self$formula, call.=FALSE) }
+      if (length(self$res) == 0L) { stop("The model must contain observed data to calculate the goodness of fit, but observed data are ", self$res, ".\nDid you forget a left side in 'formula'?",call.=FALSE) }
 
       if (is.null(newdata) | missing(newdata)) {
         obs <- as.matrix(self$res)
@@ -566,7 +566,7 @@ Cogscimodel <- R6Class(
         return()
       }
       if (inherits(try(.get_rhs_vars(f, d), silent = TRUE), "try-error")) {
-        stop("Variables in 'formula' are missing in 'data': ", .brackify(setdiff(unlist(.rhs_varnames(f)), names(d))), ".")
+        stop("Can't find variables from 'formula' in 'data': ", .brackify(setdiff(unlist(.rhs_varnames(f)), names(d))), ".")
       }
      
       # n observations
@@ -999,7 +999,7 @@ Cogscimodel <- R6Class(
         par <- self$get_par()
 
         if (!all( names(fix) %in% rownames(parspace))) {
-          stop("Check the parameter names in 'fix'. Some parameters in 'fix' ", .brackify(dQuote(setdiff(names(fix), rownames(parspace)))), " are not in the model's parameter space, which contains the following parameter ", .brackify(dQuote(rownames(parspace))), ".", call.=FALSE)
+          stop("In 'fix' you can set the parameter ", .brackify(dQuote(rownames(parspace))), ", but not ", .brackify(dQuote(setdiff(names(fix), rownames(parspace)))), ". Did you misspell a parameter?", call.=FALSE)
         }
         if (!all(fix[names(fix) %in% private$get_parnames("equal")] %in% private$get_parnames())) {
           stop("Check equality constraints in 'fix'. The equality constraints ", .brackify(
@@ -1007,13 +1007,15 @@ Cogscimodel <- R6Class(
             ), " are not valid, because you can only constrain parameters to equal the model's parameter space, which contains the following parameters ", .brackify(rownames(parspace)), ".", call.=FALSE)
         }
         if ( length(fix) < nrow(parspace) & is.null(self$res) & self$options$fit == TRUE ) {
-          stop('Trying to estimate model parameter ', .brackify(setdiff(rownames(parspace), names(fix))), ', but "formula" has no left-hand side. -> Add a LHS to the formula that defines the observed data, or fix all free model parameter using fix = list(...).', call. = FALSE)
+          stop("'formula' must have a left side to estimate parameter ", .brackify(setdiff(rownames(parspace), names(fix))), ".\n  
+            * Did you forget to add a left-hand to the formula?\n  
+            * Did you forget to fix the parameter?", call. = FALSE)
         }
 
         lapply(seq_len(self$npar('equal')), function(i, fix) {
             p <- unlist(fix[private$get_parnames('equal')][i])
             newp <- setNames(list(self$par[[p]]), names(p))
-            tryCatch(private$check_par( newp ), error = function(e) stop("Check equality constraints in 'fix'. Trying to set ", names(p), " = ", dQuote(p),", but the value of ",dQuote(p)," (",self$get_par()[p],") lies outside of the allowed range of ",dQuote(names(p))," (",paste(parspace[names(p), c("lb","ub")], collapse=" to "),").",call.=FALSE))
+            tryCatch(private$check_par( newp ), error = function(e) stop("Can't set parameter ", names(p), " = ", dQuote(p),", because the value of ",dQuote(p)," (",self$get_par()[p],") lies outside of the allowed range of ", dQuote(names(p))," (",paste(parspace[names(p), c("lb","ub")], collapse=" to "),").",call.=FALSE))
 
           }, fix = fix)
       }
