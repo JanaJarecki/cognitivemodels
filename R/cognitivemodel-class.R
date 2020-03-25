@@ -68,9 +68,9 @@ Csm <- R6Class("csm",
         }
       }
     },
-    set_par = function(x, check = FALSE) {
+    set_par = function(x, check = FALSE, constrain = TRUE) {
       # Set the parameter of this  model
-      super$set_par(x, check = check)
+      super$set_par(x, check = check, constrain = constrain)
       # Set the parameter of the underlying models
       npar <- lapply(self$models, function(x) x$npar())
       for(m in 1:self$nmod) {
@@ -165,6 +165,8 @@ Csm <- R6Class("csm",
     end = function(discount = 0L, options = NULL) {
       self$init_call()
       # TODO: put some sanitize names code here for the model names
+      # fixme: the constraints in fix are giving rise to duplicated constraints
+      # idea: maybe using "fix" only from the global parameters?
       super$initialize(
         formula = self$models[[self$nmod]]$formula,
         data = self$data,
@@ -214,8 +216,7 @@ Csm <- R6Class("csm",
   ),
   private = list(
     make_constraints = function() {
-      # This function is a dummy,
-      # which is called in initialize which is called in end()
+      return(self$constraints)
     }
   )
 )
