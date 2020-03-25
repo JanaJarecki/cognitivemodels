@@ -194,7 +194,13 @@ print.csm_constraint = function(x, latex = FALSE) {
   }
   A <- as.matrix(x$L)
   b <- x$rhs
-  A <- matlib::echelon(A,b)
+  #fixme: this is a hack b/c matlib:echelon cannot handle
+  #       one-row matrices
+  if (nrow(A) == 1 & sum(A != 0) == 1) {
+    return(A == 0)
+  } else {
+    A <- matlib::echelon(A,b)  
+  }
   A <- A[, -ncol(A), drop = FALSE]
   a <- which(colSums(A) == 0)
   b <- which(colSums(A[which(rowSums(A) != 1), , drop = FALSE]) != 0)
