@@ -18,7 +18,7 @@ test_that("Values of hm1988", {
   # initial status = 11
   val11 <- cbind(a1pa1=c(0.9, 0.99, 0.999, 0.9999),
                  a1pa2=c(0.6, 0.96, 0.996, 0.9996)) # Table 1
-  .args <- list(formula = ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = ~b, ntrials = ~nt, states = ~s, initstate = ~init, trials=~t, data = D11, choicerule = "softmax", fix = list(tau = 0.3))
+  .args <- list(formula = ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = ~b, ntrials = ~nt, states = ~s, initstate = ~init, trials=~t, data = D11, choicerule = "argmax")
   M <- do.call(hm1988, .args)
   expect_equal(M$predict("value", action = 1:2), val11)
   expect_equal(M$predict("response", action = 1:2), cbind(a1pa1=rep(1,4), a1pa2=0))
@@ -103,17 +103,17 @@ test_that("Input formats of hm1988", {
 })
 
 
-
-D <- ...
-M <- hm1988(formula = ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = ~b, ntrials = ~nt, states = ~s, initstate = ~init, trials=~t, data = D, choicerule = "softmax", fix = list(tau = 0.3))
-M$predict("value", 1:2) # EV of options
-M$predict("response") # Pr(choice) of options gegeben softmax
-M$set_par(c(tau = .0001))
-coef(M)
-
-
-
-
+# test_that("Newdata prediction hm1988", {
+#   D <- data.frame(
+#     a1   = 0,    a2 = 1,    a3 = 2,
+#     pa11 = 0.1, pa12 = 0.8, pa13 = 0.1,
+#     pa21 = 0.4, pa22 = 0.2, pa23 = 0.4,
+#     s = 11,
+#     t = 4:1)
+#   M <- hm1988(formula = ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = 12, ntrials = 4, states = ~s, initstate = 11, trials=~t, data = D, choicerule = "argmax")
+#   expect_equal(predict(M, type = "values", 1:2), predict(M, newdata = D, type = "values", 1:2)) 
+#   predict(M, newdata = rbind(D,D), type = "values", 1:2)
+# })
 
 
 # test_that("Choicerule in hm1988", {

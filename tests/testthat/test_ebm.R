@@ -67,12 +67,13 @@ test_that("Parameter estimates in SIZE condition", {
     discount = 0)
   expect_equal(coef(M), target_par, tol = 0.01)
   
-  M2 <- cogscimodel(data=dd) +
+  M2 <- cognitivemodel(data=dd) +
      gcm(formula = pobs ~ angle+size,
         class = ~ true_cat,
         fix = list(q = 2, r = 2),
         discount = 0L)
   M2$fit(options = list(fit_data = fitd, fit_n = fitd$N))
+
   expect_equal(coef(M2), target_par, tol = 0.01)
 
   # weights constrained
