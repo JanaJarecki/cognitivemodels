@@ -317,16 +317,7 @@ make_parspace <- function(...) {
 
 
 
-#' Combine multiple constraints of type "constraint" from ROI
-#' Combine constraints, ignore \code{NULL} constraints
-#' 
-#' @param ... Objects of the class "constraint" from the ROI package (see \link[ROI]{L_constraint})
-#' @return An object of class "constraint" with all constraints or \code{NULL} if all \code{...} are \code{NULL}.
-.combine_constraints <- function(...) {
-  constr <- list(...)
-  constr <- Filter(Negate(is.null), constr)
-  do.call(rbind, constr)
-}
+
 
 
 # ==========================================================================
@@ -371,54 +362,6 @@ make_parspace <- function(...) {
 
 
 
-
-#' Prints the constraints of a cogscimodel nicely
-#' or NULL if the formula has none
-#' 
-#' @param latex (optional) if \code{TRUE} formats them for LaTeX documents
-print.csm_constraint = function(x, latex = FALSE) {
-  ROI:::print.constraint(x)
-  if (length(x) == 0) return(NULL)
-  A <- as.matrix(x$L)
-  b <- x$rhs
-  # We use the side-effect of printing in showEqn()
-  sapply(1:x$L$nrow, function(i) {
-    cat("  ")
-    matlib::showEqn(
-      A = A[i, A[i, ] != 0L, drop=FALSE],
-      b = b[i],
-      vars = x$names[A[i, ] != 0L],
-      latex = latex)
-  })
-  return(x)
-}
-
-#' Simplify constraints
-#' 
-#' Simplify a constraint by removing the fully-determined parameter
-#' 
-#' @param x An object of type L_constraint from the package ROI
-#' @export
-.simplify_constraints <- function(x) {
-  if (length(x) == 0) { return(x) }
-  A <- as.matrix(x$L)
-  rhs <- x$rhs
-  # Get parameter that are under-determined by constraints x
-  qrcoef <- qr.coef(qr(A), rhs)
-  # candidates for a solution
-  ids <- which(qrcoef == 0 | is.na(qrcoef))
-  # which rows of A to keep
-  .rows <- rowSums(A[, ids, drop = FALSE]) != 0
-  .cols <- colSums(A[.rows, , drop = FALSE]) | !colSums(A)
-
-  C <- ROI::L_constraint(
-    L = A[.rows, .cols, drop = FALSE],
-    dir = x$dir[.rows],
-    rhs = x$rhs[.rows],
-    names = x$names[.cols])
-  class(C) <- c("csm_constraint", class(C))
-  return(C)
-}
 
 
 # ==========================================================================
