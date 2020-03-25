@@ -975,12 +975,11 @@ Cogscimodel <- R6Class(
       private$check_parnames(x)
       sapply(names(x), function(n) {      
         if (is.na(x[[n]]) & is.na(parspace[n, 'na'])) {
-          stop("Ignoring the parameter ",dQuote(n)," is not possible.\n\nBackground: Ignoring a parameter by setting it to NA only works if the model's 'parspace' has a value in the 'na' column, which is not the case for the parameter ", dQuote(n), " in this model.", call.=FALSE)
+          stop("The parameter ", sQuote(n), " cannot be ignored, but was fixed to NA (which is supposed to ignore the parameter).", call.=FALSE)
         }
         if (!is.na(x[[n]]) & !is.character(x[[n]])) {
-          print(x[n])
           if (x[[n]] < parspace[n, "lb"] | x[[n]] > parspace[n, "ub"]) {
-          stop("Parameter ", sQuote(n), " in 'fix' must be between ", parspace[n, "lb"]," and ", parspace[n, "ub"], ", it cannot be ", x[[n]], ".", call.=FALSE)
+          stop("Parameter ", sQuote(n), " can range from ", parspace[n, "lb"]," to ", parspace[n, "ub"], ", but it was fixed to ", x[[n]], ".", call.=FALSE)
           }
         }
 

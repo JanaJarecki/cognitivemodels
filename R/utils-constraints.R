@@ -147,14 +147,15 @@
   if (length(x) == 0) { return(x) }
   A <- as.matrix(x$L)
   colnames(A) <- x$names
-  rhs <- x$rhs
+  b <- x$rhs
+  # fixme this is a hack
+  if (nrow(A) == 1 & sum(A != 0) == 1) {
+    return(setNames(solve(A[A != 0], b), x$names[A != 0]))
+  }
   # Get parameter that are under-determined by constraints x
-  qrcoef <- qr.coef(qr(A), rhs)
+  qrcoef <- qr.coef(qr(A), b)
   qrcoef[qrcoef == 0L] <- NA
-  qr.solve(A, rhs)
-  
-  
-  s <- setNames(qr.solve(A, rhs)[!is.na(qrcoef)], x$names[!is.na(qrcoef)])
+  s <- setNames(qr.solve(A, b)[!is.na(qrcoef)], x$names[!is.na(qrcoef)])
   return(s)
 }
 
@@ -199,7 +200,7 @@ print.csm_constraint = function(x, latex = FALSE) {
   if (nrow(A) == 1 & sum(A != 0) == 1) {
     return(A == 0)
   } else {
-    A <- matlib::echelon(A,b)  
+    A <- matlib::echelon(A,b)
   }
   A <- A[, -ncol(A), drop = FALSE]
   a <- which(colSums(A) == 0)
