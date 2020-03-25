@@ -115,7 +115,6 @@ Cogscimodel <- R6Class(
     #' Initializes a new cogscimodel
     initialize = function(formula, data = NULL, parspace = make_parspace(), fix = NULL, choicerule =  NULL, title = NULL, discount = NULL, mode = NULL, options = NULL) {
       if (length(data) == 0) {
-        data <- data.frame()
         self$pass_checks <- TRUE
       }
       # get call
@@ -130,7 +129,7 @@ Cogscimodel <- R6Class(
       if (length(fix) > 0) {
         if (fix[1] != "start") {
           if (!is.list(fix) & all(!is.numeric(fix))) {
-            stop("'fix' must be a list -> use list(...) instead of ", .abbrDeparse(fix), ".")
+            stop("'fix' must be a list, but is a", class(fix), ". Solution: use list().")
           }
         }
       }
@@ -278,11 +277,13 @@ Cogscimodel <- R6Class(
     #' @description
     #' New data input for a cogscim
     #' @param data A data frame with variables corresponding to the inputs that the model needs
-    set_data = function(data) {
-      if (missing(data)) data <- data.frame()
-      if (!inherits(data, "data.frame")) {
-        stop("'data' must be a data.frame, but is a ", class(data)[1], "Possible solution is as.data.frame().")
+    set_data = function(data = NULL) {
+      if (missing(data) | is.null(data) | length(data) == 0) {
+        data <- data.frame()
       }
+      if (length(data) > 0 & !inherits(data, "data.frame")) {
+        stop("'data' must be a data.frame, but is a ", class(data)[1], ".")
+      } 
       formula <- self$formula
       self$nobs <- nrow(data)
       self$nstim <- length(self$formula)[2]
@@ -690,6 +691,8 @@ Cogscimodel <- R6Class(
         return(NULL)
       } else if (c(fix[1]) == "start" & length(fix) == 1L) {
         return(setNames(self$parspace[, "start"], rownames(self$parspace)))
+      } else if (anyNA(fix)) {
+        return(replace(fix, is.na(fix), self$parspace[names(fix)[is.na(fix)], "na"]))
       } else {
         return(fix)
       }
@@ -971,7 +974,7 @@ Cogscimodel <- R6Class(
       private$check_parnames(x)
       sapply(names(x), function(n) {      
         if (is.na(x[[n]]) & is.na(parspace[n, 'na'])) {
-          stop("Tried to ignore the parameter ", dQuote(n), ", but ignoring ",dQuote(n)," is not possible.\n\nBackground: Ignoring a parameter by setting it to NA only works if the model's 'parspace' has a value in the 'na' column, which is not the case for the parameter ", dQuote(n), " in this model.", call.=FALSE)
+          stop("Ignoring the parameter ",dQuote(n)," is not possible.\n\nBackground: Ignoring a parameter by setting it to NA only works if the model's 'parspace' has a value in the 'na' column, which is not the case for the parameter ", dQuote(n), " in this model.", call.=FALSE)
         }
         if (!is.na(x[[n]]) & !is.character(x[[n]])) {
           if(x[[n]] < parspace[n, "lb"] | x[[n]] > parspace[n, "ub"]) {
