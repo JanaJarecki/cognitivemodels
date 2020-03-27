@@ -206,7 +206,6 @@ Ebm <- R6Class('ebm',
           } else {
             as.double(tail(par, -(na + 3))[1:na])
           }
-      print(b)
       exemplar_w <- as.numeric(!is.na(criterion)) # exemplar weights
       criterion[is.na(criterion)] <- 0L
       return(ebm_cpp(
