@@ -30,10 +30,10 @@ pars <- M$parspace[, 1:2]
 pars <- pars[sort(rownames(pars)), ]
 pars <- data.frame(pars, (pars + tk_par)/2)
 
-solutions <- array(data = c(4.65, 10000, 7.58, 758.58, rep(57.4, 16),
-                            2.86, 21616, 5.56, 1112.26, rep(57.23, 8), 105.9, 69.61, 21.01, 77.53, rep(57.23, 4),
-                            rep(-129.47, 4), -10.36, -22500, -17.07, -1706.8, rep(-129.47, 8), 0, -575.44, -64.74, -352.46,
-                            rep(-129.87, 4), -6.5, -49053.55, -12.62, -2524.03, 0, -132.92, -56.27, -154.08, rep(-129.87, 4), 0, -577.21, -64.94, -353.54), 
+solutions <- array(data = c(1, 10000, 7.58, 758.58, rep(57.4, 16),
+                            0.54, 21616, 5.56, 1112.26, rep(57.23, 8), 0, 69.61, 21.01, 77.53, rep(57.23, 4),
+                            rep(-129.47, 4), -2.26, -22500, -17.07, -1706.8, rep(-129.47, 8), 575.44, -575.44, 222.98, -352.46,
+                            rep(-129.87, 4), -1.23, -49053.55, -12.62, -2524.03, 0, -132.92, -56.27, -154.08, rep(-129.87, 4), 577.21, -577.21, 223.67, -353.54), 
                    dim = c(4, 5, 4), dimnames = list(c("lb", "ub", "lb.1", "ub.1"), names(tk_par), c("x1", "y1", "x2", "y2")))
 
 apply(as.matrix(expand.grid(1:length(tk_par), 1:ncol(pars))), 1, function(i) {
@@ -107,11 +107,7 @@ sapply(1:length(form), function(i) {
     D <- as.matrix(D)
     test_that("Prediction identities", {
       expect_error(cpt(~x1+p+x2, ref=0L, data=D[1,], fix=tk_par))
-      expect_error(cpt(~x1+p+x2, ref=0L, data=D[2,], fix=tk_par))
-      expect_error(cpt(~x1+p+x2, ref=0L, data=D[3,], fix=tk_par))
       expect_error(cpt(~x1+p+x2, ref=0L, data=D, fix=tk_par))
-      expect_error(cpt(~x1+p+x2, ref=0L, data=D[3:1,], fix=tk_par))
-      expect_error(cpt(~x1+p+x2, ref=0L, data=D[c(2, 1, 3),], fix=tk_par))
     })
   } else {
     test_that("Prediction identities", {
