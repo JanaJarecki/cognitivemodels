@@ -7,7 +7,7 @@ dt <- data.frame(x1 = rep(1,3), x2 = rep(2,3), px = rep(.5,3),
                 y1 = 0:2,      y2 = rep(3,3), py = rep(.5,3),
                 aspiration = rep(1,3),
                 choice = c(1,1,0))
-par <- c(beta = 0.05, delta = 0.6) 
+par <- c(beta = 5, delta = 0.5) 
 M <- shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = par)
 tol <- .01 
 
@@ -16,7 +16,7 @@ test_that("Prediction identitites", {
   expect_equal(M$predict('value')[1,'pr_x'], c('pr_x'=1.5), tol = tol)
   expect_equal(M$predict('value')[2,'pr_x'], c('pr_x'=1.5), tol = tol)
   expect_equal(M$predict('value')[3,'pr_x'], c('pr_x'=1.5), tol = tol)
-  expect_equal(M$predict('value')[1,'pr_y'], c('pr_y'=1.485), tol = tol)
+  expect_equal(M$predict('value')[1,'pr_y'], c('pr_y'=0.25), tol = tol)
   expect_equal(M$predict('value')[2,'pr_y'], c('pr_y'=2), tol = tol)
   expect_equal(M$predict('value')[3,'pr_y'], c('pr_y'=2.5), tol = tol)
 })
