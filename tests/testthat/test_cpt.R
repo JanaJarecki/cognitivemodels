@@ -1,6 +1,7 @@
 # Tversky, A., & Kahneman, D. (1992). Advances in prospect theory: cumulative representation of uncertainty. Journal of Risk and Uncertainty, 5, 297–323. doi:10.1007/BF00122574
 context("cpt")
 library(cogsciMs)
+library(dplyr)
 
 # 0. Data set, standard parameters, and tolerance
 dt <- data.frame(
@@ -88,30 +89,46 @@ dt_tk1992$rp <- apply(M$predict(), 1, function(i) {
   ifelse(i[1] > i[2], 1, 0)
 })
 M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt_tk1992)
+# bug: did you forget to imply the choicerule? im osf nach Originaldaten suchen und fitten --> welche choice rule?
+# test with three options
+# shortfall model beginnen
 
 # 3. Formal tests
 # 3.a. One-row test set and test sets with different orders
 tk_par <- c(alpha = 0.88, beta = 0.88, lambda = 2.25, gammap = 0.61, gamman = 0.69) 
 D <- data.frame(x1=c(1,2,2),x2=c(2,1,1),p=c(0.66,0.66,0.50))
-form <- c("data frame", "matrix", "data table")
+form <- c("data frame", "tibble", "data table", "matrix") # tibble
 sapply(1:length(form), function(i) {
   print(paste0("D is a ", form[i]))
-  if(form[i] == "matrix") D <- as.matrix(D)
+  if(form[i] == "data frame") D <- as.data.frame(D)
+  if(form[i] == "tibble") D <- as_tibble(D)
   if(form[i] == "data table") D <- as.data.table(D)
-  test_that("Prediction identities", {
-    M <- cpt(~x1+p+x2, ref=0L, data=D[1,], fix=tk_par)
-    expect_equivalent(M$predict(), 1.285, tol=tol)
-    M <- cpt(~x1+p+x2, ref=0L, data=D[2,], fix=tk_par)
-    expect_equivalent(M$predict(), 1.427, tol=tol)
-    M <- cpt(~x1+p+x2, ref=0L, data=D[3,], fix=tk_par)
-    expect_equivalent(M$predict(), 1.353, tol = tol)
-    M <- cpt(~x1+p+x2, ref=0L, data=D, fix=tk_par)
-    expect_equivalent(M$predict(), c(1.285, 1.427, 1.353), tol = tol)
-    M <- cpt(~x1+p+x2, ref=0L, data=D[3:1,], fix=tk_par)
-    expect_equivalent(M$predict(), c(1.353, 1.427, 1.285), tol = tol)
-    M <- cpt(~x1+p+x2, ref=0L, data=D[c(2,1,3),], fix=tk_par)
-    expect_equivalent(M$predict(), c(1.427, 1.285, 1.353), tol = tol)
-  })
+  if(form[i] == "matrix") {
+    D <- as.matrix(D)
+    test_that("Prediction identities", {
+      expect_error(cpt(~x1+p+x2, ref=0L, data=D[1,], fix=tk_par))
+      expect_error(cpt(~x1+p+x2, ref=0L, data=D[2,], fix=tk_par))
+      expect_error(cpt(~x1+p+x2, ref=0L, data=D[3,], fix=tk_par))
+      expect_error(cpt(~x1+p+x2, ref=0L, data=D, fix=tk_par))
+      expect_error(cpt(~x1+p+x2, ref=0L, data=D[3:1,], fix=tk_par))
+      expect_error(cpt(~x1+p+x2, ref=0L, data=D[c(2, 1, 3),], fix=tk_par))
+    })
+  } else {
+    test_that("Prediction identities", {
+      M <- cpt(~x1+p+x2, ref=0L, data=D[1,], fix=tk_par)
+      expect_equivalent(M$predict(), 1.285, tol=tol)
+      M <- cpt(~x1+p+x2, ref=0L, data=D[2,], fix=tk_par)
+      expect_equivalent(M$predict(), 1.427, tol=tol)
+      M <- cpt(~x1+p+x2, ref=0L, data=D[3,], fix=tk_par)
+      expect_equivalent(M$predict(), 1.353, tol = tol)
+      M <- cpt(~x1+p+x2, ref=0L, data=D, fix=tk_par)
+      expect_equivalent(M$predict(), c(1.285, 1.427, 1.353), tol = tol)
+      M <- cpt(~x1+p+x2, ref=0L, data=D[3:1,], fix=tk_par)
+      expect_equivalent(M$predict(), c(1.353, 1.427, 1.285), tol = tol)
+      M <- cpt(~x1+p+x2, ref=0L, data=D[c(2,1,3),], fix=tk_par)
+      expect_equivalent(M$predict(), c(1.427, 1.285, 1.353), tol = tol)
+    })
+  }
 })
 
 # 3.b. Formula entry
