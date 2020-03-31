@@ -1,6 +1,5 @@
-
 # ==========================================================================
-# Package: Cogscimodels
+# Package: Cognitivemodels
 # File: utils-formula.R
 # Author: Jana B. Jarecki
 # Changed: 2019-12-13
