@@ -1,6 +1,6 @@
 # Tversky, A., & Kahneman, D. (1992). Advances in prospect theory: cumulative representation of uncertainty. Journal of Risk and Uncertainty, 5, 297–323. doi:10.1007/BF00122574
 context("cpt")
-library(cogsciMs)
+# library(cogsciMs)
 library(dplyr)
 
 # 0. Data set, standard parameters, and tolerance
@@ -88,7 +88,7 @@ M <- cpt(~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt_tk1992, fix = tk_par)
 dt_tk1992$rp <- apply(M$predict(), 1, function(i) {
   ifelse(i[1] > i[2], 1, 0)
 })
-M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt_tk1992)
+M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt_tk1992, choicerule = "softmax")
 # bug: did you forget to imply the choicerule? im osf nach Originaldaten suchen und fitten --> welche choice rule?
 # test with three options
 # shortfall model beginnen
