@@ -15,7 +15,7 @@ cognitivemodel <- function(data, ...) {
 }
 
 Csm <- R6Class("csm",
-  inherit = Cogscimodel,
+  inherit = Cm,
   public = list(
     titels = list(),
     models = list(),

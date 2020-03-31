@@ -8,7 +8,7 @@ using namespace Rcpp;
 
 // ebm_cpp
 Rcpp::NumericVector ebm_cpp(Rcpp::NumericVector criterion, Rcpp::NumericMatrix features, Rcpp::NumericVector w, double r, double q, double lambda, Rcpp::NumericVector b, Rcpp::NumericVector wf, int lastLearnTrial, int firstOutTrial);
-RcppExport SEXP _cogscimodels_ebm_cpp(SEXP criterionSEXP, SEXP featuresSEXP, SEXP wSEXP, SEXP rSEXP, SEXP qSEXP, SEXP lambdaSEXP, SEXP bSEXP, SEXP wfSEXP, SEXP lastLearnTrialSEXP, SEXP firstOutTrialSEXP) {
+RcppExport SEXP _cognitivemodels_ebm_cpp(SEXP criterionSEXP, SEXP featuresSEXP, SEXP wSEXP, SEXP rSEXP, SEXP qSEXP, SEXP lambdaSEXP, SEXP bSEXP, SEXP wfSEXP, SEXP lastLearnTrialSEXP, SEXP firstOutTrialSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -28,7 +28,7 @@ END_RCPP
 }
 // lexicographic
 NumericMatrix lexicographic(NumericMatrix I);
-RcppExport SEXP _cogscimodels_lexicographic(SEXP ISEXP) {
+RcppExport SEXP _cognitivemodels_lexicographic(SEXP ISEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -39,7 +39,7 @@ END_RCPP
 }
 // indicators
 NumericMatrix indicators(arma::mat features, NumericVector splitcriteria);
-RcppExport SEXP _cogscimodels_indicators(SEXP featuresSEXP, SEXP splitcriteriaSEXP) {
+RcppExport SEXP _cognitivemodels_indicators(SEXP featuresSEXP, SEXP splitcriteriaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -51,7 +51,7 @@ END_RCPP
 }
 // shortfall_cpp
 Rcpp::NumericVector shortfall_cpp(Rcpp::NumericMatrix x, Rcpp::NumericMatrix p, Rcpp::NumericVector a, double beta, double delta);
-RcppExport SEXP _cogscimodels_shortfall_cpp(SEXP xSEXP, SEXP pSEXP, SEXP aSEXP, SEXP betaSEXP, SEXP deltaSEXP) {
+RcppExport SEXP _cognitivemodels_shortfall_cpp(SEXP xSEXP, SEXP pSEXP, SEXP aSEXP, SEXP betaSEXP, SEXP deltaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -66,14 +66,14 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_cogscimodels_ebm_cpp", (DL_FUNC) &_cogscimodels_ebm_cpp, 10},
-    {"_cogscimodels_lexicographic", (DL_FUNC) &_cogscimodels_lexicographic, 1},
-    {"_cogscimodels_indicators", (DL_FUNC) &_cogscimodels_indicators, 2},
-    {"_cogscimodels_shortfall_cpp", (DL_FUNC) &_cogscimodels_shortfall_cpp, 5},
+    {"_cognitivemodels_ebm_cpp", (DL_FUNC) &_cognitivemodels_ebm_cpp, 10},
+    {"_cognitivemodels_lexicographic", (DL_FUNC) &_cognitivemodels_lexicographic, 1},
+    {"_cognitivemodels_indicators", (DL_FUNC) &_cognitivemodels_indicators, 2},
+    {"_cognitivemodels_shortfall_cpp", (DL_FUNC) &_cognitivemodels_shortfall_cpp, 5},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_cogscimodels(DllInfo *dll) {
+RcppExport void R_init_cognitivemodels(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

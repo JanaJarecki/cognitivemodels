@@ -19,15 +19,15 @@
 NULL
 
 ebm_cpp <- function(criterion, features, w, r, q, lambda, b, wf, lastLearnTrial, firstOutTrial) {
-    .Call(`_cogscimodels_ebm_cpp`, criterion, features, w, r, q, lambda, b, wf, lastLearnTrial, firstOutTrial)
+    .Call(`_cognitivemodels_ebm_cpp`, criterion, features, w, r, q, lambda, b, wf, lastLearnTrial, firstOutTrial)
 }
 
 lexicographic <- function(I) {
-    .Call(`_cogscimodels_lexicographic`, I)
+    .Call(`_cognitivemodels_lexicographic`, I)
 }
 
 indicators <- function(features, splitcriteria) {
-    .Call(`_cogscimodels_indicators`, features, splitcriteria)
+    .Call(`_cognitivemodels_indicators`, features, splitcriteria)
 }
 
 #' Exemplar-based prediction computation
@@ -40,6 +40,6 @@ indicators <- function(features, splitcriteria) {
 #' '
 #' @export
 shortfall_cpp <- function(x, p, a, beta, delta) {
-    .Call(`_cogscimodels_shortfall_cpp`, x, p, a, beta, delta)
+    .Call(`_cognitivemodels_shortfall_cpp`, x, p, a, beta, delta)
 }
 

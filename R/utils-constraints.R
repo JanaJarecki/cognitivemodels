@@ -9,7 +9,7 @@
 #' 
 #' @param parspace A parameter space matrix, see make_parspace()
 #' @param fix A list of fixed parameters
-#' @NoRd
+#' @noRd
 .make_constraints <- function(parspace = NULL, fix = NULL, par = NULL) {
   if (is.null(fix)) {
     return(NULL)
@@ -76,7 +76,7 @@
 #' 
 #' @param ... Objects of the class "constraint" from the ROI package (see \link[ROI]{L_constraint})
 #' @return An object of class "constraint" with all constraints or \code{NULL} if all \code{...} are \code{NULL}.
-#' @NoRd
+#' @noRd
 .combine_constraints <- function(...) {
   C <- list(...)
   C <- Filter(Negate(is.null), C)
@@ -99,7 +99,7 @@
 #' Simplify a constraint by removing the fully-determined parameter
 #' 
 #' @param x An object of type L_constraint from the package ROI
-#' @NoRd
+#' @noRd
 .simplify_constraints <- function(x) {
   if (length(x) == 0) { return(x) }
   A <- as.matrix(x$L)
@@ -126,7 +126,7 @@
 #' Coerce to constraint object
 #' 
 #' @param x An object of type constraint from the package ROI
-#' @NoRd
+#' @noRd
 .as.csm_constraint <- function(x = NULL) {
   if (!length(x)) return(x)
   if (!inherits(x, "csm_constraint")) {
@@ -142,7 +142,7 @@
 #' Gets the solution to a constraint for the fully-determined parameter
 #' 
 #' @param x An object of type L_constraint from the package ROI
-#' @NoRd
+#' @noRd
 .solve_constraints <- function(x) {
   if (length(x) == 0) { return(x) }
   A <- as.matrix(x$L)
@@ -154,7 +154,7 @@
   }
   # Get parameter that are under-determined by constraints x
   qrcoef <- qr.coef(qr(A), b)
-  qrcoef[qrcoef == 0L] <- NA
+  qrcoef[qrcoef == 0L & b != 0] <- NA
   s <- setNames(qr.solve(A, b)[!is.na(qrcoef)], x$names[!is.na(qrcoef)])
   return(s)
 }
@@ -188,20 +188,14 @@ print.csm_constraint = function(x, latex = FALSE) {
 #' Returns the constraints that are under-determined
 #' 
 #' @param x An object of type constraint from the package ROI
-#' @NoRd
+#' @noRd
 .which.underdetermined <- function(x) {
   if (is.null(x) || missing(x)) {
     return(NULL)
   }
   A <- as.matrix(x$L)
   b <- x$rhs
-  #fixme: this is a hack b/c matlib:echelon cannot handle
-  #       one-row matrices
-  if (nrow(A) == 1 & sum(A != 0) == 1) {
-    return(A == 0)
-  } else {
-    A <- matlib::echelon(A,b)
-  }
+  A <- matlib::echelon(A,b)
   A <- A[, -ncol(A), drop = FALSE]
   a <- which(colSums(A) == 0)
   b <- which(colSums(A[which(rowSums(A) != 1), , drop = FALSE]) != 0)

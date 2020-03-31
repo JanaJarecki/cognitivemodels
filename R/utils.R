@@ -1,6 +1,6 @@
 
 # ==========================================================================
-# Package: Cogscimodels
+# Package: Cognitivemodels
 # File: utils.R
 # Author: Jana B. Jarecki
 # Changed: 2019-12-13
@@ -181,7 +181,7 @@ get_id_in_grid <- function(id, grid) {
 
 
 # ==========================================================================
-# Utilities for parsing, printing cogscimodels
+# Utilities for parsing, printing model objects
 # ==========================================================================
 
 # deparse(.) returning \bold{one} string
@@ -402,7 +402,7 @@ get_ev <- function(x) {
 #' @export
 get_var <- function(x) {
   d <- dim(x)[2]
-  apply(x, 3, function(slice) cogscimodels:::varG(
+  apply(x, 3, function(slice) cognitivemodels:::varG(
     x = slice[, seq(1, d, 2), drop = FALSE],
     p = slice[, seq(2, d, 2), drop = FALSE]))
 }

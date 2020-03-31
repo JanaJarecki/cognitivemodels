@@ -8,7 +8,7 @@
 #' @return A vector or matrix of predictions, if multiple models are supplied using \code{...}, returns a list containing the predictions for each model
 #' 
 #' @export
-predict.cogscimodel <- function(obj, ..., type = "response", newdata = NULL) {
+predict.cm <- function(obj, ..., type = "response", newdata = NULL) {
   dotargs <- list(...)
   if (missing(obj) & length(dotargs)) {
     obj <- dotargs
