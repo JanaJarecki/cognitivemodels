@@ -1,5 +1,6 @@
 # Cognitivemodels
 
+<<<<<<< HEAD
 Cognitivemodels is an R packages containing a growing number of cognitive models using a formula interface similar to `lm. The models can be fit to data by maximum likelihood, minimum MSE, RMSE, and more fit measures using various optimization routines. Cognitivemodls also provides a back-end for making it easy to write your own cognitive models.
 
 ## Getting Started and Installation
