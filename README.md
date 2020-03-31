@@ -1,16 +1,14 @@
 # Cognitivemodels
-
-<<<<<<< HEAD
-Cognitivemodels is an R packages containing a growing number of cognitive models using a formula interface similar to `lm. The models can be fit to data by maximum likelihood, minimum MSE, RMSE, and more fit measures using various optimization routines. Cognitivemodls also provides a back-end for making it easy to write your own cognitive models.
+Cognitivemodels is an R packages that provides a number of cognitive models, using a formula interface similar to the `aov`- or `lm`-syntax. The models can be fit to data by maximum likelihood, minimum MSE, and more fit measures using  optimization routines like rsolnp or Nelder-Mead, and many more. Also, the package provides a class back-end to develop new cognitive models.
 
 ## Getting Started and Installation
-To use this package, ensure you have the prerequesites (working installation of R) and the Rcpp package (`install.packages("Rcpp")`), and install the package
+To use this package, ensure you have the prerequesites (a working installation of R) and the Rcpp package, `install.packages("Rcpp")`). Install Cognitivemodels by running
 
     ```r
     # Install  development version from github
     install.packages("devtools")
     devtools::install_github("janajarecki/cognitivemodels")
-    ```r
+    ```
 
 To use the package, you need to load it `library(cogscimodels)`
 
