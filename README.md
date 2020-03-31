@@ -1,62 +1,47 @@
-# cogscimodels
+# Cognitivemodels
 
-R packages containing cognitive models.
+This is an R packages containing various cognitive models.
 
 ## Getting started
-This explains how to use the models. 
+To use this package, ensure you have the prerequesites and then follow the installing code.
 
-## Prerequisites
-Working installation of R and the devtools and Rcpp packages (devtools version 2.0.2, `install.packages("devtools")`, Rcpp version 1.0.1 `install.packages("Rcpp")`).
+### Prerequisites
+You need a working installation of R, and the Rcpp package:
 
-## Installing
-Install the cogscimodelss and the cogsciutils packages (the latter is needed for goodness of fit and choicerule functions)
+    install.packages("Rcpp")
 
-    devtools::install_github("janajarecki/cogscimodels")
-    devtools::install_github("janajarecki/cogsciutils")
-    
-Load the package
+### Installing this R package
+To use the cognitive models library, install and load it like so:
 
+    # Install (once)
+    install.packages("devtools")
+    devtools::install_github("janajarecki/cognitivemodels")
+
+    # Load to use
     library(cogscimodels)
-    
-## Usage
-### 1. Memory-based preference model used in Jarecki & Rieskamp (submitted)
-#### Usage
-    jr19mem(choices ~ a1 + a2 | subj_values | prices, data = dt)
-see `?jr19mem`
-#### Example
-    # Create data
-    attributes <- expand.grid(a1=0:1,a2=0:1)[rep(1:4,2),]
-    prices <- rep(c(0,.5,.5,1),2)
-    subj_values <- rep(c(2,0.2,0.1,2), 2)
-    choices <- rep(c(1,0,0,1),2)
-    dt <- data.frame(choices, attributes, prices, subj_values)
 
-    # Fit the model
-    M <- jr19mem(choices ~ a1 + a2 | subj_values | prices, data = dt)
+#### Installation Problems
+If you use Rstudio you may encounter the "Error: Could not find tools necessary to compile a package". If so, following [this solution](https://stackoverflow.com/questions/37776377/error-when-installing-an-r-package-from-github-could-not-find-build-tools-neces), you can run `pkgbuild::check_build_tools(debug = TRUE)` to diagnose the problem; and most likely you need to run `options(buildtools.check = function(action) TRUE )` to solve the problem.
     
-    # View results
-    M
-    M$predict() # predict data
-    M$coef() # view coefficients
-    
-    #     lambda        tau 
-    # 10.0000000  0.7982114
-### 2. Generalized context model (Medin & Schaffer, 1976; Nosofsky, 1986)
-#### Usage
-    ebm(formula, data, ...) #ebm for examplar-based model
-see `?ebm`
-### 3. Optimal risk-sensitive foraging model (Houston & McNamara, 1988)
-#### Usage
-    hm1988(env, formula, data, choicerule, fixed = NULL)
-see `?hm1988`
-### 4. Cumulative prospect theory model (Kahneman & Tversky, 1979; Tversky & Kahneman, 1992)
-#### Usage
-    cpt(rp ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py), nopt = 2, nout = 2, ref = 0,
-        choicerule = "softmax", data = dt)
-see `?cpt`
+## Models in this Package
+The cognitive models in this package follow the `lm`-type syntax, which you may be familiar with. The following models are implemented:
+
+Model | Reference | Documentation of the Function
+------------ | ------------- | -------------
+Memory-based preference model | Jarecki & Rieskamp (submitted) | `?mem`
+Generalized context model | Medin & Schaffer (1976); Nosofsky (1986) | `?ebm`
+Optimal risk-sensitive foraging model | Houston & McNamara (1988) | `?hm1988`
+Cumulative prospect theory | Kahneman & Tversky (1979); Tversky & Kahneman () 1992) | `?cpt`
+Bayesian cognitive model | Hoffart, Jarecki, Duthil, & Rieskamp (under review) | `?bayes`
+Power utility | Tversky (1967); Wakker (2008)| `?utility_pow`
+Soft-max choice rule | Sutton & Barto (1998) | `?softmax`
+Baseline model | | `?baseline`
+Shortfall model | Andraszewicz (2014) | `?shortfall`
+
     
 # Authors
 Jana B. Jarecki
+Florian I. Seitz
 
 # License
 This project is licensed under CC-By Attribution 4.0 International
