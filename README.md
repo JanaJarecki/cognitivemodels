@@ -4,11 +4,11 @@ Cognitivemodels is an R packages that provides a number of cognitive models, usi
 ## Getting Started and Installation
 To use this package, ensure you have the prerequesites (a working installation of R) and the Rcpp package, `install.packages("Rcpp")`). Install Cognitivemodels by running
 
-    ```r
+```R
     # Install  development version from github
     install.packages("devtools")
     devtools::install_github("janajarecki/cognitivemodels")
-    ```
+```
 
 To use the package, you need to load it `library(cogscimodels)`
 
