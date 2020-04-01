@@ -7,7 +7,7 @@ To use this package, ensure you have the prerequesites (a working installation o
 ```R
     # Install  development version from github
     install.packages("devtools")
-    devtools::install_github("janajarecki/cognitivemodels")
+    devtools::install_github("janajarecki/cognitivemodels", ref = "development")
 ```
 
 To use the package, you need to load it `library(cogscimodels)`
