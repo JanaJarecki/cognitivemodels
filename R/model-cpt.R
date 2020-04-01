@@ -73,7 +73,7 @@ Cpt <- R6Class("cpt",
         beta    = c(0.001,  2,  .8, 1L),
         gammap  = c(0.001,  2, 1,   1L), 
         gamman  = c(0.001,  2, 1,   1L),
-        lambda  = c(-10, 10, 1, 1L)
+        lambda  = c(0.001, 10, 1, 1L)
         )
       formula <- self$sanitize_formula(f = formula)
       super$initialize(
