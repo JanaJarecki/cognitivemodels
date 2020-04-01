@@ -11,7 +11,7 @@ Imports:
     abind,
     AICcmodavg,
     arrangements,
-    cogsciutils (>= 1.0.7),
+    cognitiveutils (>= 1.0.7),
     combinat, 
     Formula,
     matlib (>= 0.9.3),
@@ -22,6 +22,7 @@ Imports:
     Rsolnp,
     ROI,
     quadprog,
+    quantreg,
     stringr 
 Remotes:
   janajarecki/cognitiveutils
