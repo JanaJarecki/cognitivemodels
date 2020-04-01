@@ -1,15 +1,17 @@
-#' The R6 class that handels everything concerning "cm" (cognitive model) objects
+#' The R6 class underlying all "cm" (cognitive model) objects
 #' 
 #' \code{Cm$new(formula, data, parspace)}
 #' 
 #' @import methods
 #' @import Rsolnp
 #' @import ROI
-#' @import cogsciutils
+#' @import cognitiveutils
 #' @import R6
 #' @import Formula
 #' @importFrom matlib showEqn
 #' @importFrom rlang call_standardise
+#' 
+#' @aliases cognitivemodel
 #' 
 #' @param formula A formula (e.g., \code{y ~ x1 + x2}).
 #' @param data A data frame containing \code{formula}'s variables.
