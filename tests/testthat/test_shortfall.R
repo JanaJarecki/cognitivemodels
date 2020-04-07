@@ -1,5 +1,5 @@
 context("shortfall")
-library(cogscimodels)
+# library(cogscimodels)
 library(data.table)
 
 # 0. Data set, standard parameters, and tolerance
@@ -45,6 +45,10 @@ apply(as.matrix(expand.grid(1:length(par), 1:ncol(pars))), 1, function(i) {
     expect_equal(M$predict('value')[2,'pr_y'], c('pr_y' = solutions[i[2], i[1], 4]), tol = tol)
   })
 })
+
+# 1.b. Parameter restrictions
+expect_error(shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = list(angle = "size")))
+expect_error(shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = list(c(par[names(par) != "beta"], beta = NA))))
 
 
 data(shortfalltest) # Load shortfall test data
