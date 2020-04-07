@@ -50,7 +50,7 @@ apply(as.matrix(expand.grid(1:length(tk_par), 1:ncol(pars))), 1, function(i) {
 
 # 1.b. Parameter restrictions
 expect_error(cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt, fix = list(angle = "size")))
-cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt, fix = list(lambda = NA))
+expect_error(cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt, fix = list(c(tk_par[names(tk_par) != "lambda"], lambda = NA))))
 
 # 1.c. Equal parameters
 tk_par["gammap"] = tk_par["gamman"]
