@@ -1,6 +1,6 @@
-Package: cogscimodels
+Package: cognitivemodels
 Type: Package
-Title: Cognitive Model Estimation and Prediction
+Title: Cognitive Models - Estimation, Prediction, and Development of Models for Cognitive Scientists
 Version: 1.0.3
 Date: 2019-03-12
 Author: Jana B. Jarecki
@@ -14,7 +14,7 @@ Imports:
     cogsciutils (>= 1.0.7),
     combinat, 
     Formula,
-    matlib,
+    matlib (>= 0.9.3),
     Rcpp (>= 1.0.1),
     reshape2,
     rlang,
@@ -24,7 +24,7 @@ Imports:
     quadprog,
     stringr 
 Remotes:
-  janajarecki/cogsciutils
+  janajarecki/cognitiveutils
 LinkingTo:
   Rcpp,
   RcppArmadillo
