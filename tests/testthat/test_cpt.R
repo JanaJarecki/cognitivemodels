@@ -25,27 +25,37 @@ test_that("Prediction identitites to Tversky & Kahneman (1992)", {
 })
 
 # 1.a. Parameter value changes (lower, higher, boundaries)
-tk_par <- tk_par[sort(names(tk_par))]
-pars <- M$parspace[, 1:2]
-pars <- pars[sort(rownames(pars)), ]
-pars <- data.frame(pars, (pars + tk_par)/2)
+test_that("Prediction identities after parameter change", {
+  expect_parchange_equal <- function(par, value, result) {
+    fix <- replace(tk_par, names(tk_par) == par, value)
+    M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt, fix = fix)
+    expect_equal(c(M$predict('value')), result, tol = tol)
+  }
 
-solutions <- array(data = c(1, 10000, 7.58, 758.58, rep(57.4, 16),
-                            0.54, 21616, 5.56, 1112.26, rep(57.23, 8), 0, 69.61, 21.01, 77.53, rep(57.23, 4),
-                            rep(-129.47, 4), -2.26, -22500, -17.07, -1706.8, rep(-129.47, 8), -0.06, -575.44, -64.77, -352.46,
-                            rep(-129.87, 4), -1.23, -49053.55, -12.62, -2524.03, 0, -132.92, -56.27, -154.08, rep(-129.87, 4), -0.06, -577.21, -64.97, -353.54), 
-                   dim = c(4, 5, 4), dimnames = list(c("lb", "ub", "lb.1", "ub.1"), names(tk_par), c("x1", "y1", "x2", "y2")))
+  expect_parchange_equal("alpha", .001, c(1, -129.47, 0.54, -129.87))
+  expect_parchange_equal("alpha", 2, c(10000, -129.47, 21626, -129.87))
+  expect_parchange_equal("alpha", 0.44, c(7.58, -129.47, 5.56, -129.87))
+  expect_parchange_equal("alpha", 1.44, c(758.58, -129.47, 1112.26, -129.87))
 
-apply(as.matrix(expand.grid(1:length(tk_par), 1:ncol(pars))), 1, function(i) {
-  fix <- tk_par
-  fix[i[1]] <- pars[i[1], i[2]]
-  M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt, fix = fix)
-  test_that("Prediction identitites to Tversky & Kahneman (1992)", {
-    expect_equal(M$predict('value')[1,'pr_x'], c('pr_x' = solutions[i[2], i[1], 1]), tol = tol)
-    expect_equal(M$predict('value')[1,'pr_y'], c('pr_y' = solutions[i[2], i[1], 2]), tol = tol)
-    expect_equal(M$predict('value')[2,'pr_x'], c('pr_x' = solutions[i[2], i[1], 3]), tol = tol)
-    expect_equal(M$predict('value')[2,'pr_y'], c('pr_y' = solutions[i[2], i[1], 4]), tol = tol)
-  })
+  expect_parchange_equal("beta", .001, c(57.4, -2.26, 57.23, -1.23))
+  expect_parchange_equal("beta", 2, c(57.4, -22500, 57.23, -49053.55))
+  expect_parchange_equal("beta", 0.44, c(57.4, -17.07, 57.23, -12.62))
+  expect_parchange_equal("beta", 1.44, c(57.4, -1706.80, 57.23, -2524.03))
+  
+  expect_parchange_equal("gamman", .001, c(57.4, -129.47, 57.23, 0))
+  expect_parchange_equal("gamman", 2, c(57.4, -129.47, 57.23, -132.92))
+  expect_parchange_equal("gamman", 0.345, c(57.4, -129.47, 57.23, -56.27))
+  expect_parchange_equal("gamman", 1.345, c(57.4, -129.47, 57.23, -154.08))
+  
+  expect_parchange_equal("gammap", .001, c(57.4, -129.47, 0, -129.87))
+  expect_parchange_equal("gammap", 2, c(57.4, -129.47, 69.61, -129.87))
+  expect_parchange_equal("gammap", 0.305, c(57.4, -129.47, 21.01, -129.87))
+  expect_parchange_equal("gammap", 1.305, c(57.4, -129.47, 77.53, -129.87))
+  
+  expect_parchange_equal("lambda", .001, c(57.4, -0.06, 57.23, -0.06))
+  expect_parchange_equal("lambda", 10, c(57.4, -575.44, 57.23, -577.21))
+  expect_parchange_equal("lambda", 1.125, c(57.4, -64.77, 57.23, -64.97))
+  expect_parchange_equal("lambda", 6.125, c(57.4, -352.46, 57.23, -353.54))
 })
 
 # 1.b. Parameter restrictions
@@ -112,6 +122,7 @@ sapply(1:length(form), function(i) {
         M <- cpt(~x1+p+x2, ref=0L, data=data, fix=tk_par)
         expect_equivalent(M$predict(), result, tol=tol)
       }
+      expect_pred_equivalent(D[1, ], 1.285)
       M <- cpt(~x1+p+x2, ref=0L, data=D[1,], fix=tk_par)
       expect_equivalent(M$predict(), 1.285, tol=tol)
       M <- cpt(~x1+p+x2, ref=0L, data=D[2,], fix=tk_par)
