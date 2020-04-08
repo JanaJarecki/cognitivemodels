@@ -57,7 +57,7 @@ chr_as_rhs <- function(x) {
 .rhs_varnames <- function(formula, n = NULL) {
   formula <- Formula::as.Formula(formula)
   if (length(attr(terms(formula), which = "term.labels"))) {
-    return(lapply(1:length(formula)[2], function(i) all.vars(formula(formula, lhs = 0, rhs = i))))
+    return(lapply(1:length(formula)[2], function(i) all.vars(formula(formula, lhs = 0, rhs = i, drop=FALSE))))
   } else {
     return(NULL)
   }
@@ -95,4 +95,24 @@ chr_as_rhs <- function(x) {
   } else {
     return(NULL)
   }
+}
+
+
+#' Add I(1-x) to the last term of formula for gambles
+#' 
+#' @param formula Objects of class "formula"
+#' @return An object of class "formula" with the last formula terms added
+#' @noRd
+.add_missing_prob <- function(formula) {
+  formula <- as.Formula(formula)
+  # Apply it to each right-hand side
+  if (length(formula)[2] > 1) {
+    updated <- lapply(1:length(formula)[2], function(i) .add_prob_rhs(formula(formula, lhs = i == 1, rhs = i, drop = FALSE)))
+    return(as.formula(gsub("\\| \\~", "\\| ", paste(updated, collapse = " | "))))
+  }
+  
+  if (.rhs_length(formula) %% 2 == 0) { return(formula) }
+  vars <- .rhs_varnames(formula)[[1]]
+  term <- as.formula(paste0("~ . + I(1-", paste0(vars[seq(2, length(vars), 2)], collapse = "-"), ")"))
+  return(update(formula, term))
 }

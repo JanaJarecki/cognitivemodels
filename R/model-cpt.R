@@ -75,7 +75,7 @@ Cpt <- R6Class("cpt",
         gamman  = c(0.001,  2, 1,   1L),
         lambda  = c(0.001, 10, 1, 1L)
         )
-      formula <- self$sanitize_formula(f = formula)
+      formula <- .add_missing_prob(formula)
       super$initialize(
         title = paste0("CPT (", unique(c(weighting, value)), ")"),
         formula = formula,
@@ -102,23 +102,6 @@ Cpt <- R6Class("cpt",
         self$wfun(x=X, p=P, gammap=par["gammap"], gamman=par["gamman"]) * 
         self$vfun(x=X, alpha = par["alpha"], beta = par["beta"], lambda = par["lambda"]))
       )
-    },
-    sanitize_formula = function(f) {
-      f <- as.Formula(f)
-      fs <- lapply(seq.int(length(f)[2]), function(x) formula(f, lhs=0, rhs=x, drop=FALSE))
-      trms <- lapply(fs, function(x) attr(terms(x), "term.labels"))
-      # If any RHS-segnemts of formula have uneven number of variables
-      # This means that the last probability was not supplied. In this case,
-      # add the last probability as I(1-p1-p2-p3-...)
-      fs <- lapply(1:length(trms), function(i) {
-        x <- trms[[i]]
-        if ( (length(x) %% 2) != 0 ) {
-            update(fs[[i]], as.formula(paste0("~ . + I(1-", paste0(x[seq(2,length(x),2)], collapse = "-"), ")")))
-          } else {
-            fs[[i]]
-          }
-        })
-      return(update(f, as.formula(paste(fs, collapse = " | "))))
     },
     set_weightingfun = function(type) {
       if (type == "TK1992") {
