@@ -108,6 +108,10 @@ sapply(1:length(form), function(i) {
     })
   } else {
     test_that("Prediction identities", {
+      expect_pred_equivalent <- function(data, result) {
+        M <- cpt(~x1+p+x2, ref=0L, data=data, fix=tk_par)
+        expect_equivalent(M$predict(), result, tol=tol)
+      }
       M <- cpt(~x1+p+x2, ref=0L, data=D[1,], fix=tk_par)
       expect_equivalent(M$predict(), 1.285, tol=tol)
       M <- cpt(~x1+p+x2, ref=0L, data=D[2,], fix=tk_par)
