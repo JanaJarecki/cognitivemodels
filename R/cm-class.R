@@ -175,7 +175,7 @@ Cm <- R6Class(
     #' @param measure (optional) A string with the goodness-of-fit measure that the solver optimizes (e.g. \code{"loglikelihood"}). Possible values, see the \code{type} argument in \link[cogsciutils]{gof}
     #' @param ... other arguments
     fit = function(solver = self$options$fit_solver, measure = self$options$fit_measure, ...) {
-      solver <- match.arg(solver, c("grid", "solnp", "auto", names(ROI::ROI_registered_solvers())), several.ok = TRUE)
+      solver <- .match_and_check_solver(solver = solver)
       constraints <- .simplify_constraints(self$constraints)
 
       if (solver[1] == "grid") {
