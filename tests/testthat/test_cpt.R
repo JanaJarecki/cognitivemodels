@@ -88,7 +88,7 @@ M <- cpt(~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt_tk1992, fix = tk_par)
 dt_tk1992$rp <- apply(M$predict(), 1, function(i) {
   ifelse(i[1] > i[2], 1, 0)
 })
-M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt_tk1992, choicerule = "softmax")
+# M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt_tk1992, choicerule = "argmax")
 
 # 3. Formal tests
 # 3.a. One-row test set and test sets with different orders
@@ -125,7 +125,7 @@ sapply(1:length(form), function(i) {
 })
 
 # 3.b. Formula entry
-test_that("Probaility entry", {
+test_that("Probability entry", {
   M1 <- cpt(rp ~ x1 + px + x2           | y1 + py + y2          , ref = 0, data = dt, fix = tk_par)$predict()
   M2 <- cpt(rp ~ x1 + px + x2           | y1 + py + y2 + I(1-py), ref = 0, data = dt, fix = tk_par)$predict()
   M3 <- cpt(rp ~ x1 + px + x2 + I(1-px) | y1 + py + y2          , ref = 0, data = dt, fix = tk_par)$predict()
@@ -175,6 +175,7 @@ test_that("CPT errors", {
   expect_error(
     cpt(rp ~ x2 + x1 + px + I(1-px) | y2 + y1 + py + I(1-py), ref=0, choicerule=NULL, data = dt)
     )
+  # TO DO: put matrix here
 })
 
 # 3.c. Tests with > 2 options per gamble
