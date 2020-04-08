@@ -32,8 +32,8 @@ pars <- data.frame(pars, (pars + tk_par)/2)
 
 solutions <- array(data = c(1, 10000, 7.58, 758.58, rep(57.4, 16),
                             0.54, 21616, 5.56, 1112.26, rep(57.23, 8), 0, 69.61, 21.01, 77.53, rep(57.23, 4),
-                            rep(-129.47, 4), -2.26, -22500, -17.07, -1706.8, rep(-129.47, 8), 575.44, -575.44, 222.98, -352.46,
-                            rep(-129.87, 4), -1.23, -49053.55, -12.62, -2524.03, 0, -132.92, -56.27, -154.08, rep(-129.87, 4), 577.21, -577.21, 223.67, -353.54), 
+                            rep(-129.47, 4), -2.26, -22500, -17.07, -1706.8, rep(-129.47, 8), -0.06, -575.44, -64.77, -352.46,
+                            rep(-129.87, 4), -1.23, -49053.55, -12.62, -2524.03, 0, -132.92, -56.27, -154.08, rep(-129.87, 4), -0.06, -577.21, -64.97, -353.54), 
                    dim = c(4, 5, 4), dimnames = list(c("lb", "ub", "lb.1", "ub.1"), names(tk_par), c("x1", "y1", "x2", "y2")))
 
 apply(as.matrix(expand.grid(1:length(tk_par), 1:ncol(pars))), 1, function(i) {
@@ -50,7 +50,7 @@ apply(as.matrix(expand.grid(1:length(tk_par), 1:ncol(pars))), 1, function(i) {
 
 # 1.b. Parameter restrictions
 expect_error(cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt, fix = list(angle = "size")))
-cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt, fix = list(lambda = NA))
+expect_error(cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt, fix = list(c(tk_par[names(tk_par) != "lambda"], lambda = NA))))
 
 # 1.c. Equal parameters
 tk_par["gammap"] = tk_par["gamman"]
@@ -88,10 +88,7 @@ M <- cpt(~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt_tk1992, fix = tk_par)
 dt_tk1992$rp <- apply(M$predict(), 1, function(i) {
   ifelse(i[1] > i[2], 1, 0)
 })
-M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt_tk1992, choicerule = "softmax")
-# bug: did you forget to imply the choicerule? im osf nach Originaldaten suchen und fitten --> welche choice rule?
-# test with three options
-# shortfall model beginnen
+# M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt_tk1992, choicerule = "argmax")
 
 # 3. Formal tests
 # 3.a. One-row test set and test sets with different orders
@@ -111,6 +108,10 @@ sapply(1:length(form), function(i) {
     })
   } else {
     test_that("Prediction identities", {
+      expect_pred_equivalent <- function(data, result) {
+        M <- cpt(~x1+p+x2, ref=0L, data=data, fix=tk_par)
+        expect_equivalent(M$predict(), result, tol=tol)
+      }
       M <- cpt(~x1+p+x2, ref=0L, data=D[1,], fix=tk_par)
       expect_equivalent(M$predict(), 1.285, tol=tol)
       M <- cpt(~x1+p+x2, ref=0L, data=D[2,], fix=tk_par)
@@ -128,7 +129,7 @@ sapply(1:length(form), function(i) {
 })
 
 # 3.b. Formula entry
-test_that("Probaility entry", {
+test_that("Probability entry", {
   M1 <- cpt(rp ~ x1 + px + x2           | y1 + py + y2          , ref = 0, data = dt, fix = tk_par)$predict()
   M2 <- cpt(rp ~ x1 + px + x2           | y1 + py + y2 + I(1-py), ref = 0, data = dt, fix = tk_par)$predict()
   M3 <- cpt(rp ~ x1 + px + x2 + I(1-px) | y1 + py + y2          , ref = 0, data = dt, fix = tk_par)$predict()
@@ -178,4 +179,34 @@ test_that("CPT errors", {
   expect_error(
     cpt(rp ~ x2 + x1 + px + I(1-px) | y2 + y1 + py + I(1-py), ref=0, choicerule=NULL, data = dt)
     )
+  # TO DO: put matrix here
 })
+
+# 3.c. Tests with > 2 options per gamble
+dt <- data.frame(
+  x1 = c(100, -100),
+  px = 1,
+  x2 = 0,
+  y1 = c(200, -200),
+  py = c(.71, .64),
+  y2 = 0,
+  z1 = c(300, -300), 
+  pz = c(.42, .38),
+  z2 = 0,
+  rp = 1) 
+expect_error(cpt(rp ~ x1 + px + x2 | y1 + py + y2 | z1 + pz + z2, ref = 0, data = dt, fix = tk_par))
+
+# 3.c. Tests with > 2 outcomes per option
+dt <- data.frame(
+  x1 = c(100, -100),
+  px1 = .4,
+  x2 = 0,
+  px2 = .4,
+  x3 = c(50, -50),
+  y1 = c(200, -200),
+  py1 = .4,
+  y2 = 0,
+  py2 = .4,
+  y3 = c(100, -100),
+  rp = 1)
+expect_error(cpt(rp ~ x1 + px1 + x2 + px2 + x3 | y1 + py1 + y2 + py2 + y3, ref = 0, data = dt, fix = tk_par)$predict())

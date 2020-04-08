@@ -1,5 +1,5 @@
 context("shortfall")
-library(cogscimodels)
+# library(cogscimodels)
 library(data.table)
 
 # 0. Data set, standard parameters, and tolerance
@@ -38,7 +38,7 @@ apply(as.matrix(expand.grid(1:length(par), 1:ncol(pars))), 1, function(i) {
   fix <- par
   fix[i[1]] <- pars[i[1], i[2]]
   M <- shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = fix)
-  test_that("Prediction identitites to Tversky & Kahneman (1992)", {
+  test_that("Prediction identities", {
     expect_equal(M$predict('value')[1,'pr_x'], c('pr_x' = solutions[i[2], i[1], 1]), tol = tol)
     expect_equal(M$predict('value')[1,'pr_y'], c('pr_y' = solutions[i[2], i[1], 2]), tol = tol)
     expect_equal(M$predict('value')[2,'pr_x'], c('pr_x' = solutions[i[2], i[1], 3]), tol = tol)
@@ -46,6 +46,21 @@ apply(as.matrix(expand.grid(1:length(par), 1:ncol(pars))), 1, function(i) {
   })
 })
 
+# 1.b. Parameter restrictions
+expect_error(shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = list(angle = "size")))
+expect_error(shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = list(c(par[names(par) != "beta"], beta = NA))))
+
+# 1.c. Equal parameters
+par["beta"] -> par["delta"]
+M <- shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = par)
+test_that("Prediction identities", {
+  expect_equal(M$predict('value')[1,'pr_x'], c('pr_x'=1.5), tol = tol)
+  expect_equal(M$predict('value')[2,'pr_x'], c('pr_x'=1.5), tol = tol)
+  expect_equal(M$predict('value')[3,'pr_x'], c('pr_x'=1.5), tol = tol)
+  expect_equal(M$predict('value')[1,'pr_y'], c('pr_y'=1.375), tol = tol)
+  expect_equal(M$predict('value')[2,'pr_y'], c('pr_y'=2), tol = tol)
+  expect_equal(M$predict('value')[3,'pr_y'], c('pr_y'=2.5), tol = tol)
+})
 
 data(shortfalltest) # Load shortfall test data
 d2  <- shortfalltest[shortfalltest$id==2,]
