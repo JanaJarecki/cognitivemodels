@@ -104,39 +104,47 @@ dt_tk1992$rp <- apply(M$predict(), 1, function(i) {
 # 3.a. One-row test set and test sets with different orders
 tk_par <- c(alpha = 0.88, beta = 0.88, lambda = 2.25, gammap = 0.61, gamman = 0.69) 
 D <- data.frame(x1=c(1,2,2),x2=c(2,1,1),p=c(0.66,0.66,0.50))
-form <- c("data frame", "tibble", "data table", "matrix") # tibble
-sapply(1:length(form), function(i) {
-  print(paste0("D is a ", form[i]))
-  if(form[i] == "data frame") D <- as.data.frame(D)
-  if(form[i] == "tibble") D <- as_tibble(D)
-  if(form[i] == "data table") D <- as.data.table(D)
-  if(form[i] == "matrix") {
-    D <- as.matrix(D)
-    test_that("Prediction identities", {
-      expect_error(cpt(~x1+p+x2, ref=0L, data=D[1,], fix=tk_par))
-      expect_error(cpt(~x1+p+x2, ref=0L, data=D, fix=tk_par))
-    })
-  } else {
-    test_that("Prediction identities", {
-      expect_pred_equivalent <- function(data, result) {
-        M <- cpt(~x1+p+x2, ref=0L, data=data, fix=tk_par)
-        expect_equivalent(M$predict(), result, tol=tol)
-      }
-      expect_pred_equivalent(D[1, ], 1.285)
-      M <- cpt(~x1+p+x2, ref=0L, data=D[1,], fix=tk_par)
-      expect_equivalent(M$predict(), 1.285, tol=tol)
-      M <- cpt(~x1+p+x2, ref=0L, data=D[2,], fix=tk_par)
-      expect_equivalent(M$predict(), 1.427, tol=tol)
-      M <- cpt(~x1+p+x2, ref=0L, data=D[3,], fix=tk_par)
-      expect_equivalent(M$predict(), 1.353, tol = tol)
-      M <- cpt(~x1+p+x2, ref=0L, data=D, fix=tk_par)
-      expect_equivalent(M$predict(), c(1.285, 1.427, 1.353), tol = tol)
-      M <- cpt(~x1+p+x2, ref=0L, data=D[3:1,], fix=tk_par)
-      expect_equivalent(M$predict(), c(1.353, 1.427, 1.285), tol = tol)
-      M <- cpt(~x1+p+x2, ref=0L, data=D[c(2,1,3),], fix=tk_par)
-      expect_equivalent(M$predict(), c(1.427, 1.285, 1.353), tol = tol)
-    })
+
+test_that("Prediction identities data frame", {
+  expect_pred_equivalent <- function(data, result) {
+    M <- cpt(~x1+p+x2, ref=0L, data=as.data.frame(data), fix=tk_par)
+    expect_equivalent(M$predict(), result, tol=tol)
   }
+
+  expect_pred_equivalent(D[1, ], 1.285)
+  expect_pred_equivalent(D[2, ], 1.427)
+  expect_pred_equivalent(D[3, ], 1.353)
+  expect_pred_equivalent(D, c(1.285, 1.427, 1.353))
+  expect_pred_equivalent(D[3:1, ], c(1.353, 1.427, 1.285))
+  expect_pred_equivalent(D[c(2,1,3), ], c(1.427, 1.285, 1.353))
+})
+
+test_that("Prediction identities data table", {
+  expect_pred_equivalent <- function(data, result) {
+    M <- cpt(~x1+p+x2, ref=0L, data=as.data.table(data), fix=tk_par)
+    expect_equivalent(M$predict(), result, tol=tol)
+  }
+  
+  expect_pred_equivalent(D[1, ], 1.285)
+  expect_pred_equivalent(D[2, ], 1.427)
+  expect_pred_equivalent(D[3, ], 1.353)
+  expect_pred_equivalent(D, c(1.285, 1.427, 1.353))
+  expect_pred_equivalent(D[3:1, ], c(1.353, 1.427, 1.285))
+  expect_pred_equivalent(D[c(2,1,3), ], c(1.427, 1.285, 1.353))
+})
+
+test_that("Prediction identities tibble", {
+  expect_pred_equivalent <- function(data, result) {
+    M <- cpt(~x1+p+x2, ref=0L, data=as_tibble(data), fix=tk_par)
+    expect_equivalent(M$predict(), result, tol=tol)
+  }
+  
+  expect_pred_equivalent(D[1, ], 1.285)
+  expect_pred_equivalent(D[2, ], 1.427)
+  expect_pred_equivalent(D[3, ], 1.353)
+  expect_pred_equivalent(D, c(1.285, 1.427, 1.353))
+  expect_pred_equivalent(D[3:1, ], c(1.353, 1.427, 1.285))
+  expect_pred_equivalent(D[c(2,1,3), ], c(1.427, 1.285, 1.353))
 })
 
 # 3.b. Formula entry
@@ -190,7 +198,12 @@ test_that("CPT errors", {
   expect_error(
     cpt(rp ~ x2 + x1 + px + I(1-px) | y2 + y1 + py + I(1-py), ref=0, choicerule=NULL, data = dt)
     )
-  # TO DO: put matrix here
+  expect_error( # matrix
+    cpt(rp ~ x1 + px + x2, ref=0L, data=as.matrix(dt[1,]), fix=tk_par)
+    )
+  expect_error(
+    cpt(rp ~ x1 + px + x2, ref=0L, data=as.matrix(dt), fix=tk_par)
+    )
 })
 
 # 3.c. Tests with > 2 options per gamble
