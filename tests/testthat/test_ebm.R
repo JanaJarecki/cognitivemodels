@@ -1,6 +1,6 @@
 library(cogscimodels)
 
-# TODO make a test for the value-based ebm aka cue-based model by P Jusline
+# @todo make a test for the value-based ebm aka cue-based model by P Jusline
 
 # Nosofsky, R. M. (1989). Further tests of an exemplar-similarity approach to relating identification and categorization. Perception & Psychophysics, 45, 279–290. doi:10.3758/BF03204942
 
