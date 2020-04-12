@@ -7,7 +7,7 @@ dt <- data.frame(x1 = rep(1,3), x2 = rep(2,3), px = rep(.5,3),
                 y1 = 0:2,      y2 = rep(3,3), py = rep(.5,3),
                 aspiration = rep(1,3),
                 choice = c(1,1,0))
-par <- c(beta = 5, delta = 0.5) 
+pars <- c(beta = 5, delta = 0.5) 
 M <- shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = par)
 tol <- .01 
 
@@ -22,29 +22,24 @@ test_that("Prediction identitites", {
 })
 
 # 1.a. Parameter value changes (lower, higher, boundaries)
-pars <- M$parspace[, 1:2]
-pars <- pars[sort(rownames(pars)), ]
-pars <- data.frame(pars, (pars + par)/2)
-
-solutions <- array(data = c(rep(1.5, 8),
-                            1.5, -1, 0.875, -0.375, 1.5, -1, 0.875, -0.375,
-                            rep(1.5, 8),
-                            rep(2, 8), 
-                            rep(1.5, 8),
-                            rep(2.5, 8)), 
-                   dim = c(4, 2, 6), dimnames = list(c("lb", "ub", "lb.1", "ub.1"), names(par), c("x1", "y1", "x2", "y2", "x3", "y3")))
-
-apply(as.matrix(expand.grid(1:length(par), 1:ncol(pars))), 1, function(i) {
-  fix <- par
-  fix[i[1]] <- pars[i[1], i[2]]
-  M <- shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = fix)
-  test_that("Prediction identities", {
-    expect_equal(M$predict('value')[1,'pr_x'], c('pr_x' = solutions[i[2], i[1], 1]), tol = tol)
-    expect_equal(M$predict('value')[1,'pr_y'], c('pr_y' = solutions[i[2], i[1], 2]), tol = tol)
-    expect_equal(M$predict('value')[2,'pr_x'], c('pr_x' = solutions[i[2], i[1], 3]), tol = tol)
-    expect_equal(M$predict('value')[2,'pr_y'], c('pr_y' = solutions[i[2], i[1], 4]), tol = tol)
-  })
+test_that("Prediction identities after parameter change", {
+  expect_parchange_equal <- function(par, value, result) {
+    fix <- replace(pars, names(pars) == par, value)
+    M <- shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = fix)
+    expect_equal(c(M$predict('value')), result, tol = tol)
+  }
+  
+  expect_parchange_equal("beta", 0, c(1.5, 1.5, 1.5, 1.5, 2, 2.5))
+  expect_parchange_equal("beta", 10, c(1.5, 1.5, 1.5, -1, 2, 2.5))
+  expect_parchange_equal("beta", 2.5, c(1.5, 1.5, 1.5, 0.875, 2, 2.5))
+  expect_parchange_equal("beta", 7.5, c(1.5, 1.5, 1.5, -0.375, 2, 2.5))
+  
+  expect_parchange_equal("delta", 0, c(1.5, 1.5, 1.5, 1.5, 2, 2.5))
+  expect_parchange_equal("delta", 1, c(1.5, 1.5, 1.5, -1, 2, 2.5))
+  expect_parchange_equal("delta", 0.25, c(1.5, 1.5, 1.5, 0.875, 2, 2.5))
+  expect_parchange_equal("delta", 0.75, c(1.5, 1.5, 1.5, -0.375, 2, 2.5))
 })
+
 
 # 1.b. Parameter restrictions
 expect_error(shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = list(angle = "size")))
