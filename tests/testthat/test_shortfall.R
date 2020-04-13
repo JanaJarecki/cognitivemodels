@@ -153,6 +153,35 @@ test_that("Probability entry", {
   )
 })
 
-test_that("Input errors", {
-  expect_error(shortfall(choice ~ a1 + a2 + a3 + a4, asp = ~ evA, data = d2))
+test_that("shortfall input errors", {
+  expect_error( # wrong order, should be x1 + px + x2 + I(1-px)
+    shortfall(choice ~ x1 + x2 + px + I(1-px), data = dt, asp = ~aspiration, fix = pars)
+  )
+  expect_error( # wrong order in the x stimuli
+    shortfall(choice ~ x1 + x2 + px + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = pars)
+  )
+  expect_error( # wrong order in the y stimuli
+    shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + y2 + py + I(1-py), data = dt, asp = ~aspiration, fix = pars)
+  )
+  expect_error( # wrong order in the x and the y stimuli
+    shortfall(choice ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py), data = dt, asp = ~aspiration, fix = pars)
+  )
+  expect_error( # wrong order without last probability
+    shortfall(choice ~ x1 + x2 + px, data = dt, asp = ~aspiration, fix = pars)
+  )
+  expect_error( # wrong order without last option
+    shortfall(choice ~ x1 + px, data = dt, asp = ~aspiration, fix = pars)
+  )
+  expect_error( # matrix
+    shortfall(choice ~ x1 + px + x2 + I(1-px), data = as.matrix(dt), asp = ~aspiration, fix = pars)
+  )
+  expect_error(
+    shortfall(choice ~ x1 + px + x2 + I(1-px), data = as.matrix(dt[1, ]), asp = ~aspiration, fix = pars)
+  )
+  expect_error( # non-binary choices
+    shortfall(py ~ x1 + px + x2 + I(1-px), data = dt, asp = ~aspiration, fix = pars)
+  )
+  expect_error( # ommission of probabilities
+    shortfall(choice ~ x1 + x2 + y1 + y2, data = dt, asp = ~aspiration, fix = pars)
+  )
 })
