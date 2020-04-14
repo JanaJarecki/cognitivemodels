@@ -218,6 +218,7 @@ dt <- data.frame(
   pz = c(.42, .38),
   z2 = 0,
   rp = 1) 
+# @todo: this should throw an error but does not:
 expect_error(cpt(rp ~ x1 + px + x2 | y1 + py + y2 | z1 + pz + z2, ref = 0, data = dt, fix = tk_par))
 
 # 3.c. Tests with > 2 outcomes per option
