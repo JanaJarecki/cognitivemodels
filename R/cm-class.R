@@ -960,24 +960,21 @@ Cm <- R6Class(
       }
     },
     check_par = function(x) {
-      if (self$pass_checks == TRUE) return()
-      if (is.null(x)) {
-        return()
-      }
-      if (all(is.numeric(x))) {
-        x <- as.list(x)
-      }
-      if (!is.list(x)) {
-        stop("Values in set_par() need to be a list, but are a ", typeof(x), ".", call.=FALSE)
-      }
+      if (self$pass_checks == TRUE) { return() }
+      if (is.null(x)) { return() }
+      if (all(is.numeric(x))) { x <- as.list(x) }
+      if (!is.list(x)) { stop("Values in set_par() must be a list, but are a ", typeof(x), ".", call.=FALSE) }
+
       parspace <- self$parspace
       private$check_parnames(x)
-      sapply(names(x), function(n) {      
+      tolerance <- sqrt(.Machine$double.eps)
+
+      sapply(names(x), function(n) {
         if (is.na(x[[n]]) & is.na(parspace[n, 'na'])) {
           stop("The parameter ", sQuote(n), " cannot be ignored, but was fixed to NA (which is supposed to ignore the parameter).", call.=FALSE)
         }
         if (!is.na(x[[n]]) & !is.character(x[[n]])) {
-          if (x[[n]] < parspace[n, "lb"] | x[[n]] > parspace[n, "ub"]) {
+          if (x[[n]] < (parspace[n, "lb"] - tolerance) | (x[[n]] > parspace[n, "ub"] + tolerance)) {
           stop("Parameter ", sQuote(n), " can range from ", parspace[n, "lb"]," to ", parspace[n, "ub"], ", but it was fixed to ", x[[n]], ".", call.=FALSE)
           }
         }
