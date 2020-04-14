@@ -57,7 +57,7 @@ chr_as_rhs <- function(x) {
 .rhs_varnames <- function(formula, n = NULL) {
   formula <- Formula::as.Formula(formula)
   if (length(attr(terms(formula), which = "term.labels"))) {
-    return(lapply(1:length(formula)[2], function(i) all.vars(formula(formula, lhs = 0, rhs = i, drop=FALSE))))
+    return(lapply(1:length(formula)[2], function(i) attr(terms(formula(formula, lhs = 0, rhs = i, drop=FALSE)), "term.labels")))
   } else {
     return(NULL)
   }
@@ -98,7 +98,7 @@ chr_as_rhs <- function(x) {
 }
 
 
-#' Add I(1-x) to the last term of formula for gambles
+#' In gambles from description, add I(1-x) to the last term
 #' 
 #' @param formula Objects of class "formula"
 #' @return An object of class "formula" with the last formula terms added
@@ -107,7 +107,7 @@ chr_as_rhs <- function(x) {
   formula <- as.Formula(formula)
   # Apply it to each right-hand side
   if (length(formula)[2] > 1) {
-    updated <- lapply(1:length(formula)[2], function(i) .add_prob_rhs(formula(formula, lhs = i == 1, rhs = i, drop = FALSE)))
+    updated <- lapply(1:length(formula)[2], function(i) .add_missing_prob(formula(formula, lhs = i == 1, rhs = i, drop = FALSE)))
     return(as.formula(gsub("\\| \\~", "\\| ", paste(updated, collapse = " | "))))
   }
   
@@ -115,4 +115,31 @@ chr_as_rhs <- function(x) {
   vars <- .rhs_varnames(formula)[[1]]
   term <- as.formula(paste0("~ . + I(1-", paste0(vars[seq(2, length(vars), 2)], collapse = "-"), ")"))
   return(update(formula, term))
+}
+
+#' In gambles from description, check if probabilities sum to 1 and are between 0 and 1
+#' 
+#' @param self A cognitive model object
+#' @return \code{NULL} if the probabilities sum to 1, else stops with an error
+#' @noRd
+.check_probabilities <- function(self, x = NULL) {
+  if (!missing(self)) {
+    if (length(self$input) == 0) return(NULL)
+    x <- self$input
+  }
+  if (!is.na(dim(x)[3])) {
+    return(sapply(1:dim(x)[3], function(k) {
+      j <- seq(2, ncol(x), 2)
+      x <- abind::adrop(x[, j, k, drop=FALSE], 3)
+      colnames(x) <- .rhs_varnames(self$formula)[[k]][j]
+      .check_probabilities(x = x)
+      }
+    ))
+  }
+  if (!isTRUE(all.equal(rowSums(x), rep(1L, nrow(x))))) {
+    stop("The probability columns in 'data' ", cognitivemodels:::.brackify(colnames(x)), " do not sum to 1'.\n  * Are the probability variables really called ", cognitivemodels:::.brackify(colnames(x)), "?\n  * Do any of these variables in 'data' not sum to 1?", call. = FALSE)
+  }
+  if (any(x > 1 | x < 0)) {
+    stop("The probability columns in 'data' ", cognitivemodels:::.brackify(colnames(x)), " must lie between 0 and 1.\n  * Are the probability variables really called ", cognitivemodels:::.brackify(colnames(x)), "?\n  * Are any of these variables in 'data' above 1 or negative?", call. = FALSE)
+  }
 }

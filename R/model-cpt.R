@@ -170,20 +170,8 @@ Cpt <- R6Class("cpt",
       }
       return(ref)
     },
-
     check_input = function() {
-      if (length(self$input) == 0) { return() }
-      P <- self$input[, seq(2, self$natt[1], 2), , drop = FALSE]
-      f <- self$formula
-      fs <- lapply(seq.int(length(f)[2]), function(x) attr(terms(formula(f, lhs=0, rhs=x, drop=FALSE)), "term.labels"))
-      pvars <- lapply(fs, function(x) x[seq(2, length(x), 2)] )
-      if (!all(apply(P, 3, rowSums) == 1L)) {
-        stop('In "data" the probability variables must sum to 1 (2nd, 4th... RHS variables in the "formula"). This is not true for:\n  ', paste(lapply(pvars[which(apply(P, 3, function(x) !all(rowSums(x) == 1L)))], .brackify), "does not sum to 1.\n  "), "Make sure outcomes and probabilities alternate in 'formula', like:  ~ x1+p1+x2+p2.")
-      }
-      pvars <- lapply(pvars, function(x) x[grep("I", x, invert=TRUE)] )
-      if (!all(P %between% list(0L,1L))) {
-        stop('In "data" the probability variables (2nd, 4th... RHS variables in the "formula") must lie between 0 - 1. This is not true for:\n  ', .brackify(unlist(pvars[which(apply(P, 3, function(x) !all(x %between% list(0L,1L))))])), ".", '\n  Check "data" or "formula"; in RHS of "formula" do outcomes and probabilities alternate (like: y ~ x1 + p1 + x2 + p2)?')
-      }
+      .check_probabilities(self = self)
       super$check_input() # don't change this, it runs default checks!
     }
   )
