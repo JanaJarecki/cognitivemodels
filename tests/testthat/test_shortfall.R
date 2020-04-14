@@ -178,8 +178,11 @@ test_that("shortfall input errors", {
   expect_error(
     shortfall(choice ~ x1 + px + x2 + I(1-px), data = as.matrix(dt[1, ]), asp = ~aspiration, fix = pars)
   )
-  expect_error( # non-binary choices
-    shortfall(py ~ x1 + px + x2 + I(1-px), data = dt, asp = ~aspiration, fix = pars)
+  expect_error( # no choices specified and parameters need to be estimated
+    shortfall(~ x1 + px + x2 + I(1-px), data = dt, asp = ~aspiration)
+  )
+  expect_error( # non-binary choices and parameters need to be estimated
+    shortfall(py ~ x1 + px + x2 + I(1-px), data = dt, asp = ~aspiration)
   )
   expect_error( # ommission of probabilities
     shortfall(choice ~ x1 + x2 + y1 + y2, data = dt, asp = ~aspiration, fix = pars)
