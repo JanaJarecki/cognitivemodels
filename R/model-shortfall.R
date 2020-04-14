@@ -44,7 +44,7 @@ Shortfall <- R6Class("shortfall",
 
       super$initialize(
         title = "Shortfall",
-        formula = formula,
+        formula = .add_missing_prob(formula),
         data = data,
         parspace = parspace,
         fix = fix,
@@ -95,19 +95,7 @@ Shortfall <- R6Class("shortfall",
       return(aspiration)
     },
     check_input = function() {
-      # this ensures that the input has an even number of columns
-      # since we need x1 px1 x2 px2 .... columns
-      if (!all(self$natt %% 2 == 0L)) {
-        stop("Formula needs an even number of right-hand elements, but has ", .brackify(self$natt), ' elements.')
-      }
-
-      # this check ensures that the probabilitites in the
-      # inpt sum to 1
-      # probabilities are the 2nd, 4th, 6th ... column of the input
-      if (!all((rowSums(self$input[, -seq(1, self$natt[1], 2), , drop = FALSE]) == self$nstim))) {
-        stop('Probabilities (which are the 2nd, 4th, 6th... element of right side of "formula") must sum to 1, but the following variables in your data do NOT sum to 1: ', .brackify(attr(terms(self$formula), "term.labels")[seq(1, self$natt[1], 2)]), '. Check the probability variables in "formula" and in "data".')
-      }
-
+      .check_probabilities(self = self)
       super$check_input() # Do not delete this, it runs default sanity checks
     }
   )

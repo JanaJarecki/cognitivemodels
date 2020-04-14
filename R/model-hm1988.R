@@ -77,8 +77,9 @@ Hm1988 <- R6Class("hm1988",
         self$make_value_mat(e = self$environments[[i]]))
       self$EV <- lapply(unique(self$envid), function(i)
         self$make_ev_mat(e = self$environments[[i]], V = self$V[[i]]))
+      formula <- 
       super$initialize(
-        formula = formula,
+        formula =  .add_missing_prob(formula),
         data = data,
         parspace = make_parspace(),
         fix = fix,
@@ -248,6 +249,10 @@ Hm1988 <- R6Class("hm1988",
       names(out) <- c("states", "trials", "budget", "initstate", "ntrials")
       private$check_more_input(x = out)
       return(out)
+    },
+    check_input = function() {
+      .check_probabilities(self = self)
+      super$check_input() # Do not delete this, it runs default sanity checks
     },
     check_more_input = function(x) {
       if (is.numeric(x$trials)) {
