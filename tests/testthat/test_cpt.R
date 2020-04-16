@@ -1,6 +1,7 @@
 # Tversky, A., & Kahneman, D. (1992). Advances in prospect theory: cumulative representation of uncertainty. Journal of Risk and Uncertainty, 5, 297–323. doi:10.1007/BF00122574
 context("cpt")
-# library(cogsciMs)
+# @todo can the test work without dplyr? 
+# @body: the idea is that we need as few dependencies as possible in a package
 library(dplyr)
 
 # 0. Data set, standard parameters, and tolerance
@@ -12,7 +13,9 @@ dt <- data.frame(
   py = c(.71, .64),
   y2 = 0,
   rp = 1) # Tversky & Kahneman, 1992, pp. 313
-tk_par <- c(alpha = 0.88, beta = 0.88, lambda = 2.25, gammap = 0.61, gamman = 0.69) 
+tk_par <- c(alpha = 0.88, beta = 0.88, lambda = 2.25, gammap = 0.61, gamman = 0.69)
+# @todo add choicerules to test_cpt
+# @body the fix for the non-default choicerule breaks these tests (sorry)
 M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt, fix = tk_par)
 tol <- .01 
 

@@ -111,7 +111,7 @@ Cm <- R6Class(
 
     #' @description
     #' Initializes a new cogscimodel
-    initialize = function(formula, data = NULL, parspace = make_parspace(), fix = NULL, choicerule =  NULL, title = NULL, discount = NULL, mode = NULL, options = NULL) {
+    initialize = function(formula, data = NULL, parspace = make_parspace(), fix = NULL, choicerule = NULL, title = NULL, discount = NULL, mode = NULL, options = NULL) {
       if (length(data) == 0) {
         self$pass_checks <- TRUE
       }
@@ -135,20 +135,19 @@ Cm <- R6Class(
 
       # Assign variables
       self$title <- title
-      choicerule <- if (!is.null(choicerule)) match.arg(choicerule, c("softmax", "argmax", "luce", "epsilon"))
-      self$choicerule <- choicerule
+      self$choicerule <- .check_and_match_choicerule(x = choicerule)
       self$formula <- formula
       self$set_data(data = data)
       self$discount <- private$init_discount(x = discount)
       
       # Initialize model slots
       private$init_mode(mode = mode)
-      private$init_parspace(p = parspace, cr = choicerule, options = options)
+      private$init_parspace(p = parspace, cr = self$choicerule, options = options)
       fix <- private$init_fix(fix)
       private$init_parnames(
         parspace = self$parspace,
         fix = fix,
-        choicerule = choicerule)
+        choicerule = self$choicerule)
       private$init_par(
         parspace = self$parspace,
         fix = fix)
@@ -500,11 +499,7 @@ Cm <- R6Class(
         note <- cbind(note, "View constraints by 'M$constraints'.")
       }
       if (!inherits(M, "csm")) {
-        if ( is.null(self$choicerule) ) {
-          note <- c(note, 'No choice rule. ')
-        } else {
-          cat('Choice rule:', self$choicerule)
-        }
+         cat('Choice rule:', self$choicerule)
       }
       
       if ( length(note) ) cat('\n---\nNote: ', note)
@@ -717,11 +712,9 @@ Cm <- R6Class(
         # parameters that have NA values
         ignored = fixednames[unlist(lapply(fix, is.na))]
       )
-      if (!is.null(choicerule)) {
-        pn[["choicerule"]] <- switch(choicerule,
+      pn[["choicerule"]] <- switch(choicerule,
                               softmax = "tau",
                               epsilon = "eps")
-      }
       self$parnames <- pn
     },
     init_par = function(parspace, fix) {
@@ -1036,10 +1029,10 @@ Cm <- R6Class(
 
     # Passes the predictions through the choicerule
     apply_choicerule = function(x) {
-      if (is.null(self$choicerule)) {
+      if (self$choicerule == "none") {
         return(x)
       } else {
-        args <- c(list(x = x, type = self$choicerule), as.list(self$get_par('choicerule')))
+        args <- c(list(x = x, type = self$choicerule), as.list(self$get_par("choicerule")))
         x[] <- do.call(cogsciutils::choicerule, args)[,1:ncol(x), drop = FALSE]
         return(x)
       }

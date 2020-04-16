@@ -70,14 +70,14 @@ Hm1988 <- R6Class("hm1988",
     V = NULL,
     env = "rsenvironment",
     initialize = function(formula, trials = "all", states = "all", budget, ntrials, initstate = 0, data = NULL, fix = list(), choicerule = "argmax", options = list(), fitnessfun = function(state, budget) { as.numeric(state >= budget) }) {
-      self$fitnessfun <- fitnessfun   
+      self$fitnessfun <- fitnessfun
+      self$choicerule <- .check_and_match_choicerule(choicerule)
       self$s_t_b_s0_T_var <- list(states, trials, budget, initstate, ntrials)
       self$init_environments(f = formula, d = data)
       self$V <- lapply(unique(self$envid), function(i)
         self$make_value_mat(e = self$environments[[i]]))
       self$EV <- lapply(unique(self$envid), function(i)
         self$make_ev_mat(e = self$environments[[i]], V = self$V[[i]]))
-      formula <- 
       super$initialize(
         formula =  .add_missing_prob(formula),
         data = data,

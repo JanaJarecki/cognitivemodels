@@ -1,6 +1,3 @@
-context("hm1988")
-library(cogscimodels)
-
 # Houston, A. I., & McNamara, J. M. (1988). A framework for the functional analysis of behaviour. Behavioural and Brain Science, 11, 117–163. doi:10.1017/S0140525X00053061
 # p. 118 - 119
 test_that("Values of hm1988", {

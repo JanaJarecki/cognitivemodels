@@ -155,7 +155,7 @@ Choicerule <- R6Class("choicerule",
         mode = "discrete",
         fix = fix,
         options = options,
-        choicerule = NULL
+        choicerule = "none"
       )
     },
     predict = function(type = c("response"), newdata = NULL) {
