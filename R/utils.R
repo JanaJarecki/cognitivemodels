@@ -1,4 +1,3 @@
-
 # ==========================================================================
 # Package: Cognitivemodels
 # File: utils.R
@@ -64,6 +63,20 @@ varG <- function(p, x) {
   # arbitrary cutoff
   if (length(x) > 10L) x = c(x[1:10], "...")
   sprintf("[%s]", paste(x, collapse = ", "))
+}
+
+# convert a vector like c(1, 4, 3, 2) into a string like [1, 4, 3, 2]
+#   (common aggregation method for error messages)
+# From data.table
+.dotify = function(x, n=6L) {
+  # arbitrary cutoff
+  if (length(x) > n) x = c(x[1:n], paste0("... (", length(x) - n, " more)"))
+  sprintf("%s", paste(x, collapse = ", "))
+}
+
+.didyoumean = function(x, y) {
+  y <- y[order(rank(adist(x, y, ignore.case = TRUE), ties.method = "random"))]
+  paste0("By ", dQuote(x), ", did you mean ", .dotify(dQuote(y), 3L), "?")
 }
 
 # Make a list with a regularly-spaced parameter grid for grid-based fitting and parameter recovery
@@ -406,47 +419,4 @@ get_var <- function(x) {
   apply(x, 3, function(slice) cognitivemodels:::varG(
     x = slice[, seq(1, d, 2), drop = FALSE],
     p = slice[, seq(2, d, 2), drop = FALSE]))
-}
-
-
-
-#' Checks and optionally installs missing solers
-#' 
-#' @param solver_name the name of the solver
-#' @export
-#' @noRd
-.match_and_check_solver <- function(solver) {
-  roi_solvers <- gsub("ROI.plugin.", "", ROI::ROI_available_solvers()$Package)
-  roi_registered <- names(ROI::ROI_registered_solvers())
-  roi_solvers <- unique(c(roi_solvers, roi_registered))
-  matched_solver <- try(match.arg(solver, c("grid", "solnp", "auto", roi_solvers), several.ok = TRUE), silent = TRUE)
-  if (inherits(matched_solver, "try-error")) {
-    stop("'solver' must be one of the following, rather than '", solver, "':\n    ", paste(sort(c("solnp", "auto", roi_solvers)), collapse = "\n    "))
-  } else {
-    solver <- unique(matched_solver)
-  }
-  if (length(solver) > 2L) {
-    stop("'solver' can have 2 entries, but it has ", length(solver), ".")
-  }
-  if (length(solver) == 2L) {
-    if (!any(grepl("grid", solver))) {
-      warning("Dropped the second solver '", solver[2], "', using only '", solver[1], "'.", call. = FALSE) 
-    } else if (solver[2] == "grid") {
-      solver <- solver[2:1]
-      warning("Using solver 'grid' first, followed by '", solver[2], "'.", call. = FALSE)
-    }
-  }
-  
-  missing <- is.na(match(solver, c("grid", "solnp", "auto", roi_registered)))
-  if (any(missing)) {
-    install <- menu(c("Yes", "No, stop the model."), title = paste0("The solver '", solver[missing], "' is not (yet) installed. Want to install it?"))
-    if (install == 1) {
-      install.packages(paste0("ROI.plugin.", solver[missing]))
-      return(solver)
-    } else {
-      stop("Model stopped, because the ROI solver plugin was not (yet) installed. \n  * See which solvers you got: ROI::ROI_registered_solvers()\n  * Do you want to change the solver?", call. = FALSE)
-    }
-  } else {
-    return(solver)
-  }
 }

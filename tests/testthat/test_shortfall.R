@@ -8,6 +8,8 @@ dt <- data.frame(x1 = rep(1,3), x2 = rep(2,3), px = rep(.5,3),
                 aspiration = rep(1,3),
                 choice = c(1,1,0))
 pars <- c(beta = 5, delta = 0.5) 
+# @todo Tests now need the parameter choicerule
+# @body the fix for requiring the choicerule breaks some tests in shortfall, e.g.
 M <- shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = pars)
 tol <- .01 
 

@@ -61,7 +61,7 @@ Utility <- R6Class("utility",
   inherit = Cm,
   public = list(
     type = NULL,
-    initialize = function(formula, data, type = c("power", "exponential"), fix = list(1), choicerule = NULL, mode = c("continuous", "discrete"), discount = 0, options = list(), ...) {
+    initialize = function(formula, data, type = c("power", "exponential"), fix = list(1), choicerule = "none", mode = c("continuous", "discrete"), discount = 0, options = list(), ...) {
       self$type <- match.arg(type)
       parspace <- self$make_parspace(
         type = self$type,

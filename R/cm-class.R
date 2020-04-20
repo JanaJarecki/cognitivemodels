@@ -111,10 +111,8 @@ Cm <- R6Class(
 
     #' @description
     #' Initializes a new cogscimodel
-    initialize = function(formula, data = NULL, parspace = make_parspace(), fix = NULL, choicerule =  NULL, title = NULL, discount = NULL, mode = NULL, options = NULL) {
-      if (length(data) == 0) {
-        self$pass_checks <- TRUE
-      }
+    initialize = function(formula, data = NULL, parspace = make_parspace(), fix = NULL, choicerule = NULL, title = NULL, discount = NULL, mode = NULL, options = NULL) {
+      self$pass_checks <- length(data) == 0
       # get call
       self$call <- if (deparse(sys.call()[[1]]) == "super$initialize") {
         # If it is not a stacked model
@@ -124,31 +122,23 @@ Cm <- R6Class(
       } else {
         rlang::call_standardise(sys.call(sys.nframe()-1L))
       }
-      if (length(fix) > 0) {
-        if (fix[1] != "start") {
-          if (!is.list(fix) & all(!is.numeric(fix))) {
-            stop("'fix' must be a list, but is a", class(fix), ". Solution: use list().")
-          }
-        }
-      }
-      formula <- as.Formula(formula) 
 
       # Assign variables
       self$title <- title
-      choicerule <- if (!is.null(choicerule)) match.arg(choicerule, c("softmax", "argmax", "luce", "epsilon"))
-      self$choicerule <- choicerule
-      self$formula <- formula
+      self$formula <- as.Formula(formula) 
+      self$choicerule <- .check_and_match_choicerule(x = choicerule)
       self$set_data(data = data)
       self$discount <- private$init_discount(x = discount)
       
       # Initialize model slots
       private$init_mode(mode = mode)
-      private$init_parspace(p = parspace, cr = choicerule, options = options)
+      private$init_parspace(p = parspace, cr = self$choicerule, options = options)
+      .check_par(fix, self$parspace, self$pass_checks)
       fix <- private$init_fix(fix)
       private$init_parnames(
         parspace = self$parspace,
         fix = fix,
-        choicerule = choicerule)
+        choicerule = self$choicerule)
       private$init_par(
         parspace = self$parspace,
         fix = fix)
@@ -159,7 +149,7 @@ Cm <- R6Class(
       # Checks
       # ! after setting formula, parspace, choicerule, etc.
       private$check_input()
-      private$check_fix(fix)
+      .check_par(fix, self$parspace, self$pass_checks)
       # Fit the model
       if (length(data) > 0 & (self$options$fit == TRUE) & (self$npar("free") > 0L)) {
         message("Fitting free parameters ",
@@ -175,7 +165,7 @@ Cm <- R6Class(
     #' @param measure (optional) A string with the goodness-of-fit measure that the solver optimizes (e.g. \code{"loglikelihood"}). Possible values, see the \code{type} argument in \link[cogsciutils]{gof}
     #' @param ... other arguments
     fit = function(solver = self$options$fit_solver, measure = self$options$fit_measure, ...) {
-      solver <- .match_and_check_solver(solver = solver)
+      solver <- .check_and_match_solver(solver = solver)
       constraints <- .simplify_constraints(self$constraints)
 
       if (solver[1] == "grid") {
@@ -404,7 +394,7 @@ Cm <- R6Class(
     #' Bayesian Information Criterion of the model predictions given the observed responses
     #' @param ... other arguments (ignored)
     BIC = function(...) {
-      k <- ifelse('newdata' %in% names(list(...)), 0, self$npar('free'))
+      k <- ifelse('newdata' %in% names(list(...)), 0L, self$npar('free'))
       N <- self$nres
       return( -2 * self$logLik() + log(N)*k )
     },
@@ -450,7 +440,7 @@ Cm <- R6Class(
     #' @param ... new parameter bound, e.g. \code{alpha = 0} sets the lower bound of the parameter \code{alpha} to 0
     set_lb = function(...) {
       x <- as.list(...)
-      private$check_parnames(x)
+      .check_parnames(names(x), rownames(self$parspace))
       self$parspace[, "lb"] <- replace(self$parspace[, "lb"], match(x, rownames(self$parspace)), x[i])
       return(invisible(self))
     },
@@ -460,7 +450,7 @@ Cm <- R6Class(
     #' @param ... new parameter bound, e.g. \code{alpha = 0} sets the lower bound of the parameter \code{alpha} to 0
     set_ub = function(...) {
       x <- as.list(...)
-      private$check_parnames(x)
+      .check_parnames(names(x), rownames(self$parspace))
       self$parspace[, "ub"] <- replace(self$parspace[, "ub"], match(x, rownames(self$parspace)), x[i])
       return(invisible(self))
     },
@@ -470,7 +460,7 @@ Cm <- R6Class(
     #' @param ... new parameter bound, e.g. \code{alpha = 0} sets the lower bound of the parameter \code{alpha} to 0
     set_start = function(...) {
       x <- as.list(...)
-      private$check_parnames(x)
+      .check_parnames(names(x), rownames(self$parspace))
       self$parspace[, "start"] <- replace(self$parspace[, "start"], match(x, rownames(self$parspace)), x[i])
     },
    
@@ -500,11 +490,7 @@ Cm <- R6Class(
         note <- cbind(note, "View constraints by 'M$constraints'.")
       }
       if (!inherits(M, "csm")) {
-        if ( is.null(self$choicerule) ) {
-          note <- c(note, 'No choice rule. ')
-        } else {
-          cat('Choice rule:', self$choicerule)
-        }
+         cat('Choice rule:', self$choicerule)
       }
       
       if ( length(note) ) cat('\n---\nNote: ', note)
@@ -574,10 +560,10 @@ Cm <- R6Class(
       # n stimuli
       ns <- length(f)[2] 
       # n attributes
-      na <- max(.rhs_length(formula = f)) # n attributes per stimulus
+      na <- .rhs_length(self$formula)
       arr <- array(NA, dim = c(no, max(na), ns))
       for (s in seq_len(ns)) {
-        arr[, , s][] <- as.matrix(model.frame(formula(f, lhs=0, rhs=s), data = d, ...))
+        arr[, 1:na[s], s][] <- as.matrix(model.frame(formula(f, lhs=0, rhs=s), data = d, ...))
       }
       if (ns == 1) {
         colnames(arr) <- attr(terms(formula(f, lhs=0, rhs=1)), "term.labels")
@@ -717,11 +703,9 @@ Cm <- R6Class(
         # parameters that have NA values
         ignored = fixednames[unlist(lapply(fix, is.na))]
       )
-      if (!is.null(choicerule)) {
-        pn[["choicerule"]] <- switch(choicerule,
+      pn[["choicerule"]] <- switch(choicerule,
                               softmax = "tau",
                               epsilon = "eps")
-      }
       self$parnames <- pn
     },
     init_par = function(parspace, fix) {
@@ -735,7 +719,7 @@ Cm <- R6Class(
                                 .make_constraints(parspace = self$parspace, fix = fix))
       # check over-constrained problems     
       if ((length(self$par) - length(C)) < 0) {
-          message("Too many constraints: ", length(self$npar), " parameter and ", length(C), " constraints. View constraints and parameter using `M$constraints` and `M$par`.")
+          message("Too many constraints: ", length(self$par), " parameter and ", length(C), " constraints. View constraints and parameter using `M$constraints` and `M$par`.")
       }
       
       # store values and constraint
@@ -948,76 +932,9 @@ Cm <- R6Class(
     },
     check_parclass = function(x) {
     },
-    check_parnames = function(x) {
-      if (self$pass_checks == TRUE) return() 
-      sapply(names(x), function(n) {
-        if (!n %in% rownames(self$parspace)) {
-          stop("The parameter ", sQuote(n), " is no model parameter. The parameter names are ", sQuote(rownames(self$parspace)), ".", call.=FALSE)
-        }
-      })
-      if (any(duplicated(names(x)))) {
-          stop("Parameter names must be unique, but the following appear multiple times: ", .brackify(sQuote(names(fix)[duplicated(names(fix))])),".", call.=FALSE)
-      }
-    },
     check_par = function(x) {
-      if (self$pass_checks == TRUE) { return() }
-      if (is.null(x)) { return() }
-      if (all(is.numeric(x))) { x <- as.list(x) }
-      if (!is.list(x)) { stop("Values in set_par() must be a list, but are a ", typeof(x), ".", call.=FALSE) }
-
-      parspace <- self$parspace
-      private$check_parnames(x)
-      tolerance <- sqrt(.Machine$double.eps)
-
-      sapply(names(x), function(n) {
-        if (is.na(x[[n]]) & is.na(parspace[n, 'na'])) {
-          stop("The parameter ", sQuote(n), " cannot be ignored, but was fixed to NA (which is supposed to ignore the parameter).", call.=FALSE)
-        }
-        if (!is.na(x[[n]]) & !is.character(x[[n]])) {
-          if (x[[n]] < (parspace[n, "lb"] - tolerance) | (x[[n]] > parspace[n, "ub"] + tolerance)) {
-          stop("Parameter ", sQuote(n), " can range from ", parspace[n, "lb"]," to ", parspace[n, "ub"], ", but it was fixed to ", x[[n]], ".", call.=FALSE)
-          }
-        }
-
-      })
+      .check_par(x = x, parspace = self$parspace, pass = self$pass_checks)
     },
-    check_fix = function(fix) {
-      if (self$pass_checks == TRUE) return()
-      if (length(fix) > 0L) {
-        if (all(is.numeric(fix))) {
-          fix <- as.list(fix)
-        }
-        if (is.list(fix) == FALSE) {
-          stop("'fix' must be a list, but it is a ", typeof(fix), ".")
-        }
-
-        private$check_parnames(fix)
-        parspace <- self$parspace
-        par <- self$get_par()
-
-        if (!all( names(fix) %in% rownames(parspace))) {
-          stop("In 'fix' you can set the parameter ", .brackify(dQuote(rownames(parspace))), ", but not ", .brackify(dQuote(setdiff(names(fix), rownames(parspace)))), ". Did you misspell a parameter?", call.=FALSE)
-        }
-        if (!all(fix[names(fix) %in% private$get_parnames("equal")] %in% private$get_parnames())) {
-          stop("Check equality constraints in 'fix'. The equality constraints ", .brackify(
-            apply(cbind(private$get_parnames('equal'), self$par[private$get_parnames('equal')]), 1, paste, collapse="=")[fix[names(fix) %in% private$get_parnames('equal')] %in% private$get_parnames()]
-            ), " are not valid, because you can only constrain parameters to equal the model's parameter space, which contains the following parameters ", .brackify(rownames(parspace)), ".", call.=FALSE)
-        }
-        if ( length(fix) < nrow(parspace) & is.null(self$res) & self$options$fit == TRUE ) {
-          stop("'formula' must have a left side to estimate parameter ", .brackify(setdiff(rownames(parspace), names(fix))), ".\n  
-            * Did you forget to add a left-hand to the formula?\n  
-            * Did you forget to fix the parameter?", call. = FALSE)
-        }
-
-        lapply(seq_len(self$npar('equal')), function(i, fix) {
-            p <- unlist(fix[private$get_parnames('equal')][i])
-            newp <- setNames(list(self$par[[p]]), names(p))
-            tryCatch(private$check_par( newp ), error = function(e) stop("Can't set parameter ", names(p), " = ", dQuote(p),", because the value of ",dQuote(p)," (",self$get_par()[p],") lies outside of the allowed range of ", dQuote(names(p))," (",paste(parspace[names(p), c("lb","ub")], collapse=" to "),").",call.=FALSE))
-
-          }, fix = fix)
-      }
-    },
-
 
     # OTHER USEFUL STUFF
     constrain = function(par, C = self$constraints) {
@@ -1036,10 +953,10 @@ Cm <- R6Class(
 
     # Passes the predictions through the choicerule
     apply_choicerule = function(x) {
-      if (is.null(self$choicerule)) {
+      if (self$choicerule == "none") {
         return(x)
       } else {
-        args <- c(list(x = x, type = self$choicerule), as.list(self$get_par('choicerule')))
+        args <- c(list(x = x, type = self$choicerule), as.list(self$get_par("choicerule")))
         x[] <- do.call(cogsciutils::choicerule, args)[,1:ncol(x), drop = FALSE]
         return(x)
       }

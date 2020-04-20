@@ -41,6 +41,10 @@ npar.cm <- function(x, type = "all") {
   return(x$npar(type))
 }
 
+#' @export
+nobs <- function(x, ...) {
+  UseMethod("nobs")
+}
 #' @name npar
 #' @usage \code{nobs(x)}
 #' @param x a model object

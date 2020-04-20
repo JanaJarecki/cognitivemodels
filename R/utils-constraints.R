@@ -154,9 +154,14 @@
   }
   # Get parameter that are under-determined by constraints x
   qrcoef <- qr.coef(qr(A), b)
-  qrcoef[qrcoef == 0L & b != 0] <- NA
-  s <- setNames(qr.solve(A, b)[!is.na(qrcoef)], x$names[!is.na(qrcoef)])
-  return(s)
+  qrcoef[qrcoef[!is.na(qrcoef)] == 0L & b != 0] <- NA
+  qrsol <- try(qr.solve(A,b), silent = TRUE)
+  if (inherits(qrsol, "try-error")) {
+    stop("Fixed parameters over-constrain the model parameters.\n", if(nrow(A) == ncol(A)) {"  * Are your constraints circular (a=b, b=a)?"}, "\n  * The original error is:\n    ", qrsol, call.=FALSE)
+  } else {
+    s <- setNames(qr.solve(A, b)[!is.na(qrcoef)], x$names[!is.na(qrcoef)])
+    return(s)
+  }
 }
 
 
