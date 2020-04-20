@@ -65,6 +65,20 @@ varG <- function(p, x) {
   sprintf("[%s]", paste(x, collapse = ", "))
 }
 
+# convert a vector like c(1, 4, 3, 2) into a string like [1, 4, 3, 2]
+#   (common aggregation method for error messages)
+# From data.table
+.dotify = function(x, n=6L) {
+  # arbitrary cutoff
+  if (length(x) > n) x = c(x[1:n], paste0("... (", length(x) - n, " more)"))
+  sprintf("%s", paste(x, collapse = ", "))
+}
+
+.didyoumean = function(x, y) {
+  y <- y[order(rank(adist(x, y, ignore.case = TRUE), ties.method = "random"))]
+  paste0("By ", dQuote(x), ", did you mean ", .dotify(dQuote(y), 3L), "?")
+}
+
 # Make a list with a regularly-spaced parameter grid for grid-based fitting and parameter recovery
 make_grid_id_list <- function(names, nsteps = list(), ub = list(), lb = list(), sumto = NULL, to = 1, offset = 0, ...) {
   # ub and lb at the level of the individual parameter   

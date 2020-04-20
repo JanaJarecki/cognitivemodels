@@ -125,6 +125,7 @@ Baseline <- R6Class("baseline",
         parspace = ps,
         data = data,
         mode = mode,
+        choicerule = "none",
         options = list(fit = FALSE))
     },
     predict = function(type = "response", newdata = NULL) {
