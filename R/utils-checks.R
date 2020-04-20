@@ -19,9 +19,6 @@
   return(x)
 }
 
-<<<<<<< HEAD
-
-
 
 
 #' Checks and optionally installs missing solvers
@@ -157,8 +154,6 @@ solvers <- function() {
     return(solver)
   }
 }
-<<<<<<< HEAD
-=======
 
 
 
