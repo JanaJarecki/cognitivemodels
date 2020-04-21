@@ -76,32 +76,18 @@ test_that("Prediction identitites to Tversky & Kahneman (1992)", {
 })
 
 # 2. Parameter recovery
-dt_tk1992 <- data.table(
-  x1 = c(rep(c(50, -50), each = 3), 
-         rep(c(100, -100), each = 5),
-         rep(c(200, -200), each = 5),
-         rep(c(400, -400), each = 2),
-         rep(c(100, -100), each = 3),
-         rep(c(150, -150), each = 5),
-         rep(c(200, -200), each = 5)),
-  px = c(rep(c(.10, .50, .90), 2), 
-         rep(c(.05, .25, .50, .75, .95), 2),
-         rep(c(.01, .10, .50, .90, .99), 2),
-         rep(c(.01, .99), 2),
-         rep(c(.10, .50, .90), 2), 
-         rep(c(.05, .25, .50, .75, .95), 2),
-         rep(c(.05, .25, .50, .75, .95), 2)),
-  x2 = c(rep(0, 30), rep(c(50, -50), each = 3), rep(c(50, -50), each = 5), rep(c(100, -100), each = 5)))
-dt_tk1992[, y1 := x1 * px + x2 * (1-px)]
-dt_tk1992[, py := 1]
-dt_tk1992[, y2 := 0]
+data(cpttest)
+# cpttest[, decision := decision - 1]
+d <- split(cpttest, cpttest$repetition)
+fml <- decision ~ o1 + p1 + o2 + p2 | o3 + p3 + o4 + p4
 
-tk_par <- c(alpha = 0.88, beta = 0.88, lambda = 2.25, gammap = 0.61, gamman = 0.69) 
-M <- cpt(~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt_tk1992, fix = tk_par)
-dt_tk1992$rp <- apply(M$predict(), 1, function(i) {
-  ifelse(i[1] > i[2], 1, 0)
+test_that("Parameter estimates == estimates in paper", {
+  model <- cpt(fml, ref = 0, data = d$`1`, choicerule = "softmax", fix = list(alpha = "beta"))
+  expect_equal(model$coef(), c(alpha = 0.74, beta=0.74, gammap = 0.61, gamman = 0.89, lambda = 1.27, tau = 1/0.06), tol = tol)
+  expect_equal(-2 * model$logLik(), 136.8, tol = tol)
 })
-# M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt_tk1992, choicerule = "argmax")
+  
+M <- cpt(fml, ref = 0, data = cpttest, choicerule = "softmax")
 
 # 3. Formal tests
 # 3.a. One-row test set and test sets with different orders
