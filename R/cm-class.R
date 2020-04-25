@@ -134,6 +134,7 @@ Cm <- R6Class(
       private$init_mode(mode = mode)
       private$init_parspace(p = parspace, cr = self$choicerule, options = options)
       .check_par(fix, self$parspace, self$pass_checks)
+
       fix <- private$init_fix(fix)
       private$init_parnames(
         parspace = self$parspace,
@@ -725,7 +726,7 @@ Cm <- R6Class(
       # store values and constraint
       self$constraints <- C
       self$ncon <- length(C)
-      if (self$ncon > 0) {
+      if (self$ncon > 0L) {
         self$set_par(.solve_constraints(C), constrain = FALSE)
         self$set_par(self$par) #fixme (this seems inefficient)
         self$parnames$free <- C$names[.which.underdetermined(C)]

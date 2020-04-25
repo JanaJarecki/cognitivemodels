@@ -92,7 +92,7 @@
 }
 
 
-
+# x <- .make_constraints(parspace = make_parspace(a = c(0,1), b= 0:1), fix = list(a = "b"))
 
 #' Simplify constraints
 #' 
@@ -106,7 +106,7 @@
   rhs <- x$rhs
   # Get parameter that are under-determined by constraints x
   qrcoef <- qr.coef(qr(A), rhs)
-  # candidates for a solution
+  # candidates for parameters with a solution
   ids <- which(qrcoef == 0 | is.na(qrcoef))
   # which rows of A to keep
   .rows <- rowSums(A[, ids, drop = FALSE]) != 0
@@ -120,8 +120,6 @@
   C <- .as.csm_constraint(C)
   return(C)
 }
-
-
 
 #' Coerce to constraint object
 #' 
