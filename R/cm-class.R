@@ -490,7 +490,7 @@ Cm <- R6Class(
       if (self$ncon  > 0L) {
         note <- cbind(note, "View constraints by 'M$constraints'.")
       }
-      if (!inherits(M, "csm")) {
+      if (!inherits(self, "csm")) {
          cat('Choice rule:', self$choicerule)
       }
       
@@ -561,7 +561,7 @@ Cm <- R6Class(
       # n stimuli
       ns <- length(f)[2] 
       # n attributes
-      na <- .rhs_length(self$formula)
+      na <- .rhs_length(f)
       arr <- array(NA, dim = c(no, max(na), ns))
       for (s in seq_len(ns)) {
         arr[, 1:na[s], s][] <- as.matrix(model.frame(formula(f, lhs=0, rhs=s), data = d, ...))

@@ -78,6 +78,9 @@ test_that("Input formats of hm1988", {
     nt = 4)
   #  full input format
   M <- hm1988(formula = ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = ~b, ntrials = ~nt, states = ~s, initstate = ~init, trials=~t, data = D, choicerule = "argmax")
+
+
+  
   # Argument 'budget' as number
   M2 <- hm1988(formula = ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = 12, ntrials = ~nt, states = ~s, initstate = ~init, trials=~t, data = D, choicerule = "argmax")
   expect_equal(M2$predict("value", 1:2), M$predict("value", 1:2))
