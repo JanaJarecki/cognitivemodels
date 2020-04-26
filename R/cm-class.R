@@ -82,6 +82,8 @@ Cm <- R6Class(
     ncon = NULL,
     #' @field par Model parameters, a named list
     par = NULL,
+    #' @field fix Fixed model parameters, a named list
+    fix = NULL,
     #' @field parspace Parameter space, a matrix with one parameter per row, and four columns lb (lower bound), ub (upper bound), start (starting value for fitting) and na (value of the parameter if it has no effect on the model); rownames are parameter names
     parspace = NULL,
     #' @field pred Model predictions for \code{data}
@@ -112,50 +114,30 @@ Cm <- R6Class(
     #' @description
     #' Initializes a new cogscimodel
     initialize = function(formula, data = NULL, parspace = make_parspace(), fix = NULL, choicerule = NULL, title = NULL, discount = NULL, mode = NULL, options = NULL) {
-      self$pass_checks <- length(data) == 0
-      # get call
-      self$call <- if (deparse(sys.call()[[1]]) == "super$initialize") {
-        # If it is not a stacked model
-        if (!inherits(self, "csm")) {
-          rlang::call_standardise(sys.calls()[[sys.nframe()-4L]])
-        }
-      } else {
-        rlang::call_standardise(sys.call(sys.nframe()-1L))
-      }
-
-      # Assign variables
-      self$title <- title
-      self$formula <- as.Formula(formula) 
-      self$choicerule <- .check_and_match_choicerule(x = choicerule)
-      self$set_data(data = data)
-      self$discount <- private$init_discount(x = discount)
+      self$title        <- title
+      self$formula      <- as.Formula(formula)
+      self$pass_checks  <- (length(data) == 0)
+      self$call  <- if (deparse(sys.call()[[1L]]) == "super$initialize") {
+        if (!inherits(self, "csm")) { rlang::call_standardise(sys.calls()[[sys.nframe()-4L]]) }
+        } else { rlang::call_standardise(sys.call(sys.nframe()-1L)) }
+      self$choicerule   <- .check_and_match_choicerule(x = choicerule)
+      self$discount     <- private$init_discount(x = discount)
       
-      # Initialize model slots
-      private$init_mode(mode = mode)
-      private$init_parspace(p = parspace, cr = self$choicerule, options = options)
-      .check_par(fix, self$parspace, self$pass_checks)
-
-      fix <- private$init_fix(fix)
-      private$init_parnames(
-        parspace = self$parspace,
-        fix = fix,
-        choicerule = self$choicerule)
-      private$init_par(
-        parspace = self$parspace,
-        fix = fix)
-      private$init_constraints(fix = fix)
+      # Initialize slots of the model
+      self$set_data(data = data)
+      private$init_par(parspace = parspace, fix = fix, options = options, mode = mode)
+      private$init_constraints(fix = self$fix)
       private$init_stimnames()
       private$init_prednames()
       private$init_options(options)
+
       # Checks
       # ! after setting formula, parspace, choicerule, etc.
       private$check_input()
       .check_par(fix, self$parspace, self$pass_checks)
-      # Fit the model
+
+      # Automatically fit free parameters
       if (length(data) > 0 & (self$options$fit == TRUE) & (self$npar("free") > 0L)) {
-        message("Fitting free parameters ",
-          .brackify(private$get_parnames("free")),
-          " by ", ifelse(grepl("loglikelihood|accuracy", self$options$fit_measure), "maximizing ", "minimizing "), self$options$fit_measure, " with ", paste(self$options$fit_solver, collapse=", "))
         self$fit()
       }
     },
@@ -166,6 +148,9 @@ Cm <- R6Class(
     #' @param measure (optional) A string with the goodness-of-fit measure that the solver optimizes (e.g. \code{"loglikelihood"}). Possible values, see the \code{type} argument in \link[cogsciutils]{gof}
     #' @param ... other arguments
     fit = function(solver = self$options$fit_solver, measure = self$options$fit_measure, ...) {
+      message("Fitting free parameters ",
+          .brackify(private$get_parnames("free")),
+          " by ", ifelse(grepl("loglikelihood|accuracy", self$options$fit_measure), "maximizing ", "minimizing "), self$options$fit_measure, " with ", paste(self$options$fit_solver, collapse=", "))
       solver <- .check_and_match_solver(solver = solver)
       constraints <- .simplify_constraints(self$constraints)
 
@@ -635,8 +620,8 @@ Cm <- R6Class(
 
     # INITIALIZE METHODS
     # -------------------------------------------------------------------------
-    init_parspace = function(p, cr, options = list()) {
-      if (is.null(self$mode)) { stop("init_parspace() must be called after init_mode().") }
+    init_parspace = function(p, cr, options = list(), mode) {
+      private$init_mode(mode = mode)
       sigma_par <- cr_par <- NULL
       if (!is.null(cr)) {
         cr_par <- if (cr == "softmax") {
@@ -675,17 +660,15 @@ Cm <- R6Class(
     },
     init_fix = function(fix) {
       if (length(fix) == 0L) {
-        return(NULL)
+        fix <- NULL
       } else if (c(fix[1]) == "start" & length(fix) == 1L) {
-        return(setNames(self$parspace[, "start"], rownames(self$parspace)))
+        fix <- setNames(self$parspace[, "start"], rownames(self$parspace))
       } else if (anyNA(fix)) {
-        return(replace(fix, is.na(fix), self$parspace[names(fix)[is.na(fix)], "na"]))
-      } else {
-        return(fix)
+        fix <- replace(fix, is.na(fix), self$parspace[names(fix)[is.na(fix)], "na"])
       }
+      self$fix <- fix
     },
-    init_parnames = function(parspace, fix, choicerule) {
-      if (is.null(self$parspace)) { stop("init_parnames() must be called after init_parspace(). --> move init_parnames after init_parspace.") }
+    init_parnames = function(parspace = self$parspace, fix = self$fix, choicerule = self$choicerule) {
       parnames <- rownames(parspace)
       fixednames <- names(fix)
       # parameters that are constrained without those ignored
@@ -709,9 +692,11 @@ Cm <- R6Class(
                               epsilon = "eps")
       self$parnames <- pn
     },
-    init_par = function(parspace, fix) {
-      if (is.null(self$parspace)) { stop("init_par() must be called after init_parspace().")
-        }
+    init_par = function(parspace, fix, options, mode) {
+      private$init_parspace(p = parspace, cr = self$choicerule, options = options, mode = mode)
+      .check_par(fix, self$parspace, self$pass_checks)
+      private$init_fix(fix)
+      private$init_parnames()
       self$par <- setNames(as.list(self$parspace[, "start"]), rownames(self$parspace))
     },
     init_constraints = function(fix) {
@@ -953,11 +938,11 @@ Cm <- R6Class(
     },
 
     # Passes the predictions through the choicerule
-    apply_choicerule = function(x) {
+    apply_choicerule = function(x, par = self$get_par("choicerule")) {
       if (self$choicerule == "none") {
         return(x)
       } else {
-        args <- c(list(x = x, type = self$choicerule), as.list(self$get_par("choicerule")))
+        args <- c(list(x = x, type = self$choicerule), as.list(par))
         x[] <- do.call(cogsciutils::choicerule, args)[,1:ncol(x), drop = FALSE]
         return(x)
       }

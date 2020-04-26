@@ -19,15 +19,15 @@ hm1988(
 )
 }
 \arguments{
-\item{formula}{An oject of class \link[stats]{formula}, e.g. \code{choice ~ x1 + p1 + x2 + p2 | y1 + q1 + y2 + q2}. Defines the risky options by alternating outcome1 + probability1 + outcome2 + probability2 + .... Different gambles are separated by a \code{"|"}. Leeft-hand-side is optional.}
+\item{formula}{A \link[stats]{formula}, e.g. \code{choice ~ x1 + px1 + x2 + px2 | y1 + py1 + y2 + py2}. Defines the risky option's variables in \code{data} by alternating outcome1 + probability1 + outcome2 + probability2 + ... Separate different options by a \code{"|"}. The Left-hand-side is optional.}
 
-\item{trials}{(defauls \code{"all"}) A numeric vector of length \code{nrow(data)}; the current decision trial. Can also be a single number, a formula (e.g., \code{~t} in which case the model takes \code{data$t} as trial), or \code{"all"} (in which case the model predicts for all trials).}
+\item{trials}{(default \code{".ALL"}) Specifies the decision tiral, can be a number, numeric vector, string, formula, or \code{".ALL"}. Vectors must have length \code{nrow(data)}, formulas and strings must refer to a column in \code{data} (e.g., \code{~ time} or \code{"time"} refer to \code{data$time}). If \code{".ALL"} the model predicts for all possible trials and states.}
 
-\item{states}{(defauls \code{"all"}) A numeric vector of length \code{nrow(data)}; the resource states or point total. Can also be a single number or a formula (e.g., \code{~s} in which case the model takes \code{data$s} as states), or \code{"all"} in which case the model predicts for all possible states.}
+\item{states}{(default \code{".ALL"}) Specifies the state, can be a number, numeric vector, string, formula, or \code{".ALL"}. Vectors must have length \code{nrow(data)}, formulas must refer to a column in \code{data} (e.g., \code{~ mystate}). If \code{".ALL"} the model predicts for all possible states and trials.}
 
-\item{budget}{A number; the critical state/goal/requirement, that matters in the terminal payout function. Can also be a numeric vector (of length \code{nrow(data)}), or a formula (e.g., \code{~b} in which case the model takes \code{data$b} as budget).}
+\item{budget}{A number; the goal/requirement/critical state, that matters in the terminal payout function. Can also be a numeric vector (of length \code{nrow(data)}), or a formula (e.g., \code{~b} in which case the model takes \code{data$b} as budget).}
 
-\item{ntrials}{A number; the total number of trials available, must be greater than \code{trial}. Can also be a numeric vector (of length \code{nrow(data)}) or a formula (e.g., \code{~total}) in which case the model takes \code{data$total}).}
+\item{ntrials}{A number; the total number of trials available, must be greater than \code{trial}. Can also be a numeric vector of length \code{nrow(data)}, or a formula (e.g., \code{~ total}) referring to a column in \code{data} (e.g., \code{data$total}).}
 
 \item{initstate}{(default 0) A number; the starting state in the first trial. Can also be a numeric vector (of length \code{nrow(data)}) or a formula (e.g., \code{~state0}) in which case the model takes \code{data$state0}).}
 
@@ -43,44 +43,17 @@ Houston & McNamara's (1988) dynamic optimization model for risk-sensitive foragi
 Risk-sensitive foraging means you have, for instance, four choices between the same two risky lotteries and after the four choices you need to have accumulated at least 12 points to get a reward. The optimal solution to this choice problem relies on dynamic programming. The function creates all possible future states given the possible remaining trials, and predicts the optimal choice polica or the expected value of chosing either option given a certain state and a certain time horizon.
 }
 \examples{
-# define the the environment like this:
-###    requirement: budget = 12
-###    number of choices: n.trials = 4
-###    initial number of points: initial.state = 10
-###    risky option: a1, with three outcomes
-###    safe option: a2, with three outcomes
-env <- rsenvironment(budget = 12,
-                     n.trials = 4,
-                     initial.state = 10,
-                     a1 = matrix(c(0.1, 0.8, 0.1, 0, 1, 2), nc = 2),
-                     a2 = matrix(c(0.4, 0.2, 0.4, 0, 1, 2), nc = 2))
-# check the environment
-env
-# > env
-# Reach 12 in 4 trials with options:
-#     a1 (0, 0.1) or (1, 0.8) or (2, 0.1) 
-#     a2 (0, 0.4) or (1, 0.2) or (2, 0.4) 
-#
-# Initial state of 10
+## Make fake data ---------------------------------
+D <- data.frame(x1 = 0, x2 = 1, x3 = 2, px11 = 0.1, px12 = 0.8, px13 = 0.1, px21 = 0.4, px22 = 0.2, px23 = 0.4, s = rep(9:11, each = 4), init = rep(9:11, each = 4), t = 4:1)
 
-# Run the optimal model
-M <- hm1988(env = env, ~ timehorizon + state, choicerule = "arg")
+## Setup the model --------------------------------
+M <- hm1988(~ x1+px11+x2+px12+x3+px13 | x1+px21+x2+px22+x3+px23,
+             trials = ~t, states = ~s, budget = 12, ntrials = 4,
+             initstate = ~init, data = D, choicerule = "argmax")
 
-# Results:
-M # view model
-M$input # view all possible state + trial combinations
-M$predict() # optimal mode for all possible state x trial combinations
-cbind(M$input, M$predict())
-M$predict("mode") # optimal mode
-M$predict("ev") # expected value of optimal choice for all possible states and trials
-M$predict("value") # expected value of choice a1
-M$predict("value", 1:2) # expected value of a1 or a2
-
-# Predict specific state x trial scenarios for 1 ... 4 trials left and a state of 11
-newdt <-  data.frame(timehorizon = 1:4, state = 11)
-M$predict("v", newdata = newdt, 1:2)
-M$predict("r", newdata = newdt)
-
+M                          # View model
+predict(M)                 # Predict choice probability of 1st option (arg-max)
+predict(M, type="values")  # Predict expected values
 }
 \references{
 Houston, A. I., & McNamara, J. M. (1988). A framework for the functional analysis of behaviour. Behavioural and Brain Science, 11, 117–163.
