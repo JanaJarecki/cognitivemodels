@@ -1,6 +1,5 @@
 context("shortfall")
 # library(cogscimodels)
-library(data.table)
 
 # 0. Data set, standard parameters, and tolerance
 dt <- data.frame(x1 = rep(1,3), x2 = rep(2,3), px = rep(.5,3),
@@ -8,9 +7,7 @@ dt <- data.frame(x1 = rep(1,3), x2 = rep(2,3), px = rep(.5,3),
                 aspiration = rep(1,3),
                 choice = c(1,1,0))
 pars <- c(beta = 5, delta = 0.5) 
-# @todo Tests now need the parameter choicerule
-# @body the fix for requiring the choicerule breaks some tests in shortfall, e.g.
-M <- shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = pars)
+M <- shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = pars, choicerule = "none")
 tol <- .01 
 
 # 1. Predictive testing
@@ -27,7 +24,7 @@ test_that("Prediction identitites", {
 test_that("Prediction identities after parameter change", {
   expect_parchange_equal <- function(par, value, result) {
     fix <- replace(pars, names(pars) == par, value)
-    M <- shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = fix)
+    M <- shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = fix, choicerule = "none")
     expect_equal(c(M$predict('value')), result, tol = tol)
   }
   
@@ -44,12 +41,12 @@ test_that("Prediction identities after parameter change", {
 
 
 # 1.b. Parameter restrictions
-expect_error(shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = list(angle = "size")))
-expect_error(shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = list(c(pars[names(pars) != "beta"], beta = NA))))
+expect_error(shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = list(angle = "size"), choicerule = "none"))
+expect_error(shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = list(c(pars[names(pars) != "beta"], beta = NA)), choicerule = "none"))
 
 # 1.c. Equal parameters
 pars["beta"] <- pars["delta"]
-M <- shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = pars)
+M <- shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = pars, choicerule = "none")
 test_that("Prediction identities", {
   expect_equal(M$predict('value')[1,'pr_x'], c('pr_x'=1.5), tol = tol)
   expect_equal(M$predict('value')[2,'pr_x'], c('pr_x'=1.5), tol = tol)
@@ -89,7 +86,7 @@ pars <- c(beta = 5, delta = 0.5)
 D <- dt[, -(1:3)]
 test_that("Prediction identities data frame", {
   expect_pred_equivalent <- function(data, result) {
-    M <- shortfall(choice ~ y1 + py + y2 + I(1-py), data = as.data.frame(data), asp = ~aspiration, fix = pars)
+    M <- shortfall(choice ~ y1 + py + y2 + I(1-py), data = as.data.frame(data), asp = ~aspiration, fix = pars, choicerule = "none")
     expect_equivalent(M$predict(), result, tol=tol)
   }
   
@@ -103,7 +100,7 @@ test_that("Prediction identities data frame", {
 
 test_that("Prediction identities data table", {
   expect_pred_equivalent <- function(data, result) {
-    M <- shortfall(choice ~ y1 + py + y2 + I(1-py), data = as.data.table(data), asp = ~aspiration, fix = pars)
+    M <- shortfall(choice ~ y1 + py + y2 + I(1-py), data = as.data.table(data), asp = ~aspiration, fix = pars, choicerule = "none")
     expect_equivalent(M$predict(), result, tol=tol)
   }
   
@@ -117,7 +114,7 @@ test_that("Prediction identities data table", {
 
 test_that("Prediction identities tibble", {
   expect_pred_equivalent <- function(data, result) {
-    M <- shortfall(choice ~ y1 + py + y2 + I(1-py), data = as_tibble(data), asp = ~aspiration, fix = pars)
+    M <- shortfall(choice ~ y1 + py + y2 + I(1-py), data = as_tibble(data), asp = ~aspiration, fix = pars, choicerule = "none")
     expect_equivalent(M$predict(), result, tol=tol)
   }
   
@@ -131,62 +128,62 @@ test_that("Prediction identities tibble", {
 
 # 3.b. Formula entry
 test_that("Probability entry", {
-  M1 <- shortfall(choice ~ x1 + px + x2           | y1 + py + y2          , data = dt, asp = ~aspiration, fix = pars)$predict()
-  M2 <- shortfall(choice ~ x1 + px + x2           | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = pars)$predict()
-  M3 <- shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2          , data = dt, asp = ~aspiration, fix = pars)$predict()
-  M4 <- shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = pars)$predict()
+  M1 <- shortfall(choice ~ x1 + px + x2           | y1 + py + y2          , data = dt, asp = ~aspiration, fix = pars, choicerule = "none")$predict()
+  M2 <- shortfall(choice ~ x1 + px + x2           | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = pars, choicerule = "none")$predict()
+  M3 <- shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2          , data = dt, asp = ~aspiration, fix = pars, choicerule = "none")$predict()
+  M4 <- shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = pars, choicerule = "none")$predict()
   expect_equal(M1, M2); expect_equal(M1, M3); expect_equal(M2, M3); expect_equal(M1, M4); expect_equal(M2, M4); expect_equal(M3, M4)
   
-  M1 <- shortfall(choice ~ x1 + px + x2           | y1 + py + y2          , data = dt[1, ], asp = ~aspiration, fix = pars)$predict()
-  M2 <- shortfall(choice ~ x1 + px + x2           | y1 + py + y2 + I(1-py), data = dt[1, ], asp = ~aspiration, fix = pars)$predict()
-  M3 <- shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2          , data = dt[1, ], asp = ~aspiration, fix = pars)$predict()
-  M4 <- shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt[2, ], asp = ~aspiration, fix = pars)$predict()
+  M1 <- shortfall(choice ~ x1 + px + x2           | y1 + py + y2          , data = dt[1, ], asp = ~aspiration, fix = pars, choicerule = "none")$predict()
+  M2 <- shortfall(choice ~ x1 + px + x2           | y1 + py + y2 + I(1-py), data = dt[1, ], asp = ~aspiration, fix = pars, choicerule = "none")$predict()
+  M3 <- shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2          , data = dt[1, ], asp = ~aspiration, fix = pars, choicerule = "none")$predict()
+  M4 <- shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = dt[2, ], asp = ~aspiration, fix = pars, choicerule = "none")$predict()
   expect_equal(M1, M2); expect_equal(M1, M3); expect_equal(M2, M3)
   expect_false(isTRUE(all.equal(M1, M4))); expect_false(isTRUE(all.equal(M2, M4))); expect_false(isTRUE(all.equal(M3, M4))) 
   
   expect_error( # probabilities don't sum to 1
-    shortfall(choice ~ x1 + px + x2 + I(2*(1-px)) | y1 + py + y2, data = dt, asp = ~aspiration, fix = pars)
+    shortfall(choice ~ x1 + px + x2 + I(2*(1-px)) | y1 + py + y2, data = dt, asp = ~aspiration, fix = pars, choicerule = "none")
   )
   expect_error(
-    shortfall(choice ~ x1 + px + x2 | y1 + py + y2 + I(2*(1-py)), data = dt, asp = ~aspiration, fix = pars)
+    shortfall(choice ~ x1 + px + x2 | y1 + py + y2 + I(2*(1-py)), data = dt, asp = ~aspiration, fix = pars, choicerule = "none")
   )
   expect_error(
-    shortfall(choice ~ x1 + px + x2 + I(2*(1-px)) | y1 + py + y2 + I(2*(1-py)), data = dt, asp = ~aspiration, fix = pars)
+    shortfall(choice ~ x1 + px + x2 + I(2*(1-px)) | y1 + py + y2 + I(2*(1-py)), data = dt, asp = ~aspiration, fix = pars, choicerule = "none")
   )
 })
 
 test_that("shortfall input errors", {
   expect_error( # wrong order, should be x1 + px + x2 + I(1-px)
-    shortfall(choice ~ x1 + x2 + px + I(1-px), data = dt, asp = ~aspiration, fix = pars)
+    shortfall(choice ~ x1 + x2 + px + I(1-px), data = dt, asp = ~aspiration, fix = pars, choicerule = "none")
   )
   expect_error( # wrong order in the x stimuli
-    shortfall(choice ~ x1 + x2 + px + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = pars)
+    shortfall(choice ~ x1 + x2 + px + I(1-px) | y1 + py + y2 + I(1-py), data = dt, asp = ~aspiration, fix = pars, choicerule = "none")
   )
   expect_error( # wrong order in the y stimuli
-    shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + y2 + py + I(1-py), data = dt, asp = ~aspiration, fix = pars)
+    shortfall(choice ~ x1 + px + x2 + I(1-px) | y1 + y2 + py + I(1-py), data = dt, asp = ~aspiration, fix = pars, choicerule = "none")
   )
   expect_error( # wrong order in the x and the y stimuli
-    shortfall(choice ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py), data = dt, asp = ~aspiration, fix = pars)
+    shortfall(choice ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py), data = dt, asp = ~aspiration, fix = pars, choicerule = "none")
   )
   expect_error( # wrong order without last probability
-    shortfall(choice ~ x1 + x2 + px, data = dt, asp = ~aspiration, fix = pars)
+    shortfall(choice ~ x1 + x2 + px, data = dt, asp = ~aspiration, fix = pars, choicerule = "none")
   )
   expect_error( # wrong order without last option
-    shortfall(choice ~ x1 + px, data = dt, asp = ~aspiration, fix = pars)
+    shortfall(choice ~ x1 + px, data = dt, asp = ~aspiration, fix = pars, choicerule = "none")
   )
   expect_error( # matrix
-    shortfall(choice ~ x1 + px + x2 + I(1-px), data = as.matrix(dt), asp = ~aspiration, fix = pars)
+    shortfall(choice ~ x1 + px + x2 + I(1-px), data = as.matrix(dt), asp = ~aspiration, fix = pars, choicerule = "none")
   )
   expect_error(
-    shortfall(choice ~ x1 + px + x2 + I(1-px), data = as.matrix(dt[1, ]), asp = ~aspiration, fix = pars)
+    shortfall(choice ~ x1 + px + x2 + I(1-px), data = as.matrix(dt[1, ]), asp = ~aspiration, fix = pars, choicerule = "none")
   )
   expect_error( # no choices specified and parameters need to be estimated
-    shortfall(~ x1 + px + x2 + I(1-px), data = dt, asp = ~aspiration)
+    shortfall(~ x1 + px + x2 + I(1-px), data = dt, asp = ~aspiration, choicerule = "none")
   )
   expect_error( # non-binary choices and parameters need to be estimated
-    shortfall(py ~ x1 + px + x2 + I(1-px), data = dt, asp = ~aspiration)
+    shortfall(py ~ x1 + px + x2 + I(1-px), data = dt, asp = ~aspiration, choicerule = "none")
   )
   expect_error( # ommission of probabilities
-    shortfall(choice ~ x1 + x2 + y1 + y2, data = dt, asp = ~aspiration, fix = pars)
+    shortfall(choice ~ x1 + x2 + y1 + y2, data = dt, asp = ~aspiration, fix = pars, choicerule = "none")
   )
 })
