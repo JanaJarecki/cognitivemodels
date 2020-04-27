@@ -41,4 +41,4 @@ M <- bayes_beta(y ~ x + z, D, fix = "start")
 SSE(M)     # 0.361
 
 }
-\concept{{fit measures for cogscimodels}}
+\concept{{fit measures for cognitive models}}

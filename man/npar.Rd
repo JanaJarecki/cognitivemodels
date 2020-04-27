@@ -32,19 +32,6 @@
 D <- data.frame(x = 1, y = 1, z = 1)
 M <- bayes_beta(y ~ x + z, D, fix = "start")
 npar(M) # 3
-
-# Print the model
-M 
-
-# Bayesian model
-# Call:  
-# bayes_beta(formula = y ~ x + z, data = D, fix = "start")  
-#
-# Constrained parameter:
-# delta      x      z
-#     1      1      1
-
-
 nobs(M)
 nstim(M)
 natt(M)

@@ -38,9 +38,9 @@
   if (any(duplicated(names(x)))) {
     stop("Names of fixed parameters must be unique, but 'fix' contains ", .dotify(sQuote(names(x)[duplicated(names(x))])), " ", sum(duplicated(names(x))) + 1, " times.", call. = FALSE)
   }
-
+  # apply the check par function iteratively if par length > 1
   if (length(x) > 1L) {
-    Map(function(x, i) .check_par(setNames(x, i), parspace), x, names(x))
+    Map(function(x, i) .check_par(x = setNames(x, i), parspace), x, names(x) )
     return()
   }
 

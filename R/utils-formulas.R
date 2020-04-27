@@ -143,3 +143,20 @@ chr_as_rhs <- function(x) {
     stop("The probability columns in 'data' ", cognitivemodels:::.brackify(colnames(x)), " must lie between 0 and 1.\n  * Are the probability variables really called ", cognitivemodels:::.brackify(colnames(x)), "?\n  * Are any of these variables in 'data' above 1 or negative?", call. = FALSE)
   }
 }
+
+
+
+#' Convert a character to formula
+#' 
+#' Checks if x is a character and if so converts it into RHS formula
+#' 
+#' @param x A string or RHS formula
+#' @export
+#' @noRd
+.as_rhs <- function(x) {
+  if (is.character(x)) { 
+    return(reformulate(x))
+  } else { 
+    return(x)
+  }
+}

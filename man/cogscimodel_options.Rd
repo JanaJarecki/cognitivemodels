@@ -2,7 +2,7 @@
 % Please edit documentation in R/zzz.R
 \name{cogscimodel_options}
 \alias{cogscimodel_options}
-\title{This is the list of options that can be used in cogscimodels. Pass them as list to the argument options in cogscimodels.}
+\title{This is the list of options that can be used in cogscimodels. Pass them as list to the argument options in cognitive models}
 \usage{
 cogscimodel_options(
   lb = NULL,
@@ -36,5 +36,5 @@ cogscimodel_options(
 \item{fit_args}{A list of arguments to be passed to the fit solver, \code{"fit_solver"} being used, see the respective pages of the solvers.}
 }
 \description{
-This is the list of options that can be used in cogscimodels. Pass them as list to the argument options in cogscimodels.
+This is the list of options that can be used in cogscimodels. Pass them as list to the argument options in cognitive models
 }

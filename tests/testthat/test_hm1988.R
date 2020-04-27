@@ -1,84 +1,76 @@
 # Houston, A. I., & McNamara, J. M. (1988). A framework for the functional analysis of behaviour. Behavioural and Brain Science, 11, 117–163. doi:10.1017/S0140525X00053061
 # p. 118 - 119
-test_that("Values of hm1988", {
-  D11 <- D10 <- D9 <- data.frame(
-    a1   = 0,    a2 = 1,    a3 = 2,
-    pa11 = 0.1, pa12 = 0.8, pa13 = 0.1,
-    pa21 = 0.4, pa22 = 0.2, pa23 = 0.4,
-    b = 12,
-    nt = 4,
-    init = 11,
-    s = 11,
-    t = 4:1)
-  D10$s <- D10$init <- 10
-  D9$s <- D9$init <- 9
-  # initial status = 11
-  val11 <- cbind(a1pa1=c(0.9, 0.99, 0.999, 0.9999),
-                 a1pa2=c(0.6, 0.96, 0.996, 0.9996)) # Table 1
-  .args <- list(formula = ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = ~b, ntrials = ~nt, states = ~s, initstate = ~init, trials=~t, data = D11, choicerule = "argmax")
-  M <- do.call(hm1988, .args)
-  expect_equal(M$predict("value", action = 1:2), val11)
-  expect_equal(M$predict("response", action = 1:2), cbind(a1pa1=rep(1,4), a1pa2=0))
-  .args$data <- .args$data[1,]
-  M1 <- do.call(hm1988, .args)
-  expect_equal(M1$predict("value", action = 1:2), val11[1,,drop=FALSE])
-  expect_equal(M1$predict("response", action = 1:2), cbind(a1pa1=1, a1pa2=0))
 
-  # initial status = 10
-  val10 <- cbind(a1pa1=c(0.1, 0.86, 0.978, 0.997),
-                 a1pa2=c(0.4, 0.74, 0.942, 0.991)) # Table 1
-  .args$data <- D10
-  M <- do.call(hm1988, .args)
-  expect_equal(M$predict("value", action = 1:2), val10)
-  expect_equal(M$predict("response", action = 1:2), cbind(a1pa1=c(0,1,1,1), a1pa2=c(1,0,0,0)))
-  .args$data <- .args$data[1,]
-  M1 <- do.call(hm1988, .args)
-  expect_equal(M1$predict("value", action = 1:2), val10[1,,drop=FALSE])
-  expect_equal(M1$predict("response", action = 1:2), cbind(a1pa1=0, a1pa2=1))
+# Generates the data used for tests
+make_test_data <- function() { 
+  data.frame(a1 = 0, a2 = 1, a3 = 2, pa11 = 0.1, pa12 = 0.8, pa13 = 0.1, pa21 = 0.4, pa22 = 0.2, pa23 = 0.4, s = rep(9:11, each = 4), init = rep(9:11, each = 4), t = 4:1)
+}
 
-  # initial status = 9
-  val9 <- cbind(a1pa1=c(0, 0.41, 0.831, 0.9654),
-                a1pa2=c(0, 0.44, 0.744, 0.9276)) # Table 1
-  .args$data <- D9
-  M <- do.call(hm1988, .args)
-  expect_equal(M$predict("value", action = 1:2), val9)
-  expect_equal(M$predict("response", action = 1:2), cbind(a1pa1=c(0.5,0,1,1), a1pa2=c(0.5,1,0,0)))
-  .args$data <- .args$data[1,]
-  M1 <- do.call(hm1988, .args)
-  expect_equal(M1$predict("value", action = 1:2), val9[1,,drop=FALSE])
-  expect_equal(M1$predict("response", action = 1:2), cbind(a1pa1=0.5, a1pa2=0.5))
-
-  # multiple values / multiple environments
-  D <- rbind(D11,D10,D9)
-  .args$data <- D
-  M <- do.call(hm1988, .args)
-  expect_equal(M$predict("values", action = 1:2), rbind(val11,val10,val9))
-
-  new_order <- sample(1:nrow(D)) # test shuffled order
-  .args$data <- D[new_order,]
-  M <- do.call(hm1988, .args)
-  expect_equal(M$predict("values", action = 1:2), rbind(val11,val10,val9)[new_order,])
-  # .args$choicerule = "softmax"
-  # .args$data$y = cr_argmax(rbind(val11,val10,val9)[new_order,1])
-  # .args$formula <- y ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23
-  # .args$fix <- list()
-  # M <-do.call(hm1988, .args)
-  # M$predict()
+# 1. Prediction identities -------------------------------------------------
+test_that("Prediction identities of values (type = 'value')", {
+  expect_pred_equal <- function(init, target, order = 1:4) {
+    D = make_test_data()
+    M <- hm1988(~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, trials = ~t, states = ~s, budget = 12, ntrials = 4, initstate = ~init, data = D[D$s %in% init, ][order, ], choicerule = "argmax")
+    expect_equal(predict(M, type = "value"), target)
+  }
+  # Table 1 of the paper gives the targets
+  expect_pred_equal( 9, cbind(a1pa1=c(0, 0.41, 0.831, 0.9654),
+                              a1pa2=c(0, 0.44, 0.744, 0.9276)))
+  expect_pred_equal(10, cbind(a1pa1=c(0.1, 0.86, 0.978, 0.997),
+                              a1pa2=c(0.4, 0.74, 0.942, 0.991)))
+  expect_pred_equal(11, cbind(a1pa1=c(0.9, 0.99, 0.999, 0.9999),
+                              a1pa2=c(0.6, 0.96, 0.996, 0.9996)))
+  # Data frame with only 1 row
+  expect_pred_equal( 9,   cbind(a1pa1=0,  a1pa2=0), 1)
+  expect_pred_equal(10,   cbind(a1pa1=0.1,a1pa2=0.4), 1)
+  expect_pred_equal(11,   cbind(a1pa1=0.9,  a1pa2=0.6), 1)
+  expect_pred_equal(9:11, cbind(a1pa1=0.9,a1pa2=0.6), 1)
+  # Multiple environments in one data frame
+  expect_pred_equal(9:11, cbind(a1pa1=c(0, 0.41, 0.831, 0.9654, 0.1, 0.86, 0.978, 0.997, 0.9, 0.99, 0.999, 0.9999), a1pa2=c(0, 0.44, 0.744, 0.9276, 0.4, 0.74, 0.942, 0.991, 0.6, 0.96, 0.996, 0.9996)), 1:12)
+  order <- sample(1:12) # Test shuffled data input
+  expect_pred_equal(9:11, cbind(a1pa1=c(0, 0.41, 0.831, 0.9654, 0.1, 0.86, 0.978, 0.997, 0.9, 0.99, 0.999, 0.9999), a1pa2=c(0, 0.44, 0.744, 0.9276, 0.4, 0.74, 0.942, 0.991, 0.6, 0.96, 0.996, 0.9996))[order,], order)
 })
 
-test_that("Input formats of hm1988", {
-  D <- data.frame(
-    a1   = 0,    a2 = 1,    a3 = 2,
-    pa11 = 0.1, pa12 = 0.8, pa13 = 0.1,
-    pa21 = 0.4, pa22 = 0.2, pa23 = 0.4,
-    s = 11,
-    t = 4:1,
-    init = 10,
-    b = 12,
-    nt = 4)
+ 
+test_that("Prediction identities of responses (type = 'response')", {
+  expect_pred_equal <- function(init, target, order = 1:4) {
+    D <- make_test_data()
+    M <- hm1988(~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, trials = ~t, states = ~s, budget = 12, ntrials = 4, initstate = ~init, data = D[D$s %in% init, ][order,], choicerule = "argmax")
+    expect_equal(predict(M), target)
+  }
+  expect_pred_equal( 9, c(0.5,0,1,1))
+  expect_pred_equal(10, c(0,1,1,1))
+  expect_pred_equal(11, c(1,1,1,1))
+  # Data input with one row
+  expect_pred_equal( 9,   c(0.5), 1)
+  expect_pred_equal(10,   c(0), 1)
+  expect_pred_equal(11,   c(1), 1)
+  expect_pred_equal(9:11, c(0.5), 1)
+  # Multiple environments in one data input
+  expect_pred_equal(9:11, c(0.5,0,1,1,0,1,1,1,rep(1,4)), 1:12)
+  order <- sample(1:12) # Test shuffled data input
+  expect_pred_equal(9:11, c(0.5,0,1,1,0,1,1,1,rep(1,4))[order], order)
+})
+
+test_that("Prediction identities of probability of states (type = 'prstate')"), {
+  expect_pred_equal <- function(init, target, order = 1:12) {
+    D <- make_test_data(order)
+    M <- hm1988(~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = 12, ntrials = 4, initstate = ~init, data = D[D$s %in% init, ], choicerule = "argmax")
+   data.table(
+    trial = 5 - M$get_timehorizons(),
+    state = M$get_states(),
+    p =   predict(M, type = "pstates"))[, sum(p), by = trial]
+
+    expect_equal(predict(M), target)
+  }
+
+
+})
+
+test_that("Input formats", {
   #  full input format
   M <- hm1988(formula = ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = ~b, ntrials = ~nt, states = ~s, initstate = ~init, trials=~t, data = D, choicerule = "argmax")
-  # Argument 'budget' as number
+   # Argument 'budget' as number
   M2 <- hm1988(formula = ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = 12, ntrials = ~nt, states = ~s, initstate = ~init, trials=~t, data = D, choicerule = "argmax")
   expect_equal(M2$predict("value", 1:2), M$predict("value", 1:2))
   # Additional argument 'ntrials' as number

@@ -19,6 +19,10 @@ tk_par <- c(alpha = 0.88, beta = 0.88, lambda = 2.25, gammap = 0.61, gamman = 0.
 M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt, fix = tk_par)
 tol <- .01 
 
+M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt, choicerule = "none", fix = list(alpha = "beta", beta = 0.88, lambda = 2.25, gammap = 0.61, gamman = 0.69))
+
+
+
 # 1. Predictive testing
 test_that("Prediction identitites to Tversky & Kahneman (1992)", {
   expect_equal(M$predict('value')[1,'pr_x'], c('pr_x'=57), tol = tol)

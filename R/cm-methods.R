@@ -1,4 +1,4 @@
-# Define S3 methods for cm
+# Define S3 methods for the class 'cm'
 
 #' @title Number of Parameters, Attributes, Stimuli
 #' @name npar
@@ -13,19 +13,6 @@
 #' D <- data.frame(x = 1, y = 1, z = 1)
 #' M <- bayes_beta(y ~ x + z, D, fix = "start")
 #' npar(M) # 3
-#' 
-#' # Print the model
-#' M 
-#' 
-#'# Bayesian model
-#'# Call:  
-#'# bayes_beta(formula = y ~ x + z, data = D, fix = "start")  
-#'#
-#'# Constrained parameter:
-#'# delta      x      z
-#'#     1      1      1
-#' 
-#' 
 #' @export
 npar <- function(x, ...) {
   UseMethod("npar")
@@ -221,4 +208,46 @@ SSE <- function(x) {
 #' @export
 SSE.cm <- function(x) {
   x$SSE()
+}
+
+
+
+#' Predictions from Cognitive Models (class cm)
+#' 
+#' @param obj A cognitive model object of class 'cm'
+#' @param ... Additional cognitive models
+#' @param type A string, what to predict, usually \code{"response"}, but other values may be possible, see the help pages of the model you use.
+#' @param newdata A data.frame with new data to predict
+#' 
+#' @return A vector or matrix of predictions, if multiple models are supplied using \code{...}, returns a list containing the predictions for each model
+#' 
+#' @export
+predict.cm <- function(obj, ..., type = "response", newdata = NULL) {
+  dotargs <- list(...)
+  if (missing(obj) & length(dotargs)) {
+    obj <- dotargs
+  }
+  if (is.list(obj) & length(obj) > 1) {
+    dotargs <- c(obj[-1], dotargs)
+  }  
+  named <- if (is.null(names(dotargs))) {
+              rep_len(FALSE, length(dotargs)) 
+            }  else {
+              (names(dotargs) != "")
+            }
+  if (any(named)) {
+    warning("These arguments to 'predict.cogscimodel' are invalid and dropped: ",
+      paste(deparse(dotargs[named]), collapse=", "))
+  }
+  dotargs <- dotargs[!named]
+
+  # Allowed models are cogscimodel, lm, merMod
+  class_allowed <- vapply(dotargs, function(x) inherits(x, "cogscimodel"), NA) | vapply(dotargs, function(x) inherits(x, "lm"), NA) | vapply(dotargs, function(x) inherits(x, "merMod"), NA)
+  dotargs <- dotargs[class_allowed]
+
+  ## If multiple objects, predict for all of them
+  if (length(dotargs)) {
+    return(lapply(c(obj, dotargs), predict, type = type, newdata = newdata))
+  }
+  return(obj$predict(type = type, newdata = newdata))
 }

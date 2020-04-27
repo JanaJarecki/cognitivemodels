@@ -222,20 +222,6 @@ get_id_in_grid <- function(id, grid) {
   }
 }
 
-#' Convert a character to formula
-#' 
-#' Checks if x is a character and if so converts it into RHS formula
-#' 
-#' @param x A string or RHS formula
-#' @export
-chr_as_rhs <- function(x) {
-  if (is.character(x)) { 
-    return(reformulate(x))
-  } else { 
-    return(x)
-  }
-}
-
 
 #' Define parameter for cognitive models
 #' 
