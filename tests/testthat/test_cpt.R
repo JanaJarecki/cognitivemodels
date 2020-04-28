@@ -13,6 +13,7 @@ dt <- data.frame(
 tk_par <- c(alpha = 0.88, beta = 0.88, lambda = 2.25, gammap = 0.61, gamman = 0.69)
 M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt, fix = tk_par, choicerule = "none")
 tol <- .01 
+# todo: gemischtes Gamble
 
 # 1. Predictive testing
 test_that("Prediction identitites to Tversky & Kahneman (1992)", {
@@ -83,11 +84,13 @@ test_that("Prediction identitites to Tversky & Kahneman (1992)", {
 # cpttest[, decision := decision - 1]
 # fml <- decision ~ o1 + p1 + o2 + p2 | o3 + p3 + o4 + p4
 # 
-# fit_cpt <- function(dt) {
-#   model <- cpt(fml, ref = 0, data = dt, choicerule = "softmax", options = list(ub = c(tau = 25)))
-#   model2 <- cpt(fml, ref = 0, data = dt, choicerule = "argmax", options = list(fit_measure = "accuracy"))
+# fit_cpt_soft <- function(dt) {
+#   model <- cpt(fml, ref = 0, data = dt, choicerule = "softmax", options = list(ub = c(tau = 25)), fix = list(alpha = "beta", beta = 0.74))
 # }
-# res <- cpttest[, list(fit = list(fit_cpt(dt = .SD))), by = list(repetition, subject)]
+# fit_cpt_arg <- function(dt) {
+#   model <- cpt(fml, ref = 0, data = dt, choicerule = "argmax", options = list(fit_measure = "accuracy"), fix = list(alpha = "beta"))
+# }
+# res <- cpttest[subject < 1, list(fit_soft = list(fit_cpt_soft(dt = .SD))), by = list(repetition, subject)]
 # 
 # test_that("Parameter estimates == estimates in paper", {
 #   expect_equal(model$coef(), c(alpha = 0.74, beta=0.74, gammap = 0.61, gamman = 0.89, lambda = 1.27, tau = 1/0.06), tol = tol)
