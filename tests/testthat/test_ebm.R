@@ -87,12 +87,12 @@ test_that('EBM error handlers', {
 
 #   
 
-#   expect_equal(cogsciutils::SSE(d$obs_cat_size/d$N_size, M$predict(d), n = d$N_size), 0.015, tol = .001)
-#   expect_equal(cogsciutils::Loglikelihood(d$obs_cat_size/d$N_size, M$predict(d), n = nn, pdf = 'binomial', binomial.coef = TRUE, mode = 'd'), -40.08, tol = 0.02)
+#   expect_equal(cognitiveutils::SSE(d$obs_cat_size/d$N_size, M$predict(d), n = d$N_size), 0.015, tol = .001)
+#   expect_equal(cognitiveutils::Loglikelihood(d$obs_cat_size/d$N_size, M$predict(d), n = nn, pdf = 'binomial', binomial.coef = TRUE, mode = 'd'), -40.08, tol = 0.02)
 #   M$setPar(c('lambda'=2.38, 'size'=.50, 'angle'=.50, 'b0'=.49, 'b1'=.51))
 #   expect_equal( 1-M$predict(d[9,]), 0.48, .01)
-#   expect_equal(cogsciutils::SSE(d$obs_cat_size/d$N_size, M$predict(d), n = nn), 0.077, tol = .01)
-#   expect_equal(cogsciutils::Loglikelihood(d$obs_cat_size/d$N_size, M$predict(d), n = nn, binomial.coef= TRUE, pdf = 'binom'), -71, tol = 0.1)
+#   expect_equal(cognitiveutils::SSE(d$obs_cat_size/d$N_size, M$predict(d), n = nn), 0.077, tol = .01)
+#   expect_equal(cognitiveutils::Loglikelihood(d$obs_cat_size/d$N_size, M$predict(d), n = nn, binomial.coef= TRUE, pdf = 'binom'), -71, tol = 0.1)
 
 #   #
 #   # Angle condition

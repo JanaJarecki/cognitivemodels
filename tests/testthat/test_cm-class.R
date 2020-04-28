@@ -119,38 +119,62 @@ test_that("M$ncon", {
 
 
 
-test_that("Constraints", {
-  expect_par_equal <- function(fix, target) {
+test_that("Names of constrained parameters", {
+  expect_parnames_equal <- function(fix, target) {
     M <- Cm$new(y~x1, D, parspace=make_parspace(a=c(0,1,0.5,0.01), b=c(0,1,0.5,0.02), c=c(-2,2,0,0.03), d=c(-2,0,-1,-0.04)), mode="discrete", choicerule = "none", fix=fix, options = list(fit = FALSE))
     expect_equal(names(M$get_par("free")), target)
   }
-  expect_par_equal(list(a=0), c("b", "c", "d"))
-  expect_par_equal(list(b=0), c("a", "c", "d"))
-  expect_par_equal(list(a=0,b=0), c("c", "d"))
-  expect_par_equal(list(c=0,b=0), c("a", "d"))
-  expect_par_equal(list(a=0,b=0,c=0,d=0), NULL)
+  expect_parnames_equal(list(a=0), c("b", "c", "d"))
+  expect_parnames_equal(list(b=0), c("a", "c", "d"))
+  expect_parnames_equal(list(a=0,b=0), c("c", "d"))
+  expect_parnames_equal(list(c=0,b=0), c("a", "d"))
+  expect_parnames_equal(list(a=0,b=0,c=0,d=0), NULL)
   # @todo check get_par("free") for a = b
   # @body: If we have equality-constraints, with the RHS of the constraint being a parameter, that is free, should the contrained parameter on the LSH be counted as free or as fixed? Technically it is fixed, but it would need to be included in the free parameters in the model to be fitted (solnp)...
-  expect_par_equal(fix = list(a="b"), c("a", "b", "c", "d"))
-  expect_par_equal(fix = list(a="b", b="c"), c("a", "b", "c", "d"))
-  expect_par_equal(fix = list(a="b", b="c", c="d"), c("a", "b", "c", "d"))
-  expect_par_equal(fix = list(a="b", b="c", c="d", d=0), NULL)
-  expect_par_equal(fix = list(c="b"), c("a", "b", "c", "d"))
+  expect_parnames_equal(fix = list(a="b"), c("a", "b", "c", "d"))
+  expect_parnames_equal(fix = list(a="b", b="c"), c("a", "b", "c", "d"))
+  expect_parnames_equal(fix = list(a="b", b="c", c="d"), c("a", "b", "c", "d"))
+  expect_parnames_equal(fix = list(a="b", b="c", c="d", d=0), NULL)
+  expect_parnames_equal(fix = list(c="b"), c("a", "b", "c", "d"))
 
-  expect_par_equal(fix = list(a=NA), c("b", "c", "d"))
-  expect_par_equal(fix = list(a=NA, b=NA), c("c", "d"))
-  expect_par_equal(fix = list(a=NA, b=NA, c=NA), c("d"))
-  expect_par_equal(fix = list(a="b", b="c", c=0, d=NA), NULL)
-  expect_par_equal(fix = list(c="b"), c("a", "b", "c", "d"))
+  expect_parnames_equal(fix = list(a=NA), c("b", "c", "d"))
+  expect_parnames_equal(fix = list(a=NA, b=NA), c("c", "d"))
+  expect_parnames_equal(fix = list(a=NA, b=NA, c=NA), c("d"))
+  expect_parnames_equal(fix = list(a="b", b="c", c=0, d=NA), NULL)
+  expect_parnames_equal(fix = list(c="b"), c("a", "b", "c", "d"))
 
-  expect_par_equal(fix = list(a=1, b="a"), c("c", "d"))
-  expect_par_equal(fix = list(a=1, b=NA), c("c", "d"))
-  expect_par_equal(fix = list(a=NA, b=NA), c("c", "d"))
-  expect_par_equal(fix = list(a=NA, b="a"), c("c", "d"))
-  expect_par_equal(fix = list(a=NA, b=0), c("c", "d"))
-  expect_par_equal(fix = list(a=1, b="a", c = 0), c("d"))
-  expect_par_equal(fix = list(a="b", c=0), c("a", "b", "d"))
+  expect_parnames_equal(fix = list(a=1, b="a"), c("c", "d"))
+  expect_parnames_equal(fix = list(a=1, b=NA), c("c", "d"))
+  expect_parnames_equal(fix = list(a=NA, b=NA), c("c", "d"))
+  expect_parnames_equal(fix = list(a=NA, b="a"), c("c", "d"))
+  expect_parnames_equal(fix = list(a=NA, b=0), c("c", "d"))
+  expect_parnames_equal(fix = list(a=1, b="a", c = 0), c("d"))
+  expect_parnames_equal(fix = list(a="b", c=0), c("a", "b", "d"))
 })
+
+
+test_that("Values of constrained parameters", {
+  expect_par_equal <- function(fix, target) {
+    M <- Cm$new(y~x1, D, parspace=make_parspace(a=c(0,1,0.5,0.01), b=c(0,1,0.5,0.02), c=c(-2,2,0,0.03), d=c(-2,0,-1,-0.04)), mode="discrete", choicerule = "none", fix=fix, options = list(fit = FALSE))
+    M$par
+    expect_equal(M$get_par("free"), target)
+  }
+  expect_par_equal(list(a="b"), c(a=0.5, b=0.5, c=0, d=-1))
+  expect_par_equal(list(c="b"), c(a=0.5, b=0.5, c=0.5, d=-1))
+  expect_par_equal(list(c="a"), c(a=0.5, b=0.5, c=0.5, d=-1))
+
+  expect_parnames_equal(list(b=0), c("a", "c", "d"))
+  expect_parnames_equal(list(a=0,b=0), c("c", "d"))
+  expect_parnames_equal(list(c=0,b=0), c("a", "d"))
+  expect_parnames_equal(list(a=0,b=0,c=0,d=0), NULL)
+  # @todo check get_par("free") for a = b
+  # @body: If we have equality-constraints, with the RHS of the constraint being a parameter, that is free, should the contrained parameter on the LSH be counted as free or as fixed? Technically it is fixed, but it would need to be included in the free parameters in the model to be fitted (solnp)...
+  expect_parnames_equal(fix = list(a="b"), c("a", "b", "c", "d"))
+  expect_parnames_equal(fix = list(a="b", b="c"), c("a", "b", "c", "d"))
+  expect_parnames_equal(fix = list(a="b", b="c", c="d"), c("a", "b", "c", "d"))
+  expect_parnames_equal(fix = list(a="b", b="c", c="d", d=0), NULL)
+  expect_parnames_equal(fix = list(c="b"), c("a", "b", "c", "d"))
+  })
 
 test_that('Error messages', {
   expect_fix_error <- function(fix) {
