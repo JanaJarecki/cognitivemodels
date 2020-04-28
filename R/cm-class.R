@@ -113,15 +113,16 @@ Cm <- R6Class(
 
     #' @description
     #' Initializes a new cogscimodel
-    initialize = function(formula, data = NULL, parspace = make_parspace(), fix = NULL, choicerule = if(mode == "continuous") { "none" } else { NULL }, title = NULL, discount = NULL, mode = NULL, options = NULL) {
+    initialize = function(formula, data = NULL, parspace = make_parspace(), fix = NULL, choicerule = if (mode == "continuous") { "none" } else { NULL }, title = NULL, discount = NULL, mode = NULL, options = NULL) {
       self$title        <- title
       self$formula      <- as.Formula(formula)
       self$pass_checks  <- (length(data) == 0)
       self$call  <- if (deparse(sys.call()[[1L]]) == "super$initialize") {
         if (!inherits(self, "csm")) { rlang::call_standardise(sys.calls()[[sys.nframe()-4L]]) }
         } else { rlang::call_standardise(sys.call(sys.nframe()-1L)) }
-      self$choicerule   <- .check_and_match_choicerule(x = choicerule)
       self$discount     <- private$init_discount(x = discount)
+      if (mode == "continuous") choicerule <- "none"
+      self$choicerule   <- .check_and_match_choicerule(x = choicerule)
       
       # Initialize slots of the model
       self$set_data(data = data)
