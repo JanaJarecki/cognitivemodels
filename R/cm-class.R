@@ -113,7 +113,7 @@ Cm <- R6Class(
 
     #' @description
     #' Initializes a new cogscimodel
-    initialize = function(formula, data = NULL, parspace = make_parspace(), fix = NULL, choicerule = NULL, title = NULL, discount = NULL, mode = NULL, options = NULL) {
+    initialize = function(formula, data = NULL, parspace = make_parspace(), fix = NULL, choicerule = if(mode == "continuous") { "none" } else { NULL }, title = NULL, discount = NULL, mode = NULL, options = NULL) {
       self$title        <- title
       self$formula      <- as.Formula(formula)
       self$pass_checks  <- (length(data) == 0)
@@ -724,6 +724,9 @@ Cm <- R6Class(
         self$mode <- private$infer_mode(y = self$res)
       }
       private$set_mode(mode)
+       if (self$mode == "continuous") {
+        self$choicerule <- "none"
+      }
     },
     init_stimnames = function() {
       self$stimnames <- abbreviate(private$make_stimnames(), minlength = 1, use.classes = FALSE)
