@@ -23,7 +23,7 @@
 #' \item{\code{parname = "p2"} constrains a parameter to another model parameter \code{p2}.}
 #' \item{\code{parname = NA} tells the model to omit a parameter, if possible.}
 #' }
-#' @param choicerule (optional) String specifying the choice rule (default \code{NULL}), allowed are \code{NULL}, \code{"softmax"}, \code{"eps"}, and other values of the argument \code{type} to \link[cogsciutils]{choicerule}.
+#' @param choicerule (optional) String specifying the choice rule (default \code{NULL}), allowed are \code{NULL}, \code{"softmax"}, \code{"eps"}, and other values of the argument \code{type} to \link[cognitiveutils]{choicerule}.
 #' @param title (optional, default is the class name) A string, the model's name.
 #' @param mode A string. Allowed are \code{"discrete"}, \code{"continuous"}, specifies the model's response mode. Discrete responses are binary (0 or 1), continuous responses are numbers with a normal error.
 #' @param discount (optional) An integer or integer vector (default \code{0}), ddefining which or how many, starting from trial 1, to discount when fitting.
@@ -41,12 +41,12 @@
 #' @section Options, see \link{cogscimodel_options}, possible options:
 #' \describe{
 #'    \item{\code{fit}}{(default \code{TRUE}), \code{FALSE} omits fitting the free parameter.}
-#'    \item{\code{fit_measure}}{(default \code{"loglikelihood"}). When fitting, which fit measure to use? See \link[cogsciutils]{gof}'s argument \code{type}.}
+#'    \item{\code{fit_measure}}{(default \code{"loglikelihood"}). When fitting, which fit measure to use? See \link[cognitiveutils]{gof}'s argument \code{type}.}
 #'    \item{\code{fit_data}}{(default: \code{data}). When fitting, which data other than to fit the model to? Useful if you fit to other data than you predict.}
 #'    \item{\code{fit_n}}{(default: \code{1}). When fitting, the number of reservations underlying each data point in \code{fit_data}. If this data is aggregated data, change this argument.}
 #'    \item{\code{fit_roi_solver}}{(default: \code{"auto"}). When fitting with the \link{http://roi.r-forge.r-project.org/index.html}{ROI pakage}, which solver to use for the parameter estimation problem.}
 #'    \item{\code{nbest}}{(default: \code{self$npar("free")}, no. of free parameters) When fitting with grid search followed by a solver, how many best grid-search solutions to use as starting parameters with the solver?}
-#' \item{\code{fit_options}}{(default: \code{NULL}). Other options, see \link[cogsciutils]{gof}.}
+#' \item{\code{fit_options}}{(default: \code{NULL}). Other options, see \link[cognitiveutils]{gof}.}
 #' }
 #' @examples 
 #' Cm$new(
@@ -146,7 +146,7 @@ Cm <- R6Class(
     #' @description
     #' Fits the free model parameters to the response data
     #' @param solver (optional) A string with the model solver
-    #' @param measure (optional) A string with the goodness-of-fit measure that the solver optimizes (e.g. \code{"loglikelihood"}). Possible values, see the \code{type} argument in \link[cogsciutils]{gof}
+    #' @param measure (optional) A string with the goodness-of-fit measure that the solver optimizes (e.g. \code{"loglikelihood"}). Possible values, see the \code{type} argument in \link[cognitiveutils]{gof}
     #' @param ... other arguments
     fit = function(solver = self$options$fit_solver, measure = self$options$fit_measure, ...) {
       message("Fitting free parameters ",
@@ -323,7 +323,7 @@ Cm <- R6Class(
 
     #' @description
     #' Computes the goodness of model fit
-    #' @param type A string, fit measure to use, e.g. \code{"loglikelihood"}, for the allowed types see \link[cogsciutils]{gof}
+    #' @param type A string, fit measure to use, e.g. \code{"loglikelihood"}, for the allowed types see \link[cognitiveutils]{gof}
     #' @param n (optional) When fitting to aggregate data, supply how many raw data points underly each aggregated data point
     #' @param newdata (optional) A data frame with new data - experimental!
     #' @param ... other arguments (ignored)
@@ -363,7 +363,7 @@ Cm <- R6Class(
       if (self$mode == "continuous" & type == "loglikelihood") {
         .args[["sigma"]] <- self$get_par()["sigma"]
       }
-      gof <- try(do.call(cogsciutils::gof, args = .args, envir = parent.frame()), silent = TRUE)
+      gof <- try(do.call(cognitiveutils::gof, args = .args, envir = parent.frame()), silent = TRUE)
       if (inherits(gof, "try-error")) {
         stop("Can't compute ", type, ", because:\n  ", geterrmessage(),
           call.= FALSE)
@@ -947,7 +947,7 @@ Cm <- R6Class(
         return(x)
       } else {
         args <- c(list(x = x, type = self$choicerule), as.list(par))
-        x[] <- do.call(cogsciutils::choicerule, args)[,1:ncol(x), drop = FALSE]
+        x[] <- do.call(cognitiveutils::choicerule, args)[,1:ncol(x), drop = FALSE]
         return(x)
       }
     },

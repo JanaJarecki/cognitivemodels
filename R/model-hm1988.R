@@ -97,7 +97,7 @@ Hm1988 <- R6Class("hm1988",
           order <- unlist(sapply(ids, function(x) which(envid == x)))
         }
 
-        return(cogsciutils:::drop2(out[order(order), , drop = FALSE]))
+        return(cognitiveutils:::drop2(out[order(order), , drop = FALSE]))
       },
       make_prediction = function(envid, type, action = NULL, more_input = self$more_input) {
         env <- self$environments[[envid]]

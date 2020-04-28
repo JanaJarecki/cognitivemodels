@@ -2,10 +2,10 @@
 #' 
 #' \code{softmax()} soft-maximizes, \code{argmax()} maximizes deterministically, \code{epsilon_greedy()} is epsilon-greedy, \code{epsilon()} is probabilistic-epsilon, \code{luce()} selects proportionally (Luce's rule).
 #' 
-#' @importFrom cogsciutils cr_softmax
-#' @importFrom cogsciutils cr_epsilon
-#' @importFrom cogsciutils cr_argmax
-#' @importFrom cogsciutils cr_luce
+#' @importFrom cognitiveutils cr_softmax
+#' @importFrom cognitiveutils cr_epsilon
+#' @importFrom cognitiveutils cr_argmax
+#' @importFrom cognitiveutils cr_luce
 #' 
 #' @inheritParams Cm
 #' @rdname choicerules
@@ -165,14 +165,14 @@ Choicerule <- R6Class("choicerule",
         D <- private$get_input(d = newdata)
       }
       fun <- switch(self$type,
-        softmax = cogsciutils::cr_softmax,
-        argmax = cogsciutils::cr_argmax,
-        luce = cogsciutils::cr_luce,
-        epsilon = cogsciutils::cr_epsilon,
+        softmax = cognitiveutils::cr_softmax,
+        argmax = cognitiveutils::cr_argmax,
+        luce = cognitiveutils::cr_luce,
+        epsilon = cognitiveutils::cr_epsilon,
         epsilongreedy = function(x, eps) {
-          cogsciutils::cr_epsilon(
+          cognitiveutils::cr_epsilon(
             x = matrix(
-              data = cogsciutils::cr_argmax(x),
+              data = cognitiveutils::cr_argmax(x),
               nrow = self$nobs),
             eps = self$get_par())
         }

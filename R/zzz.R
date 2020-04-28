@@ -18,7 +18,7 @@
  #' This is the list of options that can be used in cogscimodels. Pass them as list to the argument options in cognitive models
 #' 
 #' @param fit Logical (default \code{TRUE}), \code{FALSE} omits parameter fitting. Useful for testing models.
-#' @param fit_measure A string (default \code{"loglikelihood"}), fit measure to use, can be one of \code{types} in the function \code{\link[cogsciutils]{gof}}, e.g. \code{"mse"}, \code{"sse"}.
+#' @param fit_measure A string (default \code{"loglikelihood"}), fit measure to use, can be one of \code{types} in the function \code{\link[cognitiveutils]{gof}}, e.g. \code{"mse"}, \code{"sse"}.
 #' @param fit_n An integer, if the data that is being predicted is aggregated data, supply the number subjects underlying each data point.
 #' @param fit_data A data frame with data other than the main \code{"data"} argument to be used for fitting.
 #' @param fit_solver Algorithm used to do the parameter estimation. \code{"grid"} uses a grid-search, \code{"solnp"} uses \code{\link[Rsolnp]{solnp}}, other solvers contained in the R optimization infrastructure can be named (see \code{\link{ROI}}), for example \code{"optimx"} or \code{"nlminb"}, see the page of ROI. This may cause warnings about ignored options. THis may cause parameter bounds to be ignored and the model to fail.

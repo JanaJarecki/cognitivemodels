@@ -179,7 +179,7 @@ Rsenvironment <- R6Class("rsenvironment",
           if (type == "random") {
             pr <- (pr + 1) / self$n.actions
           } else if (type == "ev") {
-            pr <- cogsciutils::choicerule(t(self$evs), "argmax")
+            pr <- cognitiveutils::choicerule(t(self$evs), "argmax")
           } else {
             pr[match(type, self$actions)] <- 1
           }

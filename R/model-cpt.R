@@ -9,7 +9,7 @@
 #' @templateVar parameter formula
 #' @param formula A \link{formula} such as \code{y ~ x1 + p1 + x2 | y1 + py + y2} specifying the columns in \code{data} that contain outcomes, probabilities and (optional) the observations. Lines (\code{|}) separate different gambles. The formula must alternate outcomes and probabilities (x + p + x2 + p2), the last probability can be omitted.
 #' @templateVar parameter choicerule
-#' @param choicerule (default \code{"softmax"}) A string specifying the choierule of the model, for instance \code{"softmax"}. If \code{"none"}, the model predicts the utility value of the option. Allowed are the values of the \code{type} argument in \code{\link[cogsciutils]{choicerule}}. 
+#' @param choicerule (default \code{"softmax"}) A string specifying the choierule of the model, for instance \code{"softmax"}. If \code{"none"}, the model predicts the utility value of the option. Allowed are the values of the \code{type} argument in \code{\link[cognitiveutils]{choicerule}}. 
 #' @param weighting (optional) weighting function. Currently the one used in Kahneman & Tversky (1992), \code{"KT1992"}, is possible.
 #' @param value (optional) value function. Currently, only the one used by Kahneman & Tversky (1992), \code{"KT1992"}, is possible.
 #' @references Tversky, A., & Kahneman, D. (1992). Advances in prospect theory: cumulative representation of uncertainty. Journal of Risk and Uncertainty, 5, 297–323. doi:10.1007/BF00122574

@@ -3,7 +3,7 @@
 #' `anova` returns an analysis of deviance table for one or more fitted cognitive models
 #'
 #' @importFrom AICcmodavg AICc
-#' @importFrom cogsciutils akaike_weight
+#' @importFrom cognitiveutils akaike_weight
 #' @param object,... Objects of class \code{cm}, typically the result of a call to one fo the models. (Or a list of \code{objects} for the \code{"cogscimodellist"} method.)
 #' @return An anova-style table
 #' @examples
@@ -103,7 +103,7 @@ anova.cogscimodellist <- function(models, model.names = NULL) {
   llk <- unlist(llks)
   tab <- data.frame(npar = npar,
                     AIC = aic,
-                    `wAIC` = cogsciutils::akaike_weight(aic),
+                    `wAIC` = cognitiveutils::akaike_weight(aic),
                     BIC = vapply(models, BIC, 1), #  "       "
                     logLik = llk,
                     deviance = -2*llk,
