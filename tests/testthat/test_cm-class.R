@@ -57,7 +57,7 @@ test_that("M$nstim and nstim(M)", {
 })
 
 
-test_that("M$natt and natt(M)", {
+test_that("Number of attributes", {
   expect_n_equal <- function(formula, target) {
     M <- Cm$new(formula, D, make_parspace(), mode ="discrete", choicerule = "none")
     expect_equal(M$natt, target)
@@ -72,7 +72,7 @@ test_that("M$natt and natt(M)", {
   expect_n_equal(y + z ~ x1 + x2 | x3 + x4, c(2,2))
 })
 
-test_that("M$npar and npar(M)", {
+test_that("Number of parameters", {
   expect_par_equal <- function(parspace, target) {
     M <- Cm$new(y~x1, D, parspace, mode="discrete", choicerule = "none", options = list(fit=FALSE))
     expect_equal(M$npar(), target)
@@ -101,7 +101,7 @@ test_that("M$npar and npar(M)", {
 
 
 
-test_that("M$ncon", {
+test_that("Number of constraints", {
   expect_n_equal <- function(fix, target) {
     M <- Cm$new(y~x1, D, parspace = make_parspace(a=0:1, b=0:1, c=0:1, d=0:1), mode="discrete", choicerule = "none", fix = fix, options = list(fit=FALSE))
     expect_equal(M$ncon, target)
@@ -121,7 +121,7 @@ test_that("M$ncon", {
 
 test_that("Names of constrained parameters", {
   expect_parnames_equal <- function(fix, target) {
-    M <- Cm$new(y~x1, D, parspace=make_parspace(a=c(0,1,0.5,0.01), b=c(0,1,0.5,0.02), c=c(-2,2,0,0.03), d=c(-2,0,-1,-0.04)), mode="discrete", choicerule = "none", fix=fix, options = list(fit = FALSE))
+    M <- Cm$new(y~x1, D, parspace=make_parspace(a=c(-1,1,0.5,0.01), b=c(-1,1,0.5,0.02), c=c(-2,2,0,0.03), d=c(-2,0,-1,-0.04)), mode="discrete", choicerule = "none", fix=fix, options = list(fit = FALSE))
     expect_equal(names(M$get_par("free")), target)
   }
   expect_parnames_equal(list(a=0), c("b", "c", "d"))
@@ -155,25 +155,40 @@ test_that("Names of constrained parameters", {
 
 test_that("Values of constrained parameters", {
   expect_par_equal <- function(fix, target) {
-    M <- Cm$new(y~x1, D, parspace=make_parspace(a=c(0,1,0.5,0.01), b=c(0,1,0.5,0.02), c=c(-2,2,0,0.03), d=c(-2,0,-1,-0.04)), mode="discrete", choicerule = "none", fix=fix, options = list(fit = FALSE))
-    M$par
-    expect_equal(M$get_par("free"), target)
+    M <- Cm$new(y~x1, D, parspace=make_parspace(a=c(0,1,0.5,0.01), b=c(-1,1,0.5,0.02), c=c(-2,2,0,0.03), d=c(-2,0.5,-1,-0.04)), mode="discrete", choicerule = "none", fix=fix, options = list(fit = FALSE))
+    expect_equal(M$get_par(), target)
   }
   expect_par_equal(list(a="b"), c(a=0.5, b=0.5, c=0, d=-1))
-  expect_par_equal(list(c="b"), c(a=0.5, b=0.5, c=0.5, d=-1))
+  expect_par_equal(list(a="c"), c(a=0, b=0.5, c=0, d=-1))
+  expect_par_equal(list(b="a"), c(a=0.5, b=0.5, c=0, d=-1))
+  expect_par_equal(list(b="c"), c(a=0.5, b=0, c=0, d=-1))
+  expect_par_equal(list(b="d"), c(a=0.5, b=-1, c=0, d=-1))
   expect_par_equal(list(c="a"), c(a=0.5, b=0.5, c=0.5, d=-1))
-
-  expect_parnames_equal(list(b=0), c("a", "c", "d"))
-  expect_parnames_equal(list(a=0,b=0), c("c", "d"))
-  expect_parnames_equal(list(c=0,b=0), c("a", "d"))
-  expect_parnames_equal(list(a=0,b=0,c=0,d=0), NULL)
-  # @todo check get_par("free") for a = b
-  # @body: If we have equality-constraints, with the RHS of the constraint being a parameter, that is free, should the contrained parameter on the LSH be counted as free or as fixed? Technically it is fixed, but it would need to be included in the free parameters in the model to be fitted (solnp)...
-  expect_parnames_equal(fix = list(a="b"), c("a", "b", "c", "d"))
-  expect_parnames_equal(fix = list(a="b", b="c"), c("a", "b", "c", "d"))
-  expect_parnames_equal(fix = list(a="b", b="c", c="d"), c("a", "b", "c", "d"))
-  expect_parnames_equal(fix = list(a="b", b="c", c="d", d=0), NULL)
-  expect_parnames_equal(fix = list(c="b"), c("a", "b", "c", "d"))
+  expect_par_equal(list(c="b"), c(a=0.5, b=0.5, c=0.5, d=-1))
+  expect_par_equal(list(c="d"), c(a=0.5, b=0.5, c=-1, d=-1))
+  expect_par_equal(list(d="c"), c(a=0.5, b=0.5, c=0, d=0))
+  # Two parameter equal each other
+  expect_par_equal(list(a="b", c="d"), c(a=0.5, b=0.5, c=-1, d=-1))
+  expect_par_equal(list(a="b", d="c"), c(a=0.5, b=0.5, c=0, d=0))
+  expect_par_equal(list(a="c", b="d"), c(a=0, b=-1, c=0, d=-1))
+  expect_par_equal(list(a="c", d="b"), c(a=0, b=0.5, c=0, d=0.5))
+  # One parameter equal one fix
+  expect_par_equal(list(a="b",b=1), c(a=1, b=1, c=0, d=-1))
+  expect_par_equal(list(a="c",c=0.1), c(a=0.1, b=0.5, c=0.1, d=-1))
+  expect_par_equal(list(b="a",a=.9), c(a=.9, b=.9, c=0, d=-1))
+  expect_par_equal(list(b="c",c=.2), c(a=0.5, b=.2, c=.2, d=-1))
+  expect_par_equal(list(b="d",d=0), c(a=0.5, b=0, c=0, d=0))
+  expect_par_equal(list(c="a",a=.4), c(a=0.4, b=0.5, c=0.4, d=-1))
+  expect_par_equal(list(c="b",b=.7), c(a=0.5, b=0.7, c=0.7, d=-1))
+  expect_par_equal(list(c="d",d=0), c(a=0.5, b=0.5, c=0, d=0))
+  expect_par_equal(list(d="c",c=0), c(a=0.5, b=0.5, c=0, d=0))
+  # Two parameter equal each other
+  expect_par_equal(list(a="b", c="d", b=0.99), c(a=0.99, b=0.99, c=-1, d=-1))
+  expect_par_equal(list(a="b", c="d", b=0.99, d=0), c(a=0.99, b=0.99, c=0, d=0))
+  expect_par_equal(list(a="b", d="c", b=0.99), c(a=0.99, b=0.99, c=0, d=0))
+  expect_par_equal(list(a="b", d="c", b=0.99, c=0.1), c(a=0.99, b=0.99, c=0.1, d=0.1))
+  expect_par_equal(list(a="c", b="d", c=0.1), c(a=0.1, b=-1, c=0.1, d=-1))
+  expect_par_equal(list(a="c", b="d", c=0.1, d=0.1), c(a=0.1, b=0.1, c=0.1, d=0.1))
   })
 
 test_that('Error messages', {

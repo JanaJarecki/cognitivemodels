@@ -18,7 +18,7 @@ cpt(
 \arguments{
 \item{formula}{A \link{formula} such as \code{y ~ x1 + p1 + x2 | y1 + py + y2} specifying the columns in \code{data} that contain outcomes, probabilities and (optional) the observations. Lines (\code{|}) separate different gambles. The formula must alternate outcomes and probabilities (x + p + x2 + p2), the last probability can be omitted.}
 
-\item{choicerule}{(default \code{"softmax"}) A string specifying the choierule of the model, for instance \code{"softmax"}. If \code{"none"}, the model predicts the utility value of the option. Allowed are the values of the \code{type} argument in \code{\link[cogsciutils]{choicerule}}.}
+\item{choicerule}{(default \code{"softmax"}) A string specifying the choierule of the model, for instance \code{"softmax"}. If \code{"none"}, the model predicts the utility value of the option. Allowed are the values of the \code{type} argument in \code{\link[cognitiveutils]{choicerule}}.}
 
 \item{weighting}{(optional) weighting function. Currently the one used in Kahneman & Tversky (1992), \code{"KT1992"}, is possible.}
 

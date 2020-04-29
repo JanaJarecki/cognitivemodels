@@ -204,10 +204,10 @@ Cm <- R6Class(
         more_input <- private$get_more_input(d = newdata)
       }
       # Initialize the results object and run $make_prediction()
-      #  where make_prediction() is a function on
-      #  the child class
-      #  Note: we run make_prediction() per 2-dimensional input
-      #        matrix!
+      #   where make_prediction() is a function on
+      #   the child class
+      #   Note: we run make_prediction() per 2-dimensional input
+      #         matrix!
       ns <- self$nstim
       RES <- sapply(seq.int(ns),
         function(s) {
@@ -226,7 +226,7 @@ Cm <- R6Class(
 
       # And we apply the choice rule if needed
       type <- try(match.arg(type, c("response", "value")), silent = TRUE)
-      # hack to allow for more types than the two
+      # fixme: ugly hack to allow for more types than the two
       if (inherits(type, "try-error")) {
         type <- "response"
       }
@@ -713,10 +713,10 @@ Cm <- R6Class(
       self$constraints <- C
       self$ncon <- length(C)
       if (self$ncon > 0L) {
-        self$set_par(.solve_constraints(C), constrain = FALSE)
+        self$set_par(.solve_constraints(C, b = unlist(self$par)), constrain = FALSE)
         self$set_par(self$par) #fixme (this seems inefficient)
         self$parnames$free <- C$names[.which.underdetermined(C)]
-        self$parnames$constrained <- names(.solve_constraints(C))
+        self$parnames$constrained <- names(.solve_constraints(C, b = unlist(self$par)))
       }
     },
     init_mode = function(mode = NULL) {
@@ -764,13 +764,15 @@ Cm <- R6Class(
     # FIT FUNCTIONS
     # -------------------------------------------------------------------------
     objective = function(par, self) {
+      # The parameter here are only the free parameter!
+      # the other parameters are retrieved in get_par() in the predict function
       if (all(par == 0L) & is.null(names(par))) {
         par <- private$get_start() # hack because ROI solver strips names
       }
       if (any(par < private$get_lb()[names(par)] | par > private$get_ub()[names(par)])) {
         return(-1e10)
       }
-      self$set_par(x = par, check = FALSE)      
+      self$set_par(x = par, check = FALSE, constrain = FALSE) 
       .args <- list(
         type = self$options$fit_measure,
         n = self$options$fit_n,
@@ -825,7 +827,7 @@ Cm <- R6Class(
         self = self,
         control = self$options$fit_control)
       if (length(cons) > 0) {
-        A <- as.matrix(cons$L)
+         A <- as.matrix(cons$L)
         .args$eqB <- cons$rhs
         .args$eqfun <- function(par, self) {
           return(force(A) %*% par)

@@ -34,7 +34,7 @@
     )
   }
   
-  # fixed parameter
+  # constant/fixed parameter
   Cf <- NULL
   if (any(sapply(fix, is.numeric))) {
     nc <- sum(sapply(fix, is.numeric))
@@ -108,9 +108,9 @@
   qrcoef <- qr.coef(qr(A), rhs)
   # candidates for parameters with a solution
   ids <- which(qrcoef == 0 | is.na(qrcoef))
-  # which rows of A to keep
-  .rows <- rowSums(A[, ids, drop = FALSE]) != 0
-  .cols <- colSums(A[.rows, , drop = FALSE]) | !colSums(A)
+  # which rows of A to keep (i.e. under-constraint parameters)
+  .rows <- rowSums(A[, ids, drop = FALSE] != 0L) > 0L
+  .cols <- colSums(A[.rows, , drop = FALSE] != 0L) > 0L | (colSums(A == 0L) == nrow(A))
   
   C <- ROI::L_constraint(
     L = A[.rows, .cols, drop = FALSE],
@@ -141,11 +141,21 @@
 #' 
 #' @param x An object of type L_constraint from the package ROI
 #' @noRd
-.solve_constraints <- function(x) {
+.solve_constraints <- function(x, b) {
   if (length(x) == 0) { return(x) }
   A <- as.matrix(x$L)
+  # todo make the loop in .solve_constraints more efficient
+  I <- diag(ncol(A))
+  for (i in 1:nrow(A)) {
+    # fixme: this is a hack and will break if all coef are < 0
+    ii <- which.max(A[i,])
+    for (j in which(A[i,] != 0L)) {
+      I[ii,j] <- A[i,j]
+      b[ii]   <- x$rhs[i]
+    }
+  }
+  A <- I
   colnames(A) <- x$names
-  b <- x$rhs
   # fixme this is a hack
   if (nrow(A) == 1 & sum(A != 0) == 1) {
     return(setNames(solve(A[A != 0], b), x$names[A != 0]))
@@ -161,7 +171,6 @@
     return(s)
   }
 }
-
 
 
 #' Prints the constraints of a cogscimodel object nicely

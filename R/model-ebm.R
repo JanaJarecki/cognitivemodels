@@ -201,6 +201,7 @@ Ebm <- R6Class('ebm',
         criterion <- c(self$more_input[, , s], c(more_input))
         input <- rbind(self$input[,,s], input)
       }
+
       b <- if (self$mode == "continuous") {
             NA
           } else {

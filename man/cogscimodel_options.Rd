@@ -21,7 +21,7 @@ cogscimodel_options(
 \arguments{
 \item{fit}{Logical (default \code{TRUE}), \code{FALSE} omits parameter fitting. Useful for testing models.}
 
-\item{fit_measure}{A string (default \code{"loglikelihood"}), fit measure to use, can be one of \code{types} in the function \code{\link[cogsciutils]{gof}}, e.g. \code{"mse"}, \code{"sse"}.}
+\item{fit_measure}{A string (default \code{"loglikelihood"}), fit measure to use, can be one of \code{types} in the function \code{\link[cognitiveutils]{gof}}, e.g. \code{"mse"}, \code{"sse"}.}
 
 \item{fit_n}{An integer, if the data that is being predicted is aggregated data, supply the number subjects underlying each data point.}
 
