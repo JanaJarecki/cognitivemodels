@@ -12,7 +12,7 @@ cogscimodel_options(
   fit_measure = "loglikelihood",
   fit_n = 1L,
   fit_data = NULL,
-  fit_solver = "auto",
+  solver = "auto",
   fit_grid_offset = 0L,
   fit_control = list(),
   fit_args = list()
@@ -27,13 +27,13 @@ cogscimodel_options(
 
 \item{fit_data}{A data frame with data other than the main \code{"data"} argument to be used for fitting.}
 
-\item{fit_solver}{Algorithm used to do the parameter estimation. \code{"grid"} uses a grid-search, \code{"solnp"} uses \code{\link[Rsolnp]{solnp}}, other solvers contained in the R optimization infrastructure can be named (see \code{\link{ROI}}), for example \code{"optimx"} or \code{"nlminb"}, see the page of ROI. This may cause warnings about ignored options. THis may cause parameter bounds to be ignored and the model to fail.}
+\item{solver}{Algorithm used to do the parameter estimation. \code{"grid"} uses a grid-search, \code{"solnp"} uses \code{\link[Rsolnp]{solnp}}, other solvers contained in the R optimization infrastructure can be named (see \code{\link{ROI}}), for example \code{"optimx"} or \code{"nlminb"}, see the page of ROI. This may cause warnings about ignored options. THis may cause parameter bounds to be ignored and the model to fail.}
 
 \item{fit_grid_offset}{A number to offset the grid-search from the boundaries.}
 
-\item{fit_control}{A list of control arguments, depends on the \code{"fit_solver"} being used, see the respective pages of the solvers.}
+\item{fit_control}{A list of control arguments, depends on the \code{"solver"} being used, see the respective pages of the solvers.}
 
-\item{fit_args}{A list of arguments to be passed to the fit solver, \code{"fit_solver"} being used, see the respective pages of the solvers.}
+\item{fit_args}{A list of arguments to be passed to the fit solver, \code{"solver"} being used, see the respective pages of the solvers.}
 }
 \description{
 This is the list of options that can be used in cogscimodels. Pass them as list to the argument options in cognitive models

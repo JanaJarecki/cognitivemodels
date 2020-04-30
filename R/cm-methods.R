@@ -251,3 +251,58 @@ predict.cm <- function(obj, ..., type = "response", newdata = NULL) {
   }
   return(obj$predict(type = type, newdata = newdata))
 }
+
+
+
+#' @description
+#' \code{parspace(cm)} shows the parameter names and upper and lower bounds of parameters in a cognitice model \code{cm}
+#' 
+#' @usage \code{parspace(x)}
+#' @param x a model object of class cm
+#' @param ... other arguments (ignored)
+#' @examples 
+#' D <- data.frame(x = 1, y = 1, z = 1)
+#' M <- bayes_beta(y ~ x + z, D, fix = "start")
+#' parspace(M)    # view the parspace
+#' @export
+parspace <- function(x, ...) {
+  UseMethod("parspace")
+}
+parspace.default <- function(x, ...) {
+  error("'parspace' method is not defined for object of class ", class(x))
+}
+#' @name parspace
+#' @export
+#' @method parspace cm
+parspace.cm <- function(x) {
+  cat("\nParameter space of the cognitive model '", class(x)[1], "':\n", sep = "")
+  print(format(x$parspace, digits = 2L, scientific = 10, width = 6), quote = FALSE, right = TRUE)
+  cat("---\nNote. lb = lower bound, ub = upper bound, start = start value.\n")
+}
+
+
+
+#' @description
+#' \code{constraints(cm)} shows the parameter constraints  of a cognitive model named \code{cm} nicely formatted
+#' 
+#' @usage \code{constraints(x)}
+#' @param x a model object of class cm
+#' @param ... other arguments (ignored)
+#' @examples 
+#' D <- data.frame(x = 1, y = 1, z = 1)
+#' M <- bayes_beta(y ~ x + z, D, fix = "start")
+#' constraints(M)    # view the parspace
+#' @export
+constraints <- function(x, ...) {
+  UseMethod("constraints")
+}
+constraints.default <- function(x, ...) {
+  error("'constraints' method is not defined for object of class ", class(x))
+}
+#' @name constraints
+#' @export
+#' @method constraints cm
+constraints.cm <- function(x) {
+  cat("\nParameter constraints of the cognitive model '", class(x)[1], "':\n", sep = "")
+  return(x$constraints)
+}

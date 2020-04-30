@@ -275,40 +275,35 @@ Bayes <- R6Class("Bayes",
       return(super$get_parnames(x))
     },
     make_parspace = function(f) {
-      self$set_formula(f)
+      self$formula <- as.Formula(f)
       f <- self$formula
+
       # Learning rate parameter
       d_par <- list(delta = c(0L, 10, 1, 1)) # NOT dynamic
       
       # Dynamic parameters: prior names are dynamically generated from
       # RHS of formula. If formula is ... ~ xx + yy we name priors:
       # "prior.xx" and "prior.yy"
-      p_names <- sapply(seq.int(length(f)[2]), function(i) attr(terms(formula(f, rhs=i)), "term.labels"))
-      p_names <- p_names
-      p_par <- setNames(lapply(1:length(p_names), function(.) c(0.001, self$natt()[1], 1L, 1L)), p_names)
-
-      return(do.call(make_parspace, c(d_par, p_par))) #Note: don't change order
+      p_par <- setNames(lapply(1:sum(.rhs_length(f)), function(.) c(0.001, self$natt[1], 1L, 1L)), unlist(.rhs_varnames(f)))
+      #Note: don't change the order, the d_par needs to come first
+      return(do.call(make_parspace, c(d_par, p_par)))
     },
     make_constraints = function() {
       # make constraint for the priors
       # note: priors depend on the type of prior distribution
       # (beta distribution, dirichlet distribution, etc.)
       # therefore we make prior parameter dynamically
-      parnames <- private$get_parnames()
-      parnames_fix <- private$get_parnames("fix")
-      parnames_priors <- private$get_parnames("priors")
-      a <- cumsum(self$natt())
-      a0 <- cumsum(self$natt())-1
-      id <- lapply(1:self$nstim, function(i) a0[i]:a[i])
-      C <- lapply(id, function(i) {
-        if (!all(parnames_priors[i] %in% parnames_fix)) {
+      parnames <- names(self$par)
+      C <- NULL
+      for (p in .rhs_varnames(self$formula)) {
+        C <- .combine_constraints(C,
           L_constraint(
-            L = as.integer(parnames %in% parnames_priors[i]),
+            L = as.integer(parnames %in% p),
             dir = "==",
-            rhs = length(parnames_priors[i]))
-        }
-      })
-      return(do.call(.combine_constraints, c(C, list(super$make_constraints()))))
+            rhs = length(p))
+        )
+      }
+      return(.combine_constraints(C, super$make_constraints))
     },
     check_input = function() {
       # This function is called automatically at the end of initialize()
