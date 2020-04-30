@@ -99,7 +99,7 @@ Threshold <- R6Class("Threshold",
         mode = mode,
         fix = fix,
         discount = discount,
-        options = c(options, list(fit_solver = c("solnp"))),
+        options = c(options, list(solver = c("solnp"))),
         ...)
     },
     make_prediction = function(type, input, ...) {

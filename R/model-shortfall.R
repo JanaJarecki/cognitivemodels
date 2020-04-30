@@ -52,7 +52,7 @@ Shortfall <- R6Class("shortfall",
         discount = 0L,
         mode = "discrete",
         # Note: keep "grid" as first solver! (flat maximum issues)
-        options = c(options, list(fit_solver = c("grid", "solnp")))
+        options = c(options, list(solver = c("grid", "solnp")))
       )
     },
     make_prediction = function(type = "response", input, more_input, isnew, s, ...) {

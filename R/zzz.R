@@ -21,10 +21,10 @@
 #' @param fit_measure A string (default \code{"loglikelihood"}), fit measure to use, can be one of \code{types} in the function \code{\link[cognitiveutils]{gof}}, e.g. \code{"mse"}, \code{"sse"}.
 #' @param fit_n An integer, if the data that is being predicted is aggregated data, supply the number subjects underlying each data point.
 #' @param fit_data A data frame with data other than the main \code{"data"} argument to be used for fitting.
-#' @param fit_solver Algorithm used to do the parameter estimation. \code{"grid"} uses a grid-search, \code{"solnp"} uses \code{\link[Rsolnp]{solnp}}, other solvers contained in the R optimization infrastructure can be named (see \code{\link{ROI}}), for example \code{"optimx"} or \code{"nlminb"}, see the page of ROI. This may cause warnings about ignored options. THis may cause parameter bounds to be ignored and the model to fail.
+#' @param solver Algorithm used to do the parameter estimation. \code{"grid"} uses a grid-search, \code{"solnp"} uses \code{\link[Rsolnp]{solnp}}, other solvers contained in the R optimization infrastructure can be named (see \code{\link{ROI}}), for example \code{"optimx"} or \code{"nlminb"}, see the page of ROI. This may cause warnings about ignored options. THis may cause parameter bounds to be ignored and the model to fail.
 #' @param fit_grid_offset A number to offset the grid-search from the boundaries.
-#' @param fit_control A list of control arguments, depends on the \code{"fit_solver"} being used, see the respective pages of the solvers.
-#' @param fit_args A list of arguments to be passed to the fit solver, \code{"fit_solver"} being used, see the respective pages of the solvers.
+#' @param fit_control A list of control arguments, depends on the \code{"solver"} being used, see the respective pages of the solvers.
+#' @param fit_args A list of arguments to be passed to the fit solver, \code{"solver"} being used, see the respective pages of the solvers.
 #' @export
 cogscimodel_options = function(
   lb = NULL,
@@ -34,7 +34,7 @@ cogscimodel_options = function(
   fit_measure = "loglikelihood",
   fit_n = 1L,
   fit_data = NULL,
-  fit_solver = "auto",
+  solver = "auto",
   fit_grid_offset = 0L,
   fit_control = list(),
   fit_args = list()) {
@@ -50,7 +50,7 @@ cogscimodel_options = function(
     fit_measure,
     fit_n,
     fit_data,
-    fit_solver,
+    solver,
     fit_grid_offset,
     fit_control,
     fit_args)

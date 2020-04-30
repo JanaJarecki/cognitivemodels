@@ -51,7 +51,7 @@ test_that("Fitting of MEM model", {
         discount = 0L) +
      softmax(obs ~ pr_c | val)
 
-  M$fit(options = list(fit_solver = c("grid", "solnp")))
+  M$fit(options = list(solver = c("grid", "solnp")))
   expect_equal(coef(M), c(lambda = 0.5, tau = 0.1), tol = 0.001)
 
   M$set_par(c(lambda = 0.5, tau = 0.1))
@@ -65,7 +65,7 @@ test_that("Fitting of MEM model", {
         crit = ~ crit,
         discount = 0L) +
      softmax(obs ~ pr_c | val)
-  M$fit(options = list(fit_solver = c("grid", "solnp")))
+  M$fit(options = list(solver = c("grid", "solnp")))
 
   expect_equal(coef(M), c(lambda = 5, tau = 0.6), tol = 0.001)
 }

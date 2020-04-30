@@ -67,7 +67,6 @@ Cpt <- R6Class("cpt",
       self$set_weightingfun(weighting)
       self$set_valuefun(value)
 
-      # todo: check if 'na' (ignore) values are correct
       parspace <- make_parspace(
         alpha   = c(0.001,  2,  .8, 1L),
         beta    = c(0.001,  2,  .8, 1L),
@@ -84,7 +83,7 @@ Cpt <- R6Class("cpt",
         choicerule =  choicerule,
         discount = 0L,
         mode = "discrete",
-        options = c(options, list(fit_solver = c("grid", "solnp"))),
+        options = c(options, list(solver = c("grid", "solnp"))),
         parspace = parspace       
         )
     },
@@ -108,7 +107,7 @@ Cpt <- R6Class("cpt",
         # One-parameter specification of cumulative prospect theory (?)
         wfun <- function(x, p, gammap, gamman, ...) {
           if(dim(p)[2] != 2) {
-            stop('Probabilities ("p" in the cpt weighting function) need 2 columns, but has ', ncol(p), ".")
+            stop('Sorry, CPT can only handle two-outcome gambles currently. The Probabilities need 2 columns, but I found ', ncol(p), ".")
         }
         id <- apply(cbind(p, x), 1, paste, collapse = "")
         id <- match(id, unique(id))
@@ -127,8 +126,8 @@ Cpt <- R6Class("cpt",
           pnord <- cumsum(pn[norder])
           ppord <- cumsum(pp[porder])
           # Weight the cummulative probabilities
-          wpord <- (ppord^gammap / ( rowSums(cbind(ppord, 1-ppord)^gammap) )^(1/gammap))
-          wnord <- (pnord^gamman / ( rowSums(cbind(pnord, 1-pnord)^gamman) )^(1/gamman))
+          wpord <- (ppord^gammap / (rowSums(cbind(ppord, 1-ppord)^gammap) )^(1/gammap))
+          wnord <- (pnord^gamman / (rowSums(cbind(pnord, 1-pnord)^gamman) )^(1/gamman))
           # Subtract the weights
           if (sum(x < 0) > 1) {
             wnord <- wnord - c(0, head(wnord, -1))

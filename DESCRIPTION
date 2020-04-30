@@ -11,7 +11,7 @@ Imports:
     abind,
     AICcmodavg,
     arrangements,
-    cognitiveutils (>= 1.0.7),
+    cognitiveutils (== 0.0.8),
     combinat, 
     Formula,
     matlib (>= 0.9.3),

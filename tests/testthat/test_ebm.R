@@ -90,7 +90,7 @@ test_that('EBM error handlers', {
 #   # M <- start(d = d) %+%
 #   #   ebmcj(~ f1 + f2 + f3, criterion = ~ ca, fix = c(lambda=1,r=1,q=1,f1=1/3,f2=1/3,f3=1/3)) %+%
 #   #   softmax(yperf ~ pred_f) %>%
-#   #   end(options = list(fit_solver = "solnp"))  
+#   #   end(options = list(solver = "solnp"))  
 # })
 
 #   

@@ -47,7 +47,7 @@ Rsft_line <- R6Class("rsft_line",
         choicerule = choicerule,
         discount = 0L,
         mode = "discrete",
-        options = c(options, list(fit_solver = c("solnp")))
+        options = c(options, list(solver = c("solnp")))
       )
     },
     predict = function(type = "response", ...) {

@@ -187,7 +187,7 @@ Csm <- R6Class("csm",
       if (length(self$data) > 0 & (self$options$fit == TRUE) & (self$npar("free") > 0L)) {
         message("Fitting free parameters ",
           .brackify(names(self$get_par("free"))),
-          " by ", ifelse(grepl("loglikelihood|accuracy", self$options$fit_measure), "maximizing ", "minimizing "), self$options$fit_measure, " with ", paste(self$options$fit_solver, collapse=", "))
+          " by ", ifelse(grepl("loglikelihood|accuracy", self$options$fit_measure), "maximizing ", "minimizing "), self$options$fit_measure, " with ", paste(self$options$solver, collapse=", "))
         super$fit()
       }
     },

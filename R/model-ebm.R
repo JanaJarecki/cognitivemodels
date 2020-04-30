@@ -185,7 +185,7 @@ Ebm <- R6Class('ebm',
         discount = discount,
         title = paste0('Exemplar-based'),
         mode = mode,
-        options = c(options, list(fit_solver = "solnp"))
+        options = c(options, list(solver = "solnp"))
       )
     },
     make_prediction = function(type, input, more_input, isnew = FALSE, s = NULL, ...) {

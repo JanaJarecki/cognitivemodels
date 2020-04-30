@@ -148,10 +148,10 @@ Cm <- R6Class(
     #' @param solver (optional) A string with the model solver
     #' @param measure (optional) A string with the goodness-of-fit measure that the solver optimizes (e.g. \code{"loglikelihood"}). Possible values, see the \code{type} argument in \link[cognitiveutils]{gof}
     #' @param ... other arguments
-    fit = function(solver = self$options$fit_solver, measure = self$options$fit_measure, ...) {
+    fit = function(solver = self$options$solver, measure = self$options$fit_measure, ...) {
       message("Fitting free parameters ",
           .brackify(private$get_parnames("free")),
-          " by ", ifelse(grepl("loglikelihood|accuracy", self$options$fit_measure), "maximizing ", "minimizing "), self$options$fit_measure, " with ", paste(self$options$fit_solver, collapse=", "))
+          " by ", ifelse(grepl("loglikelihood|accuracy", self$options$fit_measure), "maximizing ", "minimizing "), self$options$fit_measure, " with ", paste(self$options$solver, collapse=", "))
       solver <- .check_and_match_solver(solver = solver)
       constraints <- .simplify_constraints(self$constraints)
 
@@ -176,7 +176,7 @@ Cm <- R6Class(
       self$fitobj <- fit
       solution <- setNames(fit$solution, self$parnames$free)
       #! Set only the free parameter
-      self$set_par(solution[self$parnames$free], check = FALSE)
+      self$set_par(solution[self$parnames$free], check = FALSE, constrain = FALSE)
     },
 
     #' @description
@@ -227,12 +227,11 @@ Cm <- R6Class(
       # And we apply the choice rule if needed
       type <- try(match.arg(type, c("response", "value")), silent = TRUE)
       # fixme: ugly hack to allow for more types than the two
-      if (inherits(type, "try-error")) {
-        type <- "response"
-      }
-      return(drop(switch(type,
+      if (inherits(type, "try-error")) { type <- "response" }
+      RES <- switch(type,
         value = RES,
-        response = private$apply_choicerule(RES))))
+        response = private$apply_choicerule(RES))
+      return(drop(RES))
     },
     
     #' @description
@@ -365,7 +364,7 @@ Cm <- R6Class(
       }
       gof <- try(do.call(cognitiveutils::gof, args = .args, envir = parent.frame()), silent = TRUE)
       if (inherits(gof, "try-error")) {
-        stop("Can't compute ", type, ", because:\n  ", geterrmessage(),
+        stop("Can't compute the model fit ", type, ", because:\n  ", geterrmessage(),
           call.= FALSE)
       } else {
         return(gof)
@@ -739,10 +738,10 @@ Cm <- R6Class(
       .args <- as.list(...)
       .args <- .args[!duplicated(names(.args))] # first argument is user-supplied, second time it occurs it is the default of a model
       ## IF fitting with grid followed by a solver
-      # fit_solver <- .args$fit_solver
-      fit_solver <- match.arg(.args$fit_solver, c("grid", "solnp", "auto", names(ROI::ROI_registered_solvers())), several.ok = TRUE)
-      if (!is.null(fit_solver)) {
-        if(fit_solver[1] == "grid" & length(fit_solver) > 1L) {
+      # solver <- .args$solver
+      solver <- match.arg(.args$solver, c("grid", "solnp", "auto", names(ROI::ROI_registered_solvers())), several.ok = TRUE)
+      if (!is.null(solver)) {
+        if(solver[1] == "grid" & length(solver) > 1L) {
           npar <- self$npar("free")
           ## use the top n parameter from the grid search, n = num free par
           if (is.null(.args$fit_control$nbest)) {
@@ -806,7 +805,7 @@ Cm <- R6Class(
         what = ROI::ROI_solve,
         args = c(list(
           x = problem,
-          solver = self$options$fit_solver,
+          solver = self$options$solver,
           start = start,
           control = self$options$fit_control[grep("grid", names(self$options$fit_control))])
           ),
@@ -876,7 +875,7 @@ Cm <- R6Class(
       if (is.null(nsteps)) nsteps <- self$options$fit_control$nsteps
       x <- if (is.null(par)) { "free" } else { "all" }
       par <- if (is.null(par)) { 1:length(private$get_parnames(x)) }
-      if (length(.simplify_constraints(self$constraints)) > 0L) { warning('Note: fit_solver="grid" does not respect linear or quadratic constraints, maybe change the solver. To this end use: options = list(fit_solver = ...), e.g, "solnp" or "optimx".') }
+      if (length(.simplify_constraints(self$constraints)) > 0L) { warning('Note: solver="grid" does not respect linear or quadratic constraints, maybe change the solver. To this end use: options = list(solver = ...), e.g, "solnp" or "optimx".') }
       return(make_grid_id_list(
         names = private$get_parnames(x)[par],
         lb = private$get_lb(x)[par],
@@ -886,7 +885,7 @@ Cm <- R6Class(
         ...))
     },
     make_random_par = function(parspace) {
-      if (!is.null(self$constraints)) { message('Note: fit_solver="grid" does NOT respect linear or quadratic constraints -> consider a differnt solver. To this end use: options = list(fit_solver = " "), e.g, "solnp" or "optimx".') }
+      if (!is.null(self$constraints)) { message('Note: solver="grid" does NOT respect linear or quadratic constraints -> consider a differnt solver. To this end use: options = list(solver = " "), e.g, "solnp" or "optimx".') }
 
       # TODO: check this fun, it's experimental (5^? more? see literature)
       n <- log(5^nrow(parspace))
@@ -950,7 +949,7 @@ Cm <- R6Class(
       } else {
         args <- c(list(x = x, type = self$choicerule), as.list(par))
         x[] <- do.call(cognitiveutils::choicerule, args)[,1:ncol(x), drop = FALSE]
-        return(x)
+        return(x[, 1:max(1, (self$nopt - 1))])
       }
     },
 

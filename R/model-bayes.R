@@ -139,7 +139,7 @@ Bayes <- R6Class("Bayes",
         mode = mode,
         fix = fix,
         discount = discount,
-        options = c(options, list(fit_solver = c("solnp"))),
+        options = c(options, list(solver = c("solnp"))),
         ...)
     },
     make_prediction = function(type, input, s, ndraws = 3, ...) {
