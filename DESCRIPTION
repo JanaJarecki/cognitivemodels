@@ -1,7 +1,7 @@
 Package: cognitivemodels
 Type: Package
 Title: Cognitive Models - Estimation, Prediction, and Development of Models for Cognitive Scientists
-Version: 1.0.3
+Version: 0.0.4
 Date: 2019-03-12
 Author: Jana B. Jarecki
 Maintainer: Jana B. Jarecki <jj@janajarecki.com>

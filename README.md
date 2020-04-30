@@ -2,13 +2,29 @@
 Cognitivemodels is an R packages that provides a number of cognitive models, using a formula interface similar to the `aov`- or `lm`-syntax. The models can be fit to data by maximum likelihood, minimum MSE, and more fit measures using  optimization routines like rsolnp or Nelder-Mead, and many more. Also, the package provides a class back-end to develop new cognitive models.
 
 ## Getting Started and Installation
-To use this package, ensure you have the prerequesites (a working installation of R) and the Rcpp package, `install.packages("Rcpp")`). Install Cognitivemodels by running
+To use this package, ensure you have the prerequesites (a working installation of R) and the **Rcpp** package, `install.packages("Rcpp")`). 
+
+```R
+    # Update the matlib package and install Rcpp and devtools
+    update.packages("matlib")
+    install.packages ("Rcpp")
+    install.packages("devtools")
+```
+
+Install Cognitivemodels by running
 
 ```R
     # Install  development version from github
-    install.packages("devtools")
+    # Optional: install.packages("devtools")
     devtools::install_github("janajarecki/cognitivemodels", ref = "development")
 ```
+
+You will see a prompt, please type `Yes` into the console.
+
+```R
+    Do you want to install from sources the packages which need compilation? (Yes/no/cancel) 
+```
+
 
 To use the package, you need to load it `library(cogscimodels)`
 

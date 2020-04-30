@@ -159,7 +159,7 @@ Ebm <- R6Class('ebm',
     parnamesWeights = NULL,
     initialize = function(formula, data = NULL, criterion, mode = NULL, fix = NULL, learntrials = NULL, discount = NULL, choicerule = NULL, options = list()) {
       if (is.null(data)) data <- data.frame()
-      self$formulaCriterion <- criterion
+      self$formulaCriterion <- .as_rhs(criterion)
       self$learntrials <- if ( is.null(learntrials) ) { seq_len(nrow(data)) } else { learntrials }
       criterion <- private$get_more_input(d=data)
       if (is.null(mode)) {
@@ -225,7 +225,7 @@ Ebm <- R6Class('ebm',
   ),
   private = list(
     get_more_input = function(d) {
-      return(private$get_input(f = chr_as_rhs(self$formulaCriterion), d = d, na.action = NULL))
+      return(private$get_input(f = self$formulaCriterion, d = d, na.action = NULL))
     },
     make_prednames = function() {
       sn <- paste0(all.vars(self$formulaCriterion[[2]]))
