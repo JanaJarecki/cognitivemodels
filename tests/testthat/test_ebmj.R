@@ -108,3 +108,15 @@ test_that("Prediction identitites to equal parameters", {
   expect_equal(M$predict()[3], calc_pred(dt, pars, FALSE)[3], tol = tol)
   expect_equal(M$predict()[4], calc_pred(dt, pars, FALSE)[4], tol = tol)
 })
+
+M <- ebm_j(rp ~ f1 + f2, ~c, data = dt, fix = list(f1 = "f2", lambda = "q", r = "q" , q = 1.5))
+test_that("Prediction identitites to equal parameters", {
+  expect_equal(M$predict(newdata = dt)[1], calc_pred(dt, pars, TRUE)[1], tol = tol)
+  expect_equal(M$predict(newdata = dt)[2], calc_pred(dt, pars, TRUE)[2], tol = tol)
+  expect_equal(M$predict(newdata = dt)[3], calc_pred(dt, pars, TRUE)[3], tol = tol)
+  expect_equal(M$predict(newdata = dt)[4], calc_pred(dt, pars, TRUE)[4], tol = tol)
+  expect_equal(M$predict()[1], calc_pred(dt, pars, FALSE)[1], tol = tol)
+  expect_equal(M$predict()[2], calc_pred(dt, pars, FALSE)[2], tol = tol)
+  expect_equal(M$predict()[3], calc_pred(dt, pars, FALSE)[3], tol = tol)
+  expect_equal(M$predict()[4], calc_pred(dt, pars, FALSE)[4], tol = tol)
+})
