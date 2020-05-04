@@ -16,7 +16,7 @@ tol <- .01
 # todo: gemischtes Gamble
 
 # 1. Predictive testing
-test_that("Prediction identitites to Tversky & Kahneman (1992)", {
+test_that("Prediction identities to Tversky & Kahneman (1992)", {
   expect_equal(M$predict('value')[1,'pr_x'], c('pr_x'=57), tol = tol)
   expect_equal(M$predict('value')[1,'pr_y'], c('pr_y'=57), tol = tol)
   expect_equal(M$predict('value')[2,'pr_x'], c('pr_x'=-129), tol = tol)
@@ -79,20 +79,6 @@ test_that("Prediction identitites to Tversky & Kahneman (1992)", {
   expect_equal(M$predict('value')[2,'pr_y'], c('pr_y'=-129.9), tol = tol)
 })
 
-<<<<<<< HEAD
-# # 2. Parameter recovery
-# data(cpttest)
-# cpttest[, decision := decision - 1]
-# fml <- decision ~ o1 + p1 + o2 + p2 | o3 + p3 + o4 + p4
-
-# fit_cpt_soft <- function(dt) {
-#   model <- cpt(fml, ref = 0, data = dt, choicerule = "softmax", options = list(ub = c(tau = 25), solver = "solnp"), fix = list(alpha = "beta"))
-# }
-# fit_cpt_arg <- function(dt) {
-#   model <- cpt(fml, ref = 0, data = dt, choicerule = "argmax", options = list(fit_measure = "accuracy"), fix = list(alpha = "beta"))
-# }
-# res <- cpttest[subject == 1, list(fit_soft = list(fit_cpt_soft(dt = .SD))), by = list(repetition, subject)]
-=======
 # 2. Parameter recovery
 data(cpttest)
 cpttest[, decision := decision - 1]
@@ -105,7 +91,6 @@ fit_cpt_arg <- function(dt) {
   model <- cpt(fml, ref = 0, data = dt, choicerule = "argmax", options = list(fit_measure = "accuracy"), fix = list(alpha = "beta"))
 }
 res <- cpttest[subject < 1, list(fit_soft = list(fit_cpt_soft(dt = .SD))), by = list(repetition, subject)]
->>>>>>> ad0c0eb29fde15ce18a912000dcd037fdc2c0b59
 
 test_that("Parameter estimates == estimates in paper", {
   expect_equal(model$coef(), c(alpha = 0.74, beta=0.74, gammap = 0.61, gamman = 0.89, lambda = 1.27, tau = 1/0.06), tol = tol)
