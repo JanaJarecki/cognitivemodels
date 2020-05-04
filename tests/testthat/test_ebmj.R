@@ -90,3 +90,21 @@ test_that("Prediction identities after parameter change", {
   expect_parchange_equal("q", 1.25)
   expect_parchange_equal("q", 1.75)
 })
+
+# 1.b. Parameter restrictions
+expect_error(ebm_j(rp ~ f1 + f2, ~c, data = dt, fix = list(angle = "size")))
+expect_error(ebm_j(rp ~ f1 + f2, ~c, data = dt, fix = list(c(pars[names(pars) != "lambda"], lambda = NA))))
+
+# 1.c. Equal parameters
+pars["lambda"] <- pars["r"]
+M <- ebm_j(rp ~ f1 + f2, ~c, data = dt, fix = pars)
+test_that("Prediction identitites to equal parameters", {
+  expect_equal(M$predict(newdata = dt)[1], calc_pred(dt, pars, TRUE)[1], tol = tol)
+  expect_equal(M$predict(newdata = dt)[2], calc_pred(dt, pars, TRUE)[2], tol = tol)
+  expect_equal(M$predict(newdata = dt)[3], calc_pred(dt, pars, TRUE)[3], tol = tol)
+  expect_equal(M$predict(newdata = dt)[4], calc_pred(dt, pars, TRUE)[4], tol = tol)
+  expect_equal(M$predict()[1], calc_pred(dt, pars, FALSE)[1], tol = tol)
+  expect_equal(M$predict()[2], calc_pred(dt, pars, FALSE)[2], tol = tol)
+  expect_equal(M$predict()[3], calc_pred(dt, pars, FALSE)[3], tol = tol)
+  expect_equal(M$predict()[4], calc_pred(dt, pars, FALSE)[4], tol = tol)
+})
