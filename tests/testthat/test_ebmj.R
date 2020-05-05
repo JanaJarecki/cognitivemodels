@@ -5,13 +5,17 @@ calc_pred <- function(dt, par, newdata) {
   r <- par["r"]; q <- par["q"]; lambda <- par["lambda"]; w <- par[c("f1", "f2")] # defines parameters
   sapply(1:nrow(dt), function(i) {
     p <- unlist(dt[i, 1:2]) # defines probe
-    if(!newdata) dt <- dt[1:(i-1), ] # use only previously seen exemplars
-    x <- dt[, 1:2] # defines exemplars
-
-    dist <- as.matrix(abs(sweep(x, 2, p))) # calculates distance
-    dist <- ((dist^r) %*% w)^(1/r)
-    sim <- exp(-lambda * dist^q) # calculates similarity
-    as.vector((dt[, "c"] %*% sim) / sum(sim)) # makes prediction
+    if(!newdata & i == 1) {
+      return(mean(range(dt[, "c"])))
+    } else {
+      if(!newdata) dt <- dt[1:(i-1), ] # use only previously seen exemplars
+      x <- dt[, 1:2] # defines exemplars
+      
+      dist <- as.matrix(abs(sweep(x, 2, p))) # calculates distance
+      dist <- ((dist^r) %*% w)^(1/r)
+      sim <- exp(-lambda * dist^q) # calculates similarity
+      return(as.vector((dt[, "c"] %*% sim) / sum(sim))) # makes prediction
+    }
   })
 }
 
@@ -31,6 +35,7 @@ test_that("Prediction identities", {
   expect_equal(M$predict(newdata = dt)[2], calc_pred(dt, pars, TRUE)[2], tol = tol)
   expect_equal(M$predict(newdata = dt)[3], calc_pred(dt, pars, TRUE)[3], tol = tol)
   expect_equal(M$predict(newdata = dt)[4], calc_pred(dt, pars, TRUE)[4], tol = tol)
+  expect_equal(M$predict(newdata = dt), calc_pred(dt, pars, TRUE), tol = tol)
   expect_equal(M$predict()[1], calc_pred(dt, pars, FALSE)[1], tol = tol)
   expect_equal(M$predict()[2], calc_pred(dt, pars, FALSE)[2], tol = tol)
   expect_equal(M$predict()[3], calc_pred(dt, pars, FALSE)[3], tol = tol)
@@ -120,3 +125,6 @@ test_that("Prediction identitites to equal parameters", {
   expect_equal(M$predict()[3], calc_pred(dt, pars, FALSE)[3], tol = tol)
   expect_equal(M$predict()[4], calc_pred(dt, pars, FALSE)[4], tol = tol)
 })
+
+# ToDo: partial feedback, eine Zeile mit criterion auf NA, predictions machen
+# ToDo: 3. orthographic mistakes
