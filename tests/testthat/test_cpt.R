@@ -90,8 +90,8 @@ fit_cpt_soft <- function(dt) {
 fit_cpt_arg <- function(dt) {
   model <- cpt(fml, ref = 0, data = dt, choicerule = "argmax", options = list(fit_measure = "accuracy", solver = "solnp"), fix = list(alpha = "beta"))
 }
-res <- cpttest[, list(fit_soft = list(fit_cpt_soft(dt = .SD)),
-                      fit_arg  = list(fit_cpt_arg( dt = .SD))), by = list(repetition, subject)]
+res <- cpttest[, list(fit_soft = list(fit_cpt_soft(dt = .SD)$par),
+                      fit_arg  = list(fit_cpt_arg( dt = .SD)$par)), by = list(repetition, subject)]
 
 test_that("Parameter estimates == estimates in paper", {
   expect_equal(model$coef(), c(alpha = 0.74, beta=0.74, gammap = 0.61, gamman = 0.89, lambda = 1.27, tau = 1/0.06), tol = tol)
