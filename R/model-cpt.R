@@ -117,7 +117,7 @@ Cpt <- R6Class("cpt",
         # One-parameter specification of cumulative prospect theory (?)
         wfun <- function(x, p, gammap, gamman, ...) {
           if(dim(p)[2] != 2) {
-            stop('Sorry, CPT can only handle two-outcome gambles currently. The Probabilities need 2 columns, but I found ', ncol(p), ".")
+            warning('Sorry, CPT can only handle two-outcome gambles currently. The Probabilities need 2 columns, but I found ', ncol(p), ".")
         }
         id <- apply(cbind(p, x), 1, paste, collapse = "")
         id <- match(id, unique(id))
