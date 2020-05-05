@@ -4,6 +4,10 @@
 # Author: Jana B. Jarecki
 # ==========================================================================
 
+# ==========================================================================
+# Utility functions for checking sanity of model inputs
+# ==========================================================================
+
 
 
 #' Checks the choicerule
@@ -13,7 +17,7 @@
 #' @noRd
 .check_and_match_choicerule <- function(x = NULL) {
   if (!length(x)) {
-    stop("Must supply a 'choicerule'.\n  * Set choicerule to 'none' to not apply a choicerule.\n  * Allowed values are 'softmax', 'luce', 'epsilon'")
+    stop("Must supply a 'choicerule'.\n  * Set choicerule to 'none' to not apply a choicerule.\n  * Allowed values are 'none', softmax', 'luce', 'epsilon'", call. = FALSE)
     }
   x <- match.arg(x, c("none", "softmax", "argmax", "luce", "epsilon"))
   return(x)
@@ -21,7 +25,8 @@
 
 #' Checks the parameter values
 #' 
-#' @param
+#' @param x A vector or list with parameters to fix
+#' @param pass Logical, whether to pass this check
 #' @export
 #' @noRd
 .check_par <- function(x = NULL, parspace, pass = FALSE) {

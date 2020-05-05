@@ -6,7 +6,6 @@ d <- nosofsky1989
 # criss = c(lambda=1.62,angle=.80,size=.20,b0=.45, b1=.55,r=2,q=2)
 # diag =  c(lambda=2.42,angle=.81,size=.19,b0=.49, b1=.51,r=2,q=2)
 
-
 test_that("Prediction identities to Nosofsky (1989)", {
   expect_ebm_nosofsky_equivalent <- function(cond, fix, target) {
     M <- ebm(obs_cat ~ angle + size, data = d[d$condition == cond & !is.na(d$true_cat), ], criterion = ~true_cat, fix = fix, choicerule = "none", mode = "discrete", discount = 0)

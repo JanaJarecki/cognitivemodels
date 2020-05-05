@@ -1,3 +1,8 @@
+# ==========================================================================
+# Package: Cognitivemodels
+# File: utils-constraints.R
+# Author: Jana B. Jarecki
+# ==========================================================================
 
 # ==========================================================================
 # Utilities for working with parameter constraints
@@ -69,6 +74,30 @@
   return(C)
 }
 
+#' Check the consistency of two constraints
+#' 
+#' @param x Object of the class "constraint" from the ROI package (see \link[ROI]{L_constraint})
+#' @param y Object of the class "constraint" from the ROI package (see \link[ROI]{L_constraint})
+#' @noRd
+.consistent_constraints <- function(x = NULL, y = NULL) {
+  x <- .combine_constraints(x, y)
+  if (is.null(x)) { return(TRUE) }
+  A <- as.matrix(x$L)
+  b <- unname(x$rhs)
+  # Drop unconstrained parameter
+  A <- A[, !apply(A==0L, 2, all), drop=FALSE]
+  # fixme: this is a hack b/c matlib::R breaks with 1-d matrices 
+  #        https://github.com/friendly/matlib/issues/34
+  if (all(dim(A) == c(1,1))) { return(TRUE) }
+  if (isTRUE(all.equal( matlib::R(A), matlib::R(cbind(A, b)) ))) {
+    return(TRUE)
+  } else {
+    cat("A constraint is violated:\n")
+    print(y)
+    cat("\n")
+    stop("Parameters in 'fix' must fulfil the constraints (above), but don't.\n  * Do you need to change the parameters in 'fix'?", call. = FALSE)
+  }
+}
 
 
 #' Combine multiple constraints of type "constraint" from ROI
@@ -84,7 +113,8 @@
     #fixme this is a hack because the ROI package has a tiny bug in the rbind function
     C <- lapply(C, function(x) {
       if (class(x)[1] == "csm_constraint") class(x) <- class(x)[-1L]
-      return(x)} )
+      return(x)
+    })
     C <- do.call(ROI:::rbind.constraint, C)
     C <- .as.csm_constraint(C)
     return(C)
@@ -106,8 +136,8 @@
   rhs <- x$rhs
   # Get parameter that are under-determined by constraints x
   qrcoef <- qr.coef(qr(A), rhs)
-  # candidates for parameters with a solution
-  ids <- which(qrcoef == 0 | is.na(qrcoef))
+  # candidates for parameters that HAVE _NO_ solution
+  ids <- which(is.na(qrcoef))
   # which rows of A to keep (i.e. under-constraint parameters)
   .rows <- rowSums(A[, ids, drop = FALSE] != 0L) > 0L
   .cols <- colSums(A[.rows, , drop = FALSE] != 0L) > 0L | (colSums(A == 0L) == nrow(A))
@@ -179,13 +209,13 @@
 #' 
 #' @param latex (optional) if \code{TRUE} formats them for LaTeX documents
 #' @export
-print.csm_constraint = function(x, latex = FALSE) {
+print.csm_constraint = function(x, ..., latex = FALSE) {
   ROI:::print.constraint(x)
   if (length(x) == 0) return(NULL)
   A <- as.matrix(x$L)
   b <- x$rhs
   # We use the side-effect of printing in showEqn()
-  sapply(1:x$L$nrow, function(i) {
+  sapply(1:nrow(A), function(i) {
     cat("  ")
     matlib::showEqn(
       A = A[i, A[i, ] != 0L, drop=FALSE],

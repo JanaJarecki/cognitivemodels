@@ -3,20 +3,11 @@
 \name{npar}
 \alias{npar}
 \alias{npar.cm}
-\alias{nobs.cm}
-\alias{nstim}
-\alias{natt}
-\title{Number of Parameters, Attributes, Stimuli}
+\title{Number of Parameters, Attributes, and Stimuli}
 \usage{
-\code{npar(x)}
+npar(x)
 
-\method{npar}{cm}(x, type = "all")
-
-\code{nobs(x)}
-
-\code{nstim(x)}
-
-\code{natt(x)}
+\method{npar}{cm}(x, type = "all", ...)
 }
 \arguments{
 \item{x}{a model object}
@@ -32,7 +23,5 @@
 D <- data.frame(x = 1, y = 1, z = 1)
 M <- bayes_beta(y ~ x + z, D, fix = "start")
 npar(M) # 3
-nobs(M)
-nstim(M)
-natt(M)
+npar(M)
 }

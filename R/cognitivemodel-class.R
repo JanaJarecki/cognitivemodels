@@ -1,3 +1,14 @@
+# ==========================================================================
+# Package: Cognitivemodels
+# File: cognitivemodel-class.R
+# Author: Jana B. Jarecki
+# ==========================================================================
+
+# ==========================================================================
+# Cognitive Model Class for Lego-type models
+# ==========================================================================
+
+
 #' Add components to a model
 #'
 #' `cogscimodel()` initializes a cogscimodel object. It can be used to
@@ -142,7 +153,7 @@ Csm <- R6Class("csm",
     },
     check_varnames = function(x) {
       if (any(x %in% colnames(self$data))) {
-          stop('"data" has a variable that is named like the prediction of the ', i, '. model! Duplicated colnames are not allowed; rename the following variables in data:', .brackify(x[which(x %in% colnames(self$data))]))
+          stop("A variable in 'data' has the same name as the prediction of the ", i, ". model. Duplicated names are not allowed.\n  * Do you want to rename the following variables in data: ", .brackify(x[which(x %in% colnames(self$data))]), "?")
         }
     },
     call_to_list = function(x) {
@@ -163,7 +174,6 @@ Csm <- R6Class("csm",
       self$call <- as.call(self$call)
     },
     end = function(discount = 0L, options = NULL) {
-      self$init_call()
       # TODO: put some sanitize names code here for the model names
       # fixme: the constraints in fix are giving rise to duplicated constraints
       # idea: maybe using "fix" only from the global parameters?
@@ -172,7 +182,7 @@ Csm <- R6Class("csm",
         data = self$data,
         title = self$title,
         mode = self$mode,
-        fix = self$fix,
+        fix = NULL,
         parspace = self$parspace,
         discount = discount,
         options = c(list(fit = FALSE), options)
@@ -181,15 +191,9 @@ Csm <- R6Class("csm",
     },
     fit = function(discount = 0L, options = list()) {
       self$discount <- discount
-      self$options$fit <- TRUE      
-      super$init_options(options)
-      
-      if (length(self$data) > 0 & (self$options$fit == TRUE) & (self$npar("free") > 0L)) {
-        message("Fitting free parameters ",
-          .brackify(names(self$get_par("free"))),
-          " by ", ifelse(grepl("loglikelihood|accuracy", self$options$fit_measure), "maximizing ", "minimizing "), self$options$fit_measure, " with ", paste(self$options$solver, collapse=", "))
-        super$fit()
-      }
+      self$options$fit <- TRUE   
+      super$init_options(c(options, self$options))
+      super$fit()
     },
     add_constraints = function(cons = NULL) {
       if (length(cons) == 0L) {
@@ -201,8 +205,10 @@ Csm <- R6Class("csm",
       }
       C <- self$constraints
       A <- array(0L, dim(C$L) + dim(cons$L))
-      A[seq.int(nrow(C$L)), seq.int(ncol(C$L))] <- C$L
-      A[-seq.int(nrow(C$L)), -seq.int(ncol(C$L))] <- cons$L
+      j <- seq.int(nrow(C$L))
+      k <- seq.int(ncol(C$L))
+      A[j, k] <- as.matrix(C$L)
+      A[-j, -k] <- as.matrix(cons$L)
       C <- ROI::L_constraint(
         L = A,
         dir = c(C$dir, cons$dir),
@@ -220,20 +226,3 @@ Csm <- R6Class("csm",
     }
   )
 )
-#' @export
-`+.csm` <- function(obj, ...) {
-  x_name <- .abbrDeparse(substitute(...))
-  return(obj$add_model(..., x_name = x_name))
-}
-#' @export
-end.csm = function(obj, ...) {
-  return(obj$end())
-}
-#' @export
-fun.csm = function(obj, ...) {
-  return(obj$add_fun(...))
-}
-#' @export
-fit.csm <- function(obj, ...) {
-  return(obj$fit(...))
-}

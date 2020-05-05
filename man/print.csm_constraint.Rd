@@ -4,7 +4,7 @@
 \alias{print.csm_constraint}
 \title{Prints the constraints of a cogscimodel object nicely}
 \usage{
-\method{print}{csm_constraint}(x, latex = FALSE)
+\method{print}{csm_constraint}(x, ..., latex = FALSE)
 }
 \arguments{
 \item{latex}{(optional) if \code{TRUE} formats them for LaTeX documents}

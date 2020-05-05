@@ -1,3 +1,14 @@
+# ==========================================================================
+# Package: Cognitivemodels
+# File: model-hm1988.R
+# Author: Jana B. Jarecki
+# ==========================================================================
+
+# ==========================================================================
+# Cognitive Model (maybe not really cognitive but more ecological)
+# ==========================================================================
+
+
 #' Houston & McNamara's (1988) dynamic optimization model for risk-sensitive foraging problems in discrete time
 #' 
 #' @import data.table
@@ -14,10 +25,15 @@
 #' @author Jana B. Jarecki, \email{jj@janajarecki.com}
 #' @details Risk-sensitive foraging means you have, for instance, four choices between the same two risky lotteries and after the four choices you need to have accumulated at least 12 points to get a reward. The optimal solution to this choice problem relies on dynamic programming. The function creates all possible future states given the possible remaining trials, and predicts the optimal choice polica or the expected value of chosing either option given a certain state and a certain time horizon.
 #' @examples
-#' ## Make fake data ---------------------------------
-#' D <- data.frame(x1 = 0, x2 = 1, x3 = 2, px11 = 0.1, px12 = 0.8, px13 = 0.1, px21 = 0.4, px22 = 0.2, px23 = 0.4, s = rep(9:11, each = 4), init = rep(9:11, each = 4), t = 4:1)
+#' ## Make fake data -----------------------------------------------------
+#' D <- data.frame(
+#'   x1 = 0, x2 = 1, x3 = 2,
+#'   px11 = 0.1, px12 = 0.8, px13 = 0.1,
+#'   px21 = 0.4, px22 = 0.2, px23 = 0.4,
+#'   s = rep(9:11, each = 4),
+#'   init = rep(9:11, each = 4), t = 4:1)
 #' 
-#' ## Setup the model --------------------------------
+#' ## Setup the model --------------------------------------------------
 #' M <- hm1988(~ x1+px11+x2+px12+x3+px13 | x1+px21+x2+px22+x3+px23,
 #'              trials = ~t, states = ~s, budget = 12, ntrials = 4,
 #'              initstate = ~init, data = D, choicerule = "argmax")

@@ -34,7 +34,7 @@ Fits the cumulative prospect theory model.
 Fits cumulative prospect theory.
 }
 \examples{
-## Tversky, A., & Kahneman, D. (1992). Advances in prospect theory: cumulative representation of uncertainty. Journal of Risk and Uncertainty, 5, 297â€“323. doi:10.1007/BF00122574
+## From Tversky, A., & Kahneman, D. (1992).
 dt <- data.frame(
   x1 = c(100, -100),
   px = 1,

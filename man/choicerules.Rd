@@ -2,11 +2,17 @@
 % Please edit documentation in R/model-choicerules.R
 \name{softmax}
 \alias{softmax}
+\alias{epsilon_greedy}
+\alias{epsilon}
 \alias{luce}
 \alias{argmax}
 \title{Models for Choice Rules (decision rules for action selection)}
 \usage{
 softmax(formula, data, fix = list(), options = NULL)
+
+epsilon_greedy(formula, data, fix = list(), options = NULL)
+
+epsilon(formula, data, fix = list(), options = NULL)
 
 luce(formula, data, ...)
 
@@ -32,6 +38,10 @@ This is how the model predicts and treats observations:
 
 \code{softmax()} picks action \eqn{i} with \eqn{exp[v(i)]/\tau / \sum exp[v]/\tau}. It equals a logistic action selection for binary actions and \eqn{\tau=1}.
 
+\code{epsilon_greedy()} picks the best action with probability \eqn{1 - \epsilon}, and with \eqn{\epsilon} it picks randomly from all actions, including the best.
+
+\code{epsilon()} picks action \eqn{i} with probability \eqn{(1 - \epsilon)*p(i)} and with \eqn{\epsilon} it picks randomly from all actions. For \eqn{\epsilon = 0} it gives \eqn{p(i)}, that is the  original probabilistic policy.
+
 \code{luce()} picks action \eqn{i} with probability \eqn{v(i) / \sum v}.
 
 \code{argmax()} picks the highest-values action with probability 1, and in case of ties it picks equi-probable
@@ -47,7 +57,7 @@ This is how the model predicts and treats observations:
 
 \examples{
 # Make some fake data
-D <- data.frame(a = c(.1,.4,.5),       # value of option A
+D <- data.frame(a = c(.3,.4,.5),       # value of option A
                 b = c(.7,.6,.5),       # value of option B
                 y = c(0,1,1))          # respondent's choice (0=A, 1=B)
 
@@ -75,23 +85,17 @@ softmax(y ~ a | b, D)                  # fit 'tau' to data y in D
 # -----------------------------------
 softmax(y ~ a | b, D,  fix=c(tau=0.5)) # fix 'tau' to 0.5
 softmax(y ~ a | b, D)                  # fit 'tau' to y
+epsilon_greedy(y~a | b, D, c(eps=0.1)) # fix 'eps' to 10 \%
+epsilon_greedy(y~a | b, D )            # fit 'eps' to y
+epsilon(y ~ a | b, D, c(eps=0.1))      # fix 'eps' to 0.1
+epsilon(y ~ a | b, D)                  # fit 'eps' to y
 luce(y ~ a | b, D)                     # Luce's choice rule
-argmx(y ~ a | b, D)                    # Argmax choice rule
+argmax(y ~ a | b, D)                    # Argmax choice rule
 }
 \references{
 Sutton, R. S., & Barto, A. G. (2018). \emph{Reinforcement Learning: An Introduction (2nd Ed.)}. MIT Press, Cambridge, MA. \url{http://incompleteideas.net/book/the-book-2nd.html}
 
 Luce, R. D. (1959). On the possible psychophysical laws. \emph{Psychological Review, 66(2)}, 81-95. \url{https://doi.org/10.1037/h0043178}
-}
-\seealso{
-Other Choicerules for cognitive models: 
-\code{\link{epsilon_greedy}()}
-
-Other Choicerules for cognitive models: 
-\code{\link{epsilon_greedy}()}
-
-Other Choicerules for cognitive models: 
-\code{\link{epsilon_greedy}()}
 }
 \author{
 Jana B. Jarecki

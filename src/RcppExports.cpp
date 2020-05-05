@@ -26,29 +26,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// lexicographic
-NumericMatrix lexicographic(NumericMatrix I);
-RcppExport SEXP _cognitivemodels_lexicographic(SEXP ISEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericMatrix >::type I(ISEXP);
-    rcpp_result_gen = Rcpp::wrap(lexicographic(I));
-    return rcpp_result_gen;
-END_RCPP
-}
-// indicators
-NumericMatrix indicators(arma::mat features, NumericVector splitcriteria);
-RcppExport SEXP _cognitivemodels_indicators(SEXP featuresSEXP, SEXP splitcriteriaSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type features(featuresSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type splitcriteria(splitcriteriaSEXP);
-    rcpp_result_gen = Rcpp::wrap(indicators(features, splitcriteria));
-    return rcpp_result_gen;
-END_RCPP
-}
 // shortfall_cpp
 Rcpp::NumericVector shortfall_cpp(Rcpp::NumericMatrix x, Rcpp::NumericMatrix p, Rcpp::NumericVector a, double beta, double delta);
 RcppExport SEXP _cognitivemodels_shortfall_cpp(SEXP xSEXP, SEXP pSEXP, SEXP aSEXP, SEXP betaSEXP, SEXP deltaSEXP) {
@@ -67,8 +44,6 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_cognitivemodels_ebm_cpp", (DL_FUNC) &_cognitivemodels_ebm_cpp, 10},
-    {"_cognitivemodels_lexicographic", (DL_FUNC) &_cognitivemodels_lexicographic, 1},
-    {"_cognitivemodels_indicators", (DL_FUNC) &_cognitivemodels_indicators, 2},
     {"_cognitivemodels_shortfall_cpp", (DL_FUNC) &_cognitivemodels_shortfall_cpp, 5},
     {NULL, NULL, 0}
 };

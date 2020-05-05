@@ -1,3 +1,14 @@
+# ==========================================================================
+# Package: Cognitivemodels
+# File: rsenvironment-class
+# Author: Jana B. Jarecki
+# ==========================================================================
+
+# ==========================================================================
+# Helper Class for the hm1988 model
+# ==========================================================================
+
+
 #' Class for risk-sensitive foraging environments
 #'
 #' @param budget Numeric, minimum requirement.

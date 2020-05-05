@@ -8,18 +8,18 @@
 \alias{SSE.cm}
 \title{Computes Various Model Fit Measures}
 \usage{
-\method{logLik}{cm}(x, ...)
+\method{logLik}{cm}(object, ...)
 
-\code{MSE(x)}
+MSE(x)
+
+SSE(x, ...)
 
 SSE(x)
-
-\code{SSE(x)}
 }
 \arguments{
-\item{x}{a cm object}
-
 \item{...}{other arguments (ignored)}
+
+\item{x}{a cm object}
 }
 \value{
 A number measuring the goodness of fit between predictions and observed data.

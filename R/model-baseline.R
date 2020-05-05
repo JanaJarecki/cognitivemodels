@@ -1,110 +1,92 @@
-#' Baseline cognitive models
+# ==========================================================================
+# Package: Cognitivemodels
+# File: model-baseline.R
+# Author: Jana B. Jarecki
+# ==========================================================================
+
+# ==========================================================================
+# Cognitive Model
+# ==========================================================================
+
+
+#' Baseline models
 #' 
-#' \code{baseline()} makes simple stimulus-agnostic models, \code{baseline_const()} predicts a fixed value, \code{baseline_mean()} predicts the mean observed value.
+#' Baseline models are simple stimulus-agnostic models, \code{baseline_const_c(), baseline_const_d()} predict a constant value for continuous and discrete data (resp.), \code{baseline_mean_c(), baseline_mean_d()} predict the mean of the observed values for continuous and discrete response data (resp.).
 #' 
 #' @rdname baseline
 #' 
 #' @inheritParams Cm
-#' @param formula A formula specifying the observed variable as left hand (e.g., \code{y ~ .}). Note the "\code{~}" and "\code{.}", please.
-#' @param type A string, can be \code{"constant", "mean"} specifying the type of baseline model (see details).
-#' @param const (optional, \bold{required} if \code{type = "constant"}) A number with the prediction of the model, must be a probability.
-#' 
-#' @section Important:
-#' \emph{Note}, \bold{these models are only implemented for discrete responses}.
+#' @param formula A formula, the observed variables, with only a left-hand-side (for example: \code{response ~ .}), note the "\code{~ .}" on the right.
+#' @param const (optional, \bold{required} in \code{baseline_const_}) A number, the constant value that the model should predict.
 #' 
 #' @details
+#' Baseline models are very simple models that ignore the stimuli. Baseline models are used as sanity checks in cognitive model comparisons. Other cognitive models are usually supposed to beat the baseline model -- if not, the other cognitive models do very likely not describe the observed data well.
 #' 
-#' Baseline models are very simple models that ignore the stimuli. Baseline models are used as sanity checks in cognitive model comparisons. Other cognitive models should beat the baseline model -- if not, the other cognitive models do not describe the observed data well.
+#' Use \bold{\code{baseline_..._d}} for discrete response variables; and use \bold{\code{baseline_..._c}} for continuous response variables.
 #' 
-#' The \bold{\code{type = "constant"}} or \code{baseline_const()} predicts the fixed value \code{const} for all trials. A common baseline in binary choice tasks is \emph{Pr=0.50}, for which we would use \code{const = 0.50}. The shorthand \code{baseline_const()} calls \code{baseline()} with \code{type = "constant"}.
+#' \bold{\code{baseline_const_}} predicts the numeric value \code{const} for all trials. A common baseline model in binary choice tasks is, for instance, a model predicting \emph{Pr=0.50} for each trial, for which you set \code{const = 0.50}. The model \bold{baseline_mean_} predicts the mean of the observed choices for each trial. This model has at least one free parameter (the mean).
 #' 
 #' @examples
-#' # Make some fake data
+#' # Here is some data, let y be the observed data
 #' D <- data.frame(y = c(1,1,0), x = c(1,2,3))
 #' 
-#' M <- baseline_const(y~., D, const = 0.5) # Constant Pr = 0.5
-#' predict(M)                               # predicts 0.5, 0.5, 0.5
-#' M$predict()                              # -- " --
-#' M$npar()                                 # 0 parameter
-#' M$logLik()                               # log likelihood (binomial)
+#' # Baseline model that predicrs Pr = 0.50
+#' M <- baseline_const_c(y ~ ., const = 0.50, data = D)
 #' 
-#' M <- baseline_mean(y~., D)               # Pr = mean(observed variable)
-#' predict(M)                               # predicts 2/3, 2/3, 2/3
-#' M$predict()                              # -- " --
-#' M$npar()                                 # 1 free parameter
+#' predict(M)                         # predicts 0.5, 0.5, 0.5
+#' npar(M)                            # 0 parameter
+#' logLik(M)                          # log likelihood (binomial)
+#' 
+#' M <- baseline_mean_d(y ~ ., D)     # Pr = mean(observed variable)
+#' predict(M)                         # predicts 0.66, 0.66, 0.66
+#' coef(M)                            # mean counts as free parameter
+#' npar(M)                            # 1 free parameter, the mean
 #' 
 #' @family Cognitive models
-#'  
 #' @export
-baseline_const <- function(formula, data = NULL, const, mode, ...) {
+baseline_const_c <- function(formula, consr, data = NULL, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args$type <- "constant"
+  .args$mode <- "continuous"
    return(do.call(what = Baseline$new, args = .args, envir = parent.frame()))
 }
 
-
-#' Baseline cognitive models
-#' 
-#' @details The \bold{\code{type = "mean"}} or \code{baseline_mean()} predicts a fixed value, namely the mean of the observed responses, for all trials. It thus has one free parameter. It calls \code{baseline()} with \code{type = "mean"}.
-#' 
 #' @rdname baseline
 #' 
 #' @export
-baseline_mean <- function(formula, data = NULL, mode, ...) {
+baseline_const_d <- function(formula, const, data, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
-  .args$type <- "mean"
+  .args$type <- "constant"
+  .args$mode <- "discrete"
    return(do.call(what = Baseline$new, args = .args, envir = parent.frame()))
 }
 
-#' Baseline cognitive models
+#' Baseline models
 #' 
 #' @rdname baseline
 #' @export
 baseline_mean_c <- function(formula, data = NULL, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args$mode <- "continuous"
+  .args$type <- "mean"
    return(do.call(what = Baseline$new, args = .args, envir = parent.frame()))
 }
 
-#' Baseline cognitive models
+
+#' Baseline models
 #' 
 #' @rdname baseline
 #' @export
 baseline_mean_d <- function(formula, data = NULL, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args$mode <- "discrete"
-   return(do.call(what = Baseline$new, args = .args, envir = parent.frame()))
+  .args$type <- "mean"
+  return(do.call(what = Baseline$new, args = .args, envir = parent.frame()))
 }
 
-#' Baseline cognitive models
-#' 
-#' @rdname baseline
-#' 
-#' @export
-baseline <- function(formula, data = NULL, type, const, mode, ...) {
-  .args <- as.list(rlang::call_standardise(match.call())[-1])
-   return(do.call(what = Baseline$new, args = .args, envir = parent.frame()))
-}
 
-#' Baseline cognitive models
-#' 
-#' @rdname baseline
-#' @export
-baseline_c <- function(formula, data = NULL, type, const, ...) {
-  .args <- as.list(rlang::call_standardise(match.call())[-1])
-  .args$mode <- "continuous"
-   return(do.call(what = Baseline$new, args = .args, envir = parent.frame()))
-}
 
-#' Baseline cognitive models
-#' 
-#' @rdname baseline
-#' @export
-baseline_d <- function(formula, data = NULL, type, const, ...) {
-  .args <- as.list(rlang::call_standardise(match.call())[-1])
-  .args$mode <- "discrete"
-   return(do.call(what = Baseline$new, args = .args, envir = parent.frame()))
-}
+
 
 Baseline <- R6Class("baseline",
   inherit = Cm,
@@ -135,13 +117,12 @@ Baseline <- R6Class("baseline",
       } else {
         private$get_input(f = self$formula, d = newdata)
       }
-      out <- switch(self$type,
+      out <- switch(self$type, # this is the model type, not response type
         constant = self$const,
         mean = apply(self$res, 2, mean, simplify = FALSE))
-      `colnames<-`(
-        matrix(out, nrow = nrow(D), ncol = self$nstim),
-        paste0("pred_", private$get_stimnames()[1:self$nstim])
-        )
+      out <- matrix(out, nrow = nrow(D), ncol = self$nstim)
+      colnames(out) <- self$prednames
+      return(drop(out))
     }
   )
 )

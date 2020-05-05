@@ -1,9 +1,21 @@
+# ==========================================================================
+# Package: Cognitivemodels
+# File: model-rsfft.R
+# Author: Jana B. Jarecki
+# ==========================================================================
+
+# ==========================================================================
+# Cognitive Model
+# ==========================================================================
+
+
+
 #' Risk-sensitive foraging fast and frugal tree
 #' 
 #' rsfft()
 #' 
 #' @keywords internal
-#' @import arrangements
+#' @importFrom arrangements permutations
 #' @useDynLib cognitivemodels, .registration = TRUE
 #' @inheritParams Cm
 rsfft <- function(formula = NULL, sbt = NULL, nopt = NULL, nout = NULL, fix = NULL, data = NULL, env = NULL, choicerule, terminal.fitness.fun) {
@@ -135,7 +147,7 @@ Rsfft <- R6Class("rsfft",
       parNames <- rownames(self$parspace)
       splitCriteria <- self$par[parNames[1:3]]
       order <- self$par[parNames[4]]
-      order <- permutations(3,3)[order, ]
+      order <- arrangements::permutations(3,3)[order, ]
       exits <- matrix(c(0, 1, 1)[order], nrow = 1)[rep(1, nrow(input)), ]
       exits <- cbind(exits, 1L - exits[, 3])
       
