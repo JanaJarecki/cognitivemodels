@@ -80,19 +80,24 @@ test_that("Prediction identitites to Tversky & Kahneman (1992)", {
 
 
 # 2. Parameter recovery
-# res <- cpttest[subject == 1, list(fit_soft = list(fit_cpt_soft(dt = .SD))), by = list(repetition, subject)]
-# test_that("Parameter estimates == estimates in paper", {
-#   expect_equal(model$coef(), c(alpha = 0.74, beta=0.74, gammap = 0.61, gamman = 0.89, lambda = 1.27, tau = 1/0.06), tol = tol)
-#   expect_equal(-2 * model$logLik(), 136.8, tol = tol)
-# })
-res <- cpttest[subject < 1, list(fit_soft = list(fit_cpt_soft(dt = .SD))), by = list(repetition, subject)]
+data(cpttest)
+cpttest[, decision := decision - 1]
+fml <- decision ~ o1 + p1 + o2 + p2 | o3 + p3 + o4 + p4
+
+fit_cpt_soft <- function(dt) {
+  model <- cpt(fml, ref = 0, data = dt, choicerule = "softmax", options = list(ub = c(tau = 25), solver = "solnp"), fix = list(alpha = "beta"))
+}
+fit_cpt_arg <- function(dt) {
+  model <- cpt(fml, ref = 0, data = dt, choicerule = "argmax", options = list(fit_measure = "accuracy", solver = "solnp"), fix = list(alpha = "beta"))
+}
+res <- cpttest[subject == 1, list(fit_soft = list(fit_cpt_soft(dt = .SD),
+                                                  fit_cpt_arg( dt = .SD))), by = list(repetition, subject)]
 
 test_that("Parameter estimates == estimates in paper", {
   expect_equal(model$coef(), c(alpha = 0.74, beta=0.74, gammap = 0.61, gamman = 0.89, lambda = 1.27, tau = 1/0.06), tol = tol)
   expect_equal(-2 * model$logLik(), 136.8, tol = tol)
 })
->>>>>>> 7c625fa391d9d125f39c7eb805be2b18bcb9beba
-  
+
 # 3. Formal tests
 # 3.a. One-row test set and test sets with different orders
 tk_par <- c(alpha = 0.88, beta = 0.88, lambda = 2.25, gammap = 0.61, gamman = 0.69) 
