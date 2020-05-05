@@ -3,8 +3,8 @@
 # --------------------------------------------------------------------------
 D <- data.frame(x = c(50,50,50), p = c(0.75, 0.50, 0.25), x2 = 10, y = c(29, 19, 13.5))
 D$p2 <- 1 - D$p
-test_that("Power utility: predicted value identities", {
-  M <- utility_pow(~ x | x2, D, list(rp=2, rn="rp"), choicerule = "none")
+test_that("Discrete Power utility: predicted value identities", {
+  M <- utility_pow_d(~ x | x2, D, list(rp=2, rn="rp"), choicerule = "none")
   ce <- function(pred, pow, p = D[, c("p", "p2")]) {
     y <- rowSums((abs(pred) * p))
     sign(y) * y^(1/pow)

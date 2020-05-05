@@ -1,5 +1,4 @@
 # Tversky, A., & Kahneman, D. (1992). Advances in prospect theory: cumulative representation of uncertainty. Journal of Risk and Uncertainty, 5, 297–323. doi:10.1007/BF00122574
-context("cpt")
 
 # 0. Data set, standard parameters, and tolerance
 dt <- data.frame(
@@ -79,6 +78,7 @@ test_that("Prediction identitites to Tversky & Kahneman (1992)", {
   expect_equal(M$predict('value')[2,'pr_y'], c('pr_y'=-129.9), tol = tol)
 })
 
+
 # 2. Parameter recovery
 data(cpttest)
 cpttest[, decision := decision - 1]
@@ -97,7 +97,7 @@ test_that("Parameter estimates == estimates in paper", {
   expect_equal(model$coef(), c(alpha = 0.74, beta=0.74, gammap = 0.61, gamman = 0.89, lambda = 1.27, tau = 1/0.06), tol = tol)
   expect_equal(-2 * model$logLik(), 136.8, tol = tol)
 })
-  
+
 # 3. Formal tests
 # 3.a. One-row test set and test sets with different orders
 tk_par <- c(alpha = 0.88, beta = 0.88, lambda = 2.25, gammap = 0.61, gamman = 0.69) 
@@ -117,33 +117,33 @@ test_that("Prediction identities data frame", {
   expect_pred_equivalent(D[c(2,1,3), ], c(1.427, 1.285, 1.353))
 })
 
-test_that("Prediction identities data table", {
-  expect_pred_equivalent <- function(data, result) {
-    M <- cpt(~x1+p+x2, ref = 0L, data = as.data.table(data), fix = tk_par, choicerule = "none")
-    expect_equivalent(M$predict(), result, tol=tol)
-  }
+# test_that("Prediction identities data table", {
+#   expect_pred_equivalent <- function(data, result) {
+#     M <- cpt(~x1+p+x2, ref = 0L, data = as.data.table(data), fix = tk_par, choicerule = "none")
+#     expect_equivalent(M$predict(), result, tol=tol)
+#   }
   
-  expect_pred_equivalent(D[1, ], 1.285)
-  expect_pred_equivalent(D[2, ], 1.427)
-  expect_pred_equivalent(D[3, ], 1.353)
-  expect_pred_equivalent(D, c(1.285, 1.427, 1.353))
-  expect_pred_equivalent(D[3:1, ], c(1.353, 1.427, 1.285))
-  expect_pred_equivalent(D[c(2,1,3), ], c(1.427, 1.285, 1.353))
-})
+#   expect_pred_equivalent(D[1, ], 1.285)
+#   expect_pred_equivalent(D[2, ], 1.427)
+#   expect_pred_equivalent(D[3, ], 1.353)
+#   expect_pred_equivalent(D, c(1.285, 1.427, 1.353))
+#   expect_pred_equivalent(D[3:1, ], c(1.353, 1.427, 1.285))
+#   expect_pred_equivalent(D[c(2,1,3), ], c(1.427, 1.285, 1.353))
+# })
 
-test_that("Prediction identities tibble", {
-  expect_pred_equivalent <- function(data, result) {
-    M <- cpt(~x1+p+x2, ref = 0L, data = as_tibble(data), fix = tk_par, choicerule = "none")
-    expect_equivalent(M$predict(), result, tol=tol)
-  }
+# test_that("Prediction identities tibble", {
+#   expect_pred_equivalent <- function(data, result) {
+#     M <- cpt(~x1+p+x2, ref = 0L, data = as_tibble(data), fix = tk_par, choicerule = "none")
+#     expect_equivalent(M$predict(), result, tol=tol)
+#   }
   
-  expect_pred_equivalent(D[1, ], 1.285)
-  expect_pred_equivalent(D[2, ], 1.427)
-  expect_pred_equivalent(D[3, ], 1.353)
-  expect_pred_equivalent(D, c(1.285, 1.427, 1.353))
-  expect_pred_equivalent(D[3:1, ], c(1.353, 1.427, 1.285))
-  expect_pred_equivalent(D[c(2,1,3), ], c(1.427, 1.285, 1.353))
-})
+#   expect_pred_equivalent(D[1, ], 1.285)
+#   expect_pred_equivalent(D[2, ], 1.427)
+#   expect_pred_equivalent(D[3, ], 1.353)
+#   expect_pred_equivalent(D, c(1.285, 1.427, 1.353))
+#   expect_pred_equivalent(D[3:1, ], c(1.353, 1.427, 1.285))
+#   expect_pred_equivalent(D[c(2,1,3), ], c(1.427, 1.285, 1.353))
+# })
 
 # 3.b. Formula entry
 test_that("Probability entry", {

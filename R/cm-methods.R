@@ -1,12 +1,21 @@
-# Define S3 methods for the class 'cm'
+# ==========================================================================
+# Package: Cognitivemodels
+# File: cm-methods.R
+# Author: Jana B. Jarecki
+# ==========================================================================
 
-#' @title Number of Parameters, Attributes, Stimuli
+# ==========================================================================
+#  Define S3 methods for the class 'cm'
+# ==========================================================================
+
+
+#' @title Number of Parameters, Attributes, and Stimuli
 #' @name npar
 #' 
 #' @description
 #' \code{npar(m)} counts the parameters in a cm, \code{nstim(m)} counts stimuli, \code{natt(m)} counts attributes by stimulus, \code{nobs(m)} counts observations in the data of a model.
 #' 
-#' @usage \code{npar(x)}
+#' @usage npar(x)
 #' @param x a model object
 #' @param ... other arguments (ignored)
 #' @examples 
@@ -24,16 +33,20 @@ npar.default <- function(x, ...) {
 #' @param type A string: \code{"all"} counts all parameters, \code{"free"} counts the free parameters, \code{"fix"} countes the fixed parameters, \code{"constrained"} counts constrained parameters.
 #' @export
 #' @method npar cm
-npar.cm <- function(x, type = "all") {
+#' @examples
+#' npar(M)
+npar.cm <- function(x, type = "all", ...) {
   return(x$npar(type))
 }
 
+#' @title Number of Parameters, Attributes, and Stimuli
+#' 
 #' @export
 nobs <- function(x, ...) {
   UseMethod("nobs")
 }
-#' @name npar
-#' @usage \code{nobs(x)}
+#' @name nobs
+#' @usage nobs(x)
 #' @param x a model object
 #' @examples 
 #' nobs(M)
@@ -41,8 +54,12 @@ nobs.cm <- function(x) {
   return(x$nobs)
 }
 
-#' @name npar
-#' @usage \code{nstim(x)}
+#
+
+#' @title Number of Parameters, Attributes, and Stimuli
+#' 
+#'  @name nstim
+#' @usage nstim(x)
 #' @param x a model object
 #' @examples 
 #' nstim(M)
@@ -51,7 +68,7 @@ nstim <- function(x) {
   UseMethod("nstim")
 }
 nstim.default <- function(x) {
-  error("'npar' method is not defined for object of class ", class(x))
+  error("'nstim' method is not defined for object of class ", class(x))
 }
 #' @export
 #' @method nstim cm
@@ -59,8 +76,10 @@ nstim.cm <- function(x) {
   return(x$nstim)
 }
 
-#' @name npar
-#' @usage \code{natt(x)}
+#' Number of Attributes of options
+#' 
+#' @name natt
+#' @usage natt(x)
 #' @param x a model object
 #' @examples 
 #' natt(M)
@@ -69,7 +88,7 @@ natt <- function(x) {
   UseMethod("natt")
 }
 natt.default <- function(x) {
-  error("'npar' method is not defined for object of class ", class(x))
+  error("'natt' method is not defined for object of class ", class(x))
 }
 #' @export
 #' @method natt cm
@@ -81,9 +100,13 @@ natt.cm <- function(x) {
 
 
 
+#' Print the (only free) model parameters
+#' 
 #' @export
-coef.cm <- function(x, ...) {
-  do.call(x$coef, list(...))
+#' @examples
+#' coef(M)
+coef.cm <- function(object, ...) {
+  do.call(object$coef, list(...))
 }
 
 
@@ -92,20 +115,18 @@ coef.cm <- function(x, ...) {
 #' @name gof
 #' @family {fit measures for cognitive models}
 #' @export
-logLik.cm <- function(x, ...) {
-  x$logLik(...)
+logLik.cm <- function(object, ...) {
+  object$logLik(...)
 }
 
 #' @name gof
 #' @family {fit measures for cognitive models}
-#' @usage \code{MSE(x)}
+#' @usage MSE(x)
 #' @examples 
 #' MSE(M)     # 0.1805
 #' 
 #' @export
-MSE <- function(x, ...) {
-  UseMethod("MSE")
-}
+MSE <- function(x, ...) { UseMethod("MSE") }
 #' @family {fit measures for cognitive models}
 #' @export
 MSE.cm <- function(x, ...) {
@@ -114,16 +135,19 @@ MSE.cm <- function(x, ...) {
 
 #' @family {fit measures for cognitive models}
 #' @export
-AIC.cm <- function(x, ...) {
-  x$AIC(...)
+AIC.cm <- function(object, ..., k) {
+  object$AIC(...)
 }
 #' @family {fit measures for cognitive models}
 #' @export
-AICc.cm <- function(x) {
-  x$AICc()
+AICc.cm <- function(object, ..., k) {
+  object$AICc()
 }
+#' @family {fit measures for cognitive models}
 #' @export
-BIC.cm <- function(x) {
+BIC <- function(x, ...) { UseMethod("BIC") }
+#' @export
+BIC.cm <- function(x, ...) {
   return(x$BIC())
 }
 #' @export
@@ -134,8 +158,8 @@ RMSE.cm <- function(x) {
 
 
 #' @export
-summary.cm <- function(x) {
-  return(x$summary())
+summary.cm <- function(object, ...) {
+  return(object$summary())
 }
 #' @export
 nstim.cm <- function(x, ...) {
@@ -182,7 +206,7 @@ print.summary.cm = function(x, digits = max(3L, (getOption("digits") - 3L)), ...
 #' @title Computes Various Model Fit Measures
 #' @name gof
 #' @export
-SSE <- function(x) {
+SSE <- function(x, ...) {
   UseMethod("SSE")
 }
 #' @name gof
@@ -192,7 +216,7 @@ SSE <- function(x) {
 #' \code{logLik(m)} computes the log likelihood of a cm object, \code{SSE(m)} computes the sum of squared errors, \code{MSE(m)} computes the mean squared error.
 #' 
 #' 
-#' @usage \code{SSE(x)}
+#' @usage SSE(x)
 #' @param x a cm object
 #' @param ... other arguments (ignored)
 #' @return A number measuring the goodness of fit between predictions and observed data.
@@ -206,7 +230,7 @@ SSE <- function(x) {
 #' SSE(M)     # 0.361
 #' 
 #' @export
-SSE.cm <- function(x) {
+SSE.cm <- function(x, ...) {
   x$SSE()
 }
 
@@ -214,7 +238,7 @@ SSE.cm <- function(x) {
 
 #' Predictions from Cognitive Models (class cm)
 #' 
-#' @param obj A cognitive model object of class 'cm'
+#' @param object A cognitive model object of class 'cm'
 #' @param ... Additional cognitive models
 #' @param type A string, what to predict, usually \code{"response"}, but other values may be possible, see the help pages of the model you use.
 #' @param newdata A data.frame with new data to predict
@@ -222,13 +246,13 @@ SSE.cm <- function(x) {
 #' @return A vector or matrix of predictions, if multiple models are supplied using \code{...}, returns a list containing the predictions for each model
 #' 
 #' @export
-predict.cm <- function(obj, ..., type = "response", newdata = NULL) {
+predict.cm <- function(object, ..., type = "response", newdata = NULL) {
   dotargs <- list(...)
-  if (missing(obj) & length(dotargs)) {
-    obj <- dotargs
+  if (missing(object) & length(dotargs)) {
+    object <- dotargs
   }
-  if (is.list(obj) & length(obj) > 1) {
-    dotargs <- c(obj[-1], dotargs)
+  if (is.list(object) & length(object) > 1) {
+    dotargs <- c(object[-1], dotargs)
   }  
   named <- if (is.null(names(dotargs))) {
               rep_len(FALSE, length(dotargs)) 
@@ -247,17 +271,19 @@ predict.cm <- function(obj, ..., type = "response", newdata = NULL) {
 
   ## If multiple objects, predict for all of them
   if (length(dotargs)) {
-    return(lapply(c(obj, dotargs), predict, type = type, newdata = newdata))
+    return(lapply(c(object, dotargs), predict, type = type, newdata = newdata))
   }
-  return(obj$predict(type = type, newdata = newdata))
+  return(object$predict(type = type, newdata = newdata))
 }
 
 
 
+#' Show the paramter space of a cognitive model
+#' 
 #' @description
 #' \code{parspace(cm)} shows the parameter names and upper and lower bounds of parameters in a cognitice model \code{cm}
 #' 
-#' @usage \code{parspace(x)}
+#' @usage parspace(x)
 #' @param x a model object of class cm
 #' @param ... other arguments (ignored)
 #' @examples 
@@ -274,7 +300,7 @@ parspace.default <- function(x, ...) {
 #' @name parspace
 #' @export
 #' @method parspace cm
-parspace.cm <- function(x) {
+parspace.cm <- function(x, ...) {
   cat("\nParameter space of the cognitive model '", class(x)[1], "':\n", sep = "")
   print(format(x$parspace, digits = 2L, scientific = 10, width = 6), quote = FALSE, right = TRUE)
   cat("---\nNote. lb = lower bound, ub = upper bound, start = start value.\n")
@@ -282,10 +308,12 @@ parspace.cm <- function(x) {
 
 
 
+#' Show the constraints of a cognitive model
+#' 
 #' @description
 #' \code{constraints(cm)} shows the parameter constraints  of a cognitive model named \code{cm} nicely formatted
 #' 
-#' @usage \code{constraints(x)}
+#' @usage constraints(x)
 #' @param x a model object of class cm
 #' @param ... other arguments (ignored)
 #' @examples 
@@ -302,7 +330,7 @@ constraints.default <- function(x, ...) {
 #' @name constraints
 #' @export
 #' @method constraints cm
-constraints.cm <- function(x) {
+constraints.cm <- function(x, ...) {
   cat("\nParameter constraints of the cognitive model '", class(x)[1], "':\n", sep = "")
   return(x$constraints)
 }

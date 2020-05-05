@@ -12,9 +12,12 @@ Imports:
     AICcmodavg,
     arrangements,
     cognitiveutils (== 0.0.8),
-    combinat, 
+    combinat,
+    data.table,
     Formula,
+    gtools,
     matlib (>= 0.9.3),
+    methods,
     Rcpp (>= 1.0.1),
     reshape2,
     rlang,
@@ -33,5 +36,6 @@ Encoding: UTF-8
 NeedsCompilation: yes
 RoxygenNote: 7.0.2
 Suggests: 
+    knitr,
     testthat
 VignetteBuilder: knitr

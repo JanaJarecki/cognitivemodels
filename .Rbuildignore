@@ -1,2 +1,13 @@
 ^docs$
 ^_pkgdown\.yml$
+^.*\.Rproj$         # Automatically added by RStudio
+^\.Rproj\.user$     # used for temporary files. 
+^\.github$          # github documentary files
+^README\.Rmd$       # An Rmarkdown file used to generate README.md
+^cran-comments\.md$ # Comments for CRAN submission
+^NEWS\.md$          # A news file written in Markdown
+^\.travis\.yml$     # Used for continuous integration testing with travis
+^desktop\.ini$      # Windows system file
+^R/desktop\.ini$    # Windows system file
+^man/desktop\.ini$  # Windows system file
+^data/desktop\.ini$ # Windows system file

@@ -1,8 +1,20 @@
+# ==========================================================================
+# Package: Cognitivemodels
+# File: cm-class.R
+# Author: Jana B. Jarecki
+# ==========================================================================
+
+# ==========================================================================
+# Main R6 Class that is the Basis of Cognitive Models
+# ==========================================================================
+
+
 #' The R6 class underlying all "cm" (cognitive model) objects
 #' 
 #' \code{Cm$new(formula, data, parspace)}
 #' 
 #' @import methods
+#' @import stats
 #' @import Rsolnp
 #' @import ROI
 #' @import cognitiveutils
@@ -10,6 +22,7 @@
 #' @import Formula
 #' @importFrom matlib showEqn
 #' @importFrom rlang call_standardise
+#' 
 #' 
 #' @aliases cognitivemodel
 #' 
@@ -49,11 +62,7 @@
 #' \item{\code{fit_options}}{(default: \code{NULL}). Other options, see \link[cognitiveutils]{gof}.}
 #' }
 #' @examples 
-#' Cm$new(
-#'     formula = y ~ x,
-#'     data = data.frame(y=1:2, x=3:4),
-#'     parspace = rbind(alpha = c("ub"=0, "lb"=1, "start"=.5)),
-#'     title = 'name of my model'))
+#' # No examples yet.
 #' @export
 Cm <- R6Class(
   "cm",
@@ -110,6 +119,8 @@ Cm <- R6Class(
     options = list(),
     #' @field pass_checks A logical if \code{TRUE} the model passes all internal checks
     pass_checks = FALSE,
+    #' @field make_prediction A function, just here for testing purposes
+    # make_prediction = NA,
 
     #' @description
     #' Initializes a new cogscimodel
@@ -210,7 +221,7 @@ Cm <- R6Class(
       #         matrix!
       ns <- self$nstim
       RES <- sapply(seq.int(ns),
-        function(s) {
+        function(s) { # s = stimulus number
           self$make_prediction(
             type = type,
             input = abind::adrop(input[, , s, drop = FALSE], 3),
@@ -300,15 +311,14 @@ Cm <- R6Class(
 
     #' @description
     #' Get the model parameter
-    # @param x string which type of parameter to get, \code{"all"} returns all parameter, \code{"free"} returns the free parameters, \code{"constrained"} returns constrained parameters, \code{"equal"} returns parameters equal to another parameter
-    #' @param x (optional, default \code{"all"}) A string specifying which parameters to retrieve, allowed are \code{"all", "free", "fix", "choicerule"}
+    #' @param x (optional) A string, which set of parameters to get, \code{"all"} returns all parameter, \code{"free"} returns the free parameters, \code{"constrained"} returns constrained parameters, \code{"equal"} returns parameters equal to another parameter
     get_par = function(x = "all") {
       return(unlist(self$par[private$get_parnames(x)]))
     },
 
     #' @description
     #' Number of model parameters
-    #' @param x String specifying which of the parameters to return, allowed are \code{"all", "free", "constrained", "equal"}
+    #' @param x  A string, which of the parameters to return, allowed are \code{"all", "free", "constrained", "equal"}
     npar = function(x = "all") {
       ans <- try(match.arg(x, "free"), silent = TRUE)
       if (class(ans) == "try-error") { # not "free"
@@ -322,7 +332,7 @@ Cm <- R6Class(
 
     #' @description
     #' Computes the goodness of model fit
-    #' @param type A string, fit measure to use, e.g. \code{"loglikelihood"}, for the allowed types see \link[cognitiveutils]{gof}
+    #' @param type A string, which goodness of fit measure to use, e.g. \code{"loglikelihood"}; for the allowed values see \link[cognitiveutils]{gof}
     #' @param n (optional) When fitting to aggregate data, supply how many raw data points underly each aggregated data point
     #' @param newdata (optional) A data frame with new data - experimental!
     #' @param ... other arguments (ignored)
@@ -374,7 +384,11 @@ Cm <- R6Class(
     #' Log likelihood of the observed responses under the model predictions
     #' @param ... other arguments (ignored)
     logLik = function(...) {
-      return(self$gof(type = "loglikelihood", ...))
+      ll <- self$gof(type = "loglikelihood", ...)
+      k <- ifelse("newdata" %in% names(list(...)), 0L, self$npar("free"))
+      attributes(ll) <- list(df = k, nobs = self$nobs)
+      class(ll) <- "logLik"
+      return(ll)
     },
     #' @description
     #' Bayesian Information Criterion of the model predictions given the observed responses
@@ -528,6 +542,10 @@ Cm <- R6Class(
 
 
 
+
+  # -------------------------------------------------------------------------
+  # -------------------------------------------------------------------------
+  # -------------------------------------------------------------------------
   # -------------------------------------------------------------------------
   # Private methods
   private = list(
@@ -701,17 +719,22 @@ Cm <- R6Class(
     },
     init_constraints = function(fix) {
       # constraints from child model objects and the supplied 'fix' argument
-      C <- .combine_constraints(private$make_constraints(),
-                                .make_constraints(parspace = self$parspace, fix = fix))
+      C <- .make_constraints(parspace = self$parspace, fix = fix)
+      C2 <- private$make_constraints()
+      if (length(fix) < length(self$par) & .consistent_constraints(C, C2)) {
+        C <- .combine_constraints(C, C2)
+      }
+
       # check over-constrained problems     
       if ((length(self$par) - length(C)) < 0) {
-          message("Too many constraints: ", length(self$par), " parameter and ", length(C), " constraints. View constraints and parameter using `M$constraints` and `M$par`.")
-      }
-      
+          message("Maybe many constraints: ", length(self$par), " parameter and ", length(C), " constraints. View constraints and parameter using `M$constraints` and `M$par`.")
+      }      
       # store values and constraint
       self$constraints <- C
+      # fixme: the second part is an ungly hack in case of unconstrained p
       self$ncon <- length(C)
       if (self$ncon > 0L) {
+        self$ncon <- min(length(C), sum(!apply(as.matrix(C$L) == 0L, 2, all)))
         self$set_par(.solve_constraints(C, b = unlist(self$par)), constrain = FALSE)
         self$set_par(self$par) #fixme (this seems inefficient)
         self$parnames$free <- C$names[.which.underdetermined(C)]
@@ -732,14 +755,16 @@ Cm <- R6Class(
       self$stimnames <- abbreviate(private$make_stimnames(), minlength = 1, use.classes = FALSE)
     },
     init_prednames = function() {
-      self$prednames <- paste0("pr_", abbreviate(private$make_prednames(), minlength = 1))
+      self$prednames <- paste("pr", abbreviate(private$make_prednames(), minlength = 1), sep="_")
     },
-    init_options = function(...) {
-      .args <- as.list(...)
+    init_options = function(options, ...) {
+      .args <- list(...)
+      .args <- if (length(.args)) { c(options, .args) } else { options }
+
       .args <- .args[!duplicated(names(.args))] # first argument is user-supplied, second time it occurs it is the default of a model
       ## IF fitting with grid followed by a solver
       # solver <- .args$solver
-      solver <- match.arg(.args$solver, c("grid", "solnp", "auto", names(ROI::ROI_registered_solvers())), several.ok = TRUE)
+      solver <- .check_and_match_solver(.args[["solver"]])
       if (!is.null(solver)) {
         if(solver[1] == "grid" & length(solver) > 1L) {
           npar <- self$npar("free")

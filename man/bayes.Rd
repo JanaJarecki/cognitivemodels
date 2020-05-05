@@ -22,11 +22,11 @@ bayes_beta(formula, data = data.frame(), fix = NULL, format = NULL, ...)
 bayes_dirichlet(formula, data, fix = NULL, format = NULL, ...)
 }
 \arguments{
-\item{formula}{A formula specifying reported beliefs ~ event + event ... (e.g., \code{y ~ coin_heads + coin_tails}).}
+\item{formula}{A formula, the reported beliefs ~ event + event ... (e.g., \code{y ~ coin_heads + coin_tails}).}
 
 \item{format}{A string (default \code{"raw"}) with the data format. Can be \code{"raw"}, \code{"cummulative"}, \code{"count"}, where \code{"raw"} means data are occurrence indicators (1=event, 0=no event); \code{"cumulative"} means data are cumulative event frequencies (1,2,2,...), and code{"count"} means data are non-ordered event frequencies (10,2,5,...).}
 
-\item{type}{(optional) A string, \code{"beta-binomial"} or \code{"dirichlet-multinomial"}, specifying the type of inference. Can be abbreviated. Will be inferred if missing.}
+\item{type}{(optional) A string, the type of inference, \code{"beta-binomial"} or \code{"dirichlet-multinomial"}. Can be abbreviated. Will be inferred, if missing.}
 
 \item{...}{other arguments from other functions, currently ignored.}
 }
@@ -34,7 +34,7 @@ bayes_dirichlet(formula, data, fix = NULL, format = NULL, ...)
 An model object (similar to lm-objects) of class "bayes". It can be viewed with \code{summary(mod)}, where \code{mod} is the name of the model object.
 }
 \description{
-\code{bayes()} fits a Bayesian cognitive model, updating beliefs about discrete-event probabilities from  event frequencies, \code{bayes_beta()} is for binomial events, \code{bayes_dirichlet()} is for categorical/multinomial events.
+\code{bayes()} fits a Bayesian cognitive model, updating beliefs about discrete-event probabilities from event frequencies, \code{bayes_beta()} is for binomial events, \code{bayes_dirichlet()} is for categorical/multinomial events.
 }
 \details{
 Given the formula \code{y ~ a} the model predicts beliefs about event "a" occurring, but given \code{y ~ a + b} it predicts beliefs about events "a" and "b" occurring. If "a" and "b" are complementary the predictions will be complements, the difference is that
@@ -67,8 +67,7 @@ D <- data.frame(
 M <- bayes(y ~ a + b, D, fix="start")          # fixed par. to start values
 predict(M)                                     # predict posterior means
 anova(M)                                       # anova-like table
-summary(M)                                     # summarize
-M$MSE()                                        # mean-squared error   
+MSE(M)                                         # mean-squared error   
 
 ### Different predictions
 # ---------------------------------------
@@ -76,7 +75,7 @@ predict(M, type = "mean")                      # predict posterior mean
 predict(M, type = "max")                       #  --"--  maximum posterior
 predict(M, type = "sd")                        #  --"--  posterior SD
 predict(M, type = "posteriorpar")              #  --"--  posterior hyper-par.
-predict(M, type = "draws", ndraws = 3)         #  --"--  3 draws from posterior
+predict(M, type = "draws", ndraws = 3)         #  --"--  3 draws from posterior      
 
 ### Ways to formulate the model parameter
 # ---------------------------------------
@@ -88,9 +87,9 @@ bayes(~a,   D, fix = "start")                    # -- (same) --
 
 
 ### Parameter fitting
----------------------
+# ---------------------------------------
 # Use a response variable, y, to which we fit parameter
-bayes(y ~ a + b, D, fix = "start")               # "start" fixes all par., fit none 
+bayes(y ~ a + b, D, fix = "start")              # "start" fixes all par., fit none 
 bayes(y ~ a + b, D, fix = list(delta=1))         # fix delta, fit priors 
 bayes(y ~ a + b, D, fix = list(a=1, b=1))        # fix priors, fit delta 
 bayes(y ~ a + b, D, fix = list(delta=1, a=1))    # fix delta & prior on "a"
@@ -98,17 +97,17 @@ bayes(y ~ a + b, D, list(delta=1, b=1))          # fix delta & prior on "b"
 
 
 ### Parameter meanings
-------------------------
+# ---------------------------------------
 # delta parameter
 bayes(y ~ a, D, c(delta = 0))                    # delta=0 -> no learning
 bayes(y ~ a, D, c(delta = 0.1))                  # 0.1 -> slow learning
 bayes(y ~ a, D, c(delta = 9))                    # 9   -> fast learning
 
 # prior parameter
-bayes(y ~ a, D, c(a=1.5, b=0.5))                 # prior belief: "a" more likely
-bayes(y ~ a, D, c(priorpar = c(1.5, 0.5)))       # -- (same) --
-bayes(y ~ a, D, c(a = 0.1, b=0.9))               # prior belief: "b" more likely
-bayes(y ~ a, D, c(priorpar = c(0.1, 1.9)))       # -- (same) --
+bayes(y ~ a + b, D, c(a=1.5, b=0.5))             # prior belief: "a" more likely
+bayes(y ~ a + b, D, list(priorpar=c(1.5, 0.5)))  # -- (same) --
+bayes(y ~ a + b, D, c(a = 0.1, b=1.9))           # prior belief: "b" more likely
+bayes(y ~ a + b, D, list(priorpar = c(0.1, 1.9)))   # -- (same) --
 
 }
 \references{

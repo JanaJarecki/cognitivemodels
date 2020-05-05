@@ -11,7 +11,16 @@ using namespace Rcpp;
   // single-threaded version of code
 #endif*/
 
-//' Exemplar-based prediction computation
+
+// TODO outsosurce the distance function in the ebm.cpp script
+// @body using the below lines of code in the ebm_cpp function
+/*double dist_euclidean(Rcpp::NumericVector x; Rcpp::NumericVector y; Rcpp::NumericVector w, double r) {
+  for (int i = 0; i < x.length(); i++) {
+    res += w[i] * pow( fabs(x[i] - y[i]), r);
+  } 
+}*/
+
+//' Computes Predictions for the Exemplar-based Models (GCM, EBM)
 //' 
 //' @param criterion numeric vector with experienced criterion
 //' @param features numeric matrix with feature criterion
@@ -25,13 +34,8 @@ using namespace Rcpp;
 //' @param firstOutTrial integer first trial of output, starting the predictions later
 //' @examples
 //' # none
+//'
 //' @export
-/* TODO: outsosurce the distance function
-double dist_euclidean(Rcpp::NumericVector x; Rcpp::NumericVector y; Rcpp::NumericVector w, double r) {
-  for (int i = 0; i < x.length(); i++) {
-    res += w[i] * pow( fabs(x[i] - y[i]), r);
-  } 
-}*/
 // [[Rcpp::export]]
 Rcpp::NumericVector ebm_cpp(
   Rcpp::NumericVector criterion,
@@ -55,7 +59,7 @@ Rcpp::NumericVector ebm_cpp(
   Rcpp::NumericVector res(ntrials);
 
   int i = 0; //a counter that starts at 0
-  res[i] = (max(criterion) - min(criterion)) / 2.0; //initialize first result to NA
+  res[i] = (max(criterion) + min(criterion)) / (NumericVector::is_na(b[0]) ? 2.0 : max(criterion) * (max(criterion) + 1)); //initialize first result when no exemplar has been seen, depending on the type
 
   firstOutTrial = (firstOutTrial == 1) ? firstOutTrial : firstOutTrial - 1;
   i = (firstOutTrial == 1) ? 1 : 0; //start at 1 if we predict all trials, otherweise at 0

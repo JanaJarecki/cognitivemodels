@@ -1,3 +1,13 @@
+# ==========================================================================
+# Package: Cognitivemodels
+# File: _init.R
+# Author: Jana B. Jarecki
+# ==========================================================================
+
+# ==========================================================================
+# Helper file to initialize stuff
+# ==========================================================================
+
 #' @details
 #' The following cogniitve models are part of this packge:
 #' * baseline - constant or 1/N choice models (as sanity check)

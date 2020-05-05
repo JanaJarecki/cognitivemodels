@@ -2,7 +2,6 @@
 # Package: Cogscimodels
 # File zzz.R
 # Author: Jana B. Jarecki
-# Changed: 2019-12-13
 # ==========================================================================
 
 .onUnload <- function (libpath) {

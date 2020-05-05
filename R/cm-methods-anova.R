@@ -1,3 +1,14 @@
+# ==========================================================================
+# Package: Cognitivemodels
+# File: cm-methods-anova.R
+# Author: Jana B. Jarecki
+# ==========================================================================
+
+# ==========================================================================
+# Method for Cognitive Model
+# ==========================================================================
+
+
 #' Analysis of Deviance for Cogscimodel Fits
 #' 
 #' `anova` returns an analysis of deviance table for one or more fitted cognitive models
@@ -7,7 +18,7 @@
 #' @param object,... Objects of class \code{cm}, typically the result of a call to one fo the models. (Or a list of \code{objects} for the \code{"cogscimodellist"} method.)
 #' @return An anova-style table
 #' @examples
-#' None yet.
+#' # None yet.
 #' @export
 anova.cm <- function(object, ...) {
   ## check for multiple objects, this is like in anova.glm
@@ -104,7 +115,7 @@ anova.cogscimodellist <- function(models, model.names = NULL) {
   tab <- data.frame(npar = npar,
                     AIC = aic,
                     `wAIC` = cognitiveutils::akaike_weight(aic),
-                    BIC = vapply(models, BIC, 1), #  "       "
+                    BIC = vapply(models, stats::BIC, 1), #  "       "
                     logLik = llk,
                     deviance = -2*llk,
                     Chisq = NA,

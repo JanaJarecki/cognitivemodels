@@ -1,4 +1,4 @@
-#include <RcppArmadillo.h>
+/*#include <RcppArmadillo.h>
 // [[Rcpp::depends(RcppArmadillo)]]
 using namespace Rcpp;
 using namespace arma;
@@ -27,10 +27,8 @@ using namespace arma;
 // Yes: terminal reward of maximum outcome x timehorizon per option
 // No: reward of the expexted value x timehorizon
 
-
-// Makes the indicator matrix lexicographic
+// Makes the indicator matrix lexicographic 
 // sets all columns right to a row containing a 1 to 0
-// [[Rcpp::export]]
 NumericMatrix lexicographic(NumericMatrix I) {
   int i = 1;
   for(unsigned int r = 0; r < I.nrow(); ++r) {
@@ -45,7 +43,6 @@ NumericMatrix lexicographic(NumericMatrix I) {
 
 // Indicator function for the nodes in the tree
 // returns a matrix ntrials x depth of tree + 1
-// [[Rcpp::export]]
 NumericMatrix indicators(arma::mat features,
       NumericVector splitcriteria) {
 
@@ -136,4 +133,4 @@ NumericMatrix indicators(arma::mat features,
 
 //   // return the new matrix
 //   return v;
-// }
+// }*/

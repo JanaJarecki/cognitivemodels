@@ -2,22 +2,21 @@
 % Please edit documentation in R/RcppExports.R
 \name{shortfall_cpp}
 \alias{shortfall_cpp}
-\title{Exemplar-based prediction computation}
+\title{Computes Predictions in the Shortfall Model}
 \usage{
 shortfall_cpp(x, p, a, beta, delta)
 }
 \arguments{
-\item{x}{numeric matrix with outcomes}
+\item{x}{Numeric matrix, the outcomes}
 
-\item{p}{numeric matrix with probabilities}
+\item{p}{Numeric matrix, the probabilities}
 
-\item{beta}{parameter}
+\item{a}{Numeric vector, the aspiration levels}
 
-\item{delta}{parameter
-'}
+\item{beta}{Model parameter}
 
-\item{w}{numeric vector with aspiration leel}
+\item{delta}{Model parameter}
 }
 \description{
-Exemplar-based prediction computation
+Computes Predictions in the Shortfall Model
 }

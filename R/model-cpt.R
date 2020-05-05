@@ -1,3 +1,13 @@
+# ==========================================================================
+# Package: Cognitivemodels
+# File: model-cpt.R
+# Author: Jana B. Jarecki
+# ==========================================================================
+
+# ==========================================================================
+# Cognitive Model
+# ==========================================================================
+
 #' Kahneman & Tversky's (1992) cumulative prospect theory model
 #' 
 #' @importFrom stringr str_extract
@@ -17,7 +27,7 @@
 #' @author Jana B. Jarecki, \email{jj@janajarecki.com}
 #' @details Fits cumulative prospect theory.
 #' @examples
-#' ## Tversky, A., & Kahneman, D. (1992). Advances in prospect theory: cumulative representation of uncertainty. Journal of Risk and Uncertainty, 5, 297–323. doi:10.1007/BF00122574
+#' ## From Tversky, A., & Kahneman, D. (1992).
 # p. 313
 #' dt <- data.frame(
 #'   x1 = c(100, -100),

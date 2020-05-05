@@ -73,7 +73,8 @@ D <- data.frame(f1 = c(0,0,1,1,2,2,0,1,2),     # feature 1
                 cl = c(0,1,0,0,1,0,NA,NA,NA),  # criterion/class
                  y = c(0,0,0,1,1,1,0,1,1))     # participant's responses
 
-M <- gcm(y ~ f1+f2, class= ~cl, D, fix="start") # GCM, par. fixed to start val.
+M <- gcm(y ~ f1+f2, class= ~cl, D, fix="start",
+         choicerule = "none")                  # GCM, par. fixed to start val.
 
 predict(M)                                     # predict 'pred_f', pr(cl=1 | features, trial)
 M$predict()                                    # -- (same) --
@@ -89,21 +90,29 @@ M$coef()                                       # 0 free parameters
 
 ### Specify models
 # -------------------------------
-gcm(y ~ f1 + f2, class = ~cl, D)                    # GCM (has bias parameter)
-ebm(y~f1+f2, criterion=~cl, D, mode="discrete")     # -- (same) --
-ebmcj(y ~ f1 + f2, criterion = ~cl, D)              # Judgment EBM  (no bias par.)
+gcm(y ~ f1 + f2, class = ~cl, D, 
+    choicerule = "none")                          # GCM (has bias parameter)
+ebm(y~f1+f2, criterion=~cl, D, mode="discrete",
+    choicerule = "none")                          # -- (same) --
+ebm_j(y ~ f1 + f2, criterion = ~cl, D)              # Judgment EBM  (no bias par.)
 ebm(y~f1+f2, criterion=~cl, D, mode="continuous")   # -- (same) --
 
 
 ### Specify parameter estimation
 # -------------------------------
-gcm(y~f1+f2, ~cl, D, fix="start")               # fix all par to start val. 
-gcm(y~f1+f2, ~cl, D, fix=list(b0=0.5, b1=0.5))  # fix 'bias' par. to 0.5, fit 5 par
-gcm(y~f1+f2, ~cl, D, fix=list(f1=0.9,f2=0.1))   # fix attention 'f1' to 90 \%  f1 & fit 5 par
-gcm(y~f1+f2, ~cl, D, fix=list(q=2, r=2))        # fix 'q', 'q' to 2 & fit 5 par
-gcm(y~f1+f2, ~cl, D, fix=list(q=1, r=1))        # fix 'q', 'r' to 1 & fit 5 par
-gcm(y~f1+f2, ~cl, D, fix=list(lambda=2))        # fix 'lambda' to 2 & fit 6 par
-gcmcj(y ~ f1 + f2, D)
+gcm(y~f1+f2, ~cl, D, fix="start", 
+    choicerule = "none")                        # fix all par to start val. 
+gcm(y~f1+f2, ~cl, D, fix=list(b0=0.5, b1=0.5),
+     choicerule = "none")                       # fix 'bias' par. to 0.5, fit 5 par
+gcm(y~f1+f2, ~cl, D, fix=list(f1=0.9,f2=0.1),
+     choicerule = "none")                       # fix attention 'f1' to 90 \%  f1 & fit 5 par
+gcm(y~f1+f2, ~cl, D, fix=list(q=2, r=2),
+     choicerule = "none")                      # fix 'q', 'q' to 2 & fit 5 par
+gcm(y~f1+f2, ~cl, D, fix=list(q=1, r=1),
+     choicerule = "none")                      # fix 'q', 'r' to 1 & fit 5 par
+gcm(y~f1+f2, ~cl, D, fix=list(lambda=2),
+     choicerule = "none")                      # fix 'lambda' to 2 & fit 6 par
+ebm_j(y ~ f1 + f2, D)
 
 mem(y ~ f1 + f2, D)
 

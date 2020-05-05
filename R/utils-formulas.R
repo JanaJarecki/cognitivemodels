@@ -1,8 +1,7 @@
 # ==========================================================================
 # Package: Cognitivemodels
-# File: utils-formula.R
+# File: utils-formulas.R
 # Author: Jana B. Jarecki
-# Changed: 2019-12-13
 # ==========================================================================
 
 # ==========================================================================
@@ -101,19 +100,20 @@ chr_as_rhs <- function(x) {
 #' In gambles from description, add I(1-x) to the last term
 #' 
 #' @param formula Objects of class "formula"
+#' @param n A number, use only each nth entries of \code{formula}
+#' @param nmax A number, only rhs of \code{formula} <= nmax is changed
 #' @return An object of class "formula" with the last formula terms added
 #' @noRd
-.add_missing_prob <- function(formula) {
+.add_missing_prob <- function(formula, n = 2, nmax = Inf) {
   formula <- as.Formula(formula)
   # Apply it to each right-hand side
   if (length(formula)[2] > 1) {
-    updated <- lapply(1:length(formula)[2], function(i) .add_missing_prob(formula(formula, lhs = i == 1, rhs = i, drop = FALSE)))
+    updated <- lapply(1:length(formula)[2], function(i) .add_missing_prob(formula(formula, lhs = i == 1, rhs = i, drop = FALSE), n = n, nmax = nmax))
     return(as.formula(gsub("\\| \\~", "\\| ", paste(updated, collapse = " | "))))
   }
-  
-  if (.rhs_length(formula) %% 2 == 0) { return(formula) }
+  if (.rhs_length(formula) %% 2 == 0 || .rhs_length(formula) > nmax) { return(formula) }
   vars <- .rhs_varnames(formula)[[1]]
-  term <- as.formula(paste0("~ . + I(1-", paste0(vars[seq(2, length(vars), 2)], collapse = "-"), ")"))
+  term <- as.formula(paste0("~ . + I(1-", paste0(vars[seq(n, length(vars), n)], collapse = "-"), ")"))
   return(update(formula, term))
 }
 

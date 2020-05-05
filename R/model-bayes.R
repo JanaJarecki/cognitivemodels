@@ -1,14 +1,24 @@
+# ==========================================================================
+# Package: Cognitivemodels
+# File: model-bayes.R
+# Author: Jana B. Jarecki
+# ==========================================================================
+
+# ==========================================================================
+# Cognitive Model
+# ==========================================================================
+
 #' Bayesian Inference Cognitive Model
 #' 
-#' \code{bayes()} fits a Bayesian cognitive model, updating beliefs about discrete-event probabilities from  event frequencies, \code{bayes_beta()} is for binomial events, \code{bayes_dirichlet()} is for categorical/multinomial events.
+#' \code{bayes()} fits a Bayesian cognitive model, updating beliefs about discrete-event probabilities from event frequencies, \code{bayes_beta()} is for binomial events, \code{bayes_dirichlet()} is for categorical/multinomial events.
 #' 
 #' @useDynLib cognitivemodels, .registration = TRUE
 #' @importFrom gtools rdirichlet
 #' 
 #' @inheritParams Cm
-#' @param formula A formula specifying reported beliefs ~ event + event ... (e.g., \code{y ~ coin_heads + coin_tails}).
+#' @param formula A formula, the reported beliefs ~ event + event ... (e.g., \code{y ~ coin_heads + coin_tails}).
 #' @param format A string (default \code{"raw"}) with the data format. Can be \code{"raw"}, \code{"cummulative"}, \code{"count"}, where \code{"raw"} means data are occurrence indicators (1=event, 0=no event); \code{"cumulative"} means data are cumulative event frequencies (1,2,2,...), and code{"count"} means data are non-ordered event frequencies (10,2,5,...).
-#' @param type (optional) A string, \code{"beta-binomial"} or \code{"dirichlet-multinomial"}, specifying the type of inference. Can be abbreviated. Will be inferred if missing.
+#' @param type (optional) A string, the type of inference, \code{"beta-binomial"} or \code{"dirichlet-multinomial"}. Can be abbreviated. Will be inferred, if missing.
 #' @param ... other arguments from other functions, currently ignored.
 #' 
 #' @return An model object (similar to lm-objects) of class "bayes". It can be viewed with \code{summary(mod)}, where \code{mod} is the name of the model object.
@@ -42,8 +52,7 @@
 #' M <- bayes(y ~ a + b, D, fix="start")          # fixed par. to start values
 #' predict(M)                                     # predict posterior means
 #' anova(M)                                       # anova-like table
-#' summary(M)                                     # summarize
-#' M$MSE()                                        # mean-squared error   
+#' MSE(M)                                         # mean-squared error   
 #' 
 #' ### Different predictions
 #' # ---------------------------------------
@@ -51,8 +60,7 @@
 #' predict(M, type = "max")                       #  --"--  maximum posterior
 #' predict(M, type = "sd")                        #  --"--  posterior SD
 #' predict(M, type = "posteriorpar")              #  --"--  posterior hyper-par.
-#' predict(M, type = "draws", ndraws = 3)         #  --"--  3 draws from posterior
-       
+#' predict(M, type = "draws", ndraws = 3)         #  --"--  3 draws from posterior      
 #' 
 #' ### Ways to formulate the model parameter
 #' # ---------------------------------------
@@ -61,13 +69,12 @@
 #' bayes(~a+b, D, list(delta=1, a=1, b=1))          # -- (same) --
 #' bayes(~a+b, D, fix = "start")                    # fix par. to start values
 #' bayes(~a,   D, fix = "start")                    # -- (same) --
-
 #' 
 #' 
 #' ### Parameter fitting
-#' ---------------------
+#' # ---------------------------------------
 #' # Use a response variable, y, to which we fit parameter
-#' bayes(y ~ a + b, D, fix = "start")               # "start" fixes all par., fit none 
+#' bayes(y ~ a + b, D, fix = "start")              # "start" fixes all par., fit none 
 #' bayes(y ~ a + b, D, fix = list(delta=1))         # fix delta, fit priors 
 #' bayes(y ~ a + b, D, fix = list(a=1, b=1))        # fix priors, fit delta 
 #' bayes(y ~ a + b, D, fix = list(delta=1, a=1))    # fix delta & prior on "a"
@@ -75,17 +82,17 @@
 #' 
 #' 
 #' ### Parameter meanings
-#' ------------------------
+#' # ---------------------------------------
 #' # delta parameter
 #' bayes(y ~ a, D, c(delta = 0))                    # delta=0 -> no learning
 #' bayes(y ~ a, D, c(delta = 0.1))                  # 0.1 -> slow learning
 #' bayes(y ~ a, D, c(delta = 9))                    # 9   -> fast learning
 #' 
 #' # prior parameter
-#' bayes(y ~ a, D, c(a=1.5, b=0.5))                 # prior belief: "a" more likely
-#' bayes(y ~ a, D, c(priorpar = c(1.5, 0.5)))       # -- (same) --
-#' bayes(y ~ a, D, c(a = 0.1, b=0.9))               # prior belief: "b" more likely
-#' bayes(y ~ a, D, c(priorpar = c(0.1, 1.9)))       # -- (same) --
+#' bayes(y ~ a + b, D, c(a=1.5, b=0.5))             # prior belief: "a" more likely
+#' bayes(y ~ a + b, D, list(priorpar=c(1.5, 0.5)))  # -- (same) --
+#' bayes(y ~ a + b, D, c(a = 0.1, b=1.9))           # prior belief: "b" more likely
+#' bayes(y ~ a + b, D, list(priorpar = c(0.1, 1.9)))   # -- (same) --
 #' 
 #' @export
 bayes <- function(formula, data = data.frame(), fix = list(), format = c("raw", "count", "cumulative"), type = NULL, discount = 0L, options = list(), ...) {
@@ -124,12 +131,12 @@ Bayes <- R6Class("Bayes",
       self$format <- match.arg(format)
       self$priordist <- self$infer_priordist(type = type, f=formula)
       self$init_npred(f=formula)
+      formula <- private$sanitize_formula(f = formula)
       fix <- self$reformulate_fix(fix = fix, f = formula)
       if (is.null(options$fit_measure)) options$fit_measure <- "mse"
-      if (grepl("^l", options$fit_measure) & options$fit==TRUE) {
+      if (grepl("^l", options$fit_measure) & options$fit == TRUE) {
         stop("Sorry, for bayes(), log likelihood is not yet implemented as fit measure.")
       }
-      formula <- self$sanitize_formula(f = formula)
       super$initialize(
         title = "Bayesian model",
         formula = formula,
@@ -142,14 +149,14 @@ Bayes <- R6Class("Bayes",
         options = c(options, list(solver = c("solnp"))),
         ...)
     },
+    #' @export
     make_prediction = function(type, input, s, ndraws = 3, ...) {
       type <- match.arg(type, c("response", "mean", "max", "sd", "draws", "posteriorpar"))
-      if (type=="response") type <- "mean"
+      if (type == "response") { type <- "mean" }
       par <- self$get_par()
-      na <- self$natt()[1]
+      na <- self$natt[1]
       no <- self$nobs    
-      if (self$format != "count") {
-        # shift input by 1 lag
+      if (self$format != "count") { # shift input by 1 lag
         input <- rbind(0L, input[-nrow(input), , drop = FALSE])
       }
       # Compute posterior parameter
@@ -171,18 +178,12 @@ Bayes <- R6Class("Bayes",
       }
     },
     init_npred = function(f) {
-      f <- as.Formula(f)
-      self$npred <- vapply(1:length(f)[2], function(i) length(attr(terms(formula(f, lhs=0, rhs=i)), "term.labels")), 1L)
-    },
-    make_prednames = function() {
-      nn <- private$get_parnames()[-1]
-      natt <- self$natt()
-      npred <- self$npred
-      tmp <- unlist(lapply(1:self$nstim, function(i) {
-        if (npred[i] == 1) { c(TRUE, FALSE) } else { rep(TRUE, npred[i]) } }))
-      return(nn[tmp])
+      self$npred <- ifelse(.rhs_length(f) == 2, 1, .rhs_length(f))
     },
     reformulate_fix = function(fix, f) {
+      if (!is.list(fix) & any(grepl("^priorpar[0-9]", names(fix)))) {
+          stop("'fix' must be a list, not a ", class(fix), ".", call. = FALSE)
+        }
       if(any(grepl("^priorpar$", names(fix)))) {
         return(c(
           fix[-which(grepl("^priorpar$", names(fix)))],
@@ -191,36 +192,12 @@ Bayes <- R6Class("Bayes",
         return(fix)
       }
     },
-    get_input = function(f = self$formula, d) {
-      if (self$format == "raw") {
-        return(self$count_raw_data(super$get_input(f=f,d=d)))
-      } else {
-        return(super$get_input(f=f,d=d))
-      }
-    },
     update_priorpar = function(data, delta, priorpar) {
       dist = self$priordist
       priorpar <- matrix(priorpar, ncol = ncol(data), nrow = nrow(data), byrow = TRUE)
       if (dist == "beta-binomial" | dist == "dirichlet-multinomial") {
         return(priorpar + delta * data)
       }
-    },
-    sanitize_formula = function(f) {
-      f <- as.Formula(f)
-      fs <- lapply(seq.int(length(f)[2]), function(x) formula(f, lhs=0, rhs=x, drop = FALSE))
-      trms <- lapply(fs, function(x) attr(terms(x), "term.labels"))
-      fs <- lapply(1:length(trms), function(i) {
-        x <- trms[[i]]
-        if (length(x) == 1) {
-          if (self$format != "raw") {
-            stop('"formula" needs > 1 right-hand side variables (unless format is "raw"), but "formula" has only 1 RHS (', .abbrDeparse(f), "). -> Add another variable to the formula to specify the counts of the other possible event(s), like: y ~ count_0 + count_1.")
-          }
-          update(fs[[i]], as.formula(paste0("~ . + I(1-", x, ")")))
-          } else {
-            fs[[i]]
-          }
-        })
-      return(update(f, as.formula(paste("", paste(fs, collapse = " | ")))))
     },
     posterior_draw = function(t, par, ndraws) {
       dist <- self$priordist
@@ -261,6 +238,7 @@ Bayes <- R6Class("Bayes",
       }
     },
     count_raw_data = function(data) {
+      if (!length(data)) return(NULL)
       counts <- apply(data, 3,
         function(p) {
           apply(p, 2, cumsum)
@@ -287,12 +265,41 @@ Bayes <- R6Class("Bayes",
       p_par <- setNames(lapply(1:sum(.rhs_length(f)), function(.) c(0.001, self$natt[1], 1L, 1L)), unlist(.rhs_varnames(f)))
       #Note: don't change the order, the d_par needs to come first
       return(do.call(make_parspace, c(d_par, p_par)))
+    }
+  ),
+
+  # Private methods
+  private = list(
+    get_input = function(f = self$formula, d) {
+      if (self$format == "raw") {
+        return(self$count_raw_data(super$get_input(f=f,d=d)))
+      } else {
+        return(super$get_input(f=f,d=d))
+      }
+    },
+    sanitize_formula = function(f) {
+      if (self$format == "raw") {
+        return(.add_missing_prob(f, 1, 1))
+      } else {
+        if (any(.rhs_length(f) == 1)) {
+            stop("'formula' needs > 1 right-hand side variables (unless format = 'raw'), but has only 1 RHS (", .abbrDeparse(f), ").\n  * Did you accidentaly forget to write the second option into the 'formula'? (e.g., y ~ count_0 + count_1)\n  * Do you wan tto use 'format = raw'?")
+          }
+        return(f)
+      }
+    },
+    make_prednames = function() {
+      nn <- private$get_parnames()[-1]
+      natt <- self$natt[1]
+      npred <- self$npred
+      tmp <- unlist(lapply(1:self$nstim, function(i) {
+        if (npred[i] == 1) { c(TRUE, FALSE) } else { rep(TRUE, npred[i]) } }))
+      return(nn[tmp])
     },
     make_constraints = function() {
       # make constraint for the priors
-      # note: priors depend on the type of prior distribution
-      # (beta distribution, dirichlet distribution, etc.)
-      # therefore we make prior parameter dynamically
+      #   note: priors depend on the type of prior distribution
+      #   (beta distribution, dirichlet distribution, etc.)
+      #   therefore we make prior parameter dynamically
       parnames <- names(self$par)
       C <- NULL
       for (p in .rhs_varnames(self$formula)) {
@@ -300,15 +307,15 @@ Bayes <- R6Class("Bayes",
           L_constraint(
             L = as.integer(parnames %in% p),
             dir = "==",
-            rhs = length(p))
+            rhs = length(p),
+            names = parnames)
         )
       }
-      return(.combine_constraints(C, super$make_constraints))
+      return(C)
     },
     check_input = function() {
       # This function is called automatically at the end of initialize()
       # Write code for checking inputs (= data of the RHS of formula) below
-
       # -----------------
       super$check_input() # leave this at the end, it runs background checks
     }

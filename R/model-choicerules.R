@@ -1,3 +1,13 @@
+# ==========================================================================
+# Package: Cognitivemodels
+# File: model-choicerules.R
+# Author: Jana B. Jarecki
+# ==========================================================================
+
+# ==========================================================================
+# Cognitive Model
+# ==========================================================================
+
 #' Models for Choice Rules (decision rules for action selection)
 #' 
 #' \code{softmax()} soft-maximizes, \code{argmax()} maximizes deterministically, \code{epsilon_greedy()} is epsilon-greedy, \code{epsilon()} is probabilistic-epsilon, \code{luce()} selects proportionally (Luce's rule).
@@ -39,7 +49,7 @@
 #' 
 #' @examples
 #' # Make some fake data
-#' D <- data.frame(a = c(.1,.4,.5),       # value of option A
+#' D <- data.frame(a = c(.3,.4,.5),       # value of option A
 #'                 b = c(.7,.6,.5),       # value of option B
 #'                 y = c(0,1,1))          # respondent's choice (0=A, 1=B)
 #' 
@@ -74,8 +84,9 @@ softmax <- function(formula, data, fix = list(), options = NULL) {
    return(do.call(what = Choicerule$new, args = .args, envir = parent.frame()))
 }
 
-
-#' @rdname choicerules#' 
+#' Models for Choice Rules (decision rules for action selection)
+#' 
+#' @rdname choicerules
 #' @family Choicerules for cognitive models
 #' @details
 #' \code{epsilon_greedy()} picks the best action with probability \eqn{1 - \epsilon}, and with \eqn{\epsilon} it picks randomly from all actions, including the best.
@@ -89,9 +100,10 @@ epsilon_greedy <- function(formula, data, fix = list(), options = NULL) {
    return(do.call(what = Choicerule$new, args = .args, envir = parent.frame()))
 }
 
-
+#' Models for Choice Rules (decision rules for action selection)
+#' 
 #' @inheritParams softmax
-#' @rdname choicerules#' 
+#' @rdname choicerules
 #' @family Choicerules for cognitive models
 #' @details
 #' \code{epsilon()} picks action \eqn{i} with probability \eqn{(1 - \epsilon)*p(i)} and with \eqn{\epsilon} it picks randomly from all actions. For \eqn{\epsilon = 0} it gives \eqn{p(i)}, that is the  original probabilistic policy.
@@ -105,6 +117,8 @@ epsilon <- function(formula, data, fix = list(), options = NULL) {
    return(do.call(what = Choicerule$new, args = .args, envir = parent.frame()))
 }
 
+#' Models for Choice Rules (decision rules for action selection)
+#' 
 #' @rdname choicerules
 #' @family Choicerules for cognitive models
 #' @details
@@ -118,12 +132,15 @@ luce <- function(formula, data, ...) {
    return(do.call(what = Choicerule$new, args = .args, envir = parent.frame()))
 }
 
+
+#' Models for Choice Rules (decision rules for action selection)
+#' 
 #' @rdname choicerules
 #' @family Choicerules for cognitive models
 #' @details
 #' \code{argmax()} picks the highest-values action with probability 1, and in case of ties it picks equi-probable
 #' @examples
-#' argmx(y ~ a | b, D)                    # Argmax choice rule
+#' argmax(y ~ a | b, D)                    # Argmax choice rule
 #' @export
 argmax <- function(formula, data, ...) {
   .args <- as.list(match.call()[-1])

@@ -1,3 +1,14 @@
+# ==========================================================================
+# Package: Cognitivemodels
+# File: model-threshold.R
+# Author: Jana B. Jarecki
+# ==========================================================================
+
+# ==========================================================================
+# Cognitive Model
+# ==========================================================================
+
+
 #' Threshold Model
 #' 
 #' \code{treshold()} fits a threshold model with the threshold as free parameter, \code{treshold_c()} predicts the distance to a threshold, \code{treshold_d()} predicts a discrete response given the distance to a threshold. 

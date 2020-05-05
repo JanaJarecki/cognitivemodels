@@ -1,4 +1,4 @@
-// ebm.cpp
+// shortfall.cpp
 #include <Rcpp.h>
 using namespace Rcpp;
 // This fixed compiler bugs on mac os
@@ -11,14 +11,14 @@ using namespace Rcpp;
   // single-threaded version of code
 #endif
 
-//' Exemplar-based prediction computation
+//' Computes Predictions in the Shortfall Model
 //' 
-//' @param x numeric matrix with outcomes
-//' @param p numeric matrix with probabilities
-//' @param w numeric vector with aspiration leel
-//' @param beta parameter
-//' @param delta parameter
-//' '
+//' @param x Numeric matrix, the outcomes
+//' @param p Numeric matrix, the probabilities
+//' @param a Numeric vector, the aspiration levels
+//' @param beta Model parameter
+//' @param delta Model parameter
+//'
 //' @export
 // [[Rcpp::export]]
 Rcpp::NumericVector shortfall_cpp(

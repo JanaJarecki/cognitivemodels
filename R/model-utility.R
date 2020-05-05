@@ -1,15 +1,24 @@
+# ==========================================================================
+# Package: Cognitivemodels
+# File: model-utility.R
+# Author: Jana B. Jarecki
+# ==========================================================================
+
+# ==========================================================================
+# Cognitive Model
+# ==========================================================================
+
+
 #' Utility Function Models
 #' 
-#' \code{utility()} fits utility models, e.g., \code{utility_pow()} fits a power utility
+#' \code{utility_pow_c(), utility_pow_d} fits a power utility model to data (continuous and discrete responses, resp.). \code{utility()} fits utility models.
 #' 
 #' @rdname utility
 #' 
-#' @inheritParams Cm
 #' @param formula A formula specifying responses ~ values (e.g, \code{y ~ x1 | x2}).
-#' @param type A string. Currently only \code{"power"} for power utility.
-#' 
+#' @param type A string, which utility function to use; currently available is only \code{"power"} for power utility.
+#' @inheritParams Cm
 #' @return A model object (similar to lm-objects) of class "utility", which can be viewed with \code{summary(M)} or \code{anova(M)} and predictions can be made with \code{predict(M)}.
-#' 
 #' @section Parameter Space:
 #' \tabular{lcrcllr}{\verb{   } \tab \strong{Name} \tab \verb{    }\strong{LB} \tab  \strong{-} \tab \strong{UB}\verb{    } \tab \strong{Description} \tab \strong{Start Value}\cr
 #' 
@@ -29,9 +38,20 @@
 #' #  No examples yet
 #' 
 #' @export
-utility_pow <- function(formula, data, fix = list(), choicerule = NULL, mode = NULL, discount = 0, options = list(), ...) {
+utility_pow_d <- function(formula, data, choicerule, fix = list(), discount = 0, options = list(), ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args[["type"]] <- "power"
+  .args[["mode"]] <- "discrete"
+  return(do.call(what = Utility$new, args = .args, envir = parent.frame()))
+}
+
+#' Utility Function Models
+#' @rdname utility 
+#' @export
+utility_pow_c <- function(formula, data, fix = list(), discount = 0, options = list(), ...) {
+  .args <- as.list(rlang::call_standardise(match.call())[-1])
+  .args[["type"]] <- "power"
+  .args[["mode"]] <- "continuous"
   return(do.call(what = Utility$new, args = .args, envir = parent.frame()))
 }
 
@@ -52,25 +72,23 @@ utility_exp <- function(formula, data, fix = list(), choicerule = NULL, mode = N
 #' @rdname utility
 #' 
 #' @export
-utility <- function(formula, data, type = c("power"), fix = list(), choicerule = NULL, mode = NULL, discount = 0, options = list(), ...) {
+utility <- function(formula, data = data.frame(), type = c("power"), fix = list(), choicerule = NULL, mode = NULL, discount = 0, options = list(), ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
-  return(do.call(what = Shortfall$new, args = .args, envir = parent.frame()))
+  return(do.call(what = Utility$new, args = .args, envir = parent.frame()))
 }
+
 
 Utility <- R6Class("utility",
   inherit = Cm,
   public = list(
     type = NULL,
-    initialize = function(formula, data, type = c("power", "exponential"), fix = list(1), choicerule = "none", mode = c("continuous", "discrete"), discount = 0, options = list(), ...) {
+    initialize = function(formula, data = NULL, type = c("power", "exponential"), fix = list(1), choicerule = "none", mode = c("continuous", "discrete"), discount = 0, options = list(), ...) {
       self$type <- match.arg(type)
-      parspace <- self$make_parspace(
-        type = self$type,
-        input = super$get_input(f=formula, d=data))
       super$initialize(
         formula = formula,
         data = data,
         title = paste("Utility:", self$type),
-        parspace = parspace,
+        parspace = self$make_parspace(formula, data),
         choicerule = choicerule,
         mode = match.arg(mode),      
         fix = fix,
@@ -78,14 +96,16 @@ Utility <- R6Class("utility",
         options = options,
         ...)
     },
-    make_parspace = function(type, input) {
+    make_parspace = function(formula, data = NULL, type = self$type) {
       if (type == "power") {
-        parspace <- make_parspace(rp = c(-20, 20, 1, 1),
-                                  rn = c(-20, 20, 1, 1))
-        if (min(input) < 0L & max(input) > 0L) {
-          parspace[, "lb"] <- 0.0001
+        lb <- if (!length(data)) {
+          -20
+        } else {
+          i <- super$get_input(formula, data)
+          if (min(i) < 0L & max(i) > 0L) { 0.0001 } else { -20 }
         }
-        return(parspace)
+        return(make_parspace(rp = c(lb, 20, 1, 1),
+                             rn = c(lb, 20, 1, 1)))
       } else if (type == "exponential") {
         return(make_parspace(r = c(0.001, 20, 1, 1)))
       }
@@ -126,5 +146,13 @@ Utility <- R6Class("utility",
       }
       return(replace(res, res == -Inf, min(res[res>-Inf])-1))
     }
-    )
+    ),
+
+
+
+  private = list(
+    make_prednames = function() {
+      return(self$stimnames)
+    }
+  )
 )
