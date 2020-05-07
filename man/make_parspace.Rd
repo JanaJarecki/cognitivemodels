@@ -7,13 +7,13 @@
 make_parspace(...)
 }
 \arguments{
-\item{...}{Parameters and their ranges, e.g., \code{make_parspace(theta = c(ub=-1, lb=1, init=0, na=0), gamma = c(0,2,1,NA))}. See details and examples.#" 
+\item{...}{Parameters and their ranges, e.g., \code{make_parspace(theta = c(ub=-1, lb=1, init=0, na=0), gamma = c(0,2,1,NA))}. See details and examples.#"
 The general schema per parameter is a named vector \code{parametername = c(ub = #, lb = #, init = #, na = #)}
 \describe{
-   \item{\code{"lb"}}{Lower limit, smallest allowed value}
-   \item{\code{"ub"}}{Upper limit, highest allowed value}
-   \item{\code{"start"} (optional)}{Initial value for fitting}
-   \item{\code{"na"} (optional)}{Value the parameter takes if it should have no effect, can be \code{NA}}
+\item{\code{"lb"}}{Lower limit, smallest allowed value}
+\item{\code{"ub"}}{Upper limit, highest allowed value}
+\item{\code{"start"} (optional)}{Initial value for fitting}
+\item{\code{"na"} (optional)}{Value the parameter takes if it should have no effect, can be \code{NA}}
 }}
 }
 \value{
@@ -26,9 +26,13 @@ This function returns a n x 4 matrix with the parameter bounds, starting value, 
 \code{"lb"} and \code{"ub"} are the smallest and largest value allowed for the parameter, \code{"start"} is the initial value when fitting the parameter, \code{"na"} is an optional value the parameter takes if it should have no effect.
 
 To define a parameter \eqn{\alpha} with \eqn{0 \le \alpha \le 1} use one argument, \code{alpha = c(0,1)}. To define an additional parameter \eqn{\beta} with \eqn{2 \le \beta \le 9} use two arguments, \code{alpha = c(0,1), beta = c(2,9)}, and so forth. You can specify an initial value for the parameter used in fitting as third element of vectors.
-## Dynamically define new parameter "gamma" and "delta"
-## with the same definition (ub, lb, init, na)
+\subsection{Dynamically define new parameter "gamma" and "delta"}{
+}
+
+\subsection{with the same definition (ub, lb, init, na)}{
+
 def <- c(lb = 0, ub = 1, init = 0.5, na = 0)
 deflist <- list("gamma" = def, "delta" = def)
 do.call(make_parspace, deflist)
+}
 }

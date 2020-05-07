@@ -16,7 +16,7 @@ mem(formula, criterion, data, options = NULL, ...)
 ebm(formula, criterion, data, mode, fix = NULL, options = NULL, ...)
 }
 \arguments{
-\item{formula}{A formula specifying  participants' responses ~ stimulus 
+\item{formula}{A formula specifying  participants' responses ~ stimulus
 features (e.g., \code{y ~ f1 + f2}).}
 
 \item{class}{A formula specifying the class feedback (e.g., \code{~ cl}), note the "\code{~}". \code{NA} values are retained, assuming a partial feedback paradigm.}
@@ -27,7 +27,7 @@ features (e.g., \code{y ~ f1 + f2}).}
 }
 \value{
 An exemplar-based model; a model \code{M} can be viewed with
-  \code{summary(M)}, or \code{anova(M)}.
+\code{summary(M)}, or \code{anova(M)}.
 }
 \description{
 \code{ebm()} fits exemplar-based models, \code{gcm()} fits a generalized context model (Medin & Schaffer, 1978; Nosofsky, 1986), \code{ebmcj()} fits an exemplar-based judgment model (Juslin et al., 2003).
@@ -37,8 +37,8 @@ If \code{mode} is missing it will be inferred from the RHS of \code{criterion} o
 
 The model can predict new data (\code{predict(M, newdata = ....)}), and this is how it works:
 \itemize{
- \item{If \code{newdata}'s \code{criterion} has only \code{NA}s, the model predicts using the old data (the originally-supplied \code{data} argument) as exemplar-memory. Parameters are not re-fit.}
- \item{If \code{newdata}'s' \code{criterion} has also non-\code{NA}s, the model predicts the first new data row using the old data, but predictions for subsequent new data use also the criterion in new data. In other words, exemplar memory is \emph{extended} by exemplars in new data for which a criterion exists. Parameters are not re-fit.}
+\item{If \code{newdata}'s \code{criterion} has only \code{NA}s, the model predicts using the old data (the originally-supplied \code{data} argument) as exemplar-memory. Parameters are not re-fit.}
+\item{If \code{newdata}'s' \code{criterion} has also non-\code{NA}s, the model predicts the first new data row using the old data, but predictions for subsequent new data use also the criterion in new data. In other words, exemplar memory is \emph{extended} by exemplars in new data for which a criterion exists. Parameters are not re-fit.}
 }
 
 \code{ebm_j()} calls \link{ebm} with \code{mode = "continuous"}.
@@ -49,8 +49,8 @@ The model can predict new data (\code{predict(M, newdata = ....)}), and this is 
 }
 \section{Parameter Space}{
 
- \tabular{lrcllr}{\verb{   }
- \strong{Name} \tab \verb{   }\strong{LB} \tab  \strong{-} \tab \strong{UB}\verb{   } \tab \strong{Description} \tab \strong{Start Value} \cr\verb{   }
+\tabular{lrcllr}{\verb{   }
+\strong{Name} \tab \verb{   }\strong{LB} \tab  \strong{-} \tab \strong{UB}\verb{   } \tab \strong{Description} \tab \strong{Start Value} \cr\verb{   }
 \code{f1, f2} \tab 0 \tab-\tab 1 \tab Attention weights, sum to 1. Note: parameter names are equal to the LHS of \code{formula} \tab 1 / n features \cr\verb{   }
 \code{lambda} \tab 0.001 \tab-\tab 10 \tab Sensitivity, higher values increase the discriminability in the psychological space \tab 0.5 \cr\verb{   }
 \code{q} \tab 0 \tab-\tab 2 \tab Exponent in the distance metric, 1 yields city-block, 2 yields Euclidean metric \tab 1.5 \cr\verb{   }
@@ -61,7 +61,7 @@ The model can predict new data (\code{predict(M, newdata = ....)}), and this is 
 
 The \code{gcm()} and \code{ebm(mode = "discrete")} have as many response bias parameters as there are category labels. For example if the categories are 0 or 1:
 \verb{   }\tabular{lrcllr}{\verb{   }
- \strong{Name} \tab \verb{   }\strong{LB} \tab  \strong{-} \tab \strong{UB}\verb{   } \tab \strong{Description} \tab \strong{Start Value} \cr\verb{   }
+\strong{Name} \tab \verb{   }\strong{LB} \tab  \strong{-} \tab \strong{UB}\verb{   } \tab \strong{Description} \tab \strong{Start Value} \cr\verb{   }
 \code{b0, b1} \tab 0 \tab-\tab 1 \tab Response bias towards each category, sum to 1. Note: names are \code{b}+unique \code{class} labels.\tab 1 / n classes
 }
 }

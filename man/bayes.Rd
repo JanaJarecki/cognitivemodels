@@ -39,10 +39,10 @@ An model object (similar to lm-objects) of class "bayes". It can be viewed with 
 \details{
 Given the formula \code{y ~ a} the model predicts beliefs about event "a" occurring, but given \code{y ~ a + b} it predicts beliefs about events "a" and "b" occurring. If "a" and "b" are complementary the predictions will be complements, the difference is that
 \itemize{
- \item{For \code{y~a} predictions have 1 column, \code{pred_a}}
- \item{For \code{y~a+b} predictions have 2 columns, \code{pred_a, pred_b} (with \code{pred_a} = 1 - \code{pred_b})}
- \item{For \code{y~a+b+c} predictions have 3 columns, \code{pred_a, pred_b, pred_c}}
- \item{etc.}
+\item{For \code{y~a} predictions have 1 column, \code{pred_a}}
+\item{For \code{y~a+b} predictions have 2 columns, \code{pred_a, pred_b} (with \code{pred_a} = 1 - \code{pred_b})}
+\item{For \code{y~a+b+c} predictions have 3 columns, \code{pred_a, pred_b, pred_c}}
+\item{etc.}
 }
 
 \emph{Note}, during parameter fitting the model treats the response variable \code{y} as beliefs about the \emph{first} event. In other words, \code{y} represents observed beliefs about \code{a} for the formula \code{y ~ a + b} (not \code{b}).

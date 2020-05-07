@@ -42,7 +42,7 @@ A model object (similar to lm-objects) of class "utility", which can be viewed w
 \code{utility_pow_c(), utility_pow_d} fits a power utility model to data (continuous and discrete responses, resp.). \code{utility()} fits utility models.
 }
 \details{
-\emph{Power Utility [(\code{utility(type="power"), utility_pow()}].} The utility \eqn{U(x)} for positive outcomes \eqn{x} is \eqn{x^r if r > 0}, and is \eqn{log(x) if r = 0}, and is \eqn{-x^r if r < 0}. The utility for negative outcomes \eqn{x} equals \eqn{-U(-x)} with a separate exponent \code{rn}.
+\emph{Power Utility \link{(\code{utility(type="power"), utility_pow()}}.} The utility \eqn{U(x)} for positive outcomes \eqn{x} is \eqn{x^r if r > 0}, and is \eqn{log(x) if r = 0}, and is \eqn{-x^r if r < 0}. The utility for negative outcomes \eqn{x} equals \eqn{-U(-x)} with a separate exponent \code{rn}.
 }
 \section{Parameter Space}{
 

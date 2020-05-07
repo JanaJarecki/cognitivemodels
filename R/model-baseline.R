@@ -93,7 +93,7 @@ Baseline <- R6Class("baseline",
   public = list(
     type = NULL,
     const = NULL,
-    initialize = function(formula, data = NULL, type, const, mode, ...) {
+    initialize = function(formula, data = NULL, type, const, mode, options = list(), ...) {
       self$type <- match.arg(type, c("constant", "mean"))
       if (self$type == "mean") {
         ps <- make_parspace(m = range(super$get_res(f=formula, d=data)))
@@ -108,7 +108,7 @@ Baseline <- R6Class("baseline",
         data = data,
         mode = mode,
         choicerule = "none",
-        options = list(fit = FALSE))
+        options = options)
     },
     predict = function(type = "response", newdata = NULL) {
       type <- match.arg(type, "response")

@@ -15,14 +15,13 @@
 #'
 #' @importFrom AICcmodavg AICc
 #' @importFrom cognitiveutils akaike_weight
-#' @param object,... Objects of class \code{cm}, typically the result of a call to one fo the models. (Or a list of \code{objects} for the \code{"cogscimodellist"} method.)
+#' @param object,... Objects of class \code{cm}, typically the result of a call to one fo the models. (Or a list of \code{objects} for the \code{"cm_list"} method.)
 #' @return An anova-style table
 #' @examples
 #' # None yet.
 #' @export
 anova.cm <- function(object, ...) {
-  ## check for multiple objects, this is like in anova.glm
-
+  ## check for multiple objects (see: anova.glm)
   dotargs <- list(...)
   named <- if (is.null(names(dotargs))) {
               rep_len(FALSE, length(dotargs)) 
@@ -37,13 +36,16 @@ anova.cm <- function(object, ...) {
 
   # Allowed models are cogscimodel, lm, merMod
   
-  is.allowed.class <- vapply(dotargs, function(x) inherits(x, "cm"), NA) | vapply(dotargs, function(x) inherits(x, "lm"), NA) | vapply(dotargs, function(x) inherits(x, "merMod"), NA)
-  dotargs <- dotargs[is.allowed.class]
+  allowed <- vapply(dotargs, function(x) inherits(x, "cm"), NA) | vapply(dotargs, function(x) inherits(x, "lm"), NA) | vapply(dotargs, function(x) inherits(x, "merMod"), NA)
+  if (any(!allowed)) {
+    warning("These object classes passed to 'anova.cm' are invalid and dropped: ", paste(sapply(dotargs, class)[!allowed], collapse=", "))
+  }
+  dotargs <- dotargs[allowed]
 
   ## If multiple objects: anova table for multiple models
 
-  if ( length(dotargs) ) {
-    return( anova(structure(c(list(object), dotargs), class="cogscimodellist")) )
+  if (length(dotargs) > 0L) {
+    return( anova(structure(c(list(object), dotargs), class="cm_list")) )
   }
 
   ## Else if single object: construct table and title for a single model
@@ -56,10 +58,11 @@ anova.cm <- function(object, ...) {
   structure(table, heading = "Sum Sq. Table", class = c("anova", "data.frame"))
 }
 
+
 #' @export
-anova.cogscimodellist <- function(models, model.names = NULL) {
+anova.cm_list <- function(models, model.names = NULL) {
   nobs <- vapply(models, nobs, 1L)
-  if (var(nobs) > 0) {
+  if (var(nobs) > 0L) {
      stop("Models were not all fitted to the same size of dataset.")
   }
 

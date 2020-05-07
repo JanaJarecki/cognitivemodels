@@ -22,9 +22,9 @@
 #' where the parameter \eqn{\beta} represents risk aversion (\eqn{0 \le \beta \le 15}), the parameter \eqn{\delta} represents weight of the aspiration level (\eqn{0 \le \delta \le 1}).
 #' @param formula A \link{formula} defining the observations and stimuli in data. Stimuli are defined by outcomes and probabilities, separated by a pipe (\code{|}), like this: \code{mode ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py)}, where x1 and x2 are the first option's outcomes, px is the probability Pr(x1), y1 and y2 are the second option's outcomes, and py is the probability Pr(y1).
 #' @param asp A \link{formula} defining the aspiration level in data, e.g., (\code{~aspirlev}), strings will be reformulated.
-#' @references Andraszewicz, S. (2014). Quntitative [ie Quantitative] analysis
+#' @references Andraszewicz, S. (2014). Quntitative \[ie Quantitative\] analysis
 #' of risky decision making in economic environments (Doctoral dissertation,
-#'  University_of_Basel). doi: 10.5451/unibas-006268585
+#'  University of Basel). doi: 10.5451/unibas-006268585
 #' @return An object of class R6 holding the model, it has free parameters. A model object \code{M} can be viewed with \code{M}, predictions can be made with \code{M$predict()} for choice predictions, and \code{M$predict("ev")} for the expected value of the optimal choice and \code{M$predict("value", 1:2)} for the expected value of all choices.
 #' @author Jana B. Jarecki, \email{jj@janajarecki.com}
 #' @details Risk-sensitive foraging means you have, for instance, four choices between the same two risky lotteries and after the four choices you need to have accumulated at least 12 points to get a reward. The optimal solution to this choice problem relies on dynamic programming. The function creates all possible future states given the possible remaining trials, and predicts the optimal choice polica or the expected value of chosing either option given a certain state and a certain time horizon.

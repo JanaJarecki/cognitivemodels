@@ -31,7 +31,7 @@ Risk-sensitive foraging means you have, for instance, four choices between the s
 \references{
 Andraszewicz, S. (2014). Quntitative [ie Quantitative] analysis
 of risky decision making in economic environments (Doctoral dissertation,
- University_of_Basel). doi: 10.5451/unibas-006268585
+University of Basel). doi: 10.5451/unibas-006268585
 }
 \author{
 Jana B. Jarecki, \email{jj@janajarecki.com}

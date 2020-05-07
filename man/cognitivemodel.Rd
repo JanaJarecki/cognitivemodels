@@ -10,11 +10,11 @@ cognitivemodel(data, ...)
 \item{data}{a data.frame holding the variables that the first model uses}
 }
 \description{
-`cogscimodel()` initializes a cogscimodel object. It can be used to
+\code{cogscimodel()} initializes a cogscimodel object. It can be used to
 declare the input data being used by the model.
 }
 \details{
-`cogscimodel()` is used to construct the initial model object,
-and is almost always followed by `%+%` to add a component to the
+\code{cogscimodel()} is used to construct the initial model object,
+and is almost always followed by \verb{\%+\%} to add a component to the
 model.
 }

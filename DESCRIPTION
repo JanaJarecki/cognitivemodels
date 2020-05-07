@@ -35,6 +35,7 @@ LinkingTo:
 Encoding: UTF-8
 NeedsCompilation: yes
 RoxygenNote: 7.0.2
+Roxygen: list(markdown = TRUE)
 Suggests: 
     knitr,
     testthat

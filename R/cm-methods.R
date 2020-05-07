@@ -50,6 +50,7 @@ nobs <- function(x, ...) {
 #' @param x a model object
 #' @examples 
 #' nobs(M)
+#' @export
 nobs.cm <- function(x) {
   return(x$nobs)
 }
@@ -174,6 +175,9 @@ natt.cm <- function(x, ...) {
 ncon.cm <- function(x, ...) {
   return(x$ncon)
 }
+
+#' @param x An existing fit from a cognitive model function such as \link[gcm]
+#' @export
 getCall.cm <- function(x, ...) {
   return(x$getCall())
 }
