@@ -176,13 +176,15 @@ ncon.cm <- function(x, ...) {
   return(x$ncon)
 }
 
-#' @param x An existing fit from a cognitive model function such as \link[gcm]
+#' Get the Call to a cognitive model object
+#' 
+#' @param x An existing fit from a cognitive model function such as \link{cm}
 #' @export
 getCall.cm <- function(x, ...) {
   return(x$getCall())
 }
 
-
+#' @export
 print.summary.cm = function(x, digits = max(3L, (getOption("digits") - 3L)), ...) {
   cat("\nModel:\n", trimws(x$model),
     if (is.null(x$choicerule)) {

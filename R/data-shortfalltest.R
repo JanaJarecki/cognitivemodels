@@ -11,11 +11,11 @@
 #'
 #' @keywords datasets
 #'
-#' @references Andraszewicz, S. (2014). Quntitative [ie Quantitative] analysis
+#' @references Andraszewicz, S. (2014). Quantitative analysis
 #' of risky decision making in economic environments (Doctoral dissertation,
 #'  University_of_Basel). \href{https://edoc.unibas.ch/33427/}{doi:10.5451/unibas-006268585}
 #'
-#' @source Andraszewicz, S. (2014). Quntitative [ie Quantitative] analysis
+#' @source Andraszewicz, S. (2014). Quantitative analysis
 #' of risky decision making in economic environments (Doctoral dissertation,
 #'  University_of_Basel). \href{https://edoc.unibas.ch/33427/}{doi:10.5451/unibas-006268585}
 #' 

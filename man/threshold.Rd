@@ -43,12 +43,17 @@ threshold_d(
 \item{...}{other arguments from other functions, currently ignored.}
 }
 \value{
-A model object (similar to lm-objects) of class "treshold". It can be viewed with \code{summary(mod)}, where \code{mod} is the name of the model object.
+A model of class "treshold". It can be viewed with \code{summary(mod)}, where \code{mod} is the name of the model object.
 }
 \description{
-\code{treshold()} fits a threshold model with the threshold as free parameter, \code{treshold_c()} predicts the distance to a threshold, \code{treshold_d()} predicts a discrete response given the distance to a threshold.
+\code{treshold()} fits a threshold model.
 }
 \details{
+\itemize{
+\item \code{treshold_c()}, which is the continuous model, fits the numeric distance to a threshold
+\item \code{treshold_d()}, which is the discrete model, fits choices given the distance to a threshold
+}
+
 Given the formula \code{y ~ a} the model predicts y = 1 for a >= \code{nu} and y = 0 for a < \code{nu}
 }
 \section{Parameter Space}{

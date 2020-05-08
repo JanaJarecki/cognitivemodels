@@ -33,16 +33,20 @@ utility(
 \arguments{
 \item{formula}{A formula specifying responses ~ values (e.g, \code{y ~ x1 | x2}).}
 
-\item{type}{A string, which utility function to use; currently available is only \code{"power"} for power utility.}
+\item{type}{(optional) A string, which utility function to use; currently available is only \code{"power"} for power utility.}
 }
 \value{
-A model object (similar to lm-objects) of class "utility", which can be viewed with \code{summary(M)} or \code{anova(M)} and predictions can be made with \code{predict(M)}.
+A model object of class "utility", which can be viewed with \code{summary(.)} or \code{anova(.)}; predictions can be made with \code{predict(.)}.
 }
 \description{
-\code{utility_pow_c(), utility_pow_d} fits a power utility model to data (continuous and discrete responses, resp.). \code{utility()} fits utility models.
+\code{utility()} fits utility models.
+\itemize{
+\item \code{utility_pow_c()} fits a power utility for continuous responses.
+\item \code{utility_pow_d()} fits a power utility for discrete respoonses.
+}
 }
 \details{
-\emph{Power Utility \link{(\code{utility(type="power"), utility_pow()}}.} The utility \eqn{U(x)} for positive outcomes \eqn{x} is \eqn{x^r if r > 0}, and is \eqn{log(x) if r = 0}, and is \eqn{-x^r if r < 0}. The utility for negative outcomes \eqn{x} equals \eqn{-U(-x)} with a separate exponent \code{rn}.
+\emph{Power Utility} \strong{\code{utility_pow_.()}}. The utility \eqn{U(x)} for positive outcomes, \eqn{x > 0}, is \eqn{x^r if r > 0}, and is \eqn{log(x) if r = 0}, and is \eqn{-x^r if r < 0}. The utility for negative outcomes \eqn{x} equals \eqn{-U(-x)} with a separate exponent r (Wakker, 2008). The exponent is called \code{rp} and \code{rn} for positive and negative outcomes, respectively. To fit the model with only one exponent parameter, which is not recommended for mixed outcomes, set \code{fix = list(rp = "rn")}.
 }
 \section{Parameter Space}{
 
@@ -60,7 +64,7 @@ A model object (similar to lm-objects) of class "utility", which can be viewed w
 
 }
 \references{
-{Wakker, P. P. (2008). Explaining the characteristics of the power (CRRA) utility family. \emph{Health Economics, 17(12), 1329-1344. } \url{htrps://doi.org/10.1002/hec.1331}}
+{Wakker, P. P. (2008). Explaining the characteristics of the power (CRRA) utility family. \emph{Health Economics, 17(12)}, 1329-1344. doi:\href{htrps://doi.org/10.1002/hec.1331}{10.1002/hec.1331}}
 
-{Tversky, A. (1967). Utility theory and additivity analysis of risky choices. \emph{Journal of Experimental Psychology, 75(1)}, 27-36. \url{htrp://dx.doi.org/10.1037/h0024915}}
+{Tversky, A. (1967). Utility theory and additivity analysis of risky choices. \emph{Journal of Experimental Psychology, 75(1)}, 27-36. doi:\href{htrp://dx.doi.org/10.1037/h0024915}{10.1037/h0024915}}
 }

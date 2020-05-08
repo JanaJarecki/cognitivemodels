@@ -11,7 +11,10 @@
 
 #' Threshold Model
 #' 
-#' \code{treshold()} fits a threshold model with the threshold as free parameter, \code{treshold_c()} predicts the distance to a threshold, \code{treshold_d()} predicts a discrete response given the distance to a threshold. 
+#' \code{treshold()} fits a threshold model.
+#' 
+#' * \code{treshold_c()}, which is the continuous model, fits the numeric distance to a threshold
+#' * \code{treshold_d()}, which is the discrete model, fits choices given the distance to a threshold
 #' 
 #' @useDynLib cognitivemodels, .registration = TRUE
 #' 
@@ -19,7 +22,7 @@
 #' @param formula A formula specifying choice ~ var
 #' @param ... other arguments from other functions, currently ignored.
 #' 
-#' @return A model object (similar to lm-objects) of class "treshold". It can be viewed with \code{summary(mod)}, where \code{mod} is the name of the model object.
+#' @return A model of class "treshold". It can be viewed with \code{summary(mod)}, where \code{mod} is the name of the model object.
 #' 
 #' @section Parameter Space:
 #' \tabular{lrcllr}{\verb{   }\strong{Name} \tab \verb{    }\strong{LB} \tab  \strong{-} \tab \strong{UB}\verb{    } \tab \strong{Description} \tab \strong{Start Value}\cr

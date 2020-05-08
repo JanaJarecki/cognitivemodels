@@ -9,6 +9,5 @@
 ## And with R 3.4.0, and RcppArmadillo 0.7.960.*, we turn C++11 on as OpenMP
 ## support within Armadillo prefers / requires it
 CXX_STD = CXX11
-CXX11FLAGS = -O3 -Wno-unused-variable -Wno-unused-function
-CXX14FLAGS = -O3 -Wno-unused-variable -Wno-unused-function
-CXX14 = (BINPREF) g++ −m(WIN) -std=c++1y
+CXX11FLAGS =
+CXX14 = (BINPREF) g++ −m(WIN) -std=c++1y -w

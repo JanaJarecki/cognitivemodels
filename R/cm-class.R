@@ -40,7 +40,7 @@
 #' @param title (optional, default is the class name) A string, the model's name.
 #' @param mode A string. Allowed are \code{"discrete"}, \code{"continuous"}, specifies the model's response mode. Discrete responses are binary (0 or 1), continuous responses are numbers with a normal error.
 #' @param discount (optional) An integer or integer vector (default \code{0}), ddefining which or how many, starting from trial 1, to discount when fitting.
-#' @param options (optional) Options to control the parameter fitting methods, see the "Options" section of \code{\link{cogscimodel}}.
+#' @param options (optional) Options to control the parameter fitting methods, see the "Options" section of \code{\link{cm_options}}.
 #' @details \code{parspace}. It is optional to define a value that makes the parameter have zero effect in the column called "na" in \code{parspace}. For example, a parameter \code{b} in \code{b*x}, has no-effect  when setting \code{b=0}. The no-effect value can be \code{NA}.
 #' 
 #' \bold{fix}
@@ -51,7 +51,7 @@
   #' \item{\code{delta=NA}}{: ignore delta if it can be ignored by setting delta equal to the value in the column "na" of \code{parspace}, given that parspace has a value in the column "na" for delta.}
 #' }
 #' You can ignore a model parameter by setting it to \code{NA} in \code{fix}, in this case your \code{parspace} needs to contain a value in the column na nullifying the effect of the parameter.
-#' @section Options, see \link{cogscimodel_options}, possible options:
+#' @section Options, see \link{cm_options}, possible options:
 #' \describe{
 #'    \item{\code{fit}}{(default \code{TRUE}), \code{FALSE} omits fitting the free parameter.}
 #'    \item{\code{fit_measure}}{(default \code{"loglikelihood"}). When fitting, which fit measure to use? See \link[cognitiveutils]{gof}'s argument \code{type}.}
@@ -119,11 +119,11 @@ Cm <- R6Class(
     options = list(),
     #' @field pass_checks A logical if \code{TRUE} the model passes all internal checks
     pass_checks = FALSE,
-    #' @field make_prediction A function, just here for testing purposes
+    # this is for testing purposes
     # make_prediction = NA,
 
     #' @description
-    #' Initializes a new cogscimodel
+    #' Initializes a new model
     initialize = function(formula, data = NULL, parspace = make_parspace(), fix = NULL, choicerule = if (mode == "continuous") { "none" } else { NULL }, title = NULL, discount = NULL, mode = NULL, options = NULL) {
       self$title        <- title
       self$formula      <- as.Formula(formula)
@@ -649,7 +649,7 @@ Cm <- R6Class(
         }
       }
       if (self$mode == "continuous" & !is.null(options)) {
-        options <- do.call(cogscimodel_options, options[!duplicated(names(options))])
+        options <- do.call(cm_options, options[!duplicated(names(options))])
         if (options$fit_measure == "loglikelihood") {
           if (!is.null(self$res)) {
             rg <- max(self$res) - min(self$res)
@@ -782,7 +782,7 @@ Cm <- R6Class(
             .args$fit_control$nsteps <- round(pmax(log(ub - lb) * 2, 3) * max(1, log(npar)))
         }
       }
-      self$options <- do.call(cogscimodel_options, args = .args)
+      self$options <- do.call(cm_options, args = .args)
     },
 
     # FIT FUNCTIONS
