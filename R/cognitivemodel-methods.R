@@ -18,8 +18,8 @@
 `+` <- function (e1, e2) { UseMethod("+") }
 #' @export
 `+.default` <- function (e1, e2) { .Primitive("+")(e1, e2) }
-#' @export
 #' @method + csm
+#' @export
 `+.csm` <- function(e1, e2) {
   x_name <- .abbrDeparse(substitute(e2))
   if (inherits(e2, "cm")) {

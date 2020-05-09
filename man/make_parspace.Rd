@@ -7,32 +7,56 @@
 make_parspace(...)
 }
 \arguments{
-\item{...}{Parameters and their ranges, e.g., \code{make_parspace(theta = c(ub=-1, lb=1, init=0, na=0), gamma = c(0,2,1,NA))}. See details and examples.#"
-The general schema per parameter is a named vector \code{parametername = c(ub = #, lb = #, init = #, na = #)}
+\item{...}{Parameters and their ranges, e.g., \code{make_parspace(theta = c(ub=-1, lb=1, init=0, na=0), gamma = c(0,2,1,NA))}. See details and examples. The general schema per parameter is a named vector \verb{parametername = c(ub = #, lb = #, init = #, na = #)}.
 \describe{
 \item{\code{"lb"}}{Lower limit, smallest allowed value}
 \item{\code{"ub"}}{Upper limit, highest allowed value}
-\item{\code{"start"} (optional)}{Initial value for fitting}
-\item{\code{"na"} (optional)}{Value the parameter takes if it should have no effect, can be \code{NA}}
+\item{\code{"start"} (optional)}{Initial value for estimation of parameters}
+\item{\code{"na"} (optional)}{Value the parameter takes if it should have no effect, can be 'NA'}
 }}
 }
 \value{
-A matrix with as many rows as parameters, where rownames are paramter names and four columns lb, ub, init, na define the lower limit, upper limit, initial value and null-effect-value (optional) for each parameter.
+A matrix with as many rows as parameters, in which the rownames are the parameter names, and four columns lb, ub, init, na that define the lower limit, upper limit, initial value and null-effect-value (optional) for each parameter.
 }
 \description{
-This function returns a n x 4 matrix with the parameter bounds, starting value, and no-effect value of parameters
+\code{make_parspace()} makes a n x 4 matrix with the parameter bounds, starting value, and no-effect value of parameters
 }
 \details{
-\code{"lb"} and \code{"ub"} are the smallest and largest value allowed for the parameter, \code{"start"} is the initial value when fitting the parameter, \code{"na"} is an optional value the parameter takes if it should have no effect.
+\code{"na"} is an optional value a parameter takes such that this parameter has no effect.
 
 To define a parameter \eqn{\alpha} with \eqn{0 \le \alpha \le 1} use one argument, \code{alpha = c(0,1)}. To define an additional parameter \eqn{\beta} with \eqn{2 \le \beta \le 9} use two arguments, \code{alpha = c(0,1), beta = c(2,9)}, and so forth. You can specify an initial value for the parameter used in fitting as third element of vectors.
-\subsection{Dynamically define new parameter "gamma" and "delta"}{
 }
+\examples{
+## Define a parameter "p" that can range from 0-1
+make_parspace(p = c(0,1))
+makeparspapce(p = c(lb=0, ub=2)) # the same
 
-\subsection{with the same definition (ub, lb, init, na)}{
+# Note:
+# Initial value will be the mean of 0 and 1.
 
+
+## Define a parameter "zeta" from 0-5
+## and set the initial value to 2
+make_parspace(zeta = c(lb=0, ub=5, init=2))
+make_parspace(zeta = c(0,5,2)) # the same
+make_parspace(zeta = c(ub=5,lb=0,init=2)) #the same
+
+
+## Define one parameter "expon" from 0-2 with initial value 0.5
+## and a value of 1 making it have no effect
+make_parspace(expon = c(0,2,1,1))
+make_parspace(expon = c(lb=0,ub=2,init=1,na=1)) #the same
+
+
+## Define four parameter alpha, beta, gamma, delta
+make_parspace(alpha = c(lb=0,ub=1,init=0.5,na=0),
+                beta = c(1,10,5,NA),
+                gamma = c(lb=1,ub=2,init=0,na=1),
+                delta = c(1,2,0))
+
+## Dynamically define new parameter "gamma" and "delta"
+## with the same definition (ub, lb, init, na)
 def <- c(lb = 0, ub = 1, init = 0.5, na = 0)
 deflist <- list("gamma" = def, "delta" = def)
 do.call(make_parspace, deflist)
-}
 }

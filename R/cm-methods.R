@@ -27,7 +27,7 @@ npar <- function(x, ...) {
   UseMethod("npar")
 }
 npar.default <- function(x, ...) {
-  error("'npar' method is not defined for object of class ", class(x))
+  stop("'npar' method is not defined for object of class ", class(x), ".")
 }
 #' @name npar
 #' @param type A string: \code{"all"} counts all parameters, \code{"free"} counts the free parameters, \code{"fix"} countes the fixed parameters, \code{"constrained"} counts constrained parameters.
@@ -51,7 +51,7 @@ nobs <- function(x, ...) {
 #' @examples 
 #' nobs(M)
 #' @export
-nobs.cm <- function(x) {
+nobs.cm <- function(x, ...) {
   return(x$nobs)
 }
 
@@ -69,7 +69,7 @@ nstim <- function(x) {
   UseMethod("nstim")
 }
 nstim.default <- function(x) {
-  error("'nstim' method is not defined for object of class ", class(x))
+  stop("'nstim' method is not defined for object of class ", class(x), ".")
 }
 #' @export
 #' @method nstim cm
@@ -89,7 +89,7 @@ natt <- function(x) {
   UseMethod("natt")
 }
 natt.default <- function(x) {
-  error("'natt' method is not defined for object of class ", class(x))
+  stop("'natt' method is not defined for object of class ", class(x), ".")
 }
 #' @export
 #' @method natt cm
@@ -301,7 +301,7 @@ parspace <- function(x, ...) {
   UseMethod("parspace")
 }
 parspace.default <- function(x, ...) {
-  error("'parspace' method is not defined for object of class ", class(x))
+  stop("'parspace' method is not defined for object of class ", class(x), ".")
 }
 #' @name parspace
 #' @export
@@ -317,7 +317,7 @@ parspace.cm <- function(x, ...) {
 #' Show the constraints of a cognitive model
 #' 
 #' @description
-#' \code{constraints(cm)} shows the parameter constraints  of a cognitive model named \code{cm} nicely formatted
+#' \code{constraints(x)} shows the parameter constraints  of a cognitive model named \code{x} nicely formatted
 #' 
 #' @usage constraints(x)
 #' @param x a model object of class cm
@@ -331,11 +331,11 @@ constraints <- function(x, ...) {
   UseMethod("constraints")
 }
 constraints.default <- function(x, ...) {
-  error("'constraints' method is not defined for object of class ", class(x))
+  stop("'constraints' method is not defined for object of class ", class(x), ".")
 }
 #' @name constraints
-#' @export
 #' @method constraints cm
+#' @export
 constraints.cm <- function(x, ...) {
   cat("\nParameter constraints of the cognitive model '", class(x)[1], "':\n", sep = "")
   return(x$constraints)

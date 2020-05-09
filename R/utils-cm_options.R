@@ -10,16 +10,25 @@
 
 #' Advanced Options for Cognitive Models
 #' 
-#' @param lb A named numeric vector, minimum parameter values; e.g., to let a parameter _k_ take values from -10 set `lb = c(k = -10)`.
-#' @param ub A named numeric vector, maximum parameter values; e.g., to let a parameter _k_ take values up to 10, set  `ub = c(k = 10)`.
-#' @param fit Logical (default `TRUE`), `FALSE` omits parameter fitting. Useful for testing models.
-#' @param fit_measure A string (default `"loglikelihood"`), the fit measure to use during parameter estimation, can be one of the `types` in the function \code{\link[cognitiveutils]{gof}}, e.g. \code{"mse"}.
-#' @param fit_n An integer, if the data that is being predicted is aggregated data, supply the number subjects underlying each data point.
-#' @param fit_data A data frame, the data based on which the parameters are being estimated. Useful if the data used in estimation differs from the data in the main `data` argument in a model.
-#' @param solver A string, the algorithm for optimizing the parameters during estimation, use `solvers()` to list the available options. `"grid"` uses a grid-search, `"solnp"` uses \code{\link[Rsolnp]{solnp}}, other solvers contained in the R optimization infrastructure can be named (see \link{ROI}). This may cause warnings about ignored options and may cause parameter bounds to be ignored and the model to fail. Can also be `c("grid", "xxx")` which uses a grid search followed by a second solver xxx, which is executed repeatedly with the best parameters from the grid search as start values; xxx mus be an allowed solver.
-#' @param fit_grid_offset A small number, amount to offset the parameter values in a grid-search from the parameter boundaries.
-#' @param fit_args A list, additional arguments to be passed to the fit solver specified in `solver`, see the respective pages of the solver to see which arguments are allowed.
-#'  @param fit_control A list, the argument `control` passed to a the solver, allowed values depend on the `solver` that is being used, see the respective pages of the solvers for details.
+#' @param lb A named numeric vector, minimum values that a parameter may take. E.g., `c(k = -10)` lets a parameter _k_ start at -10.
+#' @param ub A named numeric vector, maximum value that parameters may take. E.g., `c(k = 10)` lets a parameter _k_ go until 10.
+#' @param fit Logical (default `TRUE`), `FALSE` disables parameter fitting. Useful for testing models.
+#' @param fit_measure A string (default `"loglikelihood"`), the goodnes of fit measure that is optimized during parameter estimation. Can be one of the `types` in the function \link[cognitiveutils]{gof}:
+#' * `"loglikelihood"` is log likelihood which uses a
+#'   * ... binomial PDF in discrete-data models.
+#'   * ... normal PDF in continuous-data models, this adds a free parameter `"sigma"`, the standard deviation of the PDF, estimated from the data.
+#' * `"mse"` is mean-squared error
+#' * `"accuracy"` is percent accuracy
+#' @param fit_n An integer, the number of data points underlying aggregated data. If the data that is being predicted is aggregated data, `n` is the number observations underlying each data point in the aggregated data.
+#' @param fit_data A data frame, the data to estimate the model parameters from. Needed if the data for the parameter estimation differs from the data in the main `data` argument in a model.
+#' @param solver A string, the alorithm used for parameter estimation,  \link{cm_solvers()} lists the options. Changing this may cause warnings about ignored options and may cause parameter bounds to be ignored and the model to fail.
+#' * `"grid"` uses a grid-search
+#' * `"solnp"` uses \link[Rsolnp]{solnp}
+#' * ... and 21 other solvers such as `"optimx"`, `"nloptr"`, and `"nlminb"` from \link{ROI} - R optimization infrastructure
+#' * `c("grid", "abcde")`, where abcde is a solver, performs a grid search, followed by an optimization with the solver. The solver optimizes n times, using the n best parameter sets that resulted from the grid search as start values. The overal best parameter result wins.
+#' @param fit_grid_offset A small number, amount to offset the parameter values in a grid search from the parameter boundaries.
+#' @param fit_args A list, additional arguments passed **directly** to the solver function, see the respective pages of the solver that you want to use, to see which arguments the solver function has.
+#' @param fit_control A list, arguments passed to the **`control`** argument in the solver function, allowed values depend on the `solver` that you want to use to for the control options.
 #' @export
 cm_options = function(
   lb = NULL,
@@ -51,4 +60,26 @@ cm_options = function(
     fit_args)
   class(out) <- "cm_options"
   return(out)
+}
+
+#' Show the Choicerules for Discrete Cognitive Models
+#' 
+#' @usage cm_choicerules()
+#' @examples
+#' cm_choicerules()
+#' @export
+cm_choicerules <- function() {
+  cat("\nAvailable choice rules:\n")
+  return(sort(c("softmax", "luce", "epsilon", "argmax")))
+}
+
+#' Show the Optimization Solvers for Cognitive Models
+#' 
+#' @usage cm_solvers()
+#' @examples
+#' cm_solvers()
+#' @export
+cm_solvers <- function() {
+  cat("\nAvailable optimization solvers:\n")
+  return(solvers())
 }

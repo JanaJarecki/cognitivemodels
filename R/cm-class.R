@@ -9,6 +9,7 @@
 # ==========================================================================
 
 
+
 #' The R6 class underlying all "cm" (cognitive model) objects
 #' 
 #' \code{Cm$new(formula, data, parspace)}
@@ -24,21 +25,21 @@
 #' @importFrom rlang call_standardise
 #' 
 #' 
-#' @aliases cognitivemodel
+#' @aliases cm-class
 #' 
-#' @param formula A formula (e.g., \code{y ~ x1 + x2}).
-#' @param data A data frame containing \code{formula}'s variables.
-#' @param parspace  (optional, \bold{required} to add model parameters) A amtrix with the parameter space: a \code{n x 4} matrix with columns named \code{"lb","ub","start","na"}. Easy to create using \link{make_parspace}, e.g. \code{make_parspace(alpha=c(0,1))}. The matrix' row names are parameter names, columns contain the lower limit, upper limit, starting value in fitting, and (optional) a value that makes a parameter have zero effect, which can be NA. See details.
-#' @param fix (optional) Parameter constraints. Can be \code{"start"} or a list with \code{parname=value}-pairs. Parameter names see below under "parameter space".
+#' @param formula A formula, e.g., `y ~ x1 + x2`.
+#' @param data A data frame containing `formula`'s variables.
+#' @param parspace  (optional, \bold{required} to add model parameters) A n x 4 matrix, the parameter space. Use \link{make_parspace} to construct it. Column names must be `"lb","ub","start","na"`, row names must be parameter names. Columns contain the lower limit, upper limit, starting value in fitting, and (optional) a value that makes a parameter have zero effect, which can be NA. See details.
+#' @param fix (optional) Parameter constraints. Can be `"start"` or a list with `parname=value`-pairs. Parameter names see below under "parameter space".
 #' \itemize{
-#' \item{\code{"start"} constrains all available parameters to their starting values. Useful for model testing.}
-#' \item{\code{parname = 0.5} constrains a parameter to 0.5.}
-#' \item{\code{parname = "p2"} constrains a parameter to another model parameter \code{p2}.}
-#' \item{\code{parname = NA} tells the model to omit a parameter, if possible.}
+#' \item{`"start"` constrains all available parameters to their starting values. Useful for model testing.}
+#' \item{`parname = 0.5` constrains a parameter to 0.5.}
+#' \item{`parname = "p2"` constrains a parameter to another model parameter `p2`.}
+#' \item{`parname = NA` tells the model to omit a parameter, if possible.}
 #' }
-#' @param choicerule (optional) String specifying the choice rule (default \code{NULL}), allowed are \code{NULL}, \code{"softmax"}, \code{"eps"}, and other values of the argument \code{type} to \link[cognitiveutils]{choicerule}.
+#' @param choicerule (only for discrete models) A string, the choice rule, to view, rum `cm_choicerules()`.
 #' @param title (optional, default is the class name) A string, the model's name.
-#' @param mode A string. Allowed are \code{"discrete"}, \code{"continuous"}, specifies the model's response mode. Discrete responses are binary (0 or 1), continuous responses are numbers with a normal error.
+#' @param mode A string, the response mode. Allowed are `"discrete"`, `"continuous". Discrete responses are binary (0 or 1), continuous responses are numbers-
 #' @param discount (optional) An integer or integer vector (default \code{0}), ddefining which or how many, starting from trial 1, to discount when fitting.
 #' @param options (optional) Options to control the parameter fitting methods, see the "Options" section of \code{\link{cm_options}}.
 #' @details \code{parspace}. It is optional to define a value that makes the parameter have zero effect in the column called "na" in \code{parspace}. For example, a parameter \code{b} in \code{b*x}, has no-effect  when setting \code{b=0}. The no-effect value can be \code{NA}.

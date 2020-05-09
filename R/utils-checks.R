@@ -12,6 +12,9 @@
 
 #' Checks the choicerule
 #' 
+#' @importFrom utils menu
+#' @importFrom utils install.packages
+#' 
 #' @param x the name of the choicerule
 #' @export
 #' @noRd
@@ -136,7 +139,7 @@ solvers <- function() {
   }
   missing <- is.na(match(solver, c("grid", "solnp", "auto", names(ROI::ROI_registered_solvers()))))
   if (any(missing)) {
-    install <- menu(c("Yes", "No, stop the model."), title = paste0("The solver '", solver[missing], "' is not (yet) installed. Want to install it?"))
+    install <- utils::menu(c("Yes", "No, stop the model."), title = paste0("The solver '", solver[missing], "' is not (yet) installed. Want to install it?"))
     if (install == 1) {
       install.packages(paste0("ROI.plugin.", solver[missing]))
       return(solver)
