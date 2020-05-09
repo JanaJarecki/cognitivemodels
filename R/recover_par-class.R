@@ -11,7 +11,7 @@
 
 #' Class for parameter recovery objects
 #' 
-#' Parameter recovery for a model works as follows: First, select a set of true model parameters \eqn{\theta}. Second, simulate data from a \link{Cognitivemodel} with the true parameters \eqn{\theta}. Third, use the simulated data to estimate the cognitive model's free parameters, store the best-fitting parameter estimates \eqn{\theta*}. Repeat step 1-2 a number of runs Lastly, diagnose the results if the recovered parameter equal the true parameter.
+#' Parameter recovery for a model works as follows: First, select a set of true model parameters \eqn{\theta}. Second, simulate data from a cognitive model, i.e. an object of class `cm`, with the true parameters \eqn{\theta}. Third, use the simulated data to estimate the cognitive model's free parameters, store the best-fitting parameter estimates \eqn{\theta*}. Repeat step 1-2 a number of runs Lastly, diagnose the results if the recovered parameter equal the true parameter.
 #' 
 #' @import data.table
 #' @param model An object of class cm.

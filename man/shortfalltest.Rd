@@ -6,7 +6,7 @@
 \title{Test data for fitting the Shortfall model}
 \format{An object of class \code{"data.table"}; see \code{\link[qtl]{fread}}.}
 \source{
-Andraszewicz, S. (2014). Quntitative \link{ie Quantitative} analysis
+Andraszewicz, S. (2014). Quantitative analysis
 of risky decision making in economic environments (Doctoral dissertation,
 University_of_Basel). \href{https://edoc.unibas.ch/33427/}{doi:10.5451/unibas-006268585}
 }
@@ -18,7 +18,7 @@ the shortfall model.
 data(shortfalltest)
 }
 \references{
-Andraszewicz, S. (2014). Quntitative \link{ie Quantitative} analysis
+Andraszewicz, S. (2014). Quantitative analysis
 of risky decision making in economic environments (Doctoral dissertation,
 University_of_Basel). \href{https://edoc.unibas.ch/33427/}{doi:10.5451/unibas-006268585}
 }
