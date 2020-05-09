@@ -1,4 +1,4 @@
-/*#include <RcppArmadillo.h>
+#include <RcppArmadillo.h>
 // [[Rcpp::depends(RcppArmadillo)]]
 using namespace Rcpp;
 using namespace arma;
@@ -29,7 +29,7 @@ using namespace arma;
 
 // Makes the indicator matrix lexicographic 
 // sets all columns right to a row containing a 1 to 0
-NumericMatrix lexicographic(NumericMatrix I) {
+/*NumericMatrix lexicographic(NumericMatrix I) {
   int i = 1;
   for(unsigned int r = 0; r < I.nrow(); ++r) {
     i = 1;
@@ -39,11 +39,11 @@ NumericMatrix lexicographic(NumericMatrix I) {
     }
   }
   return I;
-}
+}*/
 
 // Indicator function for the nodes in the tree
 // returns a matrix ntrials x depth of tree + 1
-NumericMatrix indicators(arma::mat features,
+/*NumericMatrix indicators(arma::mat features,
       NumericVector splitcriteria) {
 
   unsigned int tdim = features.n_rows, // trials
@@ -63,7 +63,7 @@ NumericMatrix indicators(arma::mat features,
   
   I = lexicographic(I);
   return I;
-}
+}*/
 
 
 
@@ -88,7 +88,7 @@ NumericMatrix indicators(arma::mat features,
 //   NumericMatrix reward = NumericMatrix(ntrial, noutc);
 
 //   for (int j = 0; j < noutc; ++j) {
-//    /* reward( _, j) = as<NumericVector>(terminalreward(_["budget"] = (budget), _["state"] = (outcomes( _, j) * timehorizon)));*/
+//       reward( _, j) = as<NumericVector>(terminalreward(_["budget"] = (budget), _["state"] = (outcomes( _, j) * timehorizon)));
 //     reward( _, j) = as<NumericVector>(terminalreward(_["budget"] = need, _["state"] = outcomes( _, j)));
 //   };
   
@@ -109,7 +109,7 @@ NumericMatrix indicators(arma::mat features,
 //     v(t, node_order(1)) = max_outcome; // ~ select risky
 //     // sX+rP+
 //     v(t, 2) = min_outcome; // ~ select safe
-//   /*
+//   
 //     // R-O-S+
 //     v(t, 2) = alpha * max_outcome + (1-alpha) * prob_max_outcome;
 //     // R-O-S+
@@ -122,15 +122,15 @@ NumericMatrix indicators(arma::mat features,
 //     v(t, 4) = 50 - 10 * max(probs(t,_));
 //     // R-O-S+
 //     //v(t, 4) = probs(t, which_min(outcomes(t,_))) * outcomes(t, which_min(outcomes(t,_)));
-//     /*v(t, 1) = ( max_reward > 0 ) * ( max_reward );
-//     /*v(t, 3) = - (max(outcomes(t,_) - min(outcomes(t,_))));
+//     v(t, 1) = ( max_reward > 0 ) * ( max_reward );
+//     v(t, 3) = - (max(outcomes(t,_) - min(outcomes(t,_))));
 //      for (int j = 0; j < noutc; ++j) {
 //       v(t, 3) += 
 //       v(t, 3) += max( outcomes(t, _) );
 //       v(t, 3) += reward(t,j) * probs(t,j);
-//     };*/
+//     };
 //   };
 
 //   // return the new matrix
 //   return v;
-// }*/
+// }
