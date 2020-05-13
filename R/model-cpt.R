@@ -198,8 +198,10 @@ Cpt <- R6Class("cpt",
         X[P==0L] <- NA
         Xmin <- apply(X, 1, min, na.rm = TRUE)
         P[X==Xmin & P>0L] <- 1L
-        X[] <- t(sapply(1:nrow(X), function(i) ifelse(X[i,] == Xmin[i],
-          X[i,] + mem[i,], X[i,] - Xmin[i])))
+        X[] <- t(sapply(1:nrow(X), function(i) ifelse(
+          X[i,] == Xmin[i],
+          X[i,] + mem[i,],
+          X[i,] - Xmin[i])))
         X[P==0L] <- 0L
         input[,  seq(1, na, 2)] <- X
         input[, -seq(1, na, 2)] <- P

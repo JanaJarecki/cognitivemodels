@@ -278,16 +278,11 @@ get_id_in_grid <- function(id, grid) {
 #' @export
 make_parspace <- function(...) {
   dotargs <- list(...)
-
-  dotargs <- vapply(dotargs, function(x) {
-      n <- names(x)
-      if ( length(x) == 2 | length(x) == 3 ) {
-        if (is.null(n)) {
+  dotargs <- vapply(dotargs, function(x) { 
+      if (length(x) == 2 | length(x) == 3) {
           x <- c(x, rep(NA, 4-length(x)))
-        } else {
-          x <- c(x, c("na" = NA, "start" = NA))[1:4]
-        }
       }
+      names(x) <- c("lb", "ub", "start", "na")[1:length(x)]
 
       n <- names(x)
       if (is.null(n)) {
@@ -295,7 +290,7 @@ make_parspace <- function(...) {
       } else if (all(c("ub", "lb") %in% n)) {
         x[intersect(c("lb", "ub", "start", "na"), n)]
       } else {
-        stop("Parameter definition must be named <'lb', 'ub', 'start', 'na'> but names contain: ", .brackify[x], ".")
+        names(x) <- c("lb", "ub", "start", "na")
       }
     }, c(lb=0, ub=0, start=0, na=0))
 

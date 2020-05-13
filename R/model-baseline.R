@@ -31,7 +31,7 @@
 #' D <- data.frame(y = c(1,1,0), x = c(1,2,3))
 #' 
 #' # Baseline model that predicrs Pr = 0.50
-#' M <- baseline_const_c(y ~ ., const = 0.50, data = D)
+#' M <- baseline_const_d(y ~ ., const = 0.50, data = D)
 #' 
 #' predict(M)                         # predicts 0.5, 0.5, 0.5
 #' npar(M)                            # 0 parameter
@@ -96,7 +96,8 @@ Baseline <- R6Class("baseline",
     initialize = function(formula, data = NULL, type, const, mode, options = list(), ...) {
       self$type <- match.arg(type, c("constant", "mean"))
       if (self$type == "mean") {
-        ps <- make_parspace(m = range(super$get_res(f=formula, d=data)))
+        res <- super$get_res(f=formula, d=data)
+        ps <- make_parspace(m = c(range(res),apply(res,2,mean)))
       } else {
         ps <- make_parspace()
         self$const <- const

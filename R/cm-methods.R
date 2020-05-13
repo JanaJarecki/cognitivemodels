@@ -133,24 +133,12 @@ MSE <- function(x, ...) { UseMethod("MSE") }
 MSE.cm <- function(x, ...) {
   x$MSE(...)
 }
-
-#' @family {fit measures for cognitive models}
-#' @export
-AIC.cm <- function(object, ..., k) {
-  object$AIC(...)
-}
 #' @family {fit measures for cognitive models}
 #' @export
 AICc.cm <- function(object, ..., k) {
   object$AICc()
 }
 #' @family {fit measures for cognitive models}
-#' @export
-BIC <- function(x, ...) { UseMethod("BIC") }
-#' @export
-BIC.cm <- function(x, ...) {
-  return(x$BIC())
-}
 #' @export
 RMSE.cm <- function(x) {
   return(x$RMSE())

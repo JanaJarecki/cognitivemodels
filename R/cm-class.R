@@ -320,8 +320,8 @@ Cm <- R6Class(
     #' @description
     #' Number of model parameters
     #' @param x  A string, which of the parameters to return, allowed are \code{"all", "free", "constrained", "equal"}
-    npar = function(x = "all") {
-      ans <- try(match.arg(x, "free"), silent = TRUE)
+    npar = function(x = "free") {
+      ans <- try(match.arg(x, c("all","free")), silent = TRUE)
       if (class(ans) == "try-error") { # not "free"
         return(length(private$get_parnames(x)))
       } else {
@@ -395,27 +395,25 @@ Cm <- R6Class(
     #' Bayesian Information Criterion of the model predictions given the observed responses
     #' @param ... other arguments (ignored)
     BIC = function(...) {
-      k <- ifelse('newdata' %in% names(list(...)), 0L, self$npar('free'))
-      N <- self$nres
-      return( -2 * self$logLik() + log(N)*k )
+      stats::BIC(self)
     },
     #' @description
     #' Akaike Information Criterion of the model predictions given the observed response
     #' @param ... other arguments (ignored)
     AIC = function(...) {
-      k <- ifelse('newdata' %in% names(list(...)), 0, self$npar('free'))
-      return( -2 * self$logLik() + 2*k )
+      k <- ifelse('newdata' %in% names(list(...)), 0, self$npar("free"))
+      stats::AIC(self, k = k)
     },
     #' @description
     #' Small-sample corrected Akaike Information Criterion of the model predictions given the responses
     #' @param ... other arguments (ignored)
     AICc = function(...) {
       k <- ifelse('newdata' %in% names(list(...)), 0, self$npar('free'))
-      if (k == 0) {
+      if (k == 0L) {
         return(self$AIC())
+      } else {
+        return(self$AIC() + (2 * k * (k+1)) / (self$nobs - k - 1))
       }
-      N <- self$nres
-      self$AIC() + (2 * k * (k+1)) / (N - k - 1)
     },
     #' @description
     #' Mean squared error between the model predictions given the observed responses
