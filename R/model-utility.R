@@ -42,7 +42,7 @@
 #' #  No examples yet
 #' 
 #' @export
-utility_pow_d <- function(formula, data, choicerule, fix = list(), discount = 0, options = list(), ...) {
+utility_pow_d <- function(formula, data, fix = list(), choicerule, discount = 0, options = list(), ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args[["type"]] <- "power"
   .args[["mode"]] <- "discrete"
@@ -70,28 +70,17 @@ utility_exp <- function(formula, data, fix = list(), choicerule = NULL, mode = N
   return(do.call(what = Utility$new, args = .args, envir = parent.frame()))
 }
 
-
-#' Utility Models
-#' 
-#' @rdname utility
-#' 
-#' @export
-utility <- function(formula, data = data.frame(), type = c("power"), fix = list(), choicerule = NULL, mode = NULL, discount = 0, options = list(), ...) {
-  .args <- as.list(rlang::call_standardise(match.call())[-1])
-  return(do.call(what = Utility$new, args = .args, envir = parent.frame()))
-}
-
-
+# This is the back-end class for the utility models
 Utility <- R6Class("utility",
   inherit = Cm,
   public = list(
     type = NULL,
-    initialize = function(formula, data = NULL, type = c("power", "exponential"), fix = list(1), choicerule = "none", mode = c("continuous", "discrete"), discount = 0, options = list(), ...) {
+    initialize = function(formula, data = data.frame(), type = c("power", "exponential"), fix = list(), choicerule = "none", mode = c("continuous", "discrete"), discount = 0, options = list(), ...) {
       self$type <- match.arg(type)
       super$initialize(
         formula = formula,
         data = data,
-        title = paste("Utility:", self$type),
+        title = paste(self$type, "utility"),
         parspace = self$make_parspace(formula, data),
         choicerule = choicerule,
         mode = match.arg(mode),      
@@ -102,11 +91,10 @@ Utility <- R6Class("utility",
     },
     make_parspace = function(formula, data = NULL, type = self$type) {
       if (type == "power") {
-        lb <- if (!length(data)) {
-          -20
-        } else {
+        lb <- -20
+        if (length(data)) {
           i <- super$get_input(formula, data)
-          if (min(i) < 0L & max(i) > 0L) { 0.0001 } else { -20 }
+          lb <- if (min(i) < 0L & max(i) > 0L) { 0.0001 } else { -20 }
         }
         return(make_parspace(rp = c(lb, 20, 1, 1),
                              rn = c(lb, 20, 1, 1)))
@@ -152,9 +140,18 @@ Utility <- R6Class("utility",
     }
     ),
 
-
-
   private = list(
+    init_fix = function(fix = list()) {
+      # Switches off the rp parameter if all input is > 0
+      # Switches off the rn parameter if all input is < 0
+      if (!length(self$input)) { super$init_fix(fix = fix); return() }
+      if (min(self$input) > 0L) {
+        fix[["rn"]] <- NA
+      } else if (max(self$input) < 0L) {
+        fix[["rp"]] <- NA
+      }
+      super$init_fix(fix = fix)
+    },
     make_prednames = function() {
       return(self$stimnames)
     }
