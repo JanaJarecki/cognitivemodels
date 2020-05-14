@@ -832,7 +832,7 @@ Cm <- R6Class(
           x = problem,
           solver = self$options$solver,
           start = start,
-          control = self$options$fit_control[grep("grid", names(self$options$fit_control))])
+          control = self$options$fit_control[!grep("grid", names(self$options$fit_control))])
           ),
         envir = parent.frame())
       if (sol$status$code == 1L) {
