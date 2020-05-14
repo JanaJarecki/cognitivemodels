@@ -189,7 +189,7 @@ Csm <- R6Class("csm",
         parspace = self$parspace,
         discount = discount,
         options = c(list(fit = FALSE), options),
-        choicerule = self$choicerule
+        choicerule = self$models[[self$nmod]]$choicerule
         )
       return(invisible(self))
     },

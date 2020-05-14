@@ -488,7 +488,7 @@ Cm <- R6Class(
       }
       if (self$ncon > 0L) {
         cat("Constrained and fixed parameter:\n")
-        par <- self$get_par()[!.which_free(M$constraints)]
+        par <- self$get_par()[!.which_free(self$constraints)]
         print.default(format(par, digits = digits, justify = 'centre', width = digits+2L), print.gap=2L, quote=FALSE)
       } else {
         note <- cbind(note, "No fixed parameter. ")

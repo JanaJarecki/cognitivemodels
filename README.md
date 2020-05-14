@@ -16,7 +16,7 @@ Install Cognitivemodels by running
 ```R
     # Install  development version from github
     # Optional: install.packages("devtools")
-    devtools::install_github("janajarecki/cognitivemodels", ref = "development")
+    devtools::install_github("janajarecki/cognitivemodels")
 ```
 
 You will see a prompt, please type `Yes` into the console.
