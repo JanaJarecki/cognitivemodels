@@ -27,7 +27,6 @@ test_that("Discrete Power utility: parameter fitting", {
   M <- cognitivemodel(D) +
     utility_pow_d(y ~ x | x2, choicerule = "none") +
     function(pred, data, par) ce(pred = pred, pow = par[["rp"]])
-
-  fit(M, options = list(fit_measure = "mse", solver = "optimx"))
-  predict(M)
+  fit(M, options = list(fit_measure = "mse"))
+  expect_equal(coef(M), c(rp=-0.52), tol = 0.005)
 })
