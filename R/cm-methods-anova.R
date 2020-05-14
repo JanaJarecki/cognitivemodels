@@ -66,7 +66,6 @@ anova.cm_list <- function(models, model.names = NULL) {
      stop("Models were not all fitted to the same size of dataset.")
   }
 
-
   ## model names
   calls <- lapply(models, getCall)
   is.cm <- vapply(models, function(x) inherits(x, "cm"), NA)
@@ -98,7 +97,7 @@ anova.cm_list <- function(models, model.names = NULL) {
   npar <- npar[ii]
   calls <- lapply(models, getCall)
   aic <- if (any(nobs/npar < 40)) {
-    bottomnote <- "AIC = AICc because a model has npar/nobs < 40"
+    bottomnote <- "AIC = AICc because a model has npar/nobs < 40."
     vapply(models, AICc, 1)
   } else {
     vapply(models, AIC, 1)
@@ -153,7 +152,7 @@ anova.cm_list <- function(models, model.names = NULL) {
 print.anova.cm <- function(x, digits = max(getOption("digits") - 4L, 2L), ...) {
   stats:::print.anova(x, digits = digits, ...)
   args <- as.list(match.call())
-  if (length(args[['signif.legend']]) | length(args[['signif.stars']])) {
+  if (length(args[['signif.legend']]) | length(args[['signif.stars']]) | length(attr(x, "note"))) {
     cat("---\n")
   }
   cat("Note:", attr(x, "note"), "\n")

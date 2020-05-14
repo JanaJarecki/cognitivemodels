@@ -122,8 +122,6 @@
 }
 
 
-# x <- .make_constraints(parspace = make_parspace(a = c(0,1), b= 0:1), fix = list(a = "b"))
-
 #' Simplify constraints
 #' 
 #' Simplify a constraint by removing the fully-determined parameter
@@ -195,7 +193,7 @@
   qrcoef[qrcoef[!is.na(qrcoef)] == 0L & b != 0] <- NA
   qrsol <- try(qr.solve(A,b), silent = TRUE)
   if (inherits(qrsol, "try-error")) {
-    stop("Fixed parameters over-constrain the model parameters.\n", if(nrow(A) == ncol(A)) {"  * Are your constraints circular (a=b, b=a)?"}, "\n  * The original error is:\n    ", qrsol, call.=FALSE)
+    stop("'fix' over-constrains the parameters.\n", if(nrow(A) == ncol(A)) {"  * Are your constraints circular (a=b, b=a)?"}, "\n  * The original error is:\n    ", qrsol, call.=FALSE)
   } else {
     s <- setNames(qr.solve(A, b)[!is.na(qrcoef)], x$names[!is.na(qrcoef)])
     return(s)
@@ -231,7 +229,7 @@ print.csm_constraint = function(x, ..., latex = FALSE) {
 #' 
 #' @param x An object of type constraint from the package ROI
 #' @noRd
-.which.underdetermined <- function(x) {
+.which_underdetermined <- function(x) {
   if (is.null(x) || missing(x)) {
     return(NULL)
   }
@@ -239,7 +237,45 @@ print.csm_constraint = function(x, ..., latex = FALSE) {
   b <- x$rhs
   A <- matlib::echelon(A,b)
   A <- A[, -ncol(A), drop = FALSE]
-  a <- which(colSums(A) == 0)
+  a <- which(apply(A == 0, 2, all))
   b <- which(colSums(A[which(rowSums(A) != 1), , drop = FALSE]) != 0)
   return(sort(unique(c(a,b))))
+}
+
+#' Returns the index of the parameter that is free without any constraints
+#' 
+#' @param x An object of type constraint from the package ROI
+#' @noRd
+.which_free <- function(x) {
+  if (is.null(x) || missing(x)) { return(NULL) }
+  A <- as.matrix(x$L)
+  b <- x$rhs
+  A <- matlib::echelon(A,b)
+  A <- A[, -ncol(A), drop = FALSE]
+  # Parameter that are in no constraints or the first parameter of a constr.
+  # Todo test if the .which_free functino works properly
+  a <- apply(A == 0, 2, all)
+  b <- apply(A != 0, 1, function(x) (sum(x) > 1) & cumsum(x) == 1)
+  b <- apply(b, 1, any)
+  return(a | b)
+}
+
+# Todo Test the .which_fixed function
+#' Returns the indexes of parameters that take a fixed value
+#' 
+#' @param x An object of type constraint from the package ROI
+#' @noRd
+.which_fix <- function(x) {
+  if (is.null(x) || missing(x)) { return(NULL) }
+  setdiff(seq.int(x$L$ncol), .which_underdetermined(x))
+}
+
+# Todo Test the .which_constrained function
+#' Returns the indexes of parameters that have constraints on them
+#' 
+#' @param x An object of type constraint from the package ROI
+#' @noRd
+.which_constrained <- function(x) {
+  if (is.null(x) || missing(x)) { return(NULL) }
+  setdiff(seq.int(x$L$ncol), .which_free(x))
 }

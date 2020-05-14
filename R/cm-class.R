@@ -139,7 +139,6 @@ Cm <- R6Class(
       # Initialize slots of the model
       self$set_data(data = data)
       private$init_par(parspace = parspace, fix = fix, options = options, mode = mode)
-      private$init_constraints(fix = self$fix)
       private$init_stimnames()
       private$init_prednames()
       private$init_options(options)
@@ -162,7 +161,7 @@ Cm <- R6Class(
     #' @param ... other arguments
     fit = function(solver = self$options$solver, measure = self$options$fit_measure, ...) {
       message("Fitting free parameters ",
-          .brackify(private$get_parnames("free")),
+          .brackify(self$parnames$free2),
           " by ", ifelse(grepl("loglikelihood|accuracy", self$options$fit_measure), "maximizing ", "minimizing "), self$options$fit_measure, " with ", paste(self$options$solver, collapse=", "))
       solver <- .check_and_match_solver(solver = solver)
       constraints <- .simplify_constraints(self$constraints)
@@ -467,29 +466,35 @@ Cm <- R6Class(
     #' Prints the model object
     #' @param digits A number specifying the number of digits to print
     print = function(digits = 2) {
-      cat(self$title)
+      title <- self$title
+      if (!inherits(self, "csm")) {
+        title <- paste(title, "| choice rule:", self$choicerule)
+      }
+      cat(title)
       cat('\nCall:\n',
       paste(.abbrDeparse(self$call), sep = '\n', collapse = '\n'), '\n\n', sep = '')
       note <- NULL
       if (self$npar("free") > 0L) {
-        cat('Free parameter estimates:\n')
-        par <- self$get_par()[setdiff(private$get_parnames('free'), private$get_parnames('constrained'))]
+        title <- "Free parameter:" 
+        if(self$options$fit == TRUE & self$fitobj$convergence == 0) {
+          title <- "Free parameter estimates:"
+        }
+        cat(title, "\n")
+        par <- self$get_par()[self$parnames$free2]
         print.default(format(par, digits = digits, justify = 'centre', width = digits+2L), print.gap=2L, quote=FALSE)
+        cat("\n")
       } else {
         note <- 'No free parameter.'
       }
       if (self$ncon > 0L) {
-        cat('\nConstrained parameter:\n')
-        par <- self$get_par()[private$get_parnames() %in% c(private$get_parnames("constrained"), private$get_parnames("constant"))]
+        cat("Constrained and fixed parameter:\n")
+        par <- self$get_par()[!.which_free(M$constraints)]
         print.default(format(par, digits = digits, justify = 'centre', width = digits+2L), print.gap=2L, quote=FALSE)
       } else {
         note <- cbind(note, "No fixed parameter. ")
       }
       if (self$ncon  > 0L) {
-        note <- cbind(note, "View constraints by 'M$constraints'.")
-      }
-      if (!inherits(self, "csm")) {
-         cat('Choice rule:', self$choicerule)
+        note <- cbind(note, "View constraints by constraints(.), view parameter space by parspace(.)")
       }
       
       if ( length(note) ) cat('\n---\nNote: ', note)
@@ -637,17 +642,17 @@ Cm <- R6Class(
 
     # INITIALIZE METHODS
     # -------------------------------------------------------------------------
-    init_parspace = function(p, cr, options = list(), mode) {
+    init_parspace = function(p, choicerule, options = list(), mode, addpar = TRUE) {
       private$init_mode(mode = mode)
-      sigma_par <- cr_par <- NULL
-      if (!is.null(cr)) {
-        cr_par <- if (cr == "softmax") {
+      sigma_par <- choicerule_par <- NULL
+      if (!is.null(choicerule) & addpar == TRUE) {
+        choicerule_par <- if (choicerule == "softmax") {
           make_parspace(tau = c(0.001, 10, 0.5, NA))
-        } else if (cr == "epsilon") {
+        } else if (choicerule == "epsilon") {
           make_parspace(eps = c(0.001, 1L, 0.2, NA))
         }
       }
-      if (self$mode == "continuous" & !is.null(options)) {
+      if (self$mode == "continuous" & !is.null(options) & addpar == TRUE) {
         options <- do.call(cm_options, options[!duplicated(names(options))])
         if (options$fit_measure == "loglikelihood") {
           if (!is.null(self$res)) {
@@ -661,7 +666,7 @@ Cm <- R6Class(
           } 
         }
       }
-      p <- rbind(p, cr_par, sigma_par)
+      p <- rbind(p, choicerule_par, sigma_par)
       
       if (length(options$lb)) {
         p[names(options$lb), "lb"] <- options$lb
@@ -671,8 +676,9 @@ Cm <- R6Class(
       }
       not_btw <- (!p[intersect(names(options$lb),names(options$ub)), "start"] %between% list(options$lb, options$ub))
       p[not_btw, "start"] <- rowMeans(p[not_btw, c("lb", "ub"), drop=FALSE])
-      p[names(options$start), "start"] <- options$start
-
+      if (length(options$start)) {
+        p[names(options$start), "start"] <- options$start
+      }
       self$parspace <- p
     },
     init_fix = function(fix) {
@@ -686,35 +692,24 @@ Cm <- R6Class(
       self$fix <- fix
     },
     init_parnames = function(parspace = self$parspace, fix = self$fix, choicerule = self$choicerule) {
-      parnames <- rownames(parspace)
-      fixednames <- names(fix)
-      # parameters that are constrained without those ignored
-      constrained = setdiff(fixednames, fixednames[unlist(lapply(fix, is.na))])
-      pn <- list(
-        all = parnames,
-        # parameters that are not fixed and not constrained
-        free = setdiff(setdiff(parnames, fixednames), constrained),
-        fix = intersect(parnames, fixednames),
-        # parameters that are constrained without those ignored
-        constrained = setdiff(fixednames, fixednames[unlist(lapply(fix, is.na))]),
-        # parameters equal to a value
-        constant = setdiff(fixednames, fixednames[unlist(lapply(fix, is.character))]),
-        # parameters equal to another parameter
-        equal = fixednames[unlist(lapply(fix, is.character))],
-        # parameters that have NA values
-        ignored = fixednames[unlist(lapply(fix, is.na))]
+      self$parnames <- list(
+        all = rownames(parspace),
+        free = rownames(parspace), # should be named to_fit
+        free2 = rownames(parspace), # should be free
+        choicerule = switch(choicerule,
+                            softmax = "tau",
+                            epsilon = "eps"),
+        ignored = names(fix)[unlist(lapply(fix, is.na))],
+        constrained = NA
       )
-      pn[["choicerule"]] <- switch(choicerule,
-                              softmax = "tau",
-                              epsilon = "eps")
-      self$parnames <- pn
     },
-    init_par = function(parspace, fix, options, mode) {
-      private$init_parspace(p = parspace, cr = self$choicerule, options = options, mode = mode)
+    init_par = function(parspace, fix, options, mode, addpar=TRUE) {
+      private$init_parspace(p = parspace, choicerule = self$choicerule, options = options, mode = mode, addpar = addpar)
       .check_par(fix, self$parspace, self$pass_checks)
       private$init_fix(fix)
       private$init_parnames()
       self$par <- setNames(as.list(self$parspace[, "start"]), rownames(self$parspace))
+      private$init_constraints(fix = self$fix)
     },
     init_constraints = function(fix) {
       # constraints from child model objects and the supplied 'fix' argument
@@ -734,10 +729,13 @@ Cm <- R6Class(
       self$ncon <- length(C)
       if (self$ncon > 0L) {
         self$ncon <- min(length(C), sum(!apply(as.matrix(C$L) == 0L, 2, all)))
-        self$set_par(.solve_constraints(C, b = unlist(self$par)), constrain = FALSE)
-        self$set_par(self$par) #fixme (this seems inefficient)
-        self$parnames$free <- C$names[.which.underdetermined(C)]
-        self$parnames$constrained <- names(.solve_constraints(C, b = unlist(self$par)))
+        parvalues <- .solve_constraints(C, b = unlist(self$par))
+        self$set_par(parvalues, constrain = FALSE)
+        self$set_par(self$par, constrain = TRUE) #fixme (this seems inefficient)
+        self$parnames$free <- C$names[.which_underdetermined(C)]
+        self$parnames$fix <- C$names[.which_fix(C)]
+        self$parnames$constrained <- C$names[.which_constrained(C)]
+        self$parnames$free2 <- C$names[.which_free(C)]
       }
     },
     init_mode = function(mode = NULL) {
@@ -805,7 +803,10 @@ Cm <- R6Class(
       maxi <- self$options$fit_measure %in% c("loglikelihood", "accuracy")
       objval <- do.call(self$gof, args = .args, envir = parent.frame()) * (-1)^maxi
       if(any(!is.finite(objval))) {
-        print(par)
+        message("\nInfinite goodness of fit during optimization for parameter values:\n")
+        writeLines(names(par), sep = "\t")
+        writeLines(sprintf("%.4f",par), sep = "\t")
+        cat("\n")
       }
       return(objval)
     },
