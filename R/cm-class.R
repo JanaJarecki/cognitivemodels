@@ -811,6 +811,7 @@ Cm <- R6Class(
       return(objval)
     },
     fit_roi = function(start = private$get_start("free"), cons) {
+      if (length(cons) == 0) { cons <- NULL }
       objective <- ROI::F_objective(
         F = function(par) { private$objective(par, self = self) },
         n = self$npar("free"),
@@ -832,7 +833,7 @@ Cm <- R6Class(
           x = problem,
           solver = self$options$solver,
           start = start,
-          control = self$options$fit_control[grep("grid", names(self$options$fit_control))])
+          control = self$options$fit_control[!grepl("grid|nbest|nsteps", names(self$options$fit_control))])
           ),
         envir = parent.frame())
       if (sol$status$code == 1L) {
