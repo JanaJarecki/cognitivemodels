@@ -142,7 +142,7 @@ solvers <- function() {
     install <- utils::menu(c("Yes", "No, stop the model."), title = paste0("The solver '", solver[missing], "' is not (yet) installed. Want to install it?"))
     if (install == 1) {
       install.packages(paste0("ROI.plugin.", solver[missing]))
-      library(paste0("ROI.plugin.", solver[missing]))
+      library(paste0("ROI.plugin.", solver[missing]), character.only=TRUE)
       return(solver)
     } else {
       stop("Model stopped, because the ROI solver plugin was not (yet) installed. \n  * Would you like to see the solvers that are installed, ROI::ROI_registered_solvers()?\n  * Would you like to change the solver?", call. = FALSE)
