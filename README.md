@@ -39,7 +39,7 @@ Model | Reference | Documentation of the Function
 Memory-based preference model | Jarecki & Rieskamp (submitted) | `?mem`
 Generalized context model | Medin & Schaffer (1976); Nosofsky (1986) | `?ebm`
 Optimal risk-sensitive foraging model | Houston & McNamara (1988) | `?hm1988`
-Cumulative prospect theory | Kahneman & Tversky (1979); Tversky & Kahneman () 1992) | `?cpt`
+Cumulative prospect theory | Kahneman & Tversky (1979); Tversky & Kahneman (1992) | `?cpt`
 Bayesian cognitive model | Hoffart, Jarecki, Duthil, & Rieskamp (under review) | `?bayes`
 Power utility | Tversky (1967); Wakker (2008)| `?utility_pow`
 Soft-max choice rule | Sutton & Barto (1998) | `?softmax`
