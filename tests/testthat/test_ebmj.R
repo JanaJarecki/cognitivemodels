@@ -3,12 +3,14 @@ context("ebm")
 
 calc_pred <- function(dt, par, newdata) {
   r <- par["r"]; q <- par["q"]; lambda <- par["lambda"]; w <- par[c("f1", "f2")] # defines parameters
+  c_true <- which(!is.na(dt$c))
   sapply(1:nrow(dt), function(i) {
     p <- unlist(dt[i, 1:2]) # defines probe
-    if(!newdata & i == 1) {
-      return(mean(range(dt[, "c"])))
+    if(!newdata & (i == 1 | length(intersect(c_true, 1:(i-1))) == 0)) {
+      return(mean(range(dt[c_true, "c"])))
     } else {
-      if(!newdata) dt <- dt[1:(i-1), ] # use only previously seen exemplars
+      if(!newdata) dt <- dt[intersect(c_true, 1:(i-1)), ] # use only previously seen exemplars with feedback
+      if(newdata) dt <- dt[c_true, ] # use only exemplars with feedback
       x <- dt[, 1:2] # defines exemplars
       
       dist <- as.matrix(abs(sweep(x, 2, p))) # calculates distance
@@ -126,5 +128,102 @@ test_that("Prediction identitites to equal parameters", {
   expect_equal(M$predict()[4], calc_pred(dt, pars, FALSE)[4], tol = tol)
 })
 
-# ToDo: partial feedback, eine Zeile mit criterion auf NA, predictions machen
-# ToDo: 3. orthographic mistakes
+# 3. Formal tests
+# 3.a. One-row test set and test sets with different orders
+test_that("Prediction identities data frame", {
+  expect_pred_equivalent <- function(data, result, newdata = NULL) {
+    M <- ebm_j(rp ~ f1 + f2, ~c, data = as.data.frame(data), fix = pars)
+    expect_equivalent(M$predict(newdata = newdata), result, tol=tol)
+  }
+  
+  expect_pred_equivalent(dt[1, ], calc_pred(dt[1, ], pars, FALSE))
+  expect_pred_equivalent(dt[2, ], calc_pred(dt[2, ], pars, FALSE))
+  expect_pred_equivalent(dt[3, ], calc_pred(dt[3, ], pars, FALSE))
+  expect_pred_equivalent(dt[4, ], calc_pred(dt[4, ], pars, FALSE))
+  expect_pred_equivalent(dt[1, ], calc_pred(dt[1, ], pars, TRUE), newdata = dt[1, ])
+  expect_pred_equivalent(dt[2, ], calc_pred(dt[2, ], pars, TRUE), newdata = dt[2, ])
+  expect_pred_equivalent(dt[3, ], calc_pred(dt[3, ], pars, TRUE), newdata = dt[3, ])
+  expect_pred_equivalent(dt[4, ], calc_pred(dt[4, ], pars, TRUE), newdata = dt[4, ])
+  expect_pred_equivalent(dt, calc_pred(dt, pars, FALSE))
+  expect_pred_equivalent(dt, calc_pred(dt, pars, TRUE), newdata = dt)
+  expect_pred_equivalent(dt[4:1, ], calc_pred(dt[4:1, ], pars, FALSE))
+  expect_pred_equivalent(dt[4:1, ], calc_pred(dt[4:1, ], pars, TRUE), newdata = dt[4:1, ])
+  expect_pred_equivalent(dt[c(2,1,4,3), ], calc_pred(dt[c(2,1,4,3), ], pars, FALSE))
+  expect_pred_equivalent(dt[c(2,1,4,3), ], calc_pred(dt[c(2,1,4,3), ], pars, TRUE), newdata = dt[c(2,1,4,3), ])
+})
+
+test_that("Prediction identities data table", {
+  expect_pred_equivalent <- function(data, result, newdata = NULL) {
+    M <- ebm_j(rp ~ f1 + f2, ~c, data = as.data.table(data), fix = pars)
+    expect_equivalent(M$predict(newdata = newdata), result, tol=tol)
+  }
+  
+  expect_pred_equivalent(dt[1, ], calc_pred(dt[1, ], pars, FALSE))
+  expect_pred_equivalent(dt[2, ], calc_pred(dt[2, ], pars, FALSE))
+  expect_pred_equivalent(dt[3, ], calc_pred(dt[3, ], pars, FALSE))
+  expect_pred_equivalent(dt[4, ], calc_pred(dt[4, ], pars, FALSE))
+  expect_pred_equivalent(dt[1, ], calc_pred(dt[1, ], pars, TRUE), newdata = dt[1, ])
+  expect_pred_equivalent(dt[2, ], calc_pred(dt[2, ], pars, TRUE), newdata = dt[2, ])
+  expect_pred_equivalent(dt[3, ], calc_pred(dt[3, ], pars, TRUE), newdata = dt[3, ])
+  expect_pred_equivalent(dt[4, ], calc_pred(dt[4, ], pars, TRUE), newdata = dt[4, ])
+  expect_pred_equivalent(dt, calc_pred(dt, pars, FALSE))
+  expect_pred_equivalent(dt, calc_pred(dt, pars, TRUE), newdata = dt)
+  expect_pred_equivalent(dt[4:1, ], calc_pred(dt[4:1, ], pars, FALSE))
+  expect_pred_equivalent(dt[4:1, ], calc_pred(dt[4:1, ], pars, TRUE), newdata = dt[4:1, ])
+  expect_pred_equivalent(dt[c(2,1,4,3), ], calc_pred(dt[c(2,1,4,3), ], pars, FALSE))
+  expect_pred_equivalent(dt[c(2,1,4,3), ], calc_pred(dt[c(2,1,4,3), ], pars, TRUE), newdata = dt[c(2,1,4,3), ])
+})
+
+test_that("Prediction identities tibble", {
+  expect_pred_equivalent <- function(data, result, newdata = NULL) {
+    M <- ebm_j(rp ~ f1 + f2, ~c, data = as_tibble(data), fix = pars)
+    expect_equivalent(M$predict(newdata = newdata), result, tol=tol)
+  }
+  
+  expect_pred_equivalent(dt[1, ], calc_pred(dt[1, ], pars, FALSE))
+  expect_pred_equivalent(dt[2, ], calc_pred(dt[2, ], pars, FALSE))
+  expect_pred_equivalent(dt[3, ], calc_pred(dt[3, ], pars, FALSE))
+  expect_pred_equivalent(dt[4, ], calc_pred(dt[4, ], pars, FALSE))
+  expect_pred_equivalent(dt[1, ], calc_pred(dt[1, ], pars, TRUE), newdata = dt[1, ])
+  expect_pred_equivalent(dt[2, ], calc_pred(dt[2, ], pars, TRUE), newdata = dt[2, ])
+  expect_pred_equivalent(dt[3, ], calc_pred(dt[3, ], pars, TRUE), newdata = dt[3, ])
+  expect_pred_equivalent(dt[4, ], calc_pred(dt[4, ], pars, TRUE), newdata = dt[4, ])
+  expect_pred_equivalent(dt, calc_pred(dt, pars, FALSE))
+  expect_pred_equivalent(dt, calc_pred(dt, pars, TRUE), newdata = dt)
+  expect_pred_equivalent(dt[4:1, ], calc_pred(dt[4:1, ], pars, FALSE))
+  expect_pred_equivalent(dt[4:1, ], calc_pred(dt[4:1, ], pars, TRUE), newdata = dt[4:1, ])
+  expect_pred_equivalent(dt[c(2,1,4,3), ], calc_pred(dt[c(2,1,4,3), ], pars, FALSE))
+  expect_pred_equivalent(dt[c(2,1,4,3), ], calc_pred(dt[c(2,1,4,3), ], pars, TRUE), newdata = dt[c(2,1,4,3), ])
+})
+
+# 3.b. Formula entry
+test_that("ebm_j input errors", {
+  expect_error( # wrong order in formula, should be rp ~ f1 + f2
+    ebm_j(f1 + f2 ~ rp, ~c, data = dt, fix = pars)
+  )
+  expect_error( # matrix
+    ebm_j(rp ~ f1 + f2, ~c, data = as.matrix(dt), fix = pars)
+  )
+  expect_error(
+    ebm_j(rp ~ f1 + f2, ~c, data = as.matrix(dt[1, ]), fix = pars)
+  )
+  expect_error( # no choices specified and parameters need to be estimated
+    ebm_j(~ f1 + f2, ~c, data = dt)
+  )
+})
+
+# 3.c. Partial feedback, eine Zeile mit criterion auf NA, predictions machen
+dt[c(1, 3), "c"] <- NA
+M <- ebm_j(rp ~ f1 + f2, ~c, data = dt, fix = pars)
+test_that("Partial feedback", {
+  expect_equal(M$predict(newdata = dt)[1], calc_pred(dt, pars, TRUE)[1], tol = tol)
+  expect_equal(M$predict(newdata = dt)[2], calc_pred(dt, pars, TRUE)[2], tol = tol)
+  expect_equal(M$predict(newdata = dt)[3], calc_pred(dt, pars, TRUE)[3], tol = tol)
+  expect_equal(M$predict(newdata = dt)[4], calc_pred(dt, pars, TRUE)[4], tol = tol)
+  expect_equal(M$predict(newdata = dt), calc_pred(dt, pars, TRUE), tol = tol)
+  expect_equal(M$predict()[1], calc_pred(dt, pars, FALSE)[1], tol = tol)
+  expect_equal(M$predict()[2], calc_pred(dt, pars, FALSE)[2], tol = tol)
+  expect_equal(M$predict()[3], calc_pred(dt, pars, FALSE)[3], tol = tol)
+  expect_equal(M$predict()[4], calc_pred(dt, pars, FALSE)[4], tol = tol)
+  expect_equal(M$predict(), calc_pred(dt, pars, FALSE), tol = tol)
+})
