@@ -85,26 +85,46 @@ Gcm <- R6Class("gcm",
                  #     return( list(x0, x1) )
                  #   }
                  # },
-                 calc_cov = function(f = self$input, c = self$cat, newdata = NULL) {
-                   if(!is.null(newdata)) {
-                     f <- as.data.frame(newdata[, grepl("^f", colnames(newdata)), with = FALSE])
-                     c <- as.data.frame(newdata[, grepl("c", colnames(newdata)), with = FALSE])
-                     cov_cat_0 <- var(f[c == 0, ])
-                     cov_cat_1 <- var(f[c == 1, ])
-                     n <- nrow(newdata)
-                     return(list(list(cov0 = cov_cat_0, cov1 = cov_cat_1))[rep(1,n)])
-                   } else {
-                     # if(self$apply_ws_first) f <- self$apply_ws()
-                     n_c <- cbind(cumsum(c == 0), cumsum(c == 1))
-                     return(
-                       lapply(1:nrow(f), function(i) {
-                         prev_f <- f[1:i, , drop = FALSE]
-                         prev_c <- c[1:i]
-                         cov_cat_0 <- ((n_c[i, 1]-1)/n_c[i, 1]) * var(prev_f[prev_c == 0, ])
-                         cov_cat_1 <- ((n_c[i, 2]-1)/n_c[i, 2]) * var(prev_f[prev_c == 1, ])
-                         return(list(cov0 = cov_cat_0, cov1 = cov_cat_1))
-                       })
-                     )
+                 calc_cov = function(f = self$input, c = self$cat, newdata = NULL, output = self$output) {
+                   if(output == "category") {
+                     if(!is.null(newdata)) {
+                       f <- as.data.frame(newdata[, grepl("^f", colnames(newdata)), with = FALSE])
+                       c <- as.data.frame(newdata[, grepl("c", colnames(newdata)), with = FALSE])
+                       cov_cat_0 <- var(f[c == 0, ])
+                       cov_cat_1 <- var(f[c == 1, ])
+                       n <- nrow(newdata)
+                       return(list(list(cov0 = cov_cat_0, cov1 = cov_cat_1))[rep(1,n)])
+                     } else {
+                       # if(self$apply_ws_first) f <- self$apply_ws()
+                       n_c <- cbind(cumsum(c == 0), cumsum(c == 1))
+                       return(
+                         lapply(1:nrow(f), function(i) {
+                           prev_f <- f[1:i, , drop = FALSE]
+                           prev_c <- c[1:i]
+                           cov_cat_0 <- ((n_c[i, 1]-1)/n_c[i, 1]) * var(prev_f[prev_c == 0, ])
+                           cov_cat_1 <- ((n_c[i, 2]-1)/n_c[i, 2]) * var(prev_f[prev_c == 1, ])
+                           return(list(cov0 = cov_cat_0, cov1 = cov_cat_1))
+                         })
+                       )
+                     }
+                   }
+                   if(output == "judgment") {
+                     if(!is.null(newdata)) {
+                       f <- as.data.frame(newdata[, grepl("^f", colnames(newdata)), with = FALSE])
+                       cov <- var(f)
+                       n <- nrow(unique(self$input)) + nrow(newdata)
+                       print(n)
+                       return(list(cov)[rep(1,n)])
+                     } else {
+                       n_c <- cbind(cumsum(c == 0), cumsum(c == 1))
+                       return(
+                         lapply(1:nrow(f), function(i) {
+                           prev_f <- f[1:i, , drop = FALSE]
+                           cov <- ((i-1)/i) * var(prev_f)
+                           return(list(cov))
+                         })
+                       )
+                     }
                    }
                  },
                  calc_stimulus_frequencies = function() {
@@ -127,10 +147,10 @@ Gcm <- R6Class("gcm",
                  calc_similarity_matrix = function(x, y, metric = self$metric, cov = NULL){
                    # x: matrix with features of every trial, e.g., learningset
                    # y: matrix with feature combinations to which the similarity should be calculated; e.g., prototypes
-                   if(self$metric != "mahalanobis") {
+                   # if(self$metric != "mahalanobis") { # add: and self$input are not integers (?)
                      x <- as.data.frame(unique(x))
                      rownames(x) <- apply(x, 1, paste0, collapse = "")
-                   }
+                   # }
                    if(missing(y)) {
                      # if no y, calculate similarity of x to x
                      identical <- TRUE
@@ -155,9 +175,13 @@ Gcm <- R6Class("gcm",
                      exemplar <- y[z[2], ]
 
                      if(metric == "mahalanobis") {
-                       # 1. calc_cov, calc_distance, add argument (c = NULL)
-                       temp_cat <- y_cat[rownames(exemplar) == rownames(y_cat), "c"]
-                       temp_cov <- cov[[z[1]]][[paste0("cov", temp_cat)]]
+                       if(self$output == "category") {
+                         temp_cat <- y_cat[rownames(exemplar) == rownames(y_cat), "c"]
+                         temp_cov <- cov[[z[1]]][[paste0("cov", temp_cat)]]
+                       }
+                       if(self$output == "judgment") {
+                         temp_cov <- cov[[z[1]]]
+                       }
                        if(class(try(solve(temp_cov), silent=T)) != "matrix") temp_cov <- temp_cov + rnorm(n = length(temp_cov), sd = .0001)
                        distance <- self$calc_distance(probe = probe, exemplar = exemplar, cov = temp_cov)
                      } else {
@@ -181,11 +205,13 @@ Gcm <- R6Class("gcm",
                      input <- model.frame(self$formula, newdata, na.action = NULL)[, -1]
                      n <- nrow(input)
                      input_id <- apply(input, 1, paste0, collapse = "")
-                     stimulus_frequencies <- self$stimulus_frequencies[, nrow(self$input), , drop = FALSE]
+                     if(self$output == "category") stimulus_frequencies <- self$stimulus_frequencies[, nrow(self$input), , drop = FALSE]
+                     if(self$output == "judgment") stimulus_frequencies <- self$stimulus_frequencies[, nrow(self$input), drop = FALSE]
                      names <- dimnames(stimulus_frequencies)
                      names[[2]] <- 1:n
-                     stimulus_frequencies <- aperm(array(rep(stimulus_frequencies, n), dim = c(nrow(newdata), 2, n), dimnames = names[c(1, 3, 2)]), perm = c(1, 3, 2))
+                     if(self$output == "category") stimulus_frequencies <- aperm(array(rep(stimulus_frequencies, n), dim = c(nrow(unique(self$input)), 2, n), dimnames = names[c(1, 3, 2)]), perm = c(1, 3, 2))
                      # stimulus_frequencies <- aperm(array(rep(stimulus_frequencies, n), dim = c(8, 2, n), dimnames = names[c(1, 3, 2)]), perm = c(1, 3, 2))
+                     if(self$output == "judgment") stimulus_frequencies <- aperm(array(rep(stimulus_frequencies, n), dim = c(nrow(unique(self$input)), n), dimnames = names[c(1, 2)]), perm = c(1, 2))
                    } else {
                      stimulus_frequencies <- self$stimulus_frequencies
                      input <- self$input
@@ -197,7 +223,7 @@ Gcm <- R6Class("gcm",
                      # means <- self$make_prototype()
                      if(!is.null(newdata)) cov <- self$calc_cov(newdata = newdata)
                      if( is.null(newdata)) cov <- self$calc_cov()
-                     if(all(input == self$input)) {
+                     if(try(all(input == self$input), silent = T) == TRUE) {
                        sim_mat <- self$calc_similarity_matrix(x = rbind(self$input), y = self$input, cov = cov)
                      } else {
                        sim_mat <- self$calc_similarity_matrix(x = rbind(self$input, input), y = self$input, cov = cov)
@@ -258,8 +284,8 @@ Gcm <- R6Class("gcm",
                    if(self$metric == "mahalanobis"){
                      dist <- sqrt(t(w*dist) %*% solve(cov) %*% (w*dist))
                    }
-                   # if(self$metric == "undet_mahalanobis"){
-                   #   dist <- sqrt(t(w*dist) %*% solve(cov) %*% (w*dist) * det(cov1)))
+                   # if(self$metric == "gv_mahalanobis"){ # generalized variance = det(cov)
+                   #   dist <- sqrt(t(w*dist) %*% solve(cov) %*% (w*dist) * det(cov)))
                    # }
                    return(dist)
                  },

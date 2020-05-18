@@ -53,10 +53,36 @@ sim1/(sim1 + sim0)
 dt <- data.table(response = c(32, 21, 34, 26, 33),
                  f1 = c(4, 4, 1, 4, 1),
                  f2 = c(1, 3, 1, 1, 4),
-                 true_cat = c(21, 26, 32, 21, 35))
+                 crit = c(21, 26, 32, 21, 35))
 formula <- response ~ f1 + f2
 
-args <- list(formula = formula, cat = ~ true_cat, metric = "mink", output = "judg", fixed = c(c = 1, r = 1, p = 1, tau = 1), choicerule = "soft")
+args <- list(formula = formula, cat = ~ crit, metric = "mink", output = "judg", fixed = c(c = 1, r = 1, p = 1, tau = 1), choicerule = "soft")
 m <- do.call(gcm, c(args, data = list(dt), discount = 0))
+
+dt <- data.table(response = rep(c(4, 6, 8, 12, 18, 24), 290),
+                 f1 = rep(c(3, 2, 3, 1, 2, 1), 290),
+                 f2 = rep(c(1, 1, 2, 1, 2, 2), 290),
+                 f3 = rep(c(2, 2, 2, 3, 3, 3), 290),
+                 crit = rep(c(4, 6, 8, 12, 18, 24), 290),
+                 block = "training")
+# c(6.37, 8.53, 4.5, 10.93, 10.35, 18.49, 21.92, 19.78)
+new_dt <- data.table(response = rep(10, 14),
+                     f1 = c(3, 4, 2, 3, 4, 1, 2, 2, 1, 1, 2, 2, 1, 2),
+                     f2 = c(1, 1, 1, 2, 2, 1, 2, 3, 2, 3, 3, 1, 3, 3),
+                     f3 = c(1, 2, 1, 1, 2, 4, 4, 3, 4, 3, 2, 3, 2, 1), 
+                     crit = 10,
+                     block = "test")
+dt <- rbind(dt, new_dt)
+formula <- response ~ f1 + f2 + f3
+
+args <- list(formula = formula, cat = ~ crit, metric = "mink", output = "judg", fixed = c(c = 11.42, r = 1, p = 1, sigma = 4, w = c(.27, .17, .56)), choicerule = NULL)
+m <- do.call(gcm, c(args, data = list(dt[block == "training"]), discount = 0))
+mink <- data.table(id = new_dt[, paste0(f1, f2, f3)], mink = round(m$predict(newdata = dt[block == "test", ]), 2))
+
+args <- list(formula = formula, cat = ~ crit, metric = "mah", output = "judg", fixed = c(c = 11.42, r = 1, p = 1, sigma = 4, w = c(.27, .17, .56)), choicerule = NULL)
+m <- do.call(gcm, c(args, data = list(dt[block == "training"]), discount = 0))
+mah <- data.frame(id = new_dt[, paste0(f1, f2, f3)], mah = round(m$predict(newdata = dt[block == "test", ]), 2))
+
+merge(mink, mah, sort = FALSE)
 
 # devtools::load_all()
