@@ -47,7 +47,7 @@ Cogscimodel <- R6Class(
       }
       self$response <- match.arg(response)
       if ( response == 'continuous' ) {
-        R <- max(self$obs) - min(self$obs)
+        R <- max(self$obs, na.rm = T) - min(self$obs, na.rm = T)
         allowedparm <- rbind(allowedparm, sigma = c(0, R, R / 2, NA))
       }
       self$discount <- self$setdiscount(discount) 
