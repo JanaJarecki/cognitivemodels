@@ -8,22 +8,27 @@
 # Cognitive Model
 # ==========================================================================
 
-#' Kahneman & Tversky's (1992) cumulative prospect theory model
+#' Cumulative Prospect Theory Models
+#' 
+#' @description 
+#' cpt_* fit a cumulative prospect theory.
+#' 
+#' * `cpt()` fits cumulative prospect theory (Tversky & Kahneman, 1992)
+#' * `cpt_mem()` fits cumulative prospect theory with memory (Thaler & Johnson, 1990)
 #' 
 #' @importFrom stringr str_extract
 #' @importFrom abind abind
 #' @importFrom data.table %between%
 #' 
 #' @inheritParams Cm
-#' @description Fits the cumulative prospect theory model.
 #' @templateVar parameter formula
 #' @param formula A \link{formula} such as \code{y ~ x1 + p1 + x2 | y1 + py + y2} specifying the columns in \code{data} that contain outcomes, probabilities and (optional) the observations. Lines (\code{|}) separate different gambles. The formula must alternate outcomes and probabilities (x + p + x2 + p2), the last probability can be omitted.
 #' @templateVar parameter choicerule
-#' @param choicerule (default \code{"softmax"}) A string specifying the choierule of the model, for instance \code{"softmax"}. If \code{"none"}, the model predicts the utility value of the option. Allowed are the values of the \code{type} argument in \code{\link[cognitiveutils]{choicerule}}. 
-#' @param weighting (optional) weighting function. Currently the one used in Kahneman & Tversky (1992), \code{"KT1992"}, is possible.
-#' @param value (optional) value function. Currently, only the one used by Kahneman & Tversky (1992), \code{"KT1992"}, is possible.
-#' @references Tversky, A., & Kahneman, D. (1992). Advances in prospect theory: cumulative representation of uncertainty. Journal of Risk and Uncertainty, 5, 297–323. doi:10.1007/BF00122574
-#' @return An object of class R6 holding the model, it has free parameters. A model object \code{M} can be viewed with \code{M}, predictions can be made with \code{M$predict()} for choice predictions, and \code{M$predict("ev")} for the expected value of the optimal choice and \code{M$predict("value", 1:2)} for the expected value of all choices.
+#' @param ref (optional, default: 0) A number, string, or RHS \link{formula}. The reference point. Formula and string set the reference point to variables in data, and `ref = "myvar"` means `data$myvar`, and so does `ref = ~ myvar`.
+#' @param weighting (optional) A string, the weighting function. Currently only \code{"KT1992"}, the value function in Kahneman & Tversky (1992), is implemented.
+#' @param value (optional) A string, the value function. Currently, only \code{"KT1992"} the value function in Kahneman & Tversky (1992) is implemented.
+#' @references Tversky, A., & Kahneman, D. (1992). Advances in prospect theory: cumulative representation of uncertainty. Journal of Risk and Uncertainty, 5, 297–-323. doi:[10.1007/BF00122574](https://doi.org/10.1007/BF00122574)
+#' @return An object of class R6 holding the model, it has free parameters. A model object `M` can be viewed with `M`, choice or utility predictions can be made by `predict(M)`, also for new data by `predict(M, newdata = ...`).
 #' @author Jana B. Jarecki, \email{jj@janajarecki.com}
 #' @details Fits cumulative prospect theory.
 #' @examples
@@ -38,7 +43,7 @@
 #'   y2 = 0,
 #'   rp = 1)
 #' 
-#' # Make the model, add fix parameters (don't fit)
+#' # Make the model, add fix parameters (don"t fit)
 #' # using the Parameter from the paper
 #' M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0,
 #'          choicerule = "softmax", data = dt,
@@ -54,7 +59,20 @@
 #' summary(M)
 #' anova(M)
 #' @export
-cpt <- function(formula, data = NULL, ref = 0L, fix = list(), choicerule = NULL, weighting = c('TK1992'), value = c('TK1992'), options = NULL) {
+cpt <- function(formula, data, choicerule, ref = 0L, fix = list(), weighting = c("TK1992"), value = c("TK1992"), options = NULL) {
+  .args <- as.list(rlang::call_standardise(match.call())[-1])
+  .args["editing"] <- "none"
+  return(do.call(what = Cpt$new, args = .args, envir = parent.frame()))
+}
+
+#' Prospect Theory Model with an Editing Step
+#' @describeIn cpt Prospect Theory with Memory
+#' 
+#' @param mem (optional, default: 0) A number, string, or RHS \link{formula}. Thr prior gains or losses in memory. Formula and string refer to variables in the data, and `mem = "myvar"`means `data$myvar` and so does `mem = ~myvar`.
+#' @param editing (optional, default: \code{"hedonic"}) A string, the editing rule to use (see Thaler & Johnson, 1999, pp. 645). Currently only \code{"hedonic"}.
+#' @references  Thaler, R. H., & Johnson, E. J. (1990). Gambling with the House Money and Trying to Break Even: The Effects of Prior Outcomes on Risky Choice. Management Science, 36(6), 643–-660. doi:[10.1287/mnsc.36.6.643](https://doi.org/10.1287/mnsc.36.6.643)
+#' @export
+cpt_mem <- function(formula, mem, data, choicerule, editing = "hedonic", ... ) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   return(do.call(what = Cpt$new, args = .args, envir = parent.frame()))
 }
@@ -63,9 +81,11 @@ Cpt <- R6Class("cpt",
   inherit = Cm,
   public = list(
     formulaRef = NULL,
+    formulaMem = NULL,
     wfun = NULL,
     vfun = NULL,
-    initialize = function(formula, ref = 0L, fix = NULL, data = NULL, choicerule = NULL, weighting = c('TK1992'), value = c('TK1992'), options = list()) {
+    efun = NULL,
+    initialize = function(formula, ref = 0L, mem = 0L, fix = NULL, data = NULL, choicerule = NULL, weighting = c("TK1992"), value = c("TK1992"), editing = c("hedonic"), options = list()) {
       # Ranges of parameters following these studiese
       # 1. International comparison study
       # Rieger, M. O., Wang, M., & Hens, T. (2017). Estimating cumulative prospect theory parameters from an international survey. Theory and Decision, 82, 567–596. doi:10.1007/s11238-016-9582-8
@@ -73,9 +93,11 @@ Cpt <- R6Class("cpt",
       # 2. parameter stability study
       # Glöckner, A., & Pachur, T. (2012). Cognitive models of risky choice: parameter stability and predictive accuracy of prospect theory. Cognition, 123, 21–32. doi:10.1016/j.cognition.2011.12.002
 
-      self$formulaRef <- if (is.numeric(ref)) { ref } else { chr_as_rhs(ref) }
+      self$formulaRef <- if (is.numeric(ref)) { ref } else { .as_rhs(ref) }
+      self$formulaMem <- if (is.numeric(mem)) { mem } else { .as_rhs(mem) }
       self$set_weightingfun(weighting)
       self$set_valuefun(value)
+      self$set_editingfun(editing)
 
       parspace <- make_parspace(
         alpha   = c(0.001,  2,  .8, 1L),
@@ -99,14 +121,15 @@ Cpt <- R6Class("cpt",
     },
     make_prediction = function(type, input, more_input, ...) {
       par <- self$get_par()
-      no <- self$nobs
-      ns <- self$nstim
       na <- self$natt[1]
+      ref <- more_input[,   1:(na/2),  drop = FALSE] # reference point
+      mem <- more_input[, -(1:(na/2)), drop = FALSE] # prior outcomes/memory
+      input <- self$efun(input = input, mem = mem)
       X <- input[,  seq(1, na, 2), drop = FALSE] #1., 3., 5. input
       P <- input[, -seq(1, na, 2), drop = FALSE] #2., 4., 6. input
-      X <- X - more_input # more_input = reference point
+      X <- X - ref
       # Cumulative prospect theory
-      #    sum(w(...) * v(...))
+      #    sum(w(.) * v(.))
       return(rowSums(
         self$wfun(x=X, p=P, gammap=par["gammap"], gamman=par["gamman"]) * 
         self$vfun(x=X, alpha = par["alpha"], beta = par["beta"], lambda = par["lambda"]))
@@ -150,6 +173,8 @@ Cpt <- R6Class("cpt",
           out[x <  0] <- wn
           return(out)
           }, x = x_unique, p = p_unique))
+        out[p_unique == 0L] <- 0L
+        out[p_unique == 1L] <- 1L
         return(out[id,])
         }
       }
@@ -163,7 +188,30 @@ Cpt <- R6Class("cpt",
         }
       } 
       self$vfun <- vfun
+    },
+  set_editingfun = function(type) {
+    if (type == "hedonic") {
+      efun <- function(input, mem = NULL) {
+        na <- self$natt[1]
+        X <- input[,  seq(1, na, 2), drop = FALSE] #1., 3., 5. input
+        P <- input[, -seq(1, na, 2), drop = FALSE] #2., 4., 6. input
+        X[P==0L] <- NA
+        Xmin <- apply(X, 1, min, na.rm = TRUE)
+        P[X==Xmin & P>0L] <- 1L
+        X[] <- t(sapply(1:nrow(X), function(i) ifelse(
+          X[i,] == Xmin[i],
+          X[i,] + mem[i,],
+          X[i,] - Xmin[i])))
+        X[P==0L] <- 0L
+        input[,  seq(1, na, 2)] <- X
+        input[, -seq(1, na, 2)] <- P
+        return(input)
+      }
+    } else {
+      efun <- function(input, ...) return(input)
     }
+    self$efun <- efun
+  }
   ),
   private = list(
     get_more_input = function(d = data.frame()) {
@@ -174,11 +222,18 @@ Cpt <- R6Class("cpt",
         ref <- super$get_input(f = chr_as_rhs(fr), d = d)
         ref <- array(ref, dim = c(nrow(d), self$natt[1]/2, self$nstim))
       }
-      return(ref)
+      fr <- self$formulaMem
+      if (is.numeric(fr)) {
+        mem <- array(fr, dim = c(nrow(d), self$natt[1]/2, self$nstim))
+      } else {
+        mem <- super$get_input(f = chr_as_rhs(fr), d = d)
+        mem <- array(ref, dim = c(nrow(d), self$natt[1]/2, self$nstim))
+      }
+      return(abind::abind(ref, mem, along = 2L))
     },
     check_input = function() {
       .check_probabilities(self = self)
-      super$check_input() # don't change this, it runs default checks!
+      super$check_input() # don"t change this, it runs default checks!
     }
   )
 )

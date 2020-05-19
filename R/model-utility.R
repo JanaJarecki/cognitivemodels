@@ -11,14 +11,18 @@
 
 #' Utility Function Models
 #' 
-#' \code{utility_pow_c(), utility_pow_d} fits a power utility model to data (continuous and discrete responses, resp.). \code{utility()} fits utility models.
-#' 
 #' @rdname utility
 #' 
+#' @description
+#' \code{utility()} fits utility models.
+#' 
+#' * \code{utility_pow_c()} fits a power utility for continuous responses.
+#' * \code{utility_pow_d()} fits a power utility for discrete respoonses.
+#' 
 #' @param formula A formula specifying responses ~ values (e.g, \code{y ~ x1 | x2}).
-#' @param type A string, which utility function to use; currently available is only \code{"power"} for power utility.
+#' @param type (optional) A string, which utility function to use; currently available is only \code{"power"} for power utility.
 #' @inheritParams Cm
-#' @return A model object (similar to lm-objects) of class "utility", which can be viewed with \code{summary(M)} or \code{anova(M)} and predictions can be made with \code{predict(M)}.
+#' @return A model object of class "utility", which can be viewed with `summary(.)` or `anova(.)`; predictions can be made with `predict(.)`.
 #' @section Parameter Space:
 #' \tabular{lcrcllr}{\verb{   } \tab \strong{Name} \tab \verb{    }\strong{LB} \tab  \strong{-} \tab \strong{UB}\verb{    } \tab \strong{Description} \tab \strong{Start Value}\cr
 #' 
@@ -28,17 +32,17 @@
 #' }
 #' \verb{   }*\emph{Note}, the lower bound is 0.001 if \eqn{x} contains positive \emph{and} negative values (see Wakker, 2008).
 #' @details  
-#' \emph{Power Utility [(\code{utility(type="power"), utility_pow()}].} The utility \eqn{U(x)} for positive outcomes \eqn{x} is \eqn{x^r if r > 0}, and is \eqn{log(x) if r = 0}, and is \eqn{-x^r if r < 0}. The utility for negative outcomes \eqn{x} equals \eqn{-U(-x)} with a separate exponent \code{rn}.
+#' _Power Utility_ **`utility_pow_.()`**. The utility \eqn{U(x)} for positive outcomes, \eqn{x > 0}, is \eqn{x^r if r > 0}, and is \eqn{log(x) if r = 0}, and is \eqn{-x^r if r < 0}. The utility for negative outcomes \eqn{x} equals \eqn{-U(-x)} with a separate exponent r (Wakker, 2008). The exponent is called `rp` and `rn` for positive and negative outcomes, respectively. To fit the model with only one exponent parameter, which is not recommended for mixed outcomes, set `fix = list(rp = "rn")`. 
 #' 
-#' @references {Wakker, P. P. (2008). Explaining the characteristics of the power (CRRA) utility family. \emph{Health Economics, 17(12), 1329-1344. } \url{htrps://doi.org/10.1002/hec.1331}}
+#' @references {Wakker, P. P. (2008). Explaining the characteristics of the power (CRRA) utility family. \emph{Health Economics, 17(12)}, 1329-1344. doi:[10.1002/hec.1331](htrps://doi.org/10.1002/hec.1331)}
 #' 
-#' {Tversky, A. (1967). Utility theory and additivity analysis of risky choices. \emph{Journal of Experimental Psychology, 75(1)}, 27-36. \url{htrp://dx.doi.org/10.1037/h0024915}}
+#' {Tversky, A. (1967). Utility theory and additivity analysis of risky choices. \emph{Journal of Experimental Psychology, 75(1)}, 27-36. doi:[10.1037/h0024915](htrp://dx.doi.org/10.1037/h0024915)}
 #' 
 #' @examples 
 #' #  No examples yet
 #' 
 #' @export
-utility_pow_d <- function(formula, data, choicerule, fix = list(), discount = 0, options = list(), ...) {
+utility_pow_d <- function(formula, data, fix = list(), choicerule, discount = 0, options = list(), ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args[["type"]] <- "power"
   .args[["mode"]] <- "discrete"
@@ -66,28 +70,17 @@ utility_exp <- function(formula, data, fix = list(), choicerule = NULL, mode = N
   return(do.call(what = Utility$new, args = .args, envir = parent.frame()))
 }
 
-
-#' Utility Models
-#' 
-#' @rdname utility
-#' 
-#' @export
-utility <- function(formula, data = data.frame(), type = c("power"), fix = list(), choicerule = NULL, mode = NULL, discount = 0, options = list(), ...) {
-  .args <- as.list(rlang::call_standardise(match.call())[-1])
-  return(do.call(what = Utility$new, args = .args, envir = parent.frame()))
-}
-
-
+# This is the back-end class for the utility models
 Utility <- R6Class("utility",
   inherit = Cm,
   public = list(
     type = NULL,
-    initialize = function(formula, data = NULL, type = c("power", "exponential"), fix = list(1), choicerule = "none", mode = c("continuous", "discrete"), discount = 0, options = list(), ...) {
+    initialize = function(formula, data = data.frame(), type = c("power", "exponential"), fix = list(), choicerule = "none", mode = c("continuous", "discrete"), discount = 0, options = list(), ...) {
       self$type <- match.arg(type)
       super$initialize(
         formula = formula,
         data = data,
-        title = paste("Utility:", self$type),
+        title = paste(self$type, "utility"),
         parspace = self$make_parspace(formula, data),
         choicerule = choicerule,
         mode = match.arg(mode),      
@@ -98,11 +91,10 @@ Utility <- R6Class("utility",
     },
     make_parspace = function(formula, data = NULL, type = self$type) {
       if (type == "power") {
-        lb <- if (!length(data)) {
-          -20
-        } else {
+        lb <- -20
+        if (length(data)) {
           i <- super$get_input(formula, data)
-          if (min(i) < 0L & max(i) > 0L) { 0.0001 } else { -20 }
+          lb <- if (min(i) < 0L & max(i) > 0L) { 0.0001 } else { -20 }
         }
         return(make_parspace(rp = c(lb, 20, 1, 1),
                              rn = c(lb, 20, 1, 1)))
@@ -148,9 +140,18 @@ Utility <- R6Class("utility",
     }
     ),
 
-
-
   private = list(
+    init_fix = function(fix = list()) {
+      # Switches off the rp parameter if all input is > 0
+      # Switches off the rn parameter if all input is < 0
+      if (!length(self$input)) { super$init_fix(fix = fix); return() }
+      if (min(self$input) > 0L) {
+        fix[["rn"]] <- NA
+      } else if (max(self$input) < 0L) {
+        fix[["rp"]] <- NA
+      }
+      super$init_fix(fix = fix)
+    },
     make_prednames = function() {
       return(self$stimnames)
     }

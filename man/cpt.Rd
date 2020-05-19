@@ -2,37 +2,53 @@
 % Please edit documentation in R/model-cpt.R
 \name{cpt}
 \alias{cpt}
-\title{Kahneman & Tversky's (1992) cumulative prospect theory model}
+\alias{cpt_mem}
+\title{Cumulative Prospect Theory Models}
 \usage{
 cpt(
   formula,
-  data = NULL,
+  data,
+  choicerule,
   ref = 0L,
   fix = list(),
-  choicerule = NULL,
   weighting = c("TK1992"),
   value = c("TK1992"),
   options = NULL
 )
+
+cpt_mem(formula, mem, data, choicerule, editing = "hedonic", ...)
 }
 \arguments{
 \item{formula}{A \link{formula} such as \code{y ~ x1 + p1 + x2 | y1 + py + y2} specifying the columns in \code{data} that contain outcomes, probabilities and (optional) the observations. Lines (\code{|}) separate different gambles. The formula must alternate outcomes and probabilities (x + p + x2 + p2), the last probability can be omitted.}
 
-\item{choicerule}{(default \code{"softmax"}) A string specifying the choierule of the model, for instance \code{"softmax"}. If \code{"none"}, the model predicts the utility value of the option. Allowed are the values of the \code{type} argument in \code{\link[cognitiveutils]{choicerule}}.}
+\item{ref}{(optional, default: 0) A number, string, or RHS \link{formula}. The reference point. Formula and string set the reference point to variables in data, and \code{ref = "myvar"} means \code{data$myvar}, and so does \code{ref = ~ myvar}.}
 
-\item{weighting}{(optional) weighting function. Currently the one used in Kahneman & Tversky (1992), \code{"KT1992"}, is possible.}
+\item{weighting}{(optional) A string, the weighting function. Currently only \code{"KT1992"}, the value function in Kahneman & Tversky (1992), is implemented.}
 
-\item{value}{(optional) value function. Currently, only the one used by Kahneman & Tversky (1992), \code{"KT1992"}, is possible.}
+\item{value}{(optional) A string, the value function. Currently, only \code{"KT1992"} the value function in Kahneman & Tversky (1992) is implemented.}
+
+\item{mem}{(optional, default: 0) A number, string, or RHS \link{formula}. Thr prior gains or losses in memory. Formula and string refer to variables in the data, and \code{mem = "myvar"}means \code{data$myvar} and so does \code{mem = ~myvar}.}
+
+\item{editing}{(optional, default: \code{"hedonic"}) A string, the editing rule to use (see Thaler & Johnson, 1999, pp. 645). Currently only \code{"hedonic"}.}
 }
 \value{
-An object of class R6 holding the model, it has free parameters. A model object \code{M} can be viewed with \code{M}, predictions can be made with \code{M$predict()} for choice predictions, and \code{M$predict("ev")} for the expected value of the optimal choice and \code{M$predict("value", 1:2)} for the expected value of all choices.
+An object of class R6 holding the model, it has free parameters. A model object \code{M} can be viewed with \code{M}, choice or utility predictions can be made by \code{predict(M)}, also for new data by \verb{predict(M, newdata = ...}).
 }
 \description{
-Fits the cumulative prospect theory model.
+cpt_* fit a cumulative prospect theory.
+\itemize{
+\item \code{cpt()} fits cumulative prospect theory (Tversky & Kahneman, 1992)
+\item \code{cpt_mem()} fits cumulative prospect theory with memory (Thaler & Johnson, 1990)
+}
 }
 \details{
 Fits cumulative prospect theory.
 }
+\section{Functions}{
+\itemize{
+\item \code{cpt_mem}: Prospect Theory with Memory
+}}
+
 \examples{
 ## From Tversky, A., & Kahneman, D. (1992).
 dt <- data.frame(
@@ -44,7 +60,7 @@ dt <- data.frame(
   y2 = 0,
   rp = 1)
 
-# Make the model, add fix parameters (don't fit)
+# Make the model, add fix parameters (don"t fit)
 # using the Parameter from the paper
 M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0,
          choicerule = "softmax", data = dt,
@@ -61,7 +77,9 @@ summary(M)
 anova(M)
 }
 \references{
-Tversky, A., & Kahneman, D. (1992). Advances in prospect theory: cumulative representation of uncertainty. Journal of Risk and Uncertainty, 5, 297–323. doi:10.1007/BF00122574
+Tversky, A., & Kahneman, D. (1992). Advances in prospect theory: cumulative representation of uncertainty. Journal of Risk and Uncertainty, 5, 297–-323. doi:\href{https://doi.org/10.1007/BF00122574}{10.1007/BF00122574}
+
+Thaler, R. H., & Johnson, E. J. (1990). Gambling with the House Money and Trying to Break Even: The Effects of Prior Outcomes on Risky Choice. Management Science, 36(6), 643–-660. doi:\href{https://doi.org/10.1287/mnsc.36.6.643}{10.1287/mnsc.36.6.643}
 }
 \author{
 Jana B. Jarecki, \email{jj@janajarecki.com}

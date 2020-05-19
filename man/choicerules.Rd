@@ -30,8 +30,8 @@ An object of class R6 holding a model.
 \details{
 This is how the model predicts and treats observations:
 \itemize{
-   \item{For \code{y ~ a} it predicts 1 response column (\code{pred_a}) and interprets observations in \code{y} as \emph{0 = \bold{not}-a}, \emph{1 = a}}
-   \item{For \code{y ~ a | b} it predicts 2 response columns (\code{pred_a, pred_b}) and interprets observations in \code{y} as \emph{0 = a}, \emph{1 = b}}
+\item{For \code{y ~ a} it predicts 1 response column (\code{pred_a}) and interprets observations in \code{y} as \emph{0 = \bold{not}-a}, \emph{1 = a}}
+\item{For \code{y ~ a | b} it predicts 2 response columns (\code{pred_a, pred_b}) and interprets observations in \code{y} as \emph{0 = a}, \emph{1 = b}}
 \item{For \code{y ~ a | b | c} it predicts 3 response columns (\code{pred_a, pred_b, pred_c}) and interprets observations in \code{y} as \emph{0 = a}, \emph{1 = b}, \emph{2 = c}}
 \item{etc.}
 }

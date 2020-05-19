@@ -1,8 +1,8 @@
 Package: cognitivemodels
 Type: Package
 Title: Cognitive Models - Estimation, Prediction, and Development of Models for Cognitive Scientists
-Version: 0.0.4
-Date: 2019-03-12
+Version: 0.0.7
+Date: 2020-05-09
 Author: Jana B. Jarecki
 Maintainer: Jana B. Jarecki <jj@janajarecki.com>
 Description: Implementation of cognitive models, includes a general class cognitive models that has methods to fit free parameters to data and, can apply choicerules, and various goodness-of-fit measures (loglikelihood, MSE, etc.). The interface is similar to the lm() interface.
@@ -35,6 +35,7 @@ LinkingTo:
 Encoding: UTF-8
 NeedsCompilation: yes
 RoxygenNote: 7.0.2
+Roxygen: list(markdown = TRUE)
 Suggests: 
     knitr,
     testthat

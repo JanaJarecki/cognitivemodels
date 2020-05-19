@@ -27,7 +27,7 @@ npar <- function(x, ...) {
   UseMethod("npar")
 }
 npar.default <- function(x, ...) {
-  error("'npar' method is not defined for object of class ", class(x))
+  stop("'npar' method is not defined for object of class ", class(x), ".")
 }
 #' @name npar
 #' @param type A string: \code{"all"} counts all parameters, \code{"free"} counts the free parameters, \code{"fix"} countes the fixed parameters, \code{"constrained"} counts constrained parameters.
@@ -50,7 +50,8 @@ nobs <- function(x, ...) {
 #' @param x a model object
 #' @examples 
 #' nobs(M)
-nobs.cm <- function(x) {
+#' @export
+nobs.cm <- function(x, ...) {
   return(x$nobs)
 }
 
@@ -68,7 +69,7 @@ nstim <- function(x) {
   UseMethod("nstim")
 }
 nstim.default <- function(x) {
-  error("'nstim' method is not defined for object of class ", class(x))
+  stop("'nstim' method is not defined for object of class ", class(x), ".")
 }
 #' @export
 #' @method nstim cm
@@ -88,7 +89,7 @@ natt <- function(x) {
   UseMethod("natt")
 }
 natt.default <- function(x) {
-  error("'natt' method is not defined for object of class ", class(x))
+  stop("'natt' method is not defined for object of class ", class(x), ".")
 }
 #' @export
 #' @method natt cm
@@ -132,24 +133,12 @@ MSE <- function(x, ...) { UseMethod("MSE") }
 MSE.cm <- function(x, ...) {
   x$MSE(...)
 }
-
-#' @family {fit measures for cognitive models}
-#' @export
-AIC.cm <- function(object, ..., k) {
-  object$AIC(...)
-}
 #' @family {fit measures for cognitive models}
 #' @export
 AICc.cm <- function(object, ..., k) {
   object$AICc()
 }
 #' @family {fit measures for cognitive models}
-#' @export
-BIC <- function(x, ...) { UseMethod("BIC") }
-#' @export
-BIC.cm <- function(x, ...) {
-  return(x$BIC())
-}
 #' @export
 RMSE.cm <- function(x) {
   return(x$RMSE())
@@ -174,11 +163,16 @@ natt.cm <- function(x, ...) {
 ncon.cm <- function(x, ...) {
   return(x$ncon)
 }
+
+#' Get the Call to a cognitive model object
+#' 
+#' @param x An existing fit from a cognitive model function such as \link{cm}
+#' @export
 getCall.cm <- function(x, ...) {
   return(x$getCall())
 }
 
-
+#' @export
 print.summary.cm = function(x, digits = max(3L, (getOption("digits") - 3L)), ...) {
   cat("\nModel:\n", trimws(x$model),
     if (is.null(x$choicerule)) {
@@ -295,7 +289,7 @@ parspace <- function(x, ...) {
   UseMethod("parspace")
 }
 parspace.default <- function(x, ...) {
-  error("'parspace' method is not defined for object of class ", class(x))
+  stop("'parspace' method is not defined for object of class ", class(x), ".")
 }
 #' @name parspace
 #' @export
@@ -311,7 +305,7 @@ parspace.cm <- function(x, ...) {
 #' Show the constraints of a cognitive model
 #' 
 #' @description
-#' \code{constraints(cm)} shows the parameter constraints  of a cognitive model named \code{cm} nicely formatted
+#' \code{constraints(x)} shows the parameter constraints  of a cognitive model named \code{x} nicely formatted
 #' 
 #' @usage constraints(x)
 #' @param x a model object of class cm
@@ -325,11 +319,11 @@ constraints <- function(x, ...) {
   UseMethod("constraints")
 }
 constraints.default <- function(x, ...) {
-  error("'constraints' method is not defined for object of class ", class(x))
+  stop("'constraints' method is not defined for object of class ", class(x), ".")
 }
 #' @name constraints
-#' @export
 #' @method constraints cm
+#' @export
 constraints.cm <- function(x, ...) {
   cat("\nParameter constraints of the cognitive model '", class(x)[1], "':\n", sep = "")
   return(x$constraints)

@@ -83,7 +83,7 @@ Csm <- R6Class("csm",
       # Set the parameter of this  model
       super$set_par(x, check = check, constrain = constrain)
       # Set the parameter of the underlying models
-      npar <- lapply(self$models, function(x) x$npar())
+      npar <- lapply(self$models, function(x) x$npar("all"))
       for(m in 1:self$nmod) {
         if(length(self$models[[m]]$npar("free"))) {
           self$models[[m]]$set_par(x[intersect(names(self$models[[m]]$par), names(x))], check = check)
@@ -101,7 +101,7 @@ Csm <- R6Class("csm",
       CALL[["data"]] <- self$data
       CALL[["options"]] <- c(list(fit = FALSE), eval(CALL[["options"]]))
       CALL <- as.call(CALL)
-      M <- try(eval(substitute(CALL), envir=parent.frame(2)), silent = TRUE)    
+      M <- try(eval(substitute(CALL), envir=parent.frame(2)), silent = TRUE)
       if (inherits(M, "try-error")) {
         if (n > 1) {
           note <- paste0("  (Internal data has predictions from previously added models called: ", .brackify(sapply(self$models, function(x) x$prednames)), ".)")
@@ -166,7 +166,10 @@ Csm <- R6Class("csm",
       self$fix <- c(self$fix, x)
     },
     add_parspace = function(x) {
-      self$parspace <- rbind(self$parspace, x)
+      # TODO fix how cognitivemodel (the lego class) deals with initializing sigma, tau, or eps in > 1 model
+      parspace <- rbind(self$parspace, x)
+      parspace[!duplicated(rownames(parspace))]
+      self$parspace <- parspace
     },
     init_call = function() {
       self$call[[1]] <- paste0(self$titel, collapse="+")
@@ -185,15 +188,21 @@ Csm <- R6Class("csm",
         fix = NULL,
         parspace = self$parspace,
         discount = discount,
-        options = c(list(fit = FALSE), options)
+        options = c(list(fit = FALSE), options),
+        choicerule = self$models[[self$nmod]]$choicerule
         )
       return(invisible(self))
     },
-    fit = function(discount = 0L, options = list()) {
+    fit = function(discount = 0L, options = self$options) {
       self$discount <- discount
-      self$options$fit <- TRUE   
-      super$init_options(c(options, self$options))
-      super$fit()
+      self$options$fit <- TRUE 
+      options <- c(options, self$options)
+      options <- options[!duplicated(names(options))]
+      super$init_par(parspace = self$parspace, fix = self$fix, options = options, mode = self$mode, addpar = FALSE)
+      super$init_options(options)
+      if(options$fit != FALSE) {
+        super$fit()  
+      }    
     },
     add_constraints = function(cons = NULL) {
       if (length(cons) == 0L) {

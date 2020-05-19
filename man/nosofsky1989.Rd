@@ -13,13 +13,13 @@ Data about categorization in four different conditions.
 }
 \details{
 \itemize{
-  \item condition. experimental condition (size, angle, criss, diag)
-  \item angle. feature value of the angle feature
-  \item size. feature value of the size feature
-  \item N. How often the feature combination occured.
-  \item obs_cat. How often a category 1 mode was observed given this feature combination.
-  \item pobs. Probability that a category 1 mode was observed given this feature combination (obs_cat / N)
-  \item true_cat. True category label of this feature combination (0 or 1)
+\item condition. experimental condition (size, angle, criss, diag)
+\item angle. feature value of the angle feature
+\item size. feature value of the size feature
+\item N. How often the feature combination occured.
+\item obs_cat. How often a category 1 mode was observed given this feature combination.
+\item pobs. Probability that a category 1 mode was observed given this feature combination (obs_cat / N)
+\item true_cat. True category label of this feature combination (0 or 1)
 }
 }
 \examples{

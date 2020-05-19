@@ -11,14 +11,9 @@
 #'
 #' @keywords datasets
 #'
-#' # @todo Can you add the references to the data in the file data-cpttest, please? 
-#' @references Andraszewicz, S. (2014). Quntitative [ie Quantitative] analysis
-#' of risky decision making in economic environments (Doctoral dissertation,
-#'  University_of_Basel). \href{https://edoc.unibas.ch/33427/}{doi:10.5451/unibas-006268585}
+#' @references Glöckner, A., & Pachur, T. (2012). Cognitive models of risky choice: Parameter stability and predictive accuracy of prospect theory. Cognition, 123(1), 21–32. doi:[10.1016/j.cognition.2011.12.002](https://doi.org/10.1016/j.cognition.2011.12.002)
 #'
-#' @source Andraszewicz, S. (2014). Quntitative [ie Quantitative] analysis
-#' of risky decision making in economic environments (Doctoral dissertation,
-#'  University_of_Basel). \href{https://edoc.unibas.ch/33427/}{doi:10.5451/unibas-006268585}
+#' @source Glöckner, A., & Pachur, T. (2012). Cognitive models of risky choice: Parameter stability and predictive accuracy of prospect theory. Cognition, 123(1), 21–32. doi:[10.1016/j.cognition.2011.12.002](https://doi.org/10.1016/j.cognition.2011.12.002)
 #' 
 #' @keywords data
 #'

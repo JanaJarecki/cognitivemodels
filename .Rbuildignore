@@ -11,3 +11,5 @@
 ^R/desktop\.ini$    # Windows system file
 ^man/desktop\.ini$  # Windows system file
 ^data/desktop\.ini$ # Windows system file
+
+man-oxygen          # see https://stackoverflow.com/questions/33689597/cran-note-when-using-roxygen2-template

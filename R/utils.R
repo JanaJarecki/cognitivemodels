@@ -28,7 +28,7 @@ rmultinom2 <- function (probs, m) {
   ran <- matrix(lev[1], ncol = m, nrow = n)
   z <- apply(probs, 1, sum)
   if (any(abs(z - 1) > 1e-05))
-    stop("Error in multinom: probabilities do not sum to 1")
+    stop("Error in multinom: probabilities do not sum to 1  ")
   U <- apply(probs, 1, cumsum)
   for (i in 1:m) {
     un <- rep(runif(n), rep(k, n))
@@ -74,8 +74,12 @@ varG <- function(p, x) {
   sprintf("%s", paste(x, collapse = ", "))
 }
 
+#' Prints a nice question for strings
+#' 
+#' @importFrom utils adist
+#' @noRd
 .didyoumean = function(x, y) {
-  y <- y[order(rank(adist(x, y, ignore.case = TRUE), ties.method = "random"))]
+  y <- y[order(rank(utils::adist(x, y, ignore.case = TRUE), ties.method = "random"))]
   paste0("By ", dQuote(x), ", did you mean ", .dotify(dQuote(y), 3L), "?")
 }
 
@@ -164,18 +168,18 @@ get_id_in_grid <- function(id, grid) {
   return(out)
 }
 
-#" Make a regular or random grid
-#" @importFrom combinat xsimplex
+#' Make a regular or random grid
+#' @importFrom combinat xsimplex
 #----------------------------------------------------------------------
 # Matrix with rows that sum to something
 # For participants() print function
 #----------------------------------------------------------------------
-#" @param rsum row sums
-#" @param ncol number of columns
-#" @param nrow number of rows (auto-determines)
-#" @param regular if regular, \code{FALSE} means random
-#" @param nstep number of steps, e.g. 4 is 0, 0.25, 0.5, 0.75, 1
-#" @param offset adjust max and min minus this value
+#' @param rsum row sums
+#' @param ncol number of columns
+#' @param nrow number of rows (auto-determines)
+#' @param regular if regular, \code{FALSE} means random
+#' @param nstep number of steps, e.g. 4 is 0, 0.25, 0.5, 0.75, 1
+#' @param offset adjust max and min minus this value
 .grid <- function(rsum, ncol, nrow, regular = TRUE, nstep = NULL, offset = 0) {
   nrow <- if( missing(nrow) ) { round(sqrt(10^ncol*2)) }
   nstep <- if ( is.null(nstep) ) { 4 } else { nstep }
@@ -209,7 +213,6 @@ get_id_in_grid <- function(id, grid) {
     } else {
       return( r )
     }
-  return(exp(deltas) / sum(exp(deltas)))
 }
 
 #' creates a directory for a new cogscimodel
@@ -225,50 +228,48 @@ get_id_in_grid <- function(id, grid) {
 
 #' Define parameter for cognitive models
 #' 
-#' This function returns a n x 4 matrix with the parameter bounds, starting value, and no-effect value of parameters
+#' `make_parspace()` makes a n x 4 matrix with the parameter bounds, starting value, and no-effect value of parameters
 #' 
-#' @param ... Parameters and their ranges, e.g., \code{make_parspace(theta = c(ub=-1, lb=1, init=0, na=0), gamma = c(0,2,1,NA))}. See details and examples.#" 
-#' The general schema per parameter is a named vector \code{parametername = c(ub = #, lb = #, init = #, na = #)}
+#' @param ... Parameters and their ranges, e.g., `make_parspace(theta = c(ub=-1, lb=1, init=0, na=0), gamma = c(0,2,1,NA))`. See details and examples. The general schema per parameter is a named vector `parametername = c(ub = #, lb = #, init = #, na = #)`.
 #' \describe{
-#'    \item{\code{"lb"}}{Lower limit, smallest allowed value}
-#'    \item{\code{"ub"}}{Upper limit, highest allowed value}
-#'    \item{\code{"start"} (optional)}{Initial value for fitting}
-#'    \item{\code{"na"} (optional)}{Value the parameter takes if it should have no effect, can be \code{NA}}
+#'    \item{`"lb"`}{Lower limit, smallest allowed value}
+#'    \item{`"ub"`}{Upper limit, highest allowed value}
+#'    \item{`"start"` (optional)}{Initial value for estimation of parameters}
+#'    \item{`"na"` (optional)}{Value the parameter takes if it should have no effect, can be 'NA'}
 #' }
-#' @return A matrix with as many rows as parameters, where rownames are paramter names and four columns lb, ub, init, na define the lower limit, upper limit, initial value and null-effect-value (optional) for each parameter.
-#' @details \code{"lb"} and \code{"ub"} are the smallest and largest value allowed for the parameter, \code{"start"} is the initial value when fitting the parameter, \code{"na"} is an optional value the parameter takes if it should have no effect.
+#' @return A matrix with as many rows as parameters, in which the rownames are the parameter names, and four columns lb, ub, init, na that define the lower limit, upper limit, initial value and null-effect-value (optional) for each parameter.
+#' @details `"na"` is an optional value a parameter takes such that this parameter has no effect.
 #' 
 #' To define a parameter \eqn{\alpha} with \eqn{0 \le \alpha \le 1} use one argument, \code{alpha = c(0,1)}. To define an additional parameter \eqn{\beta} with \eqn{2 \le \beta \le 9} use two arguments, \code{alpha = c(0,1), beta = c(2,9)}, and so forth. You can specify an initial value for the parameter used in fitting as third element of vectors.
-#" 
-#" @examples 
-#" ## Define a parameter "p" that can range from 0-1
-#" make_parspace(p = c(0,1))
-#" makeparspapce(p = c(lb=0, ub=2)) # the same
-#" 
-#" # Note:
-#" # Initial value will be the mean of 0 and 1.
-#" 
-#" 
-#" ## Define a parameter "zeta" from 0-5
-#" ## and set the initial value to 2
-#" make_parspace(zeta = c(lb=0, ub=5, init=2))
-#" make_parspace(zeta = c(0,5,2)) # the same
-#" make_parspace(zeta = c(ub=5,lb=0,init=2)) #the same
-#" 
-#" 
-#" ## Define one parameter "expon" from 0-2 with initial value 0.5
-#" ## and a value of 1 making it have no effect
-#" make_parspace(expon = c(0,2,1,1))
-#" make_parspace(expon = c(lb=0,ub=2,init=1,na=1)) #the same
-#" 
-#" 
-#" ## Define four parameter alpha, beta, gamma, delta
-#" make_parspace(alpha = c(lb=0,ub=1,init=0.5,na=0),
-#"                 beta = c(1,10,5,NA),
-#"                 gamma = c(lb=1,ub=2,init=0,na=1),
-#"                 delta = c(1,2,0))
-#" 
-#" 
+#' 
+#' @examples 
+#' ## Define a parameter "p" that can range from 0-1
+#' make_parspace(p = c(0,1))
+#' makeparspapce(p = c(lb=0, ub=2)) # the same
+#' 
+#' # Note:
+#' # Initial value will be the mean of 0 and 1.
+#' 
+#' 
+#' ## Define a parameter "zeta" from 0-5
+#' ## and set the initial value to 2
+#' make_parspace(zeta = c(lb=0, ub=5, init=2))
+#' make_parspace(zeta = c(0,5,2)) # the same
+#' make_parspace(zeta = c(ub=5,lb=0,init=2)) #the same
+#' 
+#' 
+#' ## Define one parameter "expon" from 0-2 with initial value 0.5
+#' ## and a value of 1 making it have no effect
+#' make_parspace(expon = c(0,2,1,1))
+#' make_parspace(expon = c(lb=0,ub=2,init=1,na=1)) #the same
+#' 
+#' 
+#' ## Define four parameter alpha, beta, gamma, delta
+#' make_parspace(alpha = c(lb=0,ub=1,init=0.5,na=0),
+#'                 beta = c(1,10,5,NA),
+#'                 gamma = c(lb=1,ub=2,init=0,na=1),
+#'                 delta = c(1,2,0))
+#' 
 #' ## Dynamically define new parameter "gamma" and "delta"
 #' ## with the same definition (ub, lb, init, na)
 #' def <- c(lb = 0, ub = 1, init = 0.5, na = 0)
@@ -277,16 +278,11 @@ get_id_in_grid <- function(id, grid) {
 #' @export
 make_parspace <- function(...) {
   dotargs <- list(...)
-
-  dotargs <- vapply(dotargs, function(x) {
-      n <- names(x)
-      if ( length(x) == 2 | length(x) == 3 ) {
-        if (is.null(n)) {
+  dotargs <- vapply(dotargs, function(x) { 
+      if (length(x) == 2 | length(x) == 3) {
           x <- c(x, rep(NA, 4-length(x)))
-        } else {
-          x <- c(x, c("na" = NA, "start" = NA))[1:4]
-        }
       }
+      names(x) <- c("lb", "ub", "start", "na")[1:length(x)]
 
       n <- names(x)
       if (is.null(n)) {
@@ -294,7 +290,7 @@ make_parspace <- function(...) {
       } else if (all(c("ub", "lb") %in% n)) {
         x[intersect(c("lb", "ub", "start", "na"), n)]
       } else {
-        stop("Parameter definition must be named <'lb', 'ub', 'start', 'na'> but names contain: ", .brackify[x], ".")
+        names(x) <- c("lb", "ub", "start", "na")
       }
     }, c(lb=0, ub=0, start=0, na=0))
 

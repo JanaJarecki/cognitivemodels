@@ -104,6 +104,7 @@ gcm <- function(formula, class, data, fix = NULL, options = NULL, ...) {
    .args <- as.list(rlang::call_standardise(match.call())[-1])
    names(.args)[which(names(.args) == "class")] <- "criterion" # rename class to criterion
    .args[["mode"]] <- "discrete"
+   .args[["title"]] <- "GCM"
    return(do.call(what = Ebm$new, args = .args, envir = parent.frame()))
 } 
 
@@ -122,6 +123,7 @@ gcm <- function(formula, class, data, fix = NULL, options = NULL, ...) {
 ebm_j <- function(formula, criterion, data, fix = NULL, options = NULL, ...) {
    .args <- as.list(rlang::call_standardise(match.call())[-1])
    .args[["mode"]] <- "continuous"
+   .args[["mode"]] <- "Exemplar-based judgment"
    return(do.call(what = Ebm$new, args = .args, envir = parent.frame()))
 }
 
@@ -176,8 +178,9 @@ Ebm <- R6Class('ebm',
     learntrials = NULL,
     parnamesBias = NULL,
     parnamesWeights = NULL,
-    initialize = function(formula, data = NULL, criterion, mode = NULL, fix = NULL, learntrials = NULL, discount = NULL, choicerule = NULL, options = list()) {
+    initialize = function(formula, data = NULL, criterion, mode = NULL, fix = NULL, learntrials = NULL, discount = NULL, choicerule = NULL, options = list(), title = "Exemplar-based Model") {
       if (is.null(data)) data <- data.frame()
+      data <- as.data.frame(data)
       self$formulaCriterion <- .as_rhs(criterion)
       self$learntrials <- if ( is.null(learntrials) ) { seq_len(nrow(data)) } else { learntrials }
       criterion <- private$get_more_input(d=data)
@@ -202,7 +205,7 @@ Ebm <- R6Class('ebm',
         parspace = parspace,
         choicerule = choicerule,
         discount = discount,
-        title = paste0('Exemplar-based'),
+        title = title,
         mode = mode,
         options = c(options, list(solver = "solnp"))
       )

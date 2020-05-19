@@ -11,14 +11,14 @@
 
 #' Class for parameter recovery objects
 #' 
-#' Parameter recovery for a model works as follows: First, select a set of true model parameters \eqn{\theta}. Second, simulate data from a \link{Cognitivemodel} with the true parameters \eqn{\theta}. Third, use the simulated data to estimate the cognitive model's free parameters, store the best-fitting parameter estimates \eqn{\theta*}. Repeat step 1-2 a number of runs Lastly, diagnose the results if the recovered parameter equal the true parameter.
+#' Parameter recovery for a model works as follows: First, select a set of true model parameters \eqn{\theta}. Second, simulate data from a cognitive model, i.e. an object of class `cm`, with the true parameters \eqn{\theta}. Third, use the simulated data to estimate the cognitive model's free parameters, store the best-fitting parameter estimates \eqn{\theta*}. Repeat step 1-2 a number of runs Lastly, diagnose the results if the recovered parameter equal the true parameter.
 #' 
 #' @import data.table
-#' @param model An object of class \link{Cognitivemodel}.
+#' @param model An object of class cm.
 #' @param nruns (optional, default 100) Integer, how often to repeat the recovery per set of true parameter?
 #' @param nsteps (optional, default 3) list with steps by which to vary each parameter.
 #' @param seed (optional) Random seed for reproducibility.
-#' @details Conducts a parameter recovery from  cognitive models generated as \link{Cogscimodel} objects.
+#' @details Conducts a parameter recovery from  cognitive model objects (\link{Cm} objects).
 #' @author Jana B. Jarecki, \email{jj@janajarecki.com}
 #' @examples 
 #' No examples yet

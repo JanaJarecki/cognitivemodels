@@ -13,6 +13,8 @@ tk_par <- c(alpha = 0.88, beta = 0.88, lambda = 2.25, gammap = 0.61, gamman = 0.
 M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt, fix = tk_par, choicerule = "none")
 tol <- .01 
 # todo: gemischtes Gamble
+M <- cpt_mem(rp ~ x1 + px + x2 | y1 + py + y2, data = dt, fix = tk_par, choicerule = "none")
+predict(M)
 
 # 1. Predictive testing
 test_that("Prediction identities to Tversky & Kahneman (1992)", {
@@ -97,6 +99,7 @@ test_that("Parameter estimates == estimates in paper", {
   expect_equal(model$coef(), c(alpha = 0.74, beta=0.74, gammap = 0.61, gamman = 0.89, lambda = 1.27, tau = 1/0.06), tol = tol)
   expect_equal(-2 * model$logLik(), 136.8, tol = tol)
 })
+
 
 # 3. Formal tests
 # 3.a. One-row test set and test sets with different orders
