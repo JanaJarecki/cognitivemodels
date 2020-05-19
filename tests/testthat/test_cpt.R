@@ -83,20 +83,29 @@ test_that("Prediction identitites to Tversky & Kahneman (1992)", {
 
 # 2. Parameter recovery
 data(cpttest)
-cpttest[, decision := decision - 1]
+cpttest[, decision := 1 - (decision - 1)]
 fml <- decision ~ o1 + p1 + o2 + p2 | o3 + p3 + o4 + p4
 
 fit_cpt_soft <- function(dt) {
-  model <- cpt(fml, ref = 0, data = dt, choicerule = "softmax", options = list(ub = c(tau = 25), solver = "solnp"), fix = list(alpha = "beta"))
+  cpt(fml, ref = 0, data = dt, choicerule = "softmax", options = list(ub = c(tau = 25), solver = "solnp"), fix = list(alpha = "beta"))
 }
 fit_cpt_arg <- function(dt) {
-  model <- cpt(fml, ref = 0, data = dt, choicerule = "argmax", options = list(fit_measure = "accuracy", solver = "solnp"), fix = list(alpha = "beta"))
+  cpt(fml, ref = 0, data = dt, choicerule = "argmax", options = list(fit_measure = "accuracy", solver = "solnp"), fix = list(alpha = "beta"))
 }
-res <- cpttest[subject == 1, list(fit_soft = list(fit_cpt_soft(dt = .SD),
-                                                  fit_cpt_arg( dt = .SD))), by = list(repetition, subject)]
+
+gp2012 <- cpttest[, list(fit_soft = list(fit_cpt_soft(dt = .SD)),
+                         fit_arg  = list(fit_cpt_arg( dt = .SD))), by = list(repetition, subject)]
+
+soft5 <- gp2012[, as.list(coef(fit_soft[[1]])), by = list(repetition, subject)]
+soft5 <- soft5[, -2][, lapply(.SD, median), by = repetition]
+arg4 <- gp2012[, as.list(coef(fit_arg[[1]])), by = list(repetition, subject)]
+arg4 <- arg4[, -2][, lapply(.SD, median), by = repetition]
 
 test_that("Parameter estimates == estimates in paper", {
-  expect_equal(model$coef(), c(alpha = 0.74, beta=0.74, gammap = 0.61, gamman = 0.89, lambda = 1.27, tau = 1/0.06), tol = tol)
+  expect_equal(unlist(round(soft5[repetition == 1, -1], 2)), c(alpha = 0.74, beta=0.74, gammap = 0.61, gamman = 0.89, lambda = 1.27, tau = 1/0.06), tol = tol)
+  expect_equal(unlist(round(soft5[repetition == 2, -1], 2)), c(alpha = 0.76, beta=0.76, gammap = 0.58, gamman = 0.89, lambda = 1.19, tau = 1/0.06), tol = tol)
+  expect_equal(unlist(round(arg4[repetition == 1, -1], 2)), c(alpha = 0.68, beta=0.68, gammap = 0.74, gamman = 0.83, lambda = 1.55), tol = tol)
+  expect_equal(unlist(round(arg4[repetition == 2, -1], 2)), c(alpha = 0.74, beta=0.74, gammap = 0.65, gamman = 0.85, lambda = 1.55), tol = tol)
   expect_equal(-2 * model$logLik(), 136.8, tol = tol)
 })
 
