@@ -180,6 +180,7 @@ Ebm <- R6Class('ebm',
     parnamesWeights = NULL,
     initialize = function(formula, data = NULL, criterion, mode = NULL, fix = NULL, learntrials = NULL, discount = NULL, choicerule = NULL, options = list(), title = "Exemplar-based Model") {
       if (is.null(data)) data <- data.frame()
+      data <- as.data.frame(data)
       self$formulaCriterion <- .as_rhs(criterion)
       self$learntrials <- if ( is.null(learntrials) ) { seq_len(nrow(data)) } else { learntrials }
       criterion <- private$get_more_input(d=data)
