@@ -3,7 +3,7 @@ context("ebm")
 
 calc_pred <- function(dt, par, newdata) {
   r <- par["r"]; q <- par["q"]; lambda <- par["lambda"]; w <- par[c("f1", "f2")] # defines parameters
-  c_true <- which(!is.na(dt$c))
+  c_true <- which(!is.na(dt[, "c"]))
   sapply(1:nrow(dt), function(i) {
     p <- unlist(dt[i, 1:2]) # defines probe
     if(!newdata & (i == 1 | length(intersect(c_true, 1:(i-1))) == 0)) {
@@ -48,25 +48,26 @@ test_that("Prediction identities", {
 test_that("Prediction identities after parameter change", {
   expect_parchange_equal <- function(par, value, newdata = NULL) {
     fix <- replace(pars, names(pars) == par, value)
+    if(par %in% c("f1", "f2")) fix[grepl("^f", names(fix)) & !grepl(par, names(fix))] <- 1 - value # this is a hack
     M <- ebm_j(rp ~ f1 + f2, ~c, data = dt, fix = fix)
     expect_equal(c(M$predict(newdata = newdata)), calc_pred(dt, fix, !is.null(newdata)), tol = tol)
   }
   
   expect_parchange_equal("f1", .001, dt)
-  expect_parchange_equal("f1", 1, dt)
+  expect_parchange_equal("f1", .999, dt)
   expect_parchange_equal("f1", 0.25, dt)
   expect_parchange_equal("f1", 0.75, dt)
   expect_parchange_equal("f1", .001)
-  expect_parchange_equal("f1", 1)
+  expect_parchange_equal("f1", .999)
   expect_parchange_equal("f1", 0.25)
   expect_parchange_equal("f1", 0.75)
   
   expect_parchange_equal("f2", .001, dt)
-  expect_parchange_equal("f2", 1, dt)
+  expect_parchange_equal("f2", .999, dt)
   expect_parchange_equal("f2", 0.25, dt)
   expect_parchange_equal("f2", 0.75, dt)
   expect_parchange_equal("f2", .001)
-  expect_parchange_equal("f2", 1)
+  expect_parchange_equal("f2", .999)
   expect_parchange_equal("f2", 0.25)
   expect_parchange_equal("f2", 0.75)
   
@@ -196,16 +197,32 @@ test_that("Prediction identities tibble", {
   expect_pred_equivalent(dt[c(2,1,4,3), ], calc_pred(dt[c(2,1,4,3), ], pars, TRUE), newdata = dt[c(2,1,4,3), ])
 })
 
+test_that("Prediction identities matrix", {
+  expect_pred_equivalent <- function(data, result, newdata = NULL) {
+    M <- ebm_j(rp ~ f1 + f2, ~c, data = as.matrix(data), fix = pars)
+    expect_equivalent(M$predict(newdata = newdata), result, tol=tol)
+  }
+  
+  expect_pred_equivalent(dt[1, ], calc_pred(dt[1, ], pars, FALSE))
+  expect_pred_equivalent(dt[2, ], calc_pred(dt[2, ], pars, FALSE))
+  expect_pred_equivalent(dt[3, ], calc_pred(dt[3, ], pars, FALSE))
+  expect_pred_equivalent(dt[4, ], calc_pred(dt[4, ], pars, FALSE))
+  expect_pred_equivalent(dt[1, ], calc_pred(dt[1, ], pars, TRUE), newdata = dt[1, ])
+  expect_pred_equivalent(dt[2, ], calc_pred(dt[2, ], pars, TRUE), newdata = dt[2, ])
+  expect_pred_equivalent(dt[3, ], calc_pred(dt[3, ], pars, TRUE), newdata = dt[3, ])
+  expect_pred_equivalent(dt[4, ], calc_pred(dt[4, ], pars, TRUE), newdata = dt[4, ])
+  expect_pred_equivalent(dt, calc_pred(dt, pars, FALSE))
+  expect_pred_equivalent(dt, calc_pred(dt, pars, TRUE), newdata = dt)
+  expect_pred_equivalent(dt[4:1, ], calc_pred(dt[4:1, ], pars, FALSE))
+  expect_pred_equivalent(dt[4:1, ], calc_pred(dt[4:1, ], pars, TRUE), newdata = dt[4:1, ])
+  expect_pred_equivalent(dt[c(2,1,4,3), ], calc_pred(dt[c(2,1,4,3), ], pars, FALSE))
+  expect_pred_equivalent(dt[c(2,1,4,3), ], calc_pred(dt[c(2,1,4,3), ], pars, TRUE), newdata = dt[c(2,1,4,3), ])
+})
+
 # 3.b. Formula entry
 test_that("ebm_j input errors", {
   expect_error( # wrong order in formula, should be rp ~ f1 + f2
     ebm_j(f1 + f2 ~ rp, ~c, data = dt, fix = pars)
-  )
-  expect_error( # matrix
-    ebm_j(rp ~ f1 + f2, ~c, data = as.matrix(dt), fix = pars)
-  )
-  expect_error(
-    ebm_j(rp ~ f1 + f2, ~c, data = as.matrix(dt[1, ]), fix = pars)
   )
   expect_error( # no choices specified and parameters need to be estimated
     ebm_j(~ f1 + f2, ~c, data = dt)

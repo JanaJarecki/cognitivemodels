@@ -35,7 +35,7 @@ Use \bold{\code{baseline_..._d}} for discrete response variables; and use \bold{
 D <- data.frame(y = c(1,1,0), x = c(1,2,3))
 
 # Baseline model that predicrs Pr = 0.50
-M <- baseline_const_c(y ~ ., const = 0.50, data = D)
+M <- baseline_const_d(y ~ ., const = 0.50, data = D)
 
 predict(M)                         # predicts 0.5, 0.5, 0.5
 npar(M)                            # 0 parameter
