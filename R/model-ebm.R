@@ -123,7 +123,7 @@ gcm <- function(formula, class, data, fix = NULL, options = NULL, ...) {
 ebm_j <- function(formula, criterion, data, fix = NULL, options = NULL, ...) {
    .args <- as.list(rlang::call_standardise(match.call())[-1])
    .args[["mode"]] <- "continuous"
-   .args[["mode"]] <- "Exemplar-based judgment"
+   .args[["title"]] <- "Exemplar-based judgment"
    return(do.call(what = Ebm$new, args = .args, envir = parent.frame()))
 }
 

@@ -26,7 +26,7 @@ You will see a prompt, please type `Yes` into the console.
 ```
 
 
-To use the package, you need to load it `library(cogscimodels)`
+To use the package, you need to load it `library(cognitivemodels)`
 
 #### Installation Problems
 If you use Rstudio you may encounter the "Error: Could not find tools necessary to compile a package". If so, following [this solution](https://stackoverflow.com/questions/37776377/error-when-installing-an-r-package-from-github-could-not-find-build-tools-neces), you can run `pkgbuild::check_build_tools(debug = TRUE)` to diagnose the problem; and most likely you need to run `options(buildtools.check = function(action) TRUE )` to solve the problem.
@@ -39,7 +39,7 @@ Model | Reference | Documentation of the Function
 Memory-based preference model | Jarecki & Rieskamp (submitted) | `?mem`
 Generalized context model | Medin & Schaffer (1976); Nosofsky (1986) | `?ebm`
 Optimal risk-sensitive foraging model | Houston & McNamara (1988) | `?hm1988`
-Cumulative prospect theory | Kahneman & Tversky (1979); Tversky & Kahneman () 1992) | `?cpt`
+Cumulative prospect theory | Kahneman & Tversky (1979); Tversky & Kahneman (1992) | `?cpt`
 Bayesian cognitive model | Hoffart, Jarecki, Duthil, & Rieskamp (under review) | `?bayes`
 Power utility | Tversky (1967); Wakker (2008)| `?utility_pow`
 Soft-max choice rule | Sutton & Barto (1998) | `?softmax`
