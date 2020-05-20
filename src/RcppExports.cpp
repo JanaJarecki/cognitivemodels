@@ -7,8 +7,8 @@
 using namespace Rcpp;
 
 // ebm_cpp
-Rcpp::NumericVector ebm_cpp(Rcpp::NumericVector criterion, Rcpp::NumericMatrix features, Rcpp::NumericVector w, double r, double q, double lambda, Rcpp::NumericVector b, Rcpp::NumericVector wf, int lastLearnTrial, int firstOutTrial);
-RcppExport SEXP _cognitivemodels_ebm_cpp(SEXP criterionSEXP, SEXP featuresSEXP, SEXP wSEXP, SEXP rSEXP, SEXP qSEXP, SEXP lambdaSEXP, SEXP bSEXP, SEXP wfSEXP, SEXP lastLearnTrialSEXP, SEXP firstOutTrialSEXP) {
+Rcpp::NumericVector ebm_cpp(Rcpp::NumericVector criterion, Rcpp::NumericMatrix features, Rcpp::NumericVector w, double r, double q, double lambda, Rcpp::NumericVector b, Rcpp::NumericVector wf, int lastLearnTrial, int firstOutTrial, double init, Rcpp::NumericVector has_criterion);
+RcppExport SEXP _cognitivemodels_ebm_cpp(SEXP criterionSEXP, SEXP featuresSEXP, SEXP wSEXP, SEXP rSEXP, SEXP qSEXP, SEXP lambdaSEXP, SEXP bSEXP, SEXP wfSEXP, SEXP lastLearnTrialSEXP, SEXP firstOutTrialSEXP, SEXP initSEXP, SEXP has_criterionSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -22,7 +22,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type wf(wfSEXP);
     Rcpp::traits::input_parameter< int >::type lastLearnTrial(lastLearnTrialSEXP);
     Rcpp::traits::input_parameter< int >::type firstOutTrial(firstOutTrialSEXP);
-    rcpp_result_gen = Rcpp::wrap(ebm_cpp(criterion, features, w, r, q, lambda, b, wf, lastLearnTrial, firstOutTrial));
+    Rcpp::traits::input_parameter< double >::type init(initSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type has_criterion(has_criterionSEXP);
+    rcpp_result_gen = Rcpp::wrap(ebm_cpp(criterion, features, w, r, q, lambda, b, wf, lastLearnTrial, firstOutTrial, init, has_criterion));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -43,7 +45,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_cognitivemodels_ebm_cpp", (DL_FUNC) &_cognitivemodels_ebm_cpp, 10},
+    {"_cognitivemodels_ebm_cpp", (DL_FUNC) &_cognitivemodels_ebm_cpp, 12},
     {"_cognitivemodels_shortfall_cpp", (DL_FUNC) &_cognitivemodels_shortfall_cpp, 5},
     {NULL, NULL, 0}
 };

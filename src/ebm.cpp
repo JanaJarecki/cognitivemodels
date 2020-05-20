@@ -47,7 +47,9 @@ Rcpp::NumericVector ebm_cpp(
   Rcpp::NumericVector b,
   Rcpp::NumericVector wf,
   int lastLearnTrial,
-  int firstOutTrial) {
+  int firstOutTrial,
+  double init,
+  Rcpp::NumericVector has_criterion) {
   
   int ntrials = criterion.length() - firstOutTrial + 1;
   int nfeatures = features.ncol();
@@ -58,47 +60,46 @@ Rcpp::NumericVector ebm_cpp(
   Rcpp::NumericVector sim(T);
   Rcpp::NumericVector res(ntrials);
 
-  int i = 0; //a counter that starts at 0
-  res[i] = (max(criterion) + min(criterion)) / (NumericVector::is_na(b[0]) ? 2.0 : max(criterion) * (max(criterion) + 1)); //initialize first result when no exemplar has been seen, depending on the type
+  int i = 0; // a counter
+
+  // initialize prediction in trial 1 in which no exemplar has been seen
+  res[i] = init;
 
   firstOutTrial = (firstOutTrial == 1) ? firstOutTrial : firstOutTrial - 1;
-  i = (firstOutTrial == 1) ? 1 : 0; //start at 1 if we predict all trials, otherweise at 0
+  i = (firstOutTrial == 1) ? 1 : 0; // start at 1 if we predict all trials
 
+  // compute the value starting from trial t (e.g. 2)
   for (int t = firstOutTrial; t < T; t++) {
-    // compute the value starting from trial t (e.g. 2)
-    
     // compute the similarity between trial t and the thrials t - 1
     // up to maximally t or the lastLearnTrial
     int th_max = std::min(lastLearnTrial, t);
 
-    for (int th = 0; th < th_max; th++) { // loop through history trials th  
-      dist[th] = 0.0; // initialize distance btwn stimulus_t and stimulus_th
+    // loop through history trials th 
+    for (int th = 0; th < th_max; th++) {
 
-      // Euclidean distance between t and th
+      // substitute initial NAs (= no feedback shown yet)
+      if (NumericVector::is_na(criterion[th])) {
+        sim[t] = 1.0;
+        val[t] = init;
+        criterion[th] = 0;
+        continue;
+      }
+
+      // Distance distance btwn. stimulus(t) and stimulus(th)
+      dist[th] = 0.0; // initialize 
       for (int f = 0; f < nfeatures; f++) {
         dist[th] += w[f] * pow( fabs(features(t, f) - features(th, f)), r);
       }
       dist[th] = pow(dist[th], q / r); // distance -> similarity
 
-      /*// multiply the similarity between t and th with the value of th
-      // and add the result up for all ths
-      val[t] += exp(-1 * lambda * dist[th]) * criterion[th];
+      // Gaussian decay multiplied with criterion
+      val[t] += exp(-1 * lambda * dist[th]) * criterion[th] * (NumericVector::is_na(b[0]) ? 1 : b[criterion[th]]);
 
-      // add all the similarities between t and all ths up
-      sim[t] += exp(-1 * lambda * dist[th]);*/
-      // multiply the similarity between t and th with the value of th
-      // and add the result up for all ths
-      val[t] += exp(-1 * lambda * dist[th]) * criterion[th] * (NumericVector::is_na(b[0]) ? 1 : b[1]);
-
-      // add all the similarities between t and all ths up
-      sim[t] += exp(-1 * lambda * dist[th]) * (NumericVector::is_na(b[0]) ? 1 : b[criterion[th]]) * wf[th];
+      // add up all the similarities between t and all ths
+      sim[t] += exp(-1 * lambda * dist[th]) * (NumericVector::is_na(b[0]) ? 1 : b[criterion[th]]) * wf[th] * has_criterion[th];
     }
 
-    // standardize the value sum by the similarity sum and store in the ith row of the result
-    /*  if (sim[t] == 0) {*/
-    sim[t] = std::max(sim[t], DBL_EPSILON); // ensure sim[t] > 0
-    /*}*/
-    
+    sim[t] = std::max(sim[t], DBL_EPSILON); // ensure sim[t] > 0    
     res[i] = val[t] / sim[t];
     i += 1;
   }

@@ -123,7 +123,7 @@ gcm <- function(formula, class, data, fix = NULL, options = NULL, ...) {
 ebm_j <- function(formula, criterion, data, fix = NULL, options = NULL, ...) {
    .args <- as.list(rlang::call_standardise(match.call())[-1])
    .args[["mode"]] <- "continuous"
-   .args[["mode"]] <- "Exemplar-based judgment"
+   .args[["title"]] <- "Exemplar-based judgment"
    return(do.call(what = Ebm$new, args = .args, envir = parent.frame()))
 }
 
@@ -230,7 +230,12 @@ Ebm <- R6Class('ebm',
             as.double(tail(par, -(na + 3))[1:na])
           }
       exemplar_w <- as.numeric(!is.na(criterion)) # exemplar weights
-      criterion[is.na(criterion)] <- 0L
+      # Initial prediction until the first feedback is shown
+      init <- switch(self$mode,
+        continuous = sum(range(criterion, na.rm=TRUE)) / 2,
+        discrete = 1/length(unique(criterion[!is.na(criterion)])))
+      has_criterion <- !is.na(criterion)
+      criterion[is.na(criterion) & cumsum(!is.na(criterion)) > 0] <- 0
       return(ebm_cpp(
             criterion = as.double(criterion),
             features = matrix(input, ncol = na),
@@ -241,8 +246,9 @@ Ebm <- R6Class('ebm',
             q = as.double(par["q"]),
             b = b,
             lastLearnTrial = learnto,
-            firstOutTrial = firstout)
-        )
+            firstOutTrial = firstout,
+            init = as.double(init),
+            has_criterion = as.double(has_criterion)))
     }
   ),
   private = list(
