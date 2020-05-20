@@ -17,8 +17,8 @@
 #' # none
 #'
 #' @export
-ebm_cpp <- function(criterion, features, w, r, q, lambda, b, wf, lastLearnTrial, firstOutTrial) {
-    .Call(`_cognitivemodels_ebm_cpp`, criterion, features, w, r, q, lambda, b, wf, lastLearnTrial, firstOutTrial)
+ebm_cpp <- function(criterion, features, w, r, q, lambda, b, wf, lastLearnTrial, firstOutTrial, init, has_criterion) {
+    .Call(`_cognitivemodels_ebm_cpp`, criterion, features, w, r, q, lambda, b, wf, lastLearnTrial, firstOutTrial, init, has_criterion)
 }
 
 #' Computes Predictions in the Shortfall Model
