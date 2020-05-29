@@ -105,6 +105,7 @@ Hm1988 <- R6Class("hm1988",
           self$make_prediction,
           type = type,
           action = action)
+        out <- lapply(out, as.matrix)
         out <- do.call(rbind, out)
 
         if (is.character(more_input$states) && more_input$states == ".ALL") {
@@ -113,7 +114,7 @@ Hm1988 <- R6Class("hm1988",
           order <- unlist(sapply(ids, function(x) which(envid == x)))
         }
 
-        return(cognitiveutils:::drop2(out[order(order), , drop = FALSE]))
+        return(cognitiveutils:::drop2(out[order(order), , drop = ncol(out) == 1]))
       },
       make_prediction = function(envid, type, action = NULL, more_input = self$more_input) {
         env <- self$environments[[envid]]
@@ -133,7 +134,7 @@ Hm1988 <- R6Class("hm1988",
           if (type == "values") {
             return(v[, , drop = FALSE])
           } else {
-            return(super$apply_choicerule(v)[, action, drop = FALSE])
+            return(super$apply_choicerule(v))
           }
         } else if (type == "ev") {
           return(EV[cbind(rows, cols, 1)])
