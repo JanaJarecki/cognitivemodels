@@ -24,7 +24,6 @@ test_that("Prediction identities of values (type = 'value')", {
   expect_pred_equal( 9,   cbind(a1pa1=0,  a1pa2=0), 1)
   expect_pred_equal(10,   cbind(a1pa1=0.1,a1pa2=0.4), 1)
   expect_pred_equal(11,   cbind(a1pa1=0.9,  a1pa2=0.6), 1)
-  expect_pred_equal(9:11, cbind(a1pa1=0.9,a1pa2=0.6), 1)
   # Multiple environments in one data frame
   expect_pred_equal(9:11, cbind(a1pa1=c(0, 0.41, 0.831, 0.9654, 0.1, 0.86, 0.978, 0.997, 0.9, 0.99, 0.999, 0.9999), a1pa2=c(0, 0.44, 0.744, 0.9276, 0.4, 0.74, 0.942, 0.991, 0.6, 0.96, 0.996, 0.9996)), 1:12)
   order <- sample(1:12) # Test shuffled data input
@@ -36,7 +35,7 @@ test_that("Prediction identities of responses (type = 'response')", {
   expect_pred_equal <- function(init, target, order = 1:4) {
     D <- make_test_data()
     M <- hm1988(~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, trials = ~t, states = ~s, budget = 12, ntrials = 4, initstate = ~init, data = D[D$s %in% init, ][order,], choicerule = "argmax")
-    expect_equal(predict(M), target)
+    expect_equivalent(predict(M), target)
   }
   expect_pred_equal( 9, c(0.5,0,1,1))
   expect_pred_equal(10, c(0,1,1,1))
@@ -52,7 +51,7 @@ test_that("Prediction identities of responses (type = 'response')", {
   expect_pred_equal(9:11, c(0.5,0,1,1,0,1,1,1,rep(1,4))[order], order)
 })
 
-test_that("Prediction identities of probability of states (type = 'prstate')"), {
+test_that("Prediction identities of probability of states (type = 'prstate')", {
   expect_pred_equal <- function(init, target, order = 1:12) {
     D <- make_test_data(order)
     M <- hm1988(~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = 12, ntrials = 4, initstate = ~init, data = D[D$s %in% init, ], choicerule = "argmax")
@@ -69,6 +68,12 @@ test_that("Prediction identities of probability of states (type = 'prstate')"), 
 
 test_that("Input formats", {
   #  full input format
+  D = make_test_data()
+  D <- D[D$s==11,]
+  D$init <- 10
+  D$b <- 12
+  D$nt <- 4
+  D$t <- 4:1
   M <- hm1988(formula = ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = ~b, ntrials = ~nt, states = ~s, initstate = ~init, trials=~t, data = D, choicerule = "argmax")
    # Argument 'budget' as number
   M2 <- hm1988(formula = ~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = 12, ntrials = ~nt, states = ~s, initstate = ~init, trials=~t, data = D, choicerule = "argmax")

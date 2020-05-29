@@ -227,8 +227,7 @@ Cm <- R6Class(
             input = abind::adrop(input[, , s, drop = FALSE], 3),
             more_input = abind::adrop(more_input[, , s, drop = FALSE], 3),
             isnew = isnew,
-            s = s,
-            ...)
+            s = s)
         })
 
       # Finally we format the RES object a bit
