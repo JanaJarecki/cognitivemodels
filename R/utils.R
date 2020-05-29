@@ -37,13 +37,33 @@ rmultinom2 <- function (probs, m) {
   return(ran)
 }
 
-# Variance of probabilistically-described gambles (without N-1 correction)
+#' Variance of probabilistically-described gambles (without N-1 correction)
+#' 
+#' @param p A numeric vector or matrix, the probabilities.
+#' @param x A numeric vector or matrix, outcomes, same length as `x`.
+#' 
+#' @returns 
+#' @examples
+#' # Variance of the gamble 0 with 10% otherwise 10:
+#' 
+#' varG(p = c(.9,.1), x = c(0,10))
+#' @export
 varG <- function(p, x) {
-  if ( is.matrix(p)) {
+  if (length(x) < 2) { stop("'x' must have two outcomes per row or more, but has only 1.")}
+  if (length(p) < 2) { stop("'p' must have two probabilities per row or more, but has only 1.")}
+  if (length(x) != length(p)) {
+    stop("'p' and 'x' must have equal numbers of entries, but length of x is ", length(x), " and dim of p is ", length(p), ".")
+  }
+  if (typeof(x) != typeof(p)) {
+    stop("'p' and 'x' must have the same type, but type of x is ", typeof(x), " and type of p is ", typeof(p), ".")
+  }
+  if (!is.null(dim(x)) && dim(x)[1] > 1) {
     return(sapply(1:dim(p)[1], function(i) varG(p[i, ], x[i, ])))
   }
-  ev <- c(x %*% p)
-  p %*% ((x - ev)^2)
+  if (is.null(dim(x))) x <- t(as.matrix(x))
+  if (is.null(dim(p))) p <- t(as.matrix(p))
+  ev <- c(x %*% t(p))
+  drop(p %*% t(((x - ev)^2)))
 }
 
 # Make a named list
