@@ -129,6 +129,17 @@ test_that("Prediction identitites to equal parameters", {
   expect_equal(M$predict()[4], calc_pred(dt, pars, FALSE)[4], tol = tol)
 })
 
+# 2. Parameter recovery (Albrecht 2019, Exp 1)
+data(albrecht2019exp1)
+fml <- crit_response ~ cue1_correct + cue2_correct + cue3_correct
+
+fit_ebm_j <- function(dt) {
+  ebm_j(fml, ~crit_correct, data = dt, options = list(solver = "solnp"))
+}
+
+dt <- albrecht2019exp1[, list(fit_ebm_j = list(fit_ebm_j(dt = .SD))), by = list(subj)]
+dt[, as.list(coef(fit_ebm_j[[1]])), by = list(subj)]
+
 # 3. Formal tests
 # 3.a. One-row test set and test sets with different orders
 test_that("Prediction identities data frame", {
