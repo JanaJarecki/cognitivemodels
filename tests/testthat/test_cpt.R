@@ -13,8 +13,8 @@ tk_par <- c(alpha = 0.88, beta = 0.88, lambda = 2.25, gammap = 0.61, gamman = 0.
 M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0, data = dt, fix = tk_par, choicerule = "none")
 tol <- .01 
 # todo: gemischtes Gamble
-M <- cpt_mem(rp ~ x1 + px + x2 | y1 + py + y2, data = dt, fix = tk_par, choicerule = "none")
-predict(M)
+# M <- cpt_mem(rp ~ x1 + px + x2 | y1 + py + y2, data = dt, fix = tk_par, choicerule = "none")
+# predict(M)
 
 # 1. Predictive testing
 test_that("Prediction identities to Tversky & Kahneman (1992)", {
