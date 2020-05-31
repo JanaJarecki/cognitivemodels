@@ -138,7 +138,8 @@ fit_ebm_j <- function(dt) {
 }
 
 dt <- albrecht2019exp1[subj <= 69, list(fit_ebm_j = list(fit_ebm_j(dt = .SD))), by = list(subj)]
-dt[, as.list(coef(fit_ebm_j[[1]])), by = list(subj)]
+coefs <- dt[, as.list(coef(fit_ebm_j[[1]])), by = list(subj)]
+coefs <- coefs[, -1][, lapply(.SD, mean)]
 
 # 3. Formal tests
 # 3.a. One-row test set and test sets with different orders
