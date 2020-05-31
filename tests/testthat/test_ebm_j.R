@@ -134,10 +134,10 @@ data(albrecht2019exp1)
 fml <- crit_response ~ cue1_correct + cue2_correct + cue3_correct
 
 fit_ebm_j <- function(dt) {
-  ebm_j(fml, ~crit_correct, data = dt, options = list(solver = "solnp"))
+  ebm_j(fml, ~crit_correct, data = dt, options = list(solver = "solnp"), fix = list(q = 1, r = 1))
 }
 
-dt <- albrecht2019exp1[, list(fit_ebm_j = list(fit_ebm_j(dt = .SD))), by = list(subj)]
+dt <- albrecht2019exp1[subj <= 69, list(fit_ebm_j = list(fit_ebm_j(dt = .SD))), by = list(subj)]
 dt[, as.list(coef(fit_ebm_j[[1]])), by = list(subj)]
 
 # 3. Formal tests
