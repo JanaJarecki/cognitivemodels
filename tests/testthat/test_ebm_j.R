@@ -134,10 +134,17 @@ data(albrecht2019exp1)
 fml <- crit_response ~ cue1_correct + cue2_correct + cue3_correct
 
 fit_ebm_j <- function(dt) {
-  ebm_j(fml, ~crit_correct, data = dt, options = list(solver = "solnp"), fix = list(q = 1, r = 1))
+  ebm_j(fml, ~crit_correct, data = dt, options = list(solver = "solnp", 
+                                                      lb = c(cue1_correct = -10,
+                                                             cue2_correct = -10,
+                                                             cue3_correct = -10),
+                                                      ub = c(cue1_correct = 10,
+                                                             cue2_correct = 10,
+                                                             cue3_correct = 10)), 
+        fix = list(q = 1, r = 1, lambda = "cue1_correct" + "cue2_correct" + "cue3_correct"))
 }
 
-dt <- albrecht2019exp1[subj <= 69, list(fit_ebm_j = list(fit_ebm_j(dt = .SD))), by = list(subj)]
+dt <- albrecht2019exp1[subj <= 1, list(fit_ebm_j = list(fit_ebm_j(dt = .SD))), by = list(subj)]
 coefs <- dt[, as.list(coef(fit_ebm_j[[1]])), by = list(subj)]
 coefs <- coefs[, -1][, lapply(.SD, mean)]
 
