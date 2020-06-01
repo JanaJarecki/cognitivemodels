@@ -131,17 +131,17 @@ test_that("Prediction identitites to equal parameters", {
 
 # 2. Parameter recovery (Albrecht 2019, Exp 1)
 data(albrecht2019exp1)
-fml <- crit_response ~ cue1_correct + cue2_correct + cue3_correct
+fml <- crit_response ~ f1 + f2 + f3
 
 fit_ebm_j <- function(dt) {
-  ebm_j(fml, ~crit_correct, data = dt, options = list(solver = "solnp", 
-                                                      lb = c(cue1_correct = -10,
-                                                             cue2_correct = -10,
-                                                             cue3_correct = -10),
-                                                      ub = c(cue1_correct = 10,
-                                                             cue2_correct = 10,
-                                                             cue3_correct = 10)), 
-        fix = list(q = 1, r = 1, lambda = "cue1_correct" + "cue2_correct" + "cue3_correct"))
+  ebm_j(fml, ~crit_correct, data = dt, options = list(solver = "solnp"), 
+                                                      # lb = c(f1 = -10,
+                                                      #        f2 = -10,
+                                                      #        f3 = -10),
+                                                      # ub = c(f1 = 10,
+                                                      #        f2 = 10,
+                                                      #        f3 = 10)), 
+        fix = list(q = 1, r = 1))
 }
 
 dt <- albrecht2019exp1[subj <= 1, list(fit_ebm_j = list(fit_ebm_j(dt = .SD))), by = list(subj)]
