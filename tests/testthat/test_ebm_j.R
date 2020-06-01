@@ -134,12 +134,6 @@ data(albrecht2019exp1)
 fml <- crit_response ~ f1 + f2 + f3
 
 fit_ebm_j <- function(dt) {
-                                                      # lb = c(f1 = -10,
-                                                      #        f2 = -10,
-                                                      #        f3 = -10),
-                                                      # ub = c(f1 = 10,
-                                                      #        f2 = 10,
-                                                      #        f3 = 10)), 
   ebm_j(fml, ~crit_correct, data = dt, options = list(solver = "solnp",
                                                       lb = c(f1 = -10,
                                                              f2 = -10,
