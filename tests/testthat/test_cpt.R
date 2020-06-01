@@ -86,29 +86,50 @@ data(cpttest)
 cpttest[, decision := 1 - (decision - 1)]
 fml <- decision ~ o1 + p1 + o2 + p2 | o3 + p3 + o4 + p4
 
-fit_cpt_soft <- function(dt) {
+fit_cpt_5_g2 <- function(dt) {
   cpt(fml, ref = 0, data = dt, choicerule = "softmax", options = list(ub = c(tau = 25), solver = "solnp"), fix = list(alpha = "beta"))
 }
-fit_cpt_arg <- function(dt) {
+fit_cpt_4_g2 <- function(dt) {
+  cpt(fml, ref = 0, data = dt, choicerule = "softmax", options = list(ub = c(tau = 25), solver = "solnp"), fix = list(alpha = "beta", gammap = "gamman"))
+}
+fit_cpt_4_pc <- function(dt) {
   cpt(fml, ref = 0, data = dt, choicerule = "argmax", options = list(fit_measure = "accuracy", solver = "solnp"), fix = list(alpha = "beta"))
 }
+fit_cpt_3_pc <- function(dt) {
+  cpt(fml, ref = 0, data = dt, choicerule = "argmax", options = list(fit_measure = "accuracy", solver = "solnp"), fix = list(alpha = "beta", gammap = "gamman"))
+}
 
-gp2012 <- cpttest[, list(fit_soft = list(fit_cpt_soft(dt = .SD)),
-                         fit_arg  = list(fit_cpt_arg( dt = .SD))), by = list(repetition, subject)]
+gp2012 <- cpttest[, list(fit_5_g2 = list(fit_cpt_5_g2(dt = .SD)),
+                         fit_4_g2 = list(fit_cpt_4_g2(dt = .SD)),
+                         fit_4_pc = list(fit_cpt_4_pc(dt = .SD)),
+                         fit_3_pc = list(fit_cpt_3_pc(dt = .SD))), by = list(repetition, subject)]
 
-soft5 <- gp2012[, as.list(coef(fit_soft[[1]])), by = list(repetition, subject)]
-soft5 <- soft5[, -2][, lapply(.SD, median), by = repetition]
-arg4 <- gp2012[, as.list(coef(fit_arg[[1]])), by = list(repetition, subject)]
-arg4 <- arg4[, -2][, lapply(.SD, median), by = repetition]
+fit_5_g2 <- gp2012[, as.list(coef(fit_5_g2[[1]])), by = list(repetition, subject)][, -2][, lapply(.SD, median), by = repetition]
+fit_4_g2 <- gp2012[, as.list(coef(fit_4_g2[[1]])), by = list(repetition, subject)][, -2][, lapply(.SD, median), by = repetition]
+fit_4_pc <- gp2012[, as.list(coef(fit_4_pc[[1]])), by = list(repetition, subject)][, -2][, lapply(.SD, median), by = repetition]
+fit_3_pc <- gp2012[, as.list(coef(fit_3_pc[[1]])), by = list(repetition, subject)][, -2][, lapply(.SD, median), by = repetition]
+
+fit_5_g2[, tau := 1/tau]
+fit_4_g2[, tau := 1/tau]
 
 test_that("Parameter estimates == estimates in paper", {
-  expect_equal(unlist(round(soft5[repetition == 1, -1], 2)), c(alpha = 0.74, beta=0.74, gammap = 0.61, gamman = 0.89, lambda = 1.27, tau = 1/0.06), tol = tol)
-  expect_equal(unlist(round(soft5[repetition == 2, -1], 2)), c(alpha = 0.76, beta=0.76, gammap = 0.58, gamman = 0.89, lambda = 1.19, tau = 1/0.06), tol = tol)
-  expect_equal(unlist(round(arg4[repetition == 1, -1], 2)), c(alpha = 0.68, beta=0.68, gammap = 0.74, gamman = 0.83, lambda = 1.55), tol = tol)
-  expect_equal(unlist(round(arg4[repetition == 2, -1], 2)), c(alpha = 0.74, beta=0.74, gammap = 0.65, gamman = 0.85, lambda = 1.55), tol = tol)
-  expect_equal(-2 * model$logLik(), 136.8, tol = tol)
+  expect_equal(unlist(round(fit_5_g2[repetition == 1, -1], 2)), c(alpha = 0.74, beta = 0.74, gammap = 0.61, gamman = 0.89, lambda = 1.27, tau = 0.06), tol = tol)
+  expect_equal(unlist(round(fit_5_g2[repetition == 2, -1], 2)), c(alpha = 0.76, beta = 0.76, gammap = 0.58, gamman = 0.89, lambda = 1.19, tau = 0.06), tol = tol)
+  expect_equal(unlist(round(fit_4_g2[repetition == 1, -1], 2)), c(alpha = 0.71, beta = 0.71, gammap = 0.72, gamman = 0.72, lambda = 1.35, tau = 0.08), tol = tol)
+  expect_equal(unlist(round(fit_4_g2[repetition == 2, -1], 2)), c(alpha = 0.70, beta = 0.70, gammap = 0.70, gamman = 0.70, lambda = 1.31, tau = 0.11), tol = tol)
+  expect_equal(unlist(round(fit_4_pc[repetition == 1, -1], 2)), c(alpha = 0.68, beta = 0.68, gammap = 0.74, gamman = 0.83, lambda = 1.55), tol = tol)
+  expect_equal(unlist(round(fit_4_pc[repetition == 2, -1], 2)), c(alpha = 0.74, beta = 0.74, gammap = 0.65, gamman = 0.85, lambda = 1.55), tol = tol)
+  expect_equal(unlist(round(fit_3_pc[repetition == 1, -1], 2)), c(alpha = 0.64, beta = 0.64, gammap = 0.77, gamman = 0.77, lambda = 1.66), tol = tol)
+  expect_equal(unlist(round(fit_3_pc[repetition == 2, -1], 2)), c(alpha = 0.67, beta = 0.67, gammap = 0.69, gamman = 0.69, lambda = 1.80), tol = tol)
 })
 
+ll_5_g2 <- gp2012[, .(ll = logLik(fit_5_g2[[1]])), by = list(repetition, subject)][, -2][, lapply(.SD, median), by = repetition]
+ll_4_g2 <- gp2012[, .(ll = logLik(fit_4_g2[[1]])), by = list(repetition, subject)][, -2][, lapply(.SD, median), by = repetition]
+
+test_that("G2 estimates == estimates in paper", {
+  expect_equal(-2 * c(ll_5_g2$ll), c(136.8, 132.7), tol = tol)
+  expect_equal(-2 * c(ll_4_g2$ll), c(155.8, 150.4), tol = tol)
+})
 
 # 3. Formal tests
 # 3.a. One-row test set and test sets with different orders
