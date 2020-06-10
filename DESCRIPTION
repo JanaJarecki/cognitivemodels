@@ -1,7 +1,7 @@
 Package: cognitivemodels
 Type: Package
 Title: Cognitive Models - Estimation, Prediction, and Development of Models for Cognitive Scientists
-Version: 0.0.9
+Version: 0.0.7
 Date: 2020-05-09
 Author: Jana B. Jarecki
 Maintainer: Jana B. Jarecki <jj@janajarecki.com>
@@ -29,14 +29,12 @@ Imports:
     stringr 
 Remotes:
   janajarecki/cognitiveutils
-LinkingTo:
-  Rcpp,
-  RcppArmadillo
-Encoding: UTF-8
-NeedsCompilation: yes
-RoxygenNote: 7.1.0
-Roxygen: list(markdown = TRUE)
 Suggests: 
     knitr,
     testthat
+LinkingTo:
+  Rcpp (>= 1.0.1), RcppArmadillo (>= 0.9.8)
+Encoding: UTF-8
 VignetteBuilder: knitr
+RoxygenNote: 7.0.2
+Roxygen: list(markdown = TRUE)
