@@ -12,13 +12,17 @@ using namespace Rcpp;
 #endif*/
 
 
-// TODO outsosurce the distance function in the ebm.cpp script
-// @body using the below lines of code in the ebm_cpp function
-/*double dist_euclidean(Rcpp::NumericVector x; Rcpp::NumericVector y; Rcpp::NumericVector w, double r) {
+//' Euclidean Distance with weights
+// [[Rcpp::export]]
+double minkowski(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::NumericVector w, double r, double q) {
+  double dist = 0.0;
   for (int i = 0; i < x.length(); i++) {
-    res += w[i] * pow( fabs(x[i] - y[i]), r);
-  } 
-}*/
+    dist += w[i] * pow( fabs(x[i] - y[i]), r);
+  }
+  dist = pow(dist, q / r);
+  return dist;
+}
+
 
 //' Computes Predictions for the Exemplar-based Models (GCM, EBM)
 //' 
@@ -86,12 +90,7 @@ Rcpp::NumericVector ebm_cpp(
       }
 
       // Distance distance btwn. stimulus(t) and stimulus(th)
-      dist[th] = 0.0; // initialize 
-      for (int f = 0; f < nfeatures; f++) {
-        dist[th] += w[f] * pow( fabs(features(t, f) - features(th, f)), r);
-      }
-      dist[th] = pow(dist[th], q / r); // distance -> similarity
-
+      dist[th] = minkowski(features(t, f), features(th, f), w, r, q);
       // Gaussian decay multiplied with criterion
       val[t] += exp(-1 * lambda * dist[th]) * criterion[th] * (NumericVector::is_na(b[0]) ? 1 : b[criterion[th]]);
 
