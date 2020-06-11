@@ -99,8 +99,6 @@ fit_cpt_3_pc <- function(dt) {
   cpt(fml, ref = 0, data = dt, choicerule = "argmax", options = list(fit_measure = "accuracy", solver = "solnp"), fix = list(alpha = "beta", gammap = "gamman"))
 }
 
-
-
 test_that("Parameter estimates == estimates in paper", {
   # Skip the tests below skip() (takes too long)
   skip("Skipping parameter estimation tests")
