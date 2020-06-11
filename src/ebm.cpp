@@ -12,7 +12,15 @@ using namespace Rcpp;
 #endif*/
 
 
-//' Euclidean Distance with weights
+//' Weighted Minkowski Distance
+//' 
+//' @param x A numeric vector, feature values of first object
+//' @param y  Like x, feature values of second object
+//' @param w numeric vector of weights (model parameter)
+//' @param r square root in distance metic (model parameter)
+//' @param q exponent in distance metric (model parameter)
+//' @examples
+//' # none
 // [[Rcpp::export]]
 double minkowski(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::NumericVector w, double r, double q) {
   double dist = 0.0;
@@ -36,10 +44,10 @@ double minkowski(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::NumericVect
 //' @param fw weight vector with a weight for each feature combination
 //' @param lastLearnTrial integer last trial of learning phase
 //' @param firstOutTrial integer first trial of output, starting the predictions later
+//' @param similarity A string, the similarity function
+//' @param is_additive A number (0 or 1), 0 means multiplicative exemplar model
 //' @examples
 //' # none
-//'
-//' @export
 // [[Rcpp::export]]
 Rcpp::NumericVector ebm_cpp(
   Rcpp::NumericVector criterion,
@@ -53,15 +61,17 @@ Rcpp::NumericVector ebm_cpp(
   int lastLearnTrial,
   int firstOutTrial,
   double init,
-  Rcpp::NumericVector has_criterion) {
+  Rcpp::NumericVector has_criterion,
+  std::string similarity,
+  int ismultiplicative) {
   
   int ntrials = criterion.length() - firstOutTrial + 1;
   int nfeatures = features.ncol();
   int T = criterion.length();
   
-  Rcpp::NumericVector dist(lastLearnTrial);
+  Rcpp::NumericVector sim(lastLearnTrial);
   Rcpp::NumericVector val(T);
-  Rcpp::NumericVector sim(T);
+  Rcpp::NumericVector sim_all(T);
   Rcpp::NumericVector res(ntrials);
 
   int i = 0; // a counter
@@ -89,17 +99,23 @@ Rcpp::NumericVector ebm_cpp(
         continue;
       }
 
-      // Distance distance btwn. stimulus(t) and stimulus(th)
-      dist[th] = minkowski(features(t, f), features(th, f), w, r, q);
-      // Gaussian decay multiplied with criterion
-      val[t] += exp(-1 * lambda * dist[th]) * criterion[th] * (NumericVector::is_na(b[0]) ? 1 : b[criterion[th]]);
+      // Similarity to stimulus at th
+      if (similarity == "minkowski") {
+        sim[th] = -1 * lambda * minkowski(features(t, _), features(th, _), w, r, q);
+      }
 
-      // add up all the similarities between t and all ths
-      sim[t] += exp(-1 * lambda * dist[th]) * (NumericVector::is_na(b[0]) ? 1 : b[criterion[th]]) * wf[th] * has_criterion[th];
+      // Similarity x criterion value
+      if (ismultiplicative == 1) {
+        val[t] += exp(sim[th]) * criterion[th] * (NumericVector::is_na(b[0]) ? 1 : b[criterion[th]]);
+        sim_all[t] += exp(sim[th]) * (NumericVector::is_na(b[0]) ? 1 : b[criterion[th]]) * wf[th] * has_criterion[th];
+      } else {
+        val[t] *= sim[th] * criterion[th] * (NumericVector::is_na(b[0]) ? 1 : b[criterion[th]]);
+        sim_all[t] *= sim[th] * (NumericVector::is_na(b[0]) ? 1 : b[criterion[th]]) * wf[th] * has_criterion[th];
+      }
     }
 
-    sim[t] = std::max(sim[t], DBL_EPSILON); // ensure sim[t] > 0    
-    res[i] = val[t] / sim[t];
+    sim_all[t] = std::max(sim_all[t], DBL_EPSILON); // ensure sim[t] > 0    
+    res[i] = val[t] / sim_all[t];
     i += 1;
   }
 
