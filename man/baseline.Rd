@@ -7,28 +7,37 @@
 \alias{baseline_mean_d}
 \title{Baseline models}
 \usage{
-baseline_const_c(formula, consr, data = NULL, ...)
+baseline_const_c(formula, const, data, ...)
 
 baseline_const_d(formula, const, data, ...)
 
-baseline_mean_c(formula, data = NULL, ...)
+baseline_mean_c(formula, data, ...)
 
-baseline_mean_d(formula, data = NULL, ...)
+baseline_mean_d(formula, data, ...)
 }
 \arguments{
 \item{formula}{A formula, the observed variables, with only a left-hand-side (for example: \code{response ~ .}), note the "\code{~ .}" on the right.}
 
-\item{const}{(optional, \bold{required} in \code{baseline_const_}) A number, the constant value that the model should predict.}
+\item{const}{A number, the value that the model predicts  (only in \code{baseline_const_c/d}) .}
+
+\item{data}{A data frame.}
+}
+\value{
+Returns a cognitive model object, which has the class \code{cm}(cm). A model, that is saved as \code{m}, can be summarized with \code{summary(m)} or \code{anova(m)}. The parameter space can be viewed using \code{parspace(m)}, constraints can be viewed using \code{constraints(m)}.
 }
 \description{
-Baseline models are simple stimulus-agnostic models, \code{baseline_const_c(), baseline_const_d()} predict a constant value for continuous and discrete data (resp.), \code{baseline_mean_c(), baseline_mean_d()} predict the mean of the observed values for continuous and discrete response data (resp.).
+Fits baseline models. Baseline models are stimulus-agostic models used as sanity checks in cognitive model comparisons. Other cognitive models should beat a baseline model -- if not, the other cognitive models don't describe patterns in the responses well.
+\itemize{
+\item \code{baseline_const_c()} predicts a constant value for continuous responses.
+\item \code{baseline_const_d()} predicts a constant value for discrete responses.
+\item \code{baseline_mean_c()} fits the mean of the observed responses for continuous responses.
+\item \code{baseline_mean_d()} fits the mean of the observed responses for discrete responses.
+}
 }
 \details{
-Baseline models are very simple models that ignore the stimuli. Baseline models are used as sanity checks in cognitive model comparisons. Other cognitive models are usually supposed to beat the baseline model -- if not, the other cognitive models do very likely not describe the observed data well.
+Use \strong{\code{baseline_xxx_d}} for discrete response variables; and  \strong{\code{baseline_xxx_c}} for continuous response variables.
 
-Use \bold{\code{baseline_..._d}} for discrete response variables; and use \bold{\code{baseline_..._c}} for continuous response variables.
-
-\bold{\code{baseline_const_}} predicts the numeric value \code{const} for all trials. A common baseline model in binary choice tasks is, for instance, a model predicting \emph{Pr=0.50} for each trial, for which you set \code{const = 0.50}. The model \bold{baseline_mean_} predicts the mean of the observed choices for each trial. This model has at least one free parameter (the mean).
+\code{baseline_const_} predicts the value of \code{const} for all trials. For example \code{const = 0.50} is a common baseline for two-option choice tasks, and it predicts \emph{Pr=0.50} for each trial. The model \code{baseline_mean_} predicts the mean of the observed responses for each trial. This model has one free parameter (\code{m}, the mean).
 }
 \examples{
 # Here is some data, let y be the observed data
@@ -47,4 +56,8 @@ coef(M)                            # mean counts as free parameter
 npar(M)                            # 1 free parameter, the mean
 
 }
-\concept{Cognitive models}
+\seealso{
+Other cognitive models: 
+\code{\link{Cm}}
+}
+\concept{cognitive models}

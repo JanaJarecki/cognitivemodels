@@ -1,1 +1,1 @@
-#' @param choicerule A string, the choice rule: `"none"` is no choice rule, `"softmax"` is (soft-maximum)[https://en.wikipedia.org/wiki/Softmax_function], run `cm_choicerules()` to see the possible choicerules.
+#' @param choicerule A string, the choice rule: `"none"` is no choice rule, `"softmax"` is (soft-maximum)[https://en.wikipedia.org/wiki/Softmax_function]. Run `cm_choicerules()` to see the available choicerules.
