@@ -20,22 +20,22 @@
 #' @rdname baseline
 #' 
 #' @template cm
-#' @param formula A formula with just a left-hand-side, the variable in `data` that holds the response, such as `y ~ .`, note the `~ .` on the right.
-#' @param const A number, the value that the model predicts.
+#' @param formula A formula, the variable in `data` to be modeled. For example, `y ~ .` models a response variable `y` (note the `~ .` after the variable name).
+#' @param const A number, the value to predict.
 #' 
 #' @details
 #' `baseline_const_c/d` predicts the value given in `const` for all trials. For example `const = 0.50` would predict \emph{Pr=0.50} for each trial, which is a commmon baseline model for tasks with two-outcome discrete choices.
 #' 
 #' @section Parameter:
-#' `baseline_const_c/d` has no free parameter, `baseline_mean_d` has one free parameter called `"m"` (the estimated mean), and `baseline_mean_c` has an additional free parameter besides `"m"`, the standard deviation `"sigma"`.
+#'  * `baseline_const_c/d` has no free parameter
+#'  * `baseline_mean_c/d` has 1 free parameter, `mu`, the mean
+#'  * `baseline_mean_c`, if estimated via log likelihood, has an additional free parameter, `sigma`, the standard deviation of the normal log likelihood.
 #' 
 #' @examples
-#' # Here is some data, let y be the observed data
+#' # Data D: let y hold the observed responses
+#' # Make a model that predicts Pr = 0.50
 #' D <- data.frame(y = c(1,1,0), x = c(1,2,3))
-#' 
-#' # Baseline model that predicrs Pr = 0.50
 #' M <- baseline_const_d(y ~ ., const = 0.50, data = D)
-#' 
 #' predict(M)                         # predicts 0.5, 0.5, 0.5
 #' npar(M)                            # 0 parameter
 #' logLik(M)                          # log likelihood (binomial)
