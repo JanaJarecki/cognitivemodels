@@ -3,7 +3,6 @@ Gcm_sim <- R6Class("gcm_sim",
                public = list(
                  obs = NULL,
                  input = NULL,
-                 output = NULL,
                  cat = NULL,
                  parm = NULL,
                  constr = NULL,
@@ -15,12 +14,12 @@ Gcm_sim <- R6Class("gcm_sim",
                  input_id_r = NULL,
                  fixed = NULL, 
                  gofvalue = NULL,
-                 initialize = function(formula, data, metric = c("minkowski", "discrete", "threshold"), output = "similarity", fixed, choicerule, discount) {
+                 initialize = function(formula, data, metric = c("minkowski", "discrete", "threshold"), fixed, choicerule, discount) {
                    self$metric <- match.arg(metric)
-                   self$nobj <- length(strsplit(attr(terms(formula), "term.labels"), split = "\\|")[[1]])
-                   self$ndim <- length(all.vars(formula)[-1]) / self$nobj
+                   self$nobj <- length(strsplit(attr(terms(formula), "term.labels"), split = "\\|")[[1]]) # how many objects per trial?
+                   self$ndim <- length(all.vars(formula)[-1]) / self$nobj # how many dimensions per object?
                    f <- Formula(formula)
-                   self$nval <- length(unique(as.vector(as.matrix(get_all_vars(formula(f, lhs=0, rhs=NULL), data)))))
+                   self$nval <- length(unique(as.vector(as.matrix(get_all_vars(formula(f, lhs=0, rhs=NULL), data))))) # how many values per dimension?
 
                    # w = vector with attention weights, sum = 1
                    # c = scalar, sensitivity that discriminate the items on the dimensions
@@ -36,8 +35,8 @@ Gcm_sim <- R6Class("gcm_sim",
                    if(self$metric == "threshold") {
                      allowedparm <- rbind(allowedparm, gamma = c(0, self$nval - 2, 1, 0))
                    }
-                   super$initialize(formula = formula, data = data, fixed = as.list(fixed), model = "gcm", discount = discount, choicerule = choicerule, allowedparm = allowedparm, response = "continuous")
-                   self$input_id_l <- apply(self$input[, 1:3], 1, paste0, collapse = "")
+                   super$initialize(formula = formula, data = data, fixed = as.list(fixed), model = "gcm_sim", discount = discount, choicerule = choicerule, allowedparm = allowedparm, response = "continuous")
+                   self$input_id_l <- apply(self$input[, 1:3], 1, paste0, collapse = "") # makes a new column for each dimension of each stimulus
                    self$input_id_r <- apply(self$input[, 4:6], 1, paste0, collapse = "")
                  },
                  make_weight_names = function(ndim = self$ndim) {
@@ -85,11 +84,11 @@ Gcm_sim <- R6Class("gcm_sim",
                  },
                  predict = function(newdata = NULL){
                    if(!is.null(newdata)) {
-                     input <- model.frame(self$formula, newdata, na.action = NULL)[, -1]
+                     input <- model.frame(self$formula, newdata, na.action = NULL)[, -1] # makes input id for new data
                      input_id_l <- apply(input[, 1:3], 1, paste0, collapse = "")
                      input_id_r <- apply(input[, 4:6], 1, paste0, collapse = "")
                    } else {
-                     input <- self$input
+                     input <- self$input # makes input ids for training data
                      input_id_l <- self$input_id_l
                      input_id_r <- self$input_id_r
                    }
@@ -157,8 +156,8 @@ Gcm_sim <- R6Class("gcm_sim",
 )
 
 #' @export
-gcm_sim <- function(formula, data, metric = c("minkowski", "discrete", "threshold"), output = "similarity", fixed, choicerule, discount = 0) {
-  obj <- Gcm_sim$new(formula = formula, data = data, metric = metric, output = output, fixed = fixed, choicerule = choicerule, discount = discount)
+gcm_sim <- function(formula, data, metric = c("minkowski", "discrete", "threshold"), fixed, choicerule, discount = 0) {
+  obj <- Gcm_sim$new(formula = formula, data = data, metric = metric, fixed = fixed, choicerule = choicerule, discount = discount)
   if(length(obj$freenames) > 0) {
     if(obj$metric == "threshold") {
       gofs <- vector("numeric", length = obj$nval - 2)
