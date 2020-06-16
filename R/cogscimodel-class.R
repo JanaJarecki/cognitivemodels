@@ -259,7 +259,8 @@ Cogscimodel <- R6Class(
         eqfun = self$getSolnpEq()[[1]],
         eqB = self$getSolnpEq()[[2]],
         control = control,
-        self = self)
+        self = self,
+        trace = TRUE)
       return(list(parm = fit$pars, val = tail(fit$value, 1)))
     },
     fitObjective = function(pars, self) {

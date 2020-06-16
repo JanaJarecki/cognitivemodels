@@ -109,22 +109,24 @@ Gcm_sim <- R6Class("gcm_sim",
                      dist <- sum( w*abs(dist)^r )^(1/r)
                    } 
                    if(self$metric == "discrete"){
-                     dist <- w %*% as.numeric(dist != 0) # Vector multiplication
+                     dist <- w %*% as.numeric(dist != 0) 
                    }
                    if(self$metric == "threshold"){
                      gamma <- self$parm[["gamma"]]
-                     dist <- w %*% as.numeric(dist > gamma) # Vector multiplication
+                     dist <- w %*% as.numeric(dist > gamma)
                    }
                    return(dist)
                  },
                  eqfun = function() {
-                   return(list(
+                   if ( all(paste0("w", 1:self$ndim) %in% self$fixednames) ) {
+                     return(list(NULL, NULL))
+                   } else {
+                     return(list(
                      eqfun = function(pars, self) {
                        sum(pars[1:self$ndim])
                      },
-                     eqB = 1
-                   )
-                   )
+                     eqB = 1))
+                     }
                  },
                  parGrid = function(offset) {
                    if(self$metric != "threshold"){
@@ -137,21 +139,8 @@ Gcm_sim <- R6Class("gcm_sim",
                        regular = TRUE,
                        offset = 0)
                    } 
-                   # else {
-                   #   grid <- MakeGridList(
-                   #     names = self$freenames,
-                   #     ll = self$allowedparm[, 'll'] + offset,
-                   #     ul = self$allowedparm[, 'ul'] - offset,
-                   #     nsteps = list(w = 4, c = 4, tau = 4, gamma = 2),
-                   #     sumto = list('w' = paste0("w", 1:self$ndim)),
-                   #     regular = TRUE,
-                   #     offset = 0)
-                   # }
                    return(grid)
                  }
-                 # fit = function(type = "solnp") {
-                 #   super$fit(type = type, eqfun = eqfun, eqB = eqB)
-                 # }
                )
 )
 

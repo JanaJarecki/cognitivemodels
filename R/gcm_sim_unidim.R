@@ -11,18 +11,16 @@ Gcm_sim_unidim <- R6Class("gcm_sim_unidim",
                             self$freenames <- setdiff(self$freenames, self$fixednames)
                             
                             unidimweights <- matrix(diag(self$ndim), ncol = self$ndim, dimnames = list(NULL, super$make_weight_names()))
-                            unidimweights <- unidimweights[c(1, 3), ] # delete
                             gofs <- vector("numeric", length = self$ndim)
-                            gofs <- vector("numeric", length = self$ndim - 1) # delete
                             parms <- matrix(nrow = self$ndim, ncol = length(self$parm), dimnames = list(NULL, names(self$parm)))
-                            parms <- matrix(nrow = self$ndim - 1, ncol = length(self$parm), dimnames = list(NULL, names(self$parm))) # delete
                             for(i in 1:nrow(unidimweights)) {
                               self$setparm(unidimweights[i, ])
                               print(unidimweights[i, ])
                               if(length(self$freenames) > 0) {
                                 super$super_$fit(type = type, ...)
                                 gofs[i] <- self$gofvalue
-                                parms[i, ] <- self$parm
+                                parms[i, ] <- unlist(self$parm)
+                                print(parms)
                               } else {
                                 gofs[i] <- -cogsciutils::gof(obs = self$obs, pred = self$predict(), response = "d", type = "log", discount = self$discount)
                                 parms <- unidimweights
@@ -43,7 +41,7 @@ Gcm_sim_unidim <- R6Class("gcm_sim_unidim",
 gcm_sim_unidim <- function(formula, data, metric = c("minkowski", "discrete", "threshold"), fixed, choicerule, discount = 0) {
   obj <- Gcm_sim_unidim$new(formula = formula, data = data, metric = metric, fixed = fixed, choicerule = choicerule, discount = discount)
   if(length(obj$freenames) > 0) {
-    obj$fit(na.rm = TRUE)
+    obj$fit(type = "solnp") # , na.rm = TRUE
   }
   return(obj)
 }
