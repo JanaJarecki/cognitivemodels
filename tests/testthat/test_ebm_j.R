@@ -144,7 +144,7 @@ fit_ebm_j <- function(dt) {
         fix = list(q = 1, r = 1))
 }
 
-dt <- albrecht2019exp1[subj <= 42, list(fit_ebm_j = list(fit_ebm_j(dt = .SD))), by = list(subj)]
+dt <- albrecht2019exp1[subj == 41, list(fit_ebm_j = list(fit_ebm_j(dt = .SD))), by = list(subj)]
 coefs <- dt[, as.list(coef(fit_ebm_j[[1]])), by = list(subj)]
 coefs <- coefs[, -1][, lapply(.SD, mean)]
 

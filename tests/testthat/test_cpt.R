@@ -87,7 +87,7 @@ cpttest[, decision := 1 - (decision - 1)]
 fml <- decision ~ o1 + p1 + o2 + p2 | o3 + p3 + o4 + p4
 
 fit_cpt_5_g2 <- function(dt) {
-  cpt(fml, ref = 0, data = dt, choicerule = "softmax", options = list(ub = c(tau = 25), solver = "solnp"), fix = list(alpha = "beta"))
+  cpt(fml, ref = 0, data = dt, choicerule = "softmax", options = list(ub = c(tau = 25)), fix = list(alpha = "beta"))
 }
 fit_cpt_4_g2 <- function(dt) {
   cpt(fml, ref = 0, data = dt, choicerule = "softmax", options = list(ub = c(tau = 25), solver = "solnp"), fix = list(alpha = "beta", gammap = "gamman"))
