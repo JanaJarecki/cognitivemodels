@@ -153,7 +153,7 @@ gcm_sim <- function(formula, data, metric = c("minkowski", "discrete", "threshol
       parms <- matrix(nrow = obj$nval - 1, ncol = length(obj$parm), dimnames = list(NULL, names(obj$parm)))
       for(i in 1:(obj$nval - 2)) {
         obj$parm$gamma <- i - 1
-        obj$fit(type = "solnp")
+        obj$fit(type = "solnp", trace = TRUE)
         gofs[i] <- obj$gofvalue
         parms[i, ] <- unlist(obj$parm)
       }
