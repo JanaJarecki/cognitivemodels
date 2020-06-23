@@ -36,7 +36,7 @@ test_that("Parameter estimates compared to Nosofsky (1989)", {
   expect_est_equal <- function(fix, target, tol = 0.01) {
     fix <- c(q=2, r=2, fix)
     fitd <- d[d$condition == condition,]
-    M <- gcm(formula = pobs ~ angle + size, criterion = ~ true_cat, data = d[d$condition == condition & !is.na(d$true_cat), ], fix = fix, options = list(fit_data = fitd, fit_n = fitd$N, fit = T), discount = 0, choicerule = "none")
+    M <- gcm(formula = pobs ~ angle + size, criterion = ~ true_cat, data = d[d$condition == condition & !is.na(d$true_cat), ], fix = fix, options = list(fit_data = fitd, fit_args = list(n = fitd$N), fit=T), discount = 0, choicerule = "none")
     expect_equal(coef(M), target, tol = tol)
   }
 

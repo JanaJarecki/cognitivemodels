@@ -3,67 +3,77 @@
 \name{gcm}
 \alias{gcm}
 \alias{ebm_j}
-\alias{mem}
 \alias{ebm}
 \title{Exemplar-based Cognitive Models}
 \usage{
-gcm(formula, class, data, fix = NULL, options = NULL, ...)
+gcm(
+  formula,
+  class,
+  data,
+  fix = NULL,
+  options = NULL,
+  similarity = "minkowski",
+  ...
+)
 
-ebm_j(formula, criterion, data, fix = NULL, options = NULL, ...)
-
-mem(formula, criterion, data, options = NULL, ...)
+ebm_j(
+  formula,
+  criterion,
+  data,
+  fix = NULL,
+  options = NULL,
+  similarity = "minkowski",
+  ...
+)
 
 ebm(formula, criterion, data, mode, fix = NULL, options = NULL, ...)
 }
 \arguments{
-\item{formula}{A formula specifying  participants' responses ~ stimulus
-features (e.g., \code{y ~ f1 + f2}).}
+\item{formula}{A formula, variables in \code{data} to be modeled, e.g., \code{y ~ x1 + x2 + x3} models the observed response, \code{y}, based on the features of the stimuli, \code{x1}, \code{x2}, \code{x3}. The response variable can be omitted if no parameters are fitted.}
 
-\item{class}{A formula specifying the class feedback (e.g., \code{~ cl}), note the "\code{~}". \code{NA} values are retained, assuming a partial feedback paradigm.}
+\item{class}{A formula, variable in \code{data} that has the class feedback, e.g. \code{~ category}. \code{NA}s are interpreted as trials without feedback (partial feedback, see details).}
 
-\item{...}{other arguments from other functions, currently ignored.}
+\item{data}{A data frame, data to be modeled.}
 
-\item{criterion}{A formula specifying the class, criterion, or feedback (e.g., \code{~ class}).}
+\item{similarity}{(optional) A string, similarity function, currently only \code{"minkowski"}.}
+
+\item{...}{(optional) Other arguments from other functions, ignored.}
+
+\item{criterion}{A formula, variable in \code{data} that has the criterion feedback, e.g. \code{~ value} \code{NA}s are interpreted as trials without feedback (partial feedback, see details).}
+
+\item{mode}{(optional) A string, the response mode, either \code{discrete} or \code{continuous}, can be abbreviated. If missing, will be inferred from \code{criterion}.}
 }
 \value{
-An exemplar-based model; a model \code{M} can be viewed with
-\code{summary(M)}, or \code{anova(M)}.
+Returns the fitted model which has class \code{cm}. A model called \code{M} can be viewed with \code{summary(M)}, or \code{anova(M)}.
 }
 \description{
-\code{ebm()} fits exemplar-based models, \code{gcm()} fits a generalized context model (Medin & Schaffer, 1978; Nosofsky, 1986), \code{ebmcj()} fits an exemplar-based judgment model (Juslin et al., 2003).
+\code{ebm()} fits an exemplar-based model
+\itemize{
+\item \code{gcm()} fits a generalized context model, aka. exemplar model, for discrete responses (Medin & Schaffer, 1978; Nosofsky, 1986)
+\item \code{ebm_j()} fits an exemplar-based judgment model for continuous responses (Juslin et al., 2003)
+}
 }
 \details{
-If \code{mode} is missing it will be inferred from the RHS of \code{criterion} or \code{class}.
-
-The model can predict new data (\code{predict(M, newdata = ....)}), and this is how it works:
-\itemize{
-\item{If \code{newdata}'s \code{criterion} has only \code{NA}s, the model predicts using the old data (the originally-supplied \code{data} argument) as exemplar-memory. Parameters are not re-fit.}
-\item{If \code{newdata}'s' \code{criterion} has also non-\code{NA}s, the model predicts the first new data row using the old data, but predictions for subsequent new data use also the criterion in new data. In other words, exemplar memory is \emph{extended} by exemplars in new data for which a criterion exists. Parameters are not re-fit.}
-}
-
 \code{ebm_j()} calls \link{ebm} with \code{mode = "continuous"}.
-
-\code{mem()} calls \link{ebm_j} with weights fixed to be equal and \code{r=2, p=2}.
 
 \code{gcm()} \link{ebm} with \code{mode = "discrete"}.
 }
 \section{Parameter Space}{
 
+The parameters of the model are listed here, LB and UB = inclusive lowr and upper parameter bounds, Start Value = starting value for fitting.
 \tabular{lrcllr}{\verb{   }
 \strong{Name} \tab \verb{   }\strong{LB} \tab  \strong{-} \tab \strong{UB}\verb{   } \tab \strong{Description} \tab \strong{Start Value} \cr\verb{   }
 \code{f1, f2} \tab 0 \tab-\tab 1 \tab Attention weights, sum to 1. Note: parameter names are equal to the LHS of \code{formula} \tab 1 / n features \cr\verb{   }
 \code{lambda} \tab 0.001 \tab-\tab 10 \tab Sensitivity, higher values increase the discriminability in the psychological space \tab 0.5 \cr\verb{   }
 \code{q} \tab 0 \tab-\tab 2 \tab Exponent in the distance metric, 1 yields city-block, 2 yields Euclidean metric \tab 1.5 \cr\verb{   }
-\code{r} \tab 0 \tab-\tab 2 \tab Exponent in the decay functio, 1 yieldes = exponential decay, 2 yields gaussian decay \tab 1.5
+\code{r} \tab 0 \tab-\tab 2 \tab Exponent in the decay functio, 1 yieldes = exponential decay, 2 yields gaussian decay \tab 1.5 \cr\verb{   }
+\code{b0, b1} \tab 0 \tab-\tab 1 \tab (only for discrete responses) Response bias, sum to 1, names are \code{b} + \code{unique(class)}.\tab 1 / n classes
 }
-\verb{   }where \emph{LB, UB} = inclusive bounds and \emph{Start Value} = starting value for fitting.
-
-
-The \code{gcm()} and \code{ebm(mode = "discrete")} have as many response bias parameters as there are category labels. For example if the categories are 0 or 1:
-\verb{   }\tabular{lrcllr}{\verb{   }
-\strong{Name} \tab \verb{   }\strong{LB} \tab  \strong{-} \tab \strong{UB}\verb{   } \tab \strong{Description} \tab \strong{Start Value} \cr\verb{   }
-\code{b0, b1} \tab 0 \tab-\tab 1 \tab Response bias towards each category, sum to 1. Note: names are \code{b}+unique \code{class} labels.\tab 1 / n classes
 }
+
+\section{Partial Feedback}{
+
+How are \code{NA} values in \code{class} and \code{criterion} handeled? The model takes \code{NA} values in the class or criterion variable as trials without feedback, in which a stimulus was shown but no feedback about the class or criterion was given (partial feedback paradigm). The model predicts the class or criterion for such trials without feedback based on the previous exemplars for which feedback was shown. The model ignores the trials without feedback in the prediction of the subsequent trials.
 }
 
 \examples{
@@ -114,8 +124,6 @@ gcm(y~f1+f2, ~cl, D, fix=list(lambda=2),
      choicerule = "none")                      # fix 'lambda' to 2 & fit 6 par
 ebm_j(y ~ f1 + f2, D)
 
-mem(y ~ f1 + f2, D)
-
 }
 \references{
 {Medin, D. L., & Schaffer, M. M. (1978). Context theory of classification learning. \emph{Psychological Review, 85}, 207-238. \url{http://dx.doi.org/10.1037//0033-295X.85.3.207}}
@@ -123,4 +131,10 @@ mem(y ~ f1 + f2, D)
 {Nosofsky, R. M. (1986). Attention, similarity, and the identification-categorization relationship. \emph{Journal of Experimental Psychology: General, 115}, 39-57. \url{http://dx.doi.org/10.1037/0096-3445.115.1.39}}
 
 {Juslin, P., Olsson, H., & Olsson, A.-C. (2003). Exemplar effects in categorization and multiple-cue judgment. \emph{Journal of Experimental Psychology: General, 132}, 133-156. \url{http://dx.doi.org/10.1037/0096-3445.132.1.133}}
+
+The model can predict new data (\code{predict(M, newdata = ....)}), and this is how it works:
+\itemize{
+\item{If \code{newdata}'s \code{criterion} has only \code{NA}s, the model predicts using the old data (the originally-supplied \code{data} argument) as exemplar-memory. Parameters are not re-fit.}
+\item{If \code{newdata}'s' \code{criterion} has also non-\code{NA}s, the model predicts the first new data row using the old data, but predictions for subsequent new data use also the criterion in new data. In other words, exemplar memory is \emph{extended} by exemplars in new data for which a criterion exists. Parameters are not re-fit.}
+}
 }

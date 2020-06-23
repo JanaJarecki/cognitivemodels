@@ -1,110 +1,104 @@
-context("choicerules")
-
-
-
-test_that("Softmax predicted values", {
-  D <- data.frame(y = c(1,1,0), x = c(.1,.2,.3))
-  D$x2 <- 1 - D$x
-  res <- cbind(exp(D$x), exp(D$x2))/(exp(D$x) + exp(D$x2))
-  colnames(res) <- c("pr_x", "pr_x2")
-
-  M <- softmax(y ~ x | x2, D[1,], c(tau = 1))
-  expect_equal(M$predict(), res[1,])
-
-  M <- softmax(y ~ x | x2, D, c(tau = 1))
-  expect_equivalent(M$predict(), res)
-
-  M <- softmax(y ~ x, D[1,], c(tau = 1))
-  expect_equal(M$predict(), res[1,1])
-
-  M <- softmax(y ~ x, D, c(tau = 1))
-  expect_equal(M$predict(), res[,1])
+# 1. Predictive testing -----------------------------------------------------
+#    Test if model(s) generate(s) the expected predictions
+test_that("Softmax - Prediction identities", {
+  expect_pred_equal <- function(D, tau, f) {
+    res <- cbind(exp(D$x/tau), exp(D$x2/tau))/(exp(D$x/tau) + exp(D$x2/tau))
+    colnames(res) <- c("pr_x", "pr_x2")
+    M <- softmax(f, D, c(tau = tau))
+    expect_equivalent(M$predict(), res[, 1:M$nstim])
+  }
+  D <- data.frame(y = c(1,1,0), x = c(.1,.2,.3), x2 = 1-c(.1,.2,.3))
+  expect_pred_equal(D[1,], tau = 1,  f = y ~ x | x2)
+  expect_pred_equal(D,     tau = 1,  f = y ~ x | x2)
+  expect_pred_equal(D[1,], tau = 1,  f = y ~ x)
+  expect_pred_equal(D,     tau = 1,  f = y ~ x)
+  expect_pred_equal(D[1,], tau = .5, f = y ~ x | x2)
+  expect_pred_equal(D,     tau = .5, f = y ~ x | x2)
+  expect_pred_equal(D[1,], tau = .5, f = y ~ x)
+  expect_pred_equal(D,     tau = .5, f = y ~ x)
 })
 
 
-test_that("Epsilon greedy predicted values", {
-  D <- data.frame(y = c(1,1,0), x = c(.1,.2,.3))
-  eps <- 0.33
-  D$x2 <- 1 - D$x
-  res <- cbind(c(0,0,0), c(1,1,1)) * (1-eps) + eps / 2
-  colnames(res) <- c("pr_x", "pr_x2")
+test_that("Epsilon greedy - Prediction identities", {
+  test_pred_equal <- function(D, eps, f) {
+    D <- data.frame(y = c(1,1,0), x = c(.1,.2,.3), x2 = 1-c(.1,.2,.3))
+    res <- cbind(c(0,0,0), c(1,1,1)) * (1-eps) + eps / 2
+    colnames(res) <- c("pr_x", "pr_x2")
+    M <- epsilon_greedy(f, D, c(eps = eps))
+    expect_equivalent(M$predict(), res[, 1:M$nstim])
+  }
+  
+  test_pred_equal(D =  D[1, ], eps = .33, f = y ~ x | x2)
+  test_pred_equal(D =  D,      eps = .33, f = y ~ x | x2)
+  test_pred_equal(D =  D[1,],  eps = .33, f = y ~ x)
+  test_pred_equal(D =  D,      eps = .33, f = y ~ x)
 
-  M <- epsilon_greedy(y ~ x | x2, D[1, ], c(eps = eps))
-  expect_equal(M$predict(), res[1,])
-
-  M <- epsilon_greedy(y ~ x | x2, D, c(eps=eps))
-  expect_equivalent(M$predict(), res)
-
-  M <- epsilon_greedy(y ~ x, D[1, ], c(eps=eps))
-  expect_equivalent(M$predict(), res[1,1])
-
-  M <- epsilon_greedy(y ~ x, D, c(eps=eps))
-  expect_equivalent(M$predict(), res[,1])
+  test_pred_equal(D =  D[1, ], eps = .1, f = y ~ x | x2)
+  test_pred_equal(D =  D,      eps = .1, f = y ~ x | x2)
+  test_pred_equal(D =  D[1,],  eps = .1, f = y ~ x)
+  test_pred_equal(D =  D,      eps = .1, f = y ~ x)
 })
 
-test_that("Epsilon predicted values", {
-  D <- data.frame(y = c(1,1,0), x = c(.1,.2,.3))
-  eps <- 0.33
-  D$x2 <- 1 - D$x
-  res <- cbind(D$x, D$x2) * (1-eps) + eps / 2
-  colnames(res) <- c("pr_x", "pr_x2")
+test_that("Epsilon - Prediction identities", {
+  test_pred_equal <- function(D, eps, f) {
+    D <- data.frame(y = c(1,1,0), x = c(.1,.2,.3), x2 = 1-c(.1,.2,.3))
+    res <- cbind(D$x, D$x2) * (1-eps) + eps / 2
+    colnames(res) <- c("pr_x", "pr_x2")
+    M <- epsilon(f, D, c(eps = eps))
+    expect_equivalent(M$predict(), res[, 1:M$nstim])
+  }
+  
+  test_pred_equal(D =  D[1, ], eps = .33, f = y ~ x | x2)
+  test_pred_equal(D =  D,      eps = .33, f = y ~ x | x2)
+  test_pred_equal(D =  D[1,],  eps = .33, f = y ~ x)
+  test_pred_equal(D =  D,      eps = .33, f = y ~ x)
 
-  M <- epsilon(y ~ x | x2, D[1, ], c(eps = eps))
-  expect_equal(M$predict(), res[1,])
-
-  M <- epsilon(y ~ x | x2, D, c(eps=eps))
-  expect_equivalent(M$predict(), res)
-
-  M <- epsilon(y ~ x, D[1, ], c(eps=eps))
-  expect_equivalent(M$predict(), res[1,1])
-
-  M <- epsilon(y ~ x, D, c(eps=eps))
-  expect_equivalent(M$predict(), res[,1])
-})
-
-test_that("Luce predicted values", {
-  D <- data.frame(y = c(1,1,0), x = c(.1,.2,.3))
-  D$x2 <- 1 - D$x
-  res <- cbind(D$x, D$x2)/(D$x + D$x2)
-  colnames(res) <- c("pr_x", "pr_x2")
-
-  M <- luce(y ~ x | x2, D[1, ])
-  expect_equal(M$predict(), res[1,])
-
-  M <- luce(y ~ x | x2, D)
-  expect_equivalent(M$predict(), res)
-
-  M <- luce(y ~ x, D[1L, ])
-  expect_equivalent(M$predict(), cbind(pred_x=1))
-
-  M <- luce(y ~ x, D)
-  expect_equivalent(M$predict(), cbind(pred_x = c(1,1,1)))
+  test_pred_equal(D =  D[1, ], eps = .1, f = y ~ x | x2)
+  test_pred_equal(D =  D,      eps = .1, f = y ~ x | x2)
+  test_pred_equal(D =  D[1,],  eps = .1, f = y ~ x)
+  test_pred_equal(D =  D,      eps = .1, f = y ~ x)
 })
 
 
+test_that("Luce  - Prediction identities", {
+  test_pred_equal <- function(D, f, res = NULL) {
+    M <- luce(f, D)
+    if (is.null(res)) res <- (cbind(D$x, D$x2)/(D$x + D$x2))[, 1:M$nstim]
+    expect_equivalent(M$predict(), res)
+  }
+  D <- data.frame(y = c(1,1,0), x = c(.1,.2,.3), x2 = 1-c(.1,.2,.3))
+  test_pred_equal(D =  D[1, ], f = y ~ x | x2)
+  test_pred_equal(D =  D,      f = y ~ x | x2)
+  test_pred_equal(D =  D[1,], f = y ~ x, c(1))
+  test_pred_equal(D =  D,     f = y ~ x, c(1,1,1))
+})
 
-test_that("Argmax greedy predicted values", {
-  D <- data.frame(y = c(1,1,0), x = c(.1,.5,.9))
-  D$x2 <- 1 - D$x
-  res <- cbind(c(0,0.5,1), c(1,0.5,0))
-  colnames(res) <- c("pr_x", "pr_x2")
 
-  M <- argmax(y ~ x | x2, D[1, ])
-  expect_equal(M$predict(), res[1,])
-
-  M <- argmax(y ~ x | x2, D)
-  expect_equivalent(M$predict(), res)
-
-  M <- argmax(y ~ x, D[1, ])
-  expect_equivalent(M$predict(), res[1,1])
-
-  M <- argmax(y ~ x, D)
-  expect_equivalent(M$predict(), res[, 1])
+test_that("Argmax greedy - Prediction identities", {
+  test_pred_equal <- function(D, f) {
+    M <- argmax(f, D)
+    res <- cbind(c(0,0.5,1), c(1,0.5,0))[1:nrow(D), , drop=F]
+    expect_equivalent(M$predict(), res[, 1:M$nstim])
+  }
+  D <- data.frame(y = c(1,1,0), x = c(.1,.5,.9), x2 = 1-c(.1,.5,.8))
+  test_pred_equal(D =  D[1, ], f = y ~ x | x2)
+  test_pred_equal(D =  D,      f = y ~ x | x2)
+  test_pred_equal(D =  D[1,], f = y ~ x)
+  test_pred_equal(D =  D,     f = y ~ x)
 })
 
 
 
-test_that("Epsilon greedy parameter estimation", {
+# 2. Parameter estimation ----------------------------------------------------
+test_that("Epsilon greedy - Parameter estimation", {
+  expect_par_equivalent <- function(y, target) {
+    D <- data.frame(y = y, x = c(.8,.8,.2,.2))
+    M <- epsilon_greedy(y ~ x, D, options = list(fit = T))
+
+    expect_equivalent(M$coef(), target, tol=0.05)
+  }
+  expect_par_equivalent(y = c(1,1,0,0), 0)
+
   D <- data.frame(y = c(1,1,0,0), x = c(.8,.8,.2,.2))
   M <- epsilon_greedy(y ~ x, D)
   expect_equivalent(M$coef(), 0, tol=0.05)

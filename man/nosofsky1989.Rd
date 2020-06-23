@@ -4,7 +4,9 @@
 \name{nosofsky1989}
 \alias{nosofsky1989}
 \title{Test data for fitting the Exemplar-based categorization model}
-\format{An object of class \code{"data.frame"}.#'}
+\format{
+An object of class \code{"data.frame"}.#'
+}
 \source{
 From Table 3 and Figure 2 in Nosofsky, R. M. (1989). Further tests of an exemplar-similarity approach to relating identification and categorization. Perception & Psychophysics, 45, 279–290. doi:10.3758/BF03204942
 }

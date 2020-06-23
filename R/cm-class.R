@@ -24,24 +24,16 @@
 #' @importFrom matlib showEqn
 #' @importFrom rlang call_standardise
 #' 
-#' 
 #' @aliases cm-class
 #' 
-#' @param formula A formula, e.g., `y ~ x1 + x2`.
-#' @param data A data frame containing `formula`'s variables.
+#' @template cm
+#' 
 #' @param parspace  (optional, \bold{required} to add model parameters) A n x 4 matrix, the parameter space. Use \link{make_parspace} to construct it. Column names must be `"lb","ub","start","na"`, row names must be parameter names. Columns contain the lower limit, upper limit, starting value in fitting, and (optional) a value that makes a parameter have zero effect, which can be NA. See details.
-#' @param fix (optional) Parameter constraints. Can be `"start"` or a list with `parname=value`-pairs. Parameter names see below under "parameter space".
-#' \itemize{
-#' \item{`"start"` constrains all available parameters to their starting values. Useful for model testing.}
-#' \item{`parname = 0.5` constrains a parameter to 0.5.}
-#' \item{`parname = "p2"` constrains a parameter to another model parameter `p2`.}
-#' \item{`parname = NA` tells the model to omit a parameter, if possible.}
-#' }
-#' @param choicerule (only for discrete models) A string, the choice rule, to view, rum `cm_choicerules()`.
+#' @template param-choicerule
+#' @template param-fix
 #' @param title (optional, default is the class name) A string, the model's name.
 #' @param mode A string, the response mode. Allowed are `"discrete"`, `"continuous". Discrete responses are binary (0 or 1), continuous responses are numbers-
-#' @param discount (optional) An integer or integer vector (default \code{0}), ddefining which or how many, starting from trial 1, to discount when fitting.
-#' @param options (optional) Options to control the parameter fitting methods, see the "Options" section of \code{\link{cm_options}}.
+#' @param discount (optional) An integer or integer vector (default \code{0}), ddefining which or how many, starting from trial 1, to discount when fitting. 
 #' @details \code{parspace}. It is optional to define a value that makes the parameter have zero effect in the column called "na" in \code{parspace}. For example, a parameter \code{b} in \code{b*x}, has no-effect  when setting \code{b=0}. The no-effect value can be \code{NA}.
 #' 
 #' \bold{fix}
@@ -52,16 +44,6 @@
   #' \item{\code{delta=NA}}{: ignore delta if it can be ignored by setting delta equal to the value in the column "na" of \code{parspace}, given that parspace has a value in the column "na" for delta.}
 #' }
 #' You can ignore a model parameter by setting it to \code{NA} in \code{fix}, in this case your \code{parspace} needs to contain a value in the column na nullifying the effect of the parameter.
-#' @section Options, see \link{cm_options}, possible options:
-#' \describe{
-#'    \item{\code{fit}}{(default \code{TRUE}), \code{FALSE} omits fitting the free parameter.}
-#'    \item{\code{fit_measure}}{(default \code{"loglikelihood"}). When fitting, which fit measure to use? See \link[cognitiveutils]{gof}'s argument \code{type}.}
-#'    \item{\code{fit_data}}{(default: \code{data}). When fitting, which data other than to fit the model to? Useful if you fit to other data than you predict.}
-#'    \item{\code{fit_n}}{(default: \code{1}). When fitting, the number of reservations underlying each data point in \code{fit_data}. If this data is aggregated data, change this argument.}
-#'    \item{\code{fit_roi_solver}}{(default: \code{"auto"}). When fitting with the \link{http://roi.r-forge.r-project.org/index.html}{ROI pakage}, which solver to use for the parameter estimation problem.}
-#'    \item{\code{nbest}}{(default: \code{self$npar("free")}, no. of free parameters) When fitting with grid search followed by a solver, how many best grid-search solutions to use as starting parameters with the solver?}
-#' \item{\code{fit_options}}{(default: \code{NULL}). Other options, see \link[cognitiveutils]{gof}.}
-#' }
 #' @examples 
 #' # No examples yet.
 #' @export
@@ -125,14 +107,15 @@ Cm <- R6Class(
 
     #' @description
     #' Initializes a new model
-    initialize = function(formula, data = NULL, parspace = make_parspace(), fix = NULL, choicerule = if (mode == "continuous") { "none" } else { NULL }, title = NULL, discount = NULL, mode = NULL, options = NULL) {
+    initialize = function(formula, data = NULL, parspace = make_parspace(), fix = NULL, choicerule = if (grepl("^c", mode)) { "none" } else { NULL }, title = NULL, discount = NULL, mode = NULL, options = NULL) {
       self$title        <- title
       self$formula      <- as.Formula(formula)
-      self$pass_checks  <- (length(data) == 0)
+      self$pass_checks  <- length(data) == 0
       self$call  <- if (deparse(sys.call()[[1L]]) == "super$initialize") {
         if (!inherits(self, "csm")) { rlang::call_standardise(sys.calls()[[sys.nframe()-4L]]) }
         } else { rlang::call_standardise(sys.call(sys.nframe()-1L)) }
       self$discount     <- private$init_discount(x = discount)
+      mode <- match.arg(mode, c("continuous", "discrete"))
       if (mode == "continuous") choicerule <- "none"
       self$choicerule   <- .check_and_match_choicerule(x = choicerule)
       
@@ -141,7 +124,7 @@ Cm <- R6Class(
       private$init_par(parspace = parspace, fix = fix, options = options, mode = mode)
       private$init_stimnames()
       private$init_prednames()
-      private$init_options(options)
+      private$init_options(options = options)
 
       # Checks
       # ! after setting formula, parspace, choicerule, etc.
@@ -149,7 +132,7 @@ Cm <- R6Class(
       .check_par(fix, self$parspace, self$pass_checks)
 
       # Automatically fit free parameters
-      if (length(data) > 0 & (self$options$fit == TRUE) & (self$npar("free") > 0L)) {
+      if (length(data) > 0 && (self$options$fit == TRUE) && (self$npar("free") > 0L)) {
         self$fit()
       }
     },
@@ -262,11 +245,13 @@ Cm <- R6Class(
     #' New data input for a cogscim
     #' @param data A data frame with variables corresponding to the inputs that the model needs
     set_data = function(data = NULL) {
-      if (missing(data) | is.null(data) | length(data) == 0) {
+      if (missing(data) || is.null(data) || length(data) == 0) {
         data <- data.frame()
-      }
-      if (length(data) > 0 & !inherits(data, "data.frame")) {
-        stop("'data' must be a data.frame, but is a ", class(data)[1], ".")
+      } else if (!inherits(data, "data.frame")) {
+        stop("'data' must be a data.frame, but is a ", class(data)[1], ifelse(is.vector(data), " vector ", ""), "", .brackify(data), ".",
+        "\n  * Do you need to re-format your data?",
+        "\n  * Did you forget to name the argument (data = ...) in the model?")
+
       } 
       formula <- self$formula
       self$nobs <- nrow(data)
@@ -319,13 +304,13 @@ Cm <- R6Class(
     #' Number of model parameters
     #' @param x  A string, which of the parameters to return, allowed are \code{"all", "free", "constrained", "equal"}
     npar = function(x = "free") {
-      ans <- try(match.arg(x, c("all","free")), silent = TRUE)
+      ans <- try(match.arg(x, c("free", "all")), silent = TRUE)
       if (class(ans) == "try-error") { # not "free"
-        return(length(private$get_parnames(x)))
+        return(nrow(self$parspace) - self$ncon)
       } else {
-        # TODO: throw error/stop if a model has more constraints than parameters
-        npar <- length(private$get_parnames()) - self$ncon
-        return(npar)
+        switch(x,
+          "free" = nrow(self$parspace) - self$ncon,
+           "all" = nrow(self$parspace))
       }
     }, 
 
@@ -335,10 +320,12 @@ Cm <- R6Class(
     #' @param n (optional) When fitting to aggregate data, supply how many raw data points underly each aggregated data point
     #' @param newdata (optional) A data frame with new data - experimental!
     #' @param ... other arguments (ignored)
-    gof = function(type, n = self$options$fit_n, newdata = self$options$fit_data, discount = FALSE, ...) {
-      if (length(self$res) == 0L) { stop("The model must contain observed data to calculate the goodness of fit, but observed data are ", self$res, ".\nDid you forget a left side in 'formula'?",call.=FALSE) }
+    gof = function(type = self$options$fit_measure, n = self$options$fit_args$n, newdata = self$options$fit_data, discount = FALSE, ...) {
+      if (length(self$res) == 0L) { stop("Model must have response variable to calculate the goodness of fit, but response are ", self$res, ".",
+        "\n  * Did you forget a left side in 'formula'?", call.=FALSE) }
 
-      if (is.null(newdata) | missing(newdata)) {
+
+      if (length(newdata) == 0L) {
         obs <- as.matrix(self$res)
         pred <- as.matrix(self$predict())
       } else {
@@ -352,11 +339,8 @@ Cm <- R6Class(
       if (discount == TRUE) {
         pred[self$discount, ] <- NA
       }
-      dotargs <- list(...)
-      options <- c(dotargs[["options"]], list(response = self$mode), self$options$fit_args[["options"]])
-      dotargs <- c(
-        dotargs[-which(names(dotargs) == "options")],
-        self$options$fit_args[-which(names(self$options$fit_args)=="options")])
+      options <- c(list(...), self$options$fit_args)
+      options <- options[!duplicated(names(options)) & !grepl("n", names(options))]
 
       .args <- c(
         list(
@@ -365,12 +349,12 @@ Cm <- R6Class(
           type = type,
           na.rm = TRUE,
           n = n,
-          options = options
+          response = self$mode,
+          sigma = if (self$mode == "continuous" & type == "loglikelihood") {
+                self$get_par()["sigma"] }
           ),
-        dotargs)
-      if (self$mode == "continuous" & type == "loglikelihood") {
-        .args[["sigma"]] <- self$get_par()["sigma"]
-      }
+          options
+        )
       gof <- try(do.call(cognitiveutils::gof, args = .args, envir = parent.frame()), silent = TRUE)
       if (inherits(gof, "try-error")) {
         stop("Can't compute the model fit ", type, ", because:\n  ", geterrmessage(),
@@ -555,6 +539,7 @@ Cm <- R6Class(
     # Get the inputs to the model
     get_input = function(f = self$formula, d, ...) {
       f <- as.Formula(f)
+      d <- as.data.frame(d)
       if (length(d) == 0) {
         return()
       }
@@ -585,6 +570,7 @@ Cm <- R6Class(
       if (length(d) == 0) {
         return(self$res)
       } else {
+        d <- as.data.frame(d)
         f <- as.Formula(f)
         if (length(f)[1] > 0) {
           return(get_all_vars(formula(f, rhs = 0), d))
@@ -644,14 +630,14 @@ Cm <- R6Class(
     init_parspace = function(p, choicerule, options = list(), mode, addpar = TRUE) {
       private$init_mode(mode = mode)
       sigma_par <- choicerule_par <- NULL
-      if (!is.null(choicerule) & addpar == TRUE) {
+      if (!length(choicerule) & addpar == TRUE) {
         choicerule_par <- if (choicerule == "softmax") {
           make_parspace(tau = c(0.001, 10, 0.5, NA))
         } else if (choicerule == "epsilon") {
           make_parspace(eps = c(0.001, 1L, 0.2, NA))
         }
       }
-      if (self$mode == "continuous" & !is.null(options) & addpar == TRUE) {
+      if (self$mode == "continuous" & !length(options) & addpar == TRUE) {
         options <- do.call(cm_options, options[!duplicated(names(options))])
         if (options$fit_measure == "loglikelihood") {
           if (!is.null(self$res)) {
@@ -753,32 +739,28 @@ Cm <- R6Class(
     init_prednames = function() {
       self$prednames <- paste("pr", abbreviate(private$make_prednames(), minlength = 1), sep="_")
     },
-    init_options = function(options, ...) {
+    init_options = function(options = list(), ...) {
       .args <- list(...)
       .args <- if (length(.args)) { c(options, .args) } else { options }
-
-      .args <- .args[!duplicated(names(.args))] # first argument is user-supplied, second time it occurs it is the default of a model
-      ## IF fitting with grid followed by a solver
-      # solver <- .args$solver
-      solver <- .check_and_match_solver(.args[["solver"]])
+      .args <- .args[!duplicated(names(.args))]
+      solver <- cognitivemodels:::.check_and_match_solver(.args[["solver"]])
       if (!is.null(solver)) {
         if(solver[1] == "grid" & length(solver) > 1L) {
           npar <- self$npar("free")
-          ## use the top n parameter from the grid search, n = num free par
-          if (is.null(.args$fit_control$nbest)) {
-            .args$fit_control$nbest <- npar
+          if (is.null(.args$solver_args$nbest)) {
+            .args$solver_args$nbest <- npar
           }       
           ub <- private$get_ub("free")
           lb <- private$get_lb("free")
           ## offset, scales logistically from super small to 10% of the range of each parameter
-          if (is.null(.args$fit_grid_offset))
-            .args$fit_grid_offset <- as.list(0.10 / (1 + exp(-(ub - lb))))
+          if (is.null(.args$solver_args$offset))
+            .args$solver_args$offset <- as.list(0.10 / (1 + exp(-(ub - lb))))
           ## make the steps exponentially bigger with the parameter range
-          if (is.null(.args$fit_control$nsteps))
-            .args$fit_control$nsteps <- round(pmax(log(ub - lb) * 2, 3) * max(1, log(npar)))
+          if (is.null(.args$solver_args$nsteps))
+            .args$solver_args$nsteps <- round(pmax(log(ub - lb) * 2, 3) * max(1, log(npar)))
         }
       }
-      self$options <- do.call(cm_options, args = .args)
+      self$options <- do.call(cm_options, args = as.list(.args))
     },
 
     # FIT FUNCTIONS
@@ -793,14 +775,11 @@ Cm <- R6Class(
         return(-1e10)
       }
       self$set_par(x = par, check = FALSE, constrain = FALSE) 
-      .args <- list(
-        type = self$options$fit_measure,
-        n = self$options$fit_n,
-        newdata = self$options$fit_data,
-        options = self$options$options,
-        discount = !is.null(self$discount))
       maxi <- self$options$fit_measure %in% c("loglikelihood", "accuracy")
-      objval <- do.call(self$gof, args = .args, envir = parent.frame()) * (-1)^maxi
+      objval <- self$gof(
+        type = self$options$fit_measure,
+        newdata = self$options$fit_data,
+        disount = !is.null(self$discount)) * (-1)^maxi
       if(any(!is.finite(objval))) {
         message("\nInfinite goodness of fit during optimization for parameter values:\n")
         writeLines(names(par), sep = "\t")
@@ -831,8 +810,8 @@ Cm <- R6Class(
         args = c(list(
           x = problem,
           solver = self$options$solver,
-          start = start,
-          control = self$options$fit_control[!grepl("grid|nbest|nsteps", names(self$options$fit_control))])
+          start = start),
+          self$options$solver_args$control
           ),
         envir = parent.frame())
       if (sol$status$code == 1L) {
@@ -849,7 +828,7 @@ Cm <- R6Class(
         eqfun = NULL,
         eqB = NULL,
         self = self,
-        control = self$options$fit_control)
+        control = self$options$solver_args$control)
       if (length(cons) > 0) {
          A <- as.matrix(cons$L)
         .args$eqB <- cons$rhs
@@ -866,11 +845,11 @@ Cm <- R6Class(
       return(fit)
     },
     fit_grid = function(par = self$get_par("free"), ...) {
-      n   <- self$options$fit_control$nbest
       G <- private$make_pargrid(which_par = par, ...)
       objvals <- sapply(1:nrow(G$ids), function(i) {
           private$objective(par = get_id_in_grid(i, G), self = self)
         })
+      n   <- self$options$solver_args$nbest
       best_ids <- which(rank(objvals, ties.method = "random") <= n)
       best_ids <- best_ids[order(objvals[best_ids])]
       best_par <- t(sapply(best_ids, get_id_in_grid, grid = G))
@@ -896,8 +875,8 @@ Cm <- R6Class(
       }
     },
     make_pargrid = function(offset = NULL, nsteps = NULL,  par = NULL, ...) {
-      if (is.null(offset)) offset <- self$options$fit_grid_offset
-      if (is.null(nsteps)) nsteps <- self$options$fit_control$nsteps
+      if (is.null(offset)) offset <- self$options$solver_args$offset
+      if (is.null(nsteps)) nsteps <- self$options$solver_args$nsteps
       x <- if (is.null(par)) { "free" } else { "all" }
       par <- if (is.null(par)) { 1:length(private$get_parnames(x)) }
       if (length(.simplify_constraints(self$constraints)) > 0L) { warning('Note: solver="grid" does not respect linear or quadratic constraints, maybe change the solver. To this end use: options = list(solver = ...), e.g, "solnp" or "optimx".') }

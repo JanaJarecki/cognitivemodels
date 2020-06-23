@@ -249,14 +249,14 @@ print.csm_constraint = function(x, ..., latex = FALSE) {
 .which_free <- function(x) {
   if (is.null(x) || missing(x)) { return(NULL) }
   A <- as.matrix(x$L)
-  b <- x$rhs
+  b <- as.matrix(x$rhs)
   A <- matlib::echelon(A,b)
   A <- A[, -ncol(A), drop = FALSE]
   # Parameter that are in no constraints or the first parameter of a constr.
   # Todo test if the .which_free functino works properly
   a <- apply(A == 0, 2, all)
   b <- apply(A != 0, 1, function(x) (sum(x) > 1) & cumsum(x) == 1)
-  b <- apply(b, 1, any)
+  b <- apply(as.matrix(b), 1, any)
   return(a | b)
 }
 

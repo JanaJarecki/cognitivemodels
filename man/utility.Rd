@@ -3,32 +3,19 @@
 \name{utility_pow_d}
 \alias{utility_pow_d}
 \alias{utility_pow_c}
-\alias{utility}
 \title{Utility Function Models}
 \usage{
 utility_pow_d(
   formula,
   data,
-  choicerule,
   fix = list(),
+  choicerule,
   discount = 0,
   options = list(),
   ...
 )
 
 utility_pow_c(formula, data, fix = list(), discount = 0, options = list(), ...)
-
-utility(
-  formula,
-  data = data.frame(),
-  type = c("power"),
-  fix = list(),
-  choicerule = NULL,
-  mode = NULL,
-  discount = 0,
-  options = list(),
-  ...
-)
 }
 \arguments{
 \item{formula}{A formula specifying responses ~ values (e.g, \code{y ~ x1 | x2}).}
