@@ -11,5 +11,6 @@
 ^R/desktop\.ini$    # Windows system file
 ^man/desktop\.ini$  # Windows system file
 ^data/desktop\.ini$ # Windows system file
+^data/gp2012.Rdata  # Large data file only used for testing
 
 man-oxygen          # see https://stackoverflow.com/questions/33689597/cran-note-when-using-roxygen2-template

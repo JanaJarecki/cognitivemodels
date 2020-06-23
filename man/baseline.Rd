@@ -16,14 +16,16 @@ baseline_mean_c(formula, data, ...)
 baseline_mean_d(formula, data, ...)
 }
 \arguments{
-\item{formula}{A formula, the observed variables, with only a left-hand-side (for example: \code{response ~ .}), note the "\code{~ .}" on the right.}
+\item{formula}{A formula, the variable in \code{data} to be modeled. For example, \code{y ~ .} models a response variable \code{y} (note the \code{~ .} after the variable name).}
 
-\item{const}{A number, the value that the model predicts  (only in \code{baseline_const_c/d}) .}
+\item{const}{A number, the value to predict.}
 
 \item{data}{A data frame.}
+
+\item{options}{(optional) A list to change the parameter estimation, see \code{\link[=cm_options]{cm_options()}} or the section Options below.}
 }
 \value{
-Returns a cognitive model object, which has the class \code{cm}(cm). A model, that is saved as \code{m}, can be summarized with \code{summary(m)} or \code{anova(m)}. The parameter space can be viewed using \code{parspace(m)}, constraints can be viewed using \code{constraints(m)}.
+Returns a cognitive model object, which is an object of class \href{Cm}{cm}. A model, that has been assigned to \code{m}, can be summarized with \code{summary(m)} or \code{anova(m)}. The parameter space can be viewed using \code{parspace(m)}, constraints can be viewed using \code{constraints(m)}.
 }
 \description{
 Fits baseline models. Baseline models are stimulus-agostic models used as sanity checks in cognitive model comparisons. Other cognitive models should beat a baseline model -- if not, the other cognitive models don't describe patterns in the responses well.
@@ -35,17 +37,35 @@ Fits baseline models. Baseline models are stimulus-agostic models used as sanity
 }
 }
 \details{
-Use \strong{\code{baseline_xxx_d}} for discrete response variables; and  \strong{\code{baseline_xxx_c}} for continuous response variables.
-
-\code{baseline_const_} predicts the value of \code{const} for all trials. For example \code{const = 0.50} is a common baseline for two-option choice tasks, and it predicts \emph{Pr=0.50} for each trial. The model \code{baseline_mean_} predicts the mean of the observed responses for each trial. This model has one free parameter (\code{m}, the mean).
+\code{baseline_const_c/d} predicts the value given in \code{const} for all trials. For example \code{const = 0.50} would predict \emph{Pr=0.50} for each trial, which is a commmon baseline model for tasks with two-outcome discrete choices.
 }
+\section{Options}{
+
+The following can be passed in one list, e.g. \verb{options = list(lb = c(k = -10)). \\describe\{ \\item\{}lb\verb{\}\{Named numeric vector, sets the lower parameter bounds; }lb = c(k = -10)\verb{ lets a parameter _k_ start at -10.\} \\item\{}ub\verb{\}\{Named numeric vector, sets the upper parameter bounds: }ub = c(k = 10)\verb{ lets a parameter _k_ go until 10.\} \\item\{}start\verb{\}\{Named numeric vector, sets the start values of parameter: }start = c(k = 5)\verb{ lets a parameter _k_ start at 5.\} \\item\{}fit\verb{\}\{Logical (default }TRUE\verb{), }fit = FALSE\verb{ disables parameter estimation. Useful for testing models.\} \\item\{}fit_measure\verb{\}\{A string (default }"loglikelihood"\verb{), the goodness of fit measure that is optimized during parameter estimation. Can be one of the }types\verb{ in the function [cognitiveutils::gof()}:
+\code{"loglikelihood"}. Uses a binomial PDF in models with discrete
+data. Uses a normal PDF \eqn{N(\mu, \sigma)} in models with
+continuous data:  \eqn{\mu}=predictions, \eqn{\sigma}=constant,
+estimated as additional free paramter. To change the PDF set
+\verb{fit_args = list(pdf = "")\} \\item\{}fit_args\verb{\}\{Named list, options for parameter estimation. Can be arguments to the function (gof())[cognitiveutils::gof()].  }list(pdf = "truncnorm", a = 0, b = 1)\verb{changes the PDF in the log likelihood to a truncated normal between 0 and 1,}list(pdf = "multinom")\verb{changes it to a multinomial PDF.}list(grid_offset = .01)\verb{offsets the parameter in a grid search by 0.01 from the parameter boundaries,}list(nsteps = 10)\verb{ defines 10 steps for each parameter in the regular grid in the grid search.\} \\item\{}fit_data\verb{\}\{A data frame, the data to estimate the model parameters from. Needed if the data for the parameter estimation differs from the data in the main }data\verb{ argument in a model.\} \\item\{}solver\verb{\}\{A string, the optimizer for the parameter estimation. Run }cm_solvers()\verb{to list all solvers. Can be}"grid"\verb{, }"solnp"\verb{}"optimx"\verb{, }"nloptr"\verb{, }"nlminb"\verb{and others from [ROI]. Can be}c("grid", "xxx")\verb{: a grid-plus-optimization: A grid search, followed by an optimization with xxx using the _n_ best solutions as start values in the optimization; the overal best  parameter set wins; and _n_ can be set in }solver_args$nbest\verb{ Changing the solver may cause warnings and ignored parameter bounds.\} \\item\{}solver_args\verb{\}\{A named list, additional arguments passed directly to the solver function, see the pages of the solver to see which arguments the solver function has. For example: }list(offset = 0.01)\verb{offset the parameters from their boundaries when}solver = "grid"\code{. }list(nsteps = 10)\verb{uses 10 steps for each parameter in the regular grid, for}solver = "grid"\verb{), }list(nbest = 3)\verb{uses the 3 best parameter sets from the grid search as starting values in a grid-plus-optimization solver, for}solver = c("grid", "xxx")\code{. }list(control = )` control arguments in the solver
+(solnp)\code{\link[Rsolnp:solnp]{Rsolnp::solnp()}} and the
+(ROI solvers)\link{https://rdrr.io/cran/ROI/man/ROI_solve.html}}
+}
+}
+
+\section{Parameter}{
+
+\itemize{
+\item \code{baseline_const_c/d} has no free parameter
+\item \code{baseline_mean_c/d} has 1 free parameter, \code{mu}, the mean
+\item \code{baseline_mean_c}, if estimated via log likelihood, has an additional free parameter, \code{sigma}, the standard deviation of the normal log likelihood.
+}
+}
+
 \examples{
-# Here is some data, let y be the observed data
+# Data D: let y hold the observed responses
+# Make a model that predicts Pr = 0.50
 D <- data.frame(y = c(1,1,0), x = c(1,2,3))
-
-# Baseline model that predicrs Pr = 0.50
 M <- baseline_const_d(y ~ ., const = 0.50, data = D)
-
 predict(M)                         # predicts 0.5, 0.5, 0.5
 npar(M)                            # 0 parameter
 logLik(M)                          # log likelihood (binomial)
@@ -58,6 +78,7 @@ npar(M)                            # 1 free parameter, the mean
 }
 \seealso{
 Other cognitive models: 
-\code{\link{Cm}}
+\code{\link{Cm}},
+\code{\link{bayes}()}
 }
 \concept{cognitive models}

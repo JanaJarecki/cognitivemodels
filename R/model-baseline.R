@@ -86,10 +86,6 @@ baseline_mean_d <- function(formula, data, ...) {
   return(do.call(what = Baseline$new, args = .args, envir = parent.frame()))
 }
 
-
-
-
-
 Baseline <- R6Class("baseline",
   inherit = Cm,
   public = list(
@@ -100,7 +96,7 @@ Baseline <- R6Class("baseline",
       self$type <- match.arg(type, c("constant", "mean"))
       if (self$type == "mean") {
         res <- super$get_res(f=formula, d=data)
-        ps <- make_parspace(mu = c(range(res),apply(res,2,mean)))
+        ps <- make_parspace(mu = c(range(res), apply(res,2,mean)))
       } else {
         ps <- make_parspace()
         self$const <- const

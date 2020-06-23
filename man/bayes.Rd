@@ -2,8 +2,10 @@
 % Please edit documentation in R/model-bayes.R
 \name{bayes}
 \alias{bayes}
-\alias{bayes_beta}
-\alias{bayes_dirichlet}
+\alias{bayes_beta_c}
+\alias{bayes_beta_d}
+\alias{bayes_dirichlet_d}
+\alias{bayes_dirichlet_c}
 \title{Bayesian Inference Cognitive Model}
 \usage{
 bayes(
@@ -17,77 +19,110 @@ bayes(
   ...
 )
 
-bayes_beta(formula, data = data.frame(), fix = NULL, format = NULL, ...)
+bayes_beta_c(
+  formula,
+  data,
+  fix = NULL,
+  format = c("raw", "count", "cumulative"),
+  ...
+)
 
-bayes_dirichlet(formula, data, fix = NULL, format = NULL, ...)
+bayes_beta_d(formula, data, fix = NULL, format = NULL, ...)
+
+bayes_dirichlet_d(formula, data, fix = NULL, format = NULL, ...)
+
+bayes_dirichlet_c(formula, data, fix = NULL, format = NULL, ...)
 }
 \arguments{
-\item{formula}{A formula, the reported beliefs ~ event + event ... (e.g., \code{y ~ coin_heads + coin_tails}).}
+\item{formula}{A \href{stats::formula}{formula}, the variables in \code{data} to be modeled. For example, \code{y ~ heads + tails} models a response, \code{y}, based on events in the variables called \code{heads} and \code{tails}.}
 
-\item{format}{A string (default \code{"raw"}) with the data format. Can be \code{"raw"}, \code{"cummulative"}, \code{"count"}, where \code{"raw"} means data are occurrence indicators (1=event, 0=no event); \code{"cumulative"} means data are cumulative event frequencies (1,2,2,...), and code{"count"} means data are non-ordered event frequencies (10,2,5,...).}
+\item{data}{A data frame.}
+
+\item{format}{A string (default \code{"raw"}), the format of the events in \code{data}. Can be abbreviated. Allowed values:
+\itemize{
+\item \code{"raw"} - event variables are binary occurrence indicators for each trial (e.g., 1, 0, 1, ..., where 1 means the event happened in this trial).
+\item \code{"cumulative"} - event variables are cumulative counts of events for each trial (e.g., 0, 1, 1, ..., counting how often the event happened up to this trial).
+\item \code{"count"} - event variables are sum counts of events after the trials, ignoring the order of events (e.g., 2, 10, ..., where 2 indicates that in this block the event occurred 2 times, in the next block 10 times).
+}}
 
 \item{type}{(optional) A string, the type of inference, \code{"beta-binomial"} or \code{"dirichlet-multinomial"}. Can be abbreviated. Will be inferred, if missing.}
 
-\item{...}{other arguments from other functions, currently ignored.}
+\item{options}{(optional) A list to change the parameter estimation, see \code{\link[=cm_options]{cm_options()}} or the section Options below.}
 }
 \value{
-An model object (similar to lm-objects) of class "bayes". It can be viewed with \code{summary(mod)}, where \code{mod} is the name of the model object.
+Returns a cognitive model object, which is an object of class \href{Cm}{cm}. A model, that has been assigned to \code{m}, can be summarized with \code{summary(m)} or \code{anova(m)}. The parameter space can be viewed using \code{parspace(m)}, constraints can be viewed using \code{constraints(m)}.
 }
 \description{
-\code{bayes()} fits a Bayesian cognitive model, updating beliefs about discrete-event probabilities from event frequencies, \code{bayes_beta()} is for binomial events, \code{bayes_dirichlet()} is for categorical/multinomial events.
+\code{bayes()} fits a Bayesian cognitive model, updating beliefs about the probability of discrete event outcomes based on the frequencies of outcomes.
+\itemize{
+\item \code{bayes_beta_c()} fits a model for 2 outcomes (beta-binomial) for continuous responses
+\item \code{bayes_beta_d()} fits a model for 2 outcomes (beta-binomial) for discrete responses
+\item \code{bayes_dirichlet_c()} fits a model for n outcomes (dirichlet-categorical/multinomial) for continuous responses
+\item \code{bayes_dirichlet_d()} fits a model for n outcomes (dirichlet-categorical/multinomial) for discrete responses
+}
 }
 \details{
-Given the formula \code{y ~ a} the model predicts beliefs about event "a" occurring, but given \code{y ~ a + b} it predicts beliefs about events "a" and "b" occurring. If "a" and "b" are complementary the predictions will be complements, the difference is that
+The model models, as response variable, the belief about the occurrence of the first event in the \code{formula} as follows:
 \itemize{
-\item{For \code{y~a} predictions have 1 column, \code{pred_a}}
-\item{For \code{y~a+b} predictions have 2 columns, \code{pred_a, pred_b} (with \code{pred_a} = 1 - \code{pred_b})}
-\item{For \code{y~a+b+c} predictions have 3 columns, \code{pred_a, pred_b, pred_c}}
-\item{etc.}
+\item \code{y ~ a} models the beliefe about event a occurring (versus a not occurring)
+\item \code{y ~ a + b} models beliefs about a occurring (versus b occurring)
+\item \code{y ~ a + b + c} models beliefs about a, b, and c occurring
+}
+}
+\section{Options}{
+
+The following can be passed in one list, e.g. \verb{options = list(lb = c(k = -10)). \\describe\{ \\item\{}lb\verb{\}\{Named numeric vector, sets the lower parameter bounds; }lb = c(k = -10)\verb{ lets a parameter _k_ start at -10.\} \\item\{}ub\verb{\}\{Named numeric vector, sets the upper parameter bounds: }ub = c(k = 10)\verb{ lets a parameter _k_ go until 10.\} \\item\{}start\verb{\}\{Named numeric vector, sets the start values of parameter: }start = c(k = 5)\verb{ lets a parameter _k_ start at 5.\} \\item\{}fit\verb{\}\{Logical (default }TRUE\verb{), }fit = FALSE\verb{ disables parameter estimation. Useful for testing models.\} \\item\{}fit_measure\verb{\}\{A string (default }"loglikelihood"\verb{), the goodness of fit measure that is optimized during parameter estimation. Can be one of the }types\verb{ in the function [cognitiveutils::gof()}:
+\code{"loglikelihood"}. Uses a binomial PDF in models with discrete
+data. Uses a normal PDF \eqn{N(\mu, \sigma)} in models with
+continuous data:  \eqn{\mu}=predictions, \eqn{\sigma}=constant,
+estimated as additional free paramter. To change the PDF set
+\verb{fit_args = list(pdf = "")\} \\item\{}fit_args\verb{\}\{Named list, options for parameter estimation. Can be arguments to the function (gof())[cognitiveutils::gof()].  }list(pdf = "truncnorm", a = 0, b = 1)\verb{changes the PDF in the log likelihood to a truncated normal between 0 and 1,}list(pdf = "multinom")\verb{changes it to a multinomial PDF.}list(grid_offset = .01)\verb{offsets the parameter in a grid search by 0.01 from the parameter boundaries,}list(nsteps = 10)\verb{ defines 10 steps for each parameter in the regular grid in the grid search.\} \\item\{}fit_data\verb{\}\{A data frame, the data to estimate the model parameters from. Needed if the data for the parameter estimation differs from the data in the main }data\verb{ argument in a model.\} \\item\{}solver\verb{\}\{A string, the optimizer for the parameter estimation. Run }cm_solvers()\verb{to list all solvers. Can be}"grid"\verb{, }"solnp"\verb{}"optimx"\verb{, }"nloptr"\verb{, }"nlminb"\verb{and others from [ROI]. Can be}c("grid", "xxx")\verb{: a grid-plus-optimization: A grid search, followed by an optimization with xxx using the _n_ best solutions as start values in the optimization; the overal best  parameter set wins; and _n_ can be set in }solver_args$nbest\verb{ Changing the solver may cause warnings and ignored parameter bounds.\} \\item\{}solver_args\verb{\}\{A named list, additional arguments passed directly to the solver function, see the pages of the solver to see which arguments the solver function has. For example: }list(offset = 0.01)\verb{offset the parameters from their boundaries when}solver = "grid"\code{. }list(nsteps = 10)\verb{uses 10 steps for each parameter in the regular grid, for}solver = "grid"\verb{), }list(nbest = 3)\verb{uses the 3 best parameter sets from the grid search as starting values in a grid-plus-optimization solver, for}solver = c("grid", "xxx")\code{. }list(control = )` control arguments in the solver
+(solnp)\code{\link[Rsolnp:solnp]{Rsolnp::solnp()}} and the
+(ROI solvers)\link{https://rdrr.io/cran/ROI/man/ROI_solve.html}}
+}
 }
 
-\emph{Note}, during parameter fitting the model treats the response variable \code{y} as beliefs about the \emph{first} event. In other words, \code{y} represents observed beliefs about \code{a} for the formula \code{y ~ a + b} (not \code{b}).
+\section{Parameters}{
 
-\code{bayes_beta()} calls \link{bayes} with \code{type = "beta-binomial"}.
-
-\code{bayes_dirichlet()} calls \link{bayes} with \code{type = "dirichlet-multinomial"}.
+View the number of free parameters of a model \code{M} using \code{npar(M)} and the whole parameter space using \code{parspace(m)}. The model has n + 1 (n = number of events) free parameters, which are:
+\itemize{
+\item \code{delta} from 0 - 10 is the weight of one observation during learning, < 1 yields conservatism, > 1 yields liberal learning, and 1 is optimal Bayesian
+\item n prior parameter named like the events, each from 0.001 - n, the prior parameter, aka. the hyperparameter of the prior belief distribution before trial 1. If they are constrainted to sum to n, n - 1 parameter are fit.
 }
-\section{Parameter Space}{
-
-\tabular{lrcllr}{\verb{   }\strong{Name} \tab \verb{    }\strong{LB} \tab  \strong{-} \tab \strong{UB}\verb{    } \tab \strong{Description} \tab \strong{Start Value}\cr
-\verb{   }\code{delta} \tab  0 \tab  - \tab  10 \tab  Weight of observation during learning, < 1 yields conservatism, > 1 yields liberal learning, 1 is optimal Bayesian \tab  1\cr
-\verb{   }\code{priorpar} \tab  0.001 \tab  - \tab   n events \tab  Hyperparameter of the prior belief distribution before trial 1, sum to n events. Note: parameter names will be the RHS of the \code{formula} \tab  1}
 }
 
 \examples{
 D <- data.frame(
   a = c(0,0,1,1,1),              # event A, e.g. coin toss "heads"
-  b = c(1,1,0,0,0),              # event B, complementary to A
-  y = c(0.5,0.6,0.6,0.6,0.5))    # participants' reported beliefs
+  b = c(1,1,0,0,0),              # event B, complement of A
+  y = c(0.5,0.3,0.2,0.3,0.5))    # participants' beliefs about A
 
-M <- bayes(y ~ a + b, D, fix="start")          # fixed par. to start values
-predict(M)                                     # predict posterior means
-anova(M)                                       # anova-like table
-MSE(M)                                         # mean-squared error   
-
-### Different predictions
-# ---------------------------------------
-predict(M, type = "mean")                      # predict posterior mean
-predict(M, type = "max")                       #  --"--  maximum posterior
-predict(M, type = "sd")                        #  --"--  posterior SD
-predict(M, type = "posteriorpar")              #  --"--  posterior hyper-par.
-predict(M, type = "draws", ndraws = 3)         #  --"--  3 draws from posterior      
-
-### Ways to formulate the model parameter
-# ---------------------------------------
-bayes(~a+b, D, list(delta=1, priorpar=c(1, 1)))  # delta=1, uniform prior
-bayes(~a,   D, list(delta=1, priorpar=c(1, 1)))  # -- (same) --
-bayes(~a+b, D, list(delta=1, a=1, b=1))          # -- (same) --
-bayes(~a+b, D, fix = "start")                    # fix par. to start values
-bayes(~a,   D, fix = "start")                    # -- (same) --
+M <- bayes_beta_c(
+     formula = y ~ a + b,
+     data = D)   # fit all parameters
+predict(M)                        # predict posterior means
+summary(M)                        # summarize model
+parspace(M)                       # view parameter space
+anova(M)                          # anova-like table
+logLik(M)                         # loglikelihood
+MSE(M)                            # mean-squared error   
 
 
-### Parameter fitting
-# ---------------------------------------
+# Predictions ----------------------------------------------
+predict(M, type = "mean")                  # posterior mean
+predict(M, type = "max")                   # maximum posterior
+predict(M, type = "sd")                    # posterior SD
+predict(M, type = "posteriorpar")          # posterior hyper-par.
+predict(M, type = "draws", ndraws = 3)     #  --"--  3 draws
+
+
+# Fix parameter ---------------------------------------------
+bayes_beta_c(~a+b, D, list(delta=1, priorpar=c(1, 1)))  # delta=1, uniform prior
+bayes_beta_c(~a+b, D, list(delta=1, a=1, b=1))          # -- (same) --
+bayes_beta_c(~a+b, D, fix = "start")                    # fix to start values
+
+
+# Parameter fitting ----------------------------------------
 # Use a response variable, y, to which we fit parameter
 bayes(y ~ a + b, D, fix = "start")              # "start" fixes all par., fit none 
 bayes(y ~ a + b, D, fix = list(delta=1))         # fix delta, fit priors 
@@ -98,15 +133,13 @@ bayes(y ~ a + b, D, list(delta=1, b=1))          # fix delta & prior on "b"
 
 ### Parameter meanings
 # ---------------------------------------
-# delta parameter
-bayes(y ~ a, D, c(delta = 0))                    # delta=0 -> no learning
-bayes(y ~ a, D, c(delta = 0.1))                  # 0.1 -> slow learning
-bayes(y ~ a, D, c(delta = 9))                    # 9   -> fast learning
-
-# prior parameter
-bayes(y ~ a + b, D, c(a=1.5, b=0.5))             # prior belief: "a" more likely
-bayes(y ~ a + b, D, list(priorpar=c(1.5, 0.5)))  # -- (same) --
-bayes(y ~ a + b, D, c(a = 0.1, b=1.9))           # prior belief: "b" more likely
+# delta parameter: the learning rate or evidence weight
+bayes(y ~ a + b, D, c(delta = 0))             # 0   -> no learning
+bayes(y ~ a + b, D, c(delta = 0.1))           # 0.1 -> slow learning
+bayes(y ~ a + b, D, c(delta = 9))             # 9   -> fast learning
+bayes(y ~ a + b, D, c(a=1.5, b=0.5))                # prior: a more likely
+bayes(y ~ a + b, D, list(priorpar=c(1.5, 0.5)))     # -- (same) --
+bayes(y ~ a + b, D, c(a = 0.1, b=1.9))              # prior: b more likely
 bayes(y ~ a + b, D, list(priorpar = c(0.1, 1.9)))   # -- (same) --
 
 }
@@ -115,6 +148,12 @@ bayes(y ~ a + b, D, list(priorpar = c(0.1, 1.9)))   # -- (same) --
 
 {Tauber, S., Navarro, D. J., Perfors, A., & Steyvers, M. (2017). Bayesian models of cognition revisited: Setting optimality aside and letting data drive psychological theory. \emph{Psychological Review, 124(4)}, 410 - 441. \url{http://dx.doi.org/10.1037/rev0000052}}
 }
+\seealso{
+Other cognitive models: 
+\code{\link{Cm}},
+\code{\link{baseline_const_c}()}
+}
 \author{
 Jana B. Jarecki, Markus Steiner
 }
+\concept{cognitive models}
