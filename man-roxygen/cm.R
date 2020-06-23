@@ -2,7 +2,8 @@
 #' @param formula A [formula](stats::formula), the variables in `data` to be modeled. For example, `y ~ x1 + x2 | z1 + z2` models the response `y` as function of one stimulus with features `x1`, `x2` and one stimulus with features `z1`, `z2`. Horizontal lines (`|`) separate different stimuli.
 #' @param options (optional) A list to change the parameter estimation, see [cm_options()] or the section Options below.
 #' @section Options:
-#' The following can be passed in one list, e.g. `options = list(lb = c(k = -10)).
+#' The following can be passed in one list, e.g. `options = list(lb = c(k = -10))`.
+#' 
 #' \describe{
 #'  \item{`lb`}{Named numeric vector, sets the lower parameter bounds;
 #'        `lb = c(k = -10)` lets a parameter _k_ start at -10.}

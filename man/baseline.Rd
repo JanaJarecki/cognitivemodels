@@ -41,12 +41,49 @@ Fits baseline models. Baseline models are stimulus-agostic models used as sanity
 }
 \section{Options}{
 
-The following can be passed in one list, e.g. \verb{options = list(lb = c(k = -10)). \\describe\{ \\item\{}lb\verb{\}\{Named numeric vector, sets the lower parameter bounds; }lb = c(k = -10)\verb{ lets a parameter _k_ start at -10.\} \\item\{}ub\verb{\}\{Named numeric vector, sets the upper parameter bounds: }ub = c(k = 10)\verb{ lets a parameter _k_ go until 10.\} \\item\{}start\verb{\}\{Named numeric vector, sets the start values of parameter: }start = c(k = 5)\verb{ lets a parameter _k_ start at 5.\} \\item\{}fit\verb{\}\{Logical (default }TRUE\verb{), }fit = FALSE\verb{ disables parameter estimation. Useful for testing models.\} \\item\{}fit_measure\verb{\}\{A string (default }"loglikelihood"\verb{), the goodness of fit measure that is optimized during parameter estimation. Can be one of the }types\verb{ in the function [cognitiveutils::gof()}:
-\code{"loglikelihood"}. Uses a binomial PDF in models with discrete
-data. Uses a normal PDF \eqn{N(\mu, \sigma)} in models with
-continuous data:  \eqn{\mu}=predictions, \eqn{\sigma}=constant,
-estimated as additional free paramter. To change the PDF set
-\verb{fit_args = list(pdf = "")\} \\item\{}fit_args\verb{\}\{Named list, options for parameter estimation. Can be arguments to the function (gof())[cognitiveutils::gof()].  }list(pdf = "truncnorm", a = 0, b = 1)\verb{changes the PDF in the log likelihood to a truncated normal between 0 and 1,}list(pdf = "multinom")\verb{changes it to a multinomial PDF.}list(grid_offset = .01)\verb{offsets the parameter in a grid search by 0.01 from the parameter boundaries,}list(nsteps = 10)\verb{ defines 10 steps for each parameter in the regular grid in the grid search.\} \\item\{}fit_data\verb{\}\{A data frame, the data to estimate the model parameters from. Needed if the data for the parameter estimation differs from the data in the main }data\verb{ argument in a model.\} \\item\{}solver\verb{\}\{A string, the optimizer for the parameter estimation. Run }cm_solvers()\verb{to list all solvers. Can be}"grid"\verb{, }"solnp"\verb{}"optimx"\verb{, }"nloptr"\verb{, }"nlminb"\verb{and others from [ROI]. Can be}c("grid", "xxx")\verb{: a grid-plus-optimization: A grid search, followed by an optimization with xxx using the _n_ best solutions as start values in the optimization; the overal best  parameter set wins; and _n_ can be set in }solver_args$nbest\verb{ Changing the solver may cause warnings and ignored parameter bounds.\} \\item\{}solver_args\verb{\}\{A named list, additional arguments passed directly to the solver function, see the pages of the solver to see which arguments the solver function has. For example: }list(offset = 0.01)\verb{offset the parameters from their boundaries when}solver = "grid"\code{. }list(nsteps = 10)\verb{uses 10 steps for each parameter in the regular grid, for}solver = "grid"\verb{), }list(nbest = 3)\verb{uses the 3 best parameter sets from the grid search as starting values in a grid-plus-optimization solver, for}solver = c("grid", "xxx")\code{. }list(control = )` control arguments in the solver
+The following can be passed in one list, e.g. \code{options = list(lb = c(k = -10))}.
+
+\describe{
+\item{\code{lb}}{Named numeric vector, sets the lower parameter bounds;
+\code{lb = c(k = -10)} lets a parameter \emph{k} start at -10.}
+\item{\code{ub}}{Named numeric vector, sets the upper parameter bounds:
+\code{ub = c(k = 10)} lets a parameter \emph{k} go until 10.}
+\item{\code{start}}{Named numeric vector, sets the start values of parameter:
+\code{start = c(k = 5)} lets a parameter \emph{k} start at 5.}
+\item{\code{fit}}{Logical (default \code{TRUE}), \code{fit = FALSE} disables parameter
+estimation. Useful for testing models.}
+\item{\code{fit_measure}}{A string (default \code{"loglikelihood"}), the goodness
+of fit measure that is optimized during parameter estimation.
+Can be one of the \code{types} in the function [cognitiveutils::gof()\verb{: }"loglikelihood"\verb{. Uses a binomial PDF in models with discrete  data. Uses a normal PDF \eqn{N(\mu, \sigma)} in models with  continuous data:  \eqn{\mu}=predictions, \eqn{\sigma}=constant, estimated as additional free paramter. To change the PDF set }fit_args = list(pdf = "")}
+\item{\code{fit_args}}{Named list, options for parameter estimation. Can be
+arguments to the function (gof())\code{\link[cognitiveutils:gof]{cognitiveutils::gof()}}.
+\code{list(pdf = "truncnorm", a = 0, b = 1)} changes the PDF
+in the log likelihood to a truncated normal between 0 and 1,
+\code{list(pdf = "multinom")} changes it to a multinomial PDF.
+\code{list(grid_offset = .01)} offsets the parameter in a grid search
+by 0.01 from the parameter boundaries, \code{list(nsteps = 10)} defines
+10 steps for each parameter in the regular grid in the grid search.}
+\item{\code{fit_data}}{A data frame, the data to estimate the model parameters
+from. Needed if the data for the parameter estimation differs from
+the data in the main \code{data} argument in a model.}
+\item{\code{solver}}{A string, the optimizer for the parameter estimation. Run
+\code{cm_solvers()} to list all solvers. Can be \code{"grid"}, \code{"solnp"}
+\code{"optimx"}, \code{"nloptr"}, \code{"nlminb"} and others from \link{ROI}. Can be
+\code{c("grid", "xxx")}: a grid-plus-optimization: A grid search, followed
+by an optimization with xxx using the \emph{n}
+best solutions as start values in the optimization; the overal best
+parameter set wins; and \emph{n} can be set in \code{solver_args$nbest}
+Changing the solver may cause warnings and ignored parameter bounds.}
+\item{\code{solver_args}}{A named list, additional arguments passed directly
+to the solver function, see the pages of the solver to see which
+arguments the solver function has. For example:
+\code{list(offset = 0.01)} offset the parameters from their boundaries
+when \code{solver = "grid"}.
+\code{list(nsteps = 10)} uses 10 steps for each parameter in the regular
+grid, for \code{solver = "grid"}), \code{list(nbest = 3)} uses the 3 best
+parameter sets from the grid search as starting values in a
+grid-plus-optimization solver, for \code{solver = c("grid", "xxx")}.
+\code{list(control = )} control arguments in the solver
 (solnp)\code{\link[Rsolnp:solnp]{Rsolnp::solnp()}} and the
 (ROI solvers)\link{https://rdrr.io/cran/ROI/man/ROI_solve.html}}
 }
@@ -79,6 +116,7 @@ npar(M)                            # 1 free parameter, the mean
 \seealso{
 Other cognitive models: 
 \code{\link{Cm}},
-\code{\link{bayes}()}
+\code{\link{bayes}()},
+\code{\link{gcm}()}
 }
 \concept{cognitive models}
