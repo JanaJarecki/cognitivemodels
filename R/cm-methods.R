@@ -295,7 +295,7 @@ parspace.default <- function(x, ...) {
 #' @export
 #' @method parspace cm
 parspace.cm <- function(x, ...) {
-  title <- ifelse(length(M$title), M$title, class(x)[1])
+  title <- ifelse(length(x$title), x$title, class(x)[1])
   cat("\nParameter space of the cognitive model '", title, "':\n", sep = "")
   print(format(x$parspace, digits = 2L, scientific = 10, width = 6), quote = FALSE, right = TRUE)
   cat("---\nNote. lb = lower bound, ub = upper bound, start = start value.\n")
