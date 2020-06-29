@@ -1,15 +1,17 @@
-# Houston, A. I., & McNamara, J. M. (1988). A framework for the functional analysis of behaviour. Behavioural and Brain Science, 11, 117–163. doi:10.1017/S0140525X00053061
+# ==========================================================================
+# Test for Cumulative Prospece Theory Cognitive Model
+#
+# Houston, A. I., & McNamara, J. M. (1988). A framework for the functional
+#   analysis of behaviour. Behavioural and Brain Science, 11, 117–163.
+#   doi:10.1017/S0140525X00053061
 # p. 118 - 119
+# ==========================================================================
 
-# Generates the data used for tests
-make_test_data <- function() { 
-  data.frame(a1 = 0, a2 = 1, a3 = 2, pa11 = 0.1, pa12 = 0.8, pa13 = 0.1, pa21 = 0.4, pa22 = 0.2, pa23 = 0.4, s = rep(9:11, each = 4), init = rep(9:11, each = 4), t = 4:1)
-}
 
-# 1. Prediction identities -------------------------------------------------
-test_that("Prediction identities of values (type = 'value')", {
+# 1. Model predictions -----------------------------------------------------
+test_that("Prediction identities", {
   expect_pred_equal <- function(init, target, order = 1:4) {
-    D = make_test_data()
+    D = data.frame(a1 = 0, a2 = 1, a3 = 2, pa11 = 0.1, pa12 = 0.8, pa13 = 0.1, pa21 = 0.4, pa22 = 0.2, pa23 = 0.4, s = rep(9:11, each = 4), init = rep(9:11, each = 4), t = 4:1)
     M <- hm1988(~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, trials = ~t, states = ~s, budget = 12, ntrials = 4, initstate = ~init, data = D[D$s %in% init, ][order, ], choicerule = "argmax")
     expect_equal(predict(M, type = "value"), target)
   }
@@ -33,7 +35,7 @@ test_that("Prediction identities of values (type = 'value')", {
  
 test_that("Prediction identities of responses (type = 'response')", {
   expect_pred_equal <- function(init, target, order = 1:4) {
-    D <- make_test_data()
+    D <- data.frame(a1 = 0, a2 = 1, a3 = 2, pa11 = 0.1, pa12 = 0.8, pa13 = 0.1, pa21 = 0.4, pa22 = 0.2, pa23 = 0.4, s = rep(9:11, each = 4), init = rep(9:11, each = 4), t = 4:1)
     M <- hm1988(~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, trials = ~t, states = ~s, budget = 12, ntrials = 4, initstate = ~init, data = D[D$s %in% init, ][order,], choicerule = "argmax")
     expect_equivalent(predict(M), target)
   }
@@ -53,7 +55,7 @@ test_that("Prediction identities of responses (type = 'response')", {
 
 test_that("Prediction identities of probability of states (type = 'prstate')", {
   expect_pred_equal <- function(init, target, order = 1:12) {
-    D <- make_test_data(order)
+    D <- data.frame(a1 = 0, a2 = 1, a3 = 2, pa11 = 0.1, pa12 = 0.8, pa13 = 0.1, pa21 = 0.4, pa22 = 0.2, pa23 = 0.4, s = rep(9:11, each = 4), init = rep(9:11, each = 4), t = 4:1)[order,]
     M <- hm1988(~ a1 + pa11 + a2 + pa12 + a3 + pa13 | a1 + pa21 + a2 + pa22 + a3 + pa23, budget = 12, ntrials = 4, initstate = ~init, data = D[D$s %in% init, ], choicerule = "argmax")
    data.table(
     trial = 5 - M$get_timehorizons(),
@@ -62,13 +64,15 @@ test_that("Prediction identities of probability of states (type = 'prstate')", {
 
     expect_equal(predict(M), target)
   }
-
-
 })
 
+
+
+# 3. Formal tests -----------------------------------------------------------
+# 3.a. Input format
 test_that("Input formats", {
   #  full input format
-  D = make_test_data()
+  D = data.frame(a1 = 0, a2 = 1, a3 = 2, pa11 = 0.1, pa12 = 0.8, pa13 = 0.1, pa21 = 0.4, pa22 = 0.2, pa23 = 0.4, s = rep(9:11, each = 4), init = rep(9:11, each = 4), t = 4:1)
   D <- D[D$s==11,]
   D$init <- 10
   D$b <- 12

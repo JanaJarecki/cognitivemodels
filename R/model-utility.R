@@ -10,39 +10,41 @@
 
 
 #' Utility Function Models
-#' 
-#' @rdname utility
-#' 
 #' @description
-#' \code{utility()} fits utility models.
+#'  `utility()` fits utility models. 
+#' * `utility_pow_c()` fits a power utility for continuous responses.
+#' * `utility_pow_d()` fits a power utility for discrete respoonses.
+#' @name utility
 #' 
-#' * \code{utility_pow_c()} fits a power utility for continuous responses.
-#' * \code{utility_pow_d()} fits a power utility for discrete respoonses.
+#' @template param-choicerule
+#' @param type (optional) A string, utility function, currently only `"power"` for power utility.
+#' @eval .param_fix("utility_pow_d")
 #' 
-#' @param formula A formula specifying responses ~ values (e.g, \code{y ~ x1 | x2}).
-#' @param type (optional) A string, which utility function to use; currently available is only \code{"power"} for power utility.
-#' @inheritParams Cm
-#' @return A model object of class "utility", which can be viewed with `summary(.)` or `anova(.)`; predictions can be made with `predict(.)`.
-#' @section Parameter Space:
-#' \tabular{lcrcllr}{\verb{   } \tab \strong{Name} \tab \verb{    }\strong{LB} \tab  \strong{-} \tab \strong{UB}\verb{    } \tab \strong{Description} \tab \strong{Start Value}\cr
-#' 
-#' \verb{   } Power \tab \code{rp} \tab  \eqn{-}20* \tab  - \tab  20 \tab  Exponent for positive \eqn{x \ge 0}. Values < 0 yield concavity, 0 logarithm, > 0 convexity \tab  1\cr
-#' 
-#' \verb{   } \tab \code{rn} \tab  \eqn{-}20* \tab  - \tab 20 \tab  Exponent for negative \eqn{x < 0;}\tab  1
-#' }
-#' \verb{   }*\emph{Note}, the lower bound is 0.001 if \eqn{x} contains positive \emph{and} negative values (see Wakker, 2008).
 #' @details  
-#' _Power Utility_ **`utility_pow_.()`**. The utility \eqn{U(x)} for positive outcomes, \eqn{x > 0}, is \eqn{x^r if r > 0}, and is \eqn{log(x) if r = 0}, and is \eqn{-x^r if r < 0}. The utility for negative outcomes \eqn{x} equals \eqn{-U(-x)} with a separate exponent r (Wakker, 2008). The exponent is called `rp` and `rn` for positive and negative outcomes, respectively. To fit the model with only one exponent parameter, which is not recommended for mixed outcomes, set `fix = list(rp = "rn")`. 
+#' The power utility \eqn{U(x)} of positive inputs, \eqn{x > 0}, is \eqn{x^r} if \eqn{r > 0}, and is \eqn{log(x)} if \eqn{r = 0}, and is \eqn{-x^r} if \eqn{r < 0}. The power utility of negative inputs \eqn{x} is \eqn{-U(-x)} with a separate exponent r (Wakker, 2008). To fit a power utility with one single exponent for positive and negative _x_, set `fix = list(rp = "rn")`, not recommended for mixed input. 
+#' 
+#' ## Model Parameters
+#' The model has between 1 and 3 free parameters, depending on model and `data` (see [npar()]):
+#' * _**`rp`**_ is the power utility exponent for positive data \eqn{x \ge} 0 (omitted if all \eqn{x <} 0). 
+#' * _**`rn`**_ is the exponent for negative data \eqn{x < 0} (omitted if all \eqn{x \ge} 0).
+#' * In `utility_pow_c()`: _**`sigma`**_ is the standard deviation of the normally-distributed loglikelihood of the responses.
+#' * In `utility_pow_d()`:  If `choicerule = "softmax"`: _**`tau`**_  is the temperature or choice softness, higher values cause more equiprobable choices. If `choicerule = "epsilon"`: _**`eps`**_ is the error proportion, higher values cause more errors from maximizing.
 #' 
 #' @references {Wakker, P. P. (2008). Explaining the characteristics of the power (CRRA) utility family. \emph{Health Economics, 17(12)}, 1329-1344. doi:[10.1002/hec.1331](htrps://doi.org/10.1002/hec.1331)}
 #' 
 #' {Tversky, A. (1967). Utility theory and additivity analysis of risky choices. \emph{Journal of Experimental Psychology, 75(1)}, 27-36. doi:[10.1037/h0024915](htrp://dx.doi.org/10.1037/h0024915)}
 #' 
+#' @template cm
+#' @param formula A formula, the variables in data to be modeled. For example, `y ~ x | z` models the response `y` as function of a stimulus value `x` and `z`. Lines (|) separate stimuli.
+NULL
+
+
+#' @name utility
+#' 
 #' @examples 
 #' #  No examples yet
-#' 
 #' @export
-utility_pow_d <- function(formula, data, fix = list(), choicerule, discount = 0, options = list(), ...) {
+utility_pow_d <- function(formula, data, choicerule, fix = list(), discount = 0, options = list(), ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args[["type"]] <- "power"
   .args[["mode"]] <- "discrete"

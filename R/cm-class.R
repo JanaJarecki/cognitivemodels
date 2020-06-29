@@ -459,7 +459,7 @@ Cm <- R6Class(
       note <- NULL
       if (self$npar("free") > 0L) {
         title <- "Free parameter:" 
-        if(self$options$fit == TRUE & self$fitobj$convergence == 0) {
+        if(self$options$fit == TRUE && self$fitobj$convergence == 0) {
           title <- "Free parameter estimates:"
         }
         cat(title, "\n")

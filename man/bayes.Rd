@@ -47,7 +47,7 @@ bayes_dirichlet_c(formula, data, fix = NULL, format = NULL, ...)
 
 \item{type}{(optional) A string, the type of inference, \code{"beta-binomial"} or \code{"dirichlet-multinomial"}. Can be abbreviated. Will be inferred, if missing.}
 
-\item{options}{(optional) A list to change the parameter estimation, see \code{\link[=cm_options]{cm_options()}} or the section Options below.}
+\item{options}{(optional) A list to change the parameter estimation process, see \code{\link[=cm_options]{cm_options()}} or the section Options below.}
 }
 \value{
 Returns a cognitive model object, which is an object of class \href{Cm}{cm}. A model, that has been assigned to \code{m}, can be summarized with \code{summary(m)} or \code{anova(m)}. The parameter space can be viewed using \code{parspace(m)}, constraints can be viewed using \code{constraints(m)}.
@@ -62,41 +62,43 @@ Returns a cognitive model object, which is an object of class \href{Cm}{cm}. A m
 }
 }
 \details{
-The model models, as response variable, the belief about the occurrence of the first event in the \code{formula} as follows:
-\itemize{
-\item \code{y ~ a} models the beliefe about event a occurring (versus a not occurring)
-\item \code{y ~ a + b} models beliefs about a occurring (versus b occurring)
-\item \code{y ~ a + b + c} models beliefs about a, b, and c occurring
-}
-}
-\section{Options}{
+\subsection{Options}{
 
-The following can be passed in one list, e.g. \code{options = list(lb = c(k = -10))}.
+\verb{   } (Optional) Set \code{options} to fine-tune the parameter estimation
+process. The values listed below must be supplied in list. For example
+\code{options = list(lb = c(k = -10))} changes a lower parameter bound.
 
 \describe{
-\item{\code{lb}}{Named numeric vector, sets the lower parameter bounds;
-\code{lb = c(k = -10)} lets a parameter \emph{k} start at -10.}
-\item{\code{ub}}{Named numeric vector, sets the upper parameter bounds:
-\code{ub = c(k = 10)} lets a parameter \emph{k} go until 10.}
-\item{\code{start}}{Named numeric vector, sets the start values of parameter:
-\code{start = c(k = 5)} lets a parameter \emph{k} start at 5.}
-\item{\code{fit}}{Logical (default \code{TRUE}), \code{fit = FALSE} disables parameter
-estimation. Useful for testing models.}
-\item{\code{fit_measure}}{A string (default \code{"loglikelihood"}), the goodness
-of fit measure that is optimized during parameter estimation.
-Can be one of the \code{types} in the function [cognitiveutils::gof()\verb{: }"loglikelihood"\verb{. Uses a binomial PDF in models with discrete  data. Uses a normal PDF \eqn{N(\mu, \sigma)} in models with  continuous data:  \eqn{\mu}=predictions, \eqn{\sigma}=constant, estimated as additional free paramter. To change the PDF set }fit_args = list(pdf = "")}
-\item{\code{fit_args}}{Named list, options for parameter estimation. Can be
-arguments to the function (gof())\code{\link[cognitiveutils:gof]{cognitiveutils::gof()}}.
+\item{\verb{   }\code{lb}}{Named numeric vector, changes lower parameter bounds;
+\code{lb = c(k = -10)} lets parameter \emph{k} start at -10.}
+\item{\verb{   }\code{ub}}{Named numeric vector, changes upper parameter bounds:
+\code{ub = c(k = 10)} lets parameter \emph{k} go until 10.}
+\item{\verb{   }\code{start}}{Named numeric vector, changes parameter start
+values: \code{start = c(k = 5)} lets parameter \emph{k} start at 5.}
+\item{\verb{   }\code{fit}}{Logical (default \code{TRUE}), \code{fit = FALSE} disables
+parameter estimation. Useful for testing models.}
+\item{\verb{   }\code{fit_measure}}{A string (default \code{"loglikelihood"}), the
+\href{https://en.wikipedia.org/wiki/Goodness_of_fit}{goodness of fit}
+measure to be optimized during parameter estimation.
+Can be any value of \code{type} in \code{\link[cognitiveutils:gof]{cognitiveutils::gof()}}.
+Loglikelihood uses a binomial PDF in models with discrete
+data and a normal PDF for continuous data, \eqn{N(\mu, \sigma)}
+with  \eqn{\mu}=predictions, \eqn{\sigma}=constant,
+estimated as additional free paramter. Change the PDF using
+\code{fit_args = list(pdf = "...")}}
+\item{\verb{   }\code{fit_args}}{Named list, options for parameter estimation.
+Can be any
+argument to \code{\link[cognitiveutils:gof]{cognitiveutils::gof()}}. For example,
 \code{list(pdf = "truncnorm", a = 0, b = 1)} changes the PDF
 in the log likelihood to a truncated normal between 0 and 1,
 \code{list(pdf = "multinom")} changes it to a multinomial PDF.
 \code{list(grid_offset = .01)} offsets the parameter in a grid search
 by 0.01 from the parameter boundaries, \code{list(nsteps = 10)} defines
 10 steps for each parameter in the regular grid in the grid search.}
-\item{\code{fit_data}}{A data frame, the data to estimate the model parameters
+\item{\verb{   }\code{fit_data}}{A data frame, the data to estimate the model parameters
 from. Needed if the data for the parameter estimation differs from
 the data in the main \code{data} argument in a model.}
-\item{\code{solver}}{A string, the optimizer for the parameter estimation. Run
+\item{\verb{   }\code{solver}}{A string, the optimizer for the parameter estimation. Run
 \code{cm_solvers()} to list all solvers. Can be \code{"grid"}, \code{"solnp"}
 \code{"optimx"}, \code{"nloptr"}, \code{"nlminb"} and others from \link{ROI}. Can be
 \code{c("grid", "xxx")}: a grid-plus-optimization: A grid search, followed
@@ -104,7 +106,7 @@ by an optimization with xxx using the \emph{n}
 best solutions as start values in the optimization; the overal best
 parameter set wins; and \emph{n} can be set in \code{solver_args$nbest}
 Changing the solver may cause warnings and ignored parameter bounds.}
-\item{\code{solver_args}}{A named list, additional arguments passed directly
+\item{\verb{   }\code{solver_args}}{A named list, additional arguments passed directly
 to the solver function, see the pages of the solver to see which
 arguments the solver function has. For example:
 \code{list(offset = 0.01)} offset the parameters from their boundaries
@@ -114,11 +116,18 @@ grid, for \code{solver = "grid"}), \code{list(nbest = 3)} uses the 3 best
 parameter sets from the grid search as starting values in a
 grid-plus-optimization solver, for \code{solver = c("grid", "xxx")}.
 \code{list(control = )} control arguments in the solver
-(solnp)\code{\link[Rsolnp:solnp]{Rsolnp::solnp()}} and the
-(ROI solvers)\link{https://rdrr.io/cran/ROI/man/ROI_solve.html}}
+\href{Rsolnp::solnp()}{solnp} and the
+\href{https://rdrr.io/cran/ROI/man/ROI_solve.html}{ROI solvers}}
 }
 }
 
+The model models, as response variable, the belief about the occurrence of the first event in the \code{formula} as follows:
+\itemize{
+\item \code{y ~ a} models the beliefe about event a occurring (versus a not occurring)
+\item \code{y ~ a + b} models beliefs about a occurring (versus b occurring)
+\item \code{y ~ a + b + c} models beliefs about a, b, and c occurring
+}
+}
 \section{Parameters}{
 
 View the number of free parameters of a model \code{M} using \code{npar(M)} and the whole parameter space using \code{parspace(m)}. The model has n + 1 (n = number of events) free parameters, which are:
@@ -189,7 +198,8 @@ bayes(y ~ a + b, D, list(priorpar = c(0.1, 1.9)))   # -- (same) --
 Other cognitive models: 
 \code{\link{Cm}},
 \code{\link{baseline_const_c}()},
-\code{\link{gcm}()}
+\code{\link{gcm}()},
+\code{\link{utility}}
 }
 \author{
 Jana B. Jarecki, Markus Steiner

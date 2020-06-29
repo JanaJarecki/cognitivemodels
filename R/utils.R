@@ -422,3 +422,34 @@ get_var <- function(x) {
     x = slice[, seq(1, d, 2), drop = FALSE],
     p = slice[, seq(2, d, 2), drop = FALSE]))
 }
+
+
+
+
+#' Helper function to document fix
+#' @noRd
+#' @export
+.param_fix <- function(x) {
+  set.seed(289)
+  space <- .cm_dummy_model(x)$parspace
+  par <- rownames(space)
+  any_na <- anyNA(space[, "na"])
+  txt <- "@param fix (optional) A list or the string `\"start\"`, the model parameters that are fixed and not estimated. Model parameters are called _"
+  txt <- paste0(txt, paste(paste0("`", rownames(space), "`"), collapse = ", "), "_ (see details), if this argument is empty all parameters are estimated.")
+
+  txt2 <- '* `"start"` sets all parameters equal to their initial values (estimates none). Useful for building a first test model. \n* `list(k = 1.5)` sets parameter _`k`_ equal to 1.5.\n'
+  if (length(par) > 1) {
+    txt2 <- paste(txt2,
+      '* `list(k = "j")` sets parameter _`k`_ equal to parameter _`j`_ (estimates _`j`_).\n',
+      '* `list(j = "k", k = 1.5)` sets parameter _`k`_ equal to parameter _`j`_ and sets parameter _`j`_ equal to 1.5 (estimates none of the two).\n')
+  }
+  if (any_na == TRUE) {
+    txt2 <- paste(txt,
+      "* `list(k = NA)` omits the parameter _`k`_, if possible.\n")
+  }
+  # Substitute k and j and 1.5 by adequate values for a model
+  txt2 <- gsub("k", par[1], txt2)
+  txt2 <- gsub("j", par[2], txt2)
+  txt2 <- gsub("1.5", sprintf("%.2f", space[1, "start"] + runif(1) * (space[1, "ub"] - space[1, "start"])), txt2)
+  return(paste(txt, "\n", txt2))
+}

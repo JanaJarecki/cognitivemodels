@@ -1,12 +1,20 @@
-# Nosofsky, R. M. (1989). Further tests of an exemplar-similarity approach to relating identification and categorization. Perception & Psychophysics, 45, 279–290. doi:10.3758/BF03204942
-data(nosofsky1989)
-d <- nosofsky1989
-# Data from Table 3 and Figure 2
-# Parameter from Table 5 "size", pred from Fig. 5 "size"
-# criss = c(lambda=1.62,angle=.80,size=.20,b0=.45, b1=.55,r=2,q=2)
-# diag =  c(lambda=2.42,angle=.81,size=.19,b0=.49, b1=.51,r=2,q=2)
+# ==========================================================================
+# Test for Exemplar-based Cognitive Model
+#
+# Nosofsky, R. M. (1989). Further tests of an exemplar-similarity approach to
+#   relating identification and categorization. Perception & Psychophysics,
+#   45, 279–290. doi:10.3758/BF03204942
+# ==========================================================================
 
+
+# 1. Model predictions -----------------------------------------------------
 test_that("Prediction identities to Nosofsky (1989)", {
+  data(nosofsky1989)
+  d <- nosofsky1989
+  # Data from Table 3 and Figure 2
+  # Parameter from Table 5 "size", pred from Fig. 5 "size"
+  # criss = c(lambda=1.62,angle=.80,size=.20,b0=.45, b1=.55,r=2,q=2)
+  # diag =  c(lambda=2.42,angle=.81,size=.19,b0=.49, b1=.51,r=2,q=2)
   expect_ebm_nosofsky_equivalent <- function(cond, fix, target) {
     M <- ebm(obs_cat ~ angle + size, data = d[d$condition == cond & !is.na(d$true_cat), ], criterion = ~true_cat, fix = fix, choicerule = "none", mode = "discrete", discount = 0)
     test_d <- d[1:16,]
@@ -22,17 +30,12 @@ test_that("Prediction identities to Nosofsky (1989)", {
     target = c(0.06,0.44,0.81,0.99,0.04,0.38,0.77,0.97,0.08,0.45,0.86,0.99,0.02,0.44,0.87,0.99))
 })
 
-# @todo Fix the cognitivemodel (model + ebm + ...) tests for ebm
-# @body the updates to the code broke the plus functionality
-# M2 <- cognitivemodel(data=dd) +
-#    gcm(formula = ~ angle+size,
-#       class = ~ true_cat,
-#       fix = fixed_par,
-#       discount = 0L)
-# expect_equivalent(predict(M2, newdata = test_d),
-#                   predict(M, newdata = test_d))
-  
+
+
+# 2. Parameter recovery ----------------------------------------------------
 test_that("Parameter estimates compared to Nosofsky (1989)", {
+  data(nosofsky1989)
+  d <- nosofsky1989
   expect_est_equal <- function(fix, target, tol = 0.01) {
     fix <- c(q=2, r=2, fix)
     fitd <- d[d$condition == condition,]
@@ -65,8 +68,8 @@ test_that("Parameter estimates compared to Nosofsky (1989)", {
     target = c(angle=.81, size=0.19, lambda=2.42)) 
 })
 
-# Tests that the model spits out an error
-# if the input is wrong
+# 3. Formal tests -----------------------------------------------------------
+# 3.a. Errors
 test_that('EBM error handlers', {
   d <- as.data.frame(matrix(c(1,1,1,1,0,
                               1,1,1,0,0,

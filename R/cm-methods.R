@@ -275,7 +275,7 @@ predict.cm <- function(object, ..., type = "response", newdata = NULL) {
 #' Show the paramter space of a cognitive model
 #' 
 #' @description
-#' \code{parspace(cm)} shows the parameter names and upper and lower bounds of parameters in a cognitice model \code{cm}
+#' `parspace(m)` shows the parameter names, the upper and lower bounds of parameters in a cognitive model stored as `m`.
 #' 
 #' @usage parspace(x)
 #' @param x a model object of class cm
@@ -295,12 +295,41 @@ parspace.default <- function(x, ...) {
 #' @export
 #' @method parspace cm
 parspace.cm <- function(x, ...) {
-  cat("\nParameter space of the cognitive model '", class(x)[1], "':\n", sep = "")
+  title <- ifelse(length(M$title), M$title, class(x)[1])
+  cat("\nParameter space of the cognitive model '", title, "':\n", sep = "")
   print(format(x$parspace, digits = 2L, scientific = 10, width = 6), quote = FALSE, right = TRUE)
   cat("---\nNote. lb = lower bound, ub = upper bound, start = start value.\n")
 }
+#' @name parspace
+#' @export
+#' @method parspace character
+parspace.character <- function(x, ...) {
+  x <- do.call(.cm_dummy_model, args = c(x, list(...)))
+  cat("\nParameter in model '", class(x)[1], "'", sep = "")
+  cat(", assuming formula '", paste(as.character(x$formula), sep = "", collapse = ""), "':\n", sep="")
+  print(format(x$parspace, digits = 2L, scientific = 10, width = 6), quote = FALSE, right = TRUE)
+  cat("---\nNote. lb/ub = lower/upper bound, start = start value.\n")
+}
 
-
+#' Returns a cognitive model without data
+#' 
+#' @param x A string, the model call. For example `"gcm"`, `"cpt"`, `"bayes_beta_c"`.
+#' @param formula (optional) A formula.
+#' 
+#' @noRd
+.cm_dummy_model <- function(x, formula = ~ x1, ...) {
+  args <- c(list(...), list(formula = formula, options = list(fit = FALSE), choicerule = "none"))
+  if (grepl("ebm|mem", x)) {
+    args <- c(args, criterion = ~c)
+    args[["formula"]] <- ~ f1 + f2
+  } else if (grepl("gcm", x)) {
+    args <- c(args, class = ~c)
+    args[["formula"]] <- ~ f1 + f2
+  }
+  return(
+    do.call(x, args)
+  )
+}
 
 #' Show the constraints of a cognitive model
 #' 
