@@ -1,6 +1,8 @@
 # Nosofsky, R. M. (1989). Further tests of an exemplar-similarity approach to relating identification and categorization. Perception & Psychophysics, 45, 279–290. doi:10.3758/BF03204942
 data(nosofsky1989)
 d <- nosofsky1989
+data(nosofsky1989long)
+d_long <- nosofsky1989long
 # Data from Table 3 and Figure 2
 # Parameter from Table 5 "size", pred from Fig. 5 "size"
 # criss = c(lambda=1.62,angle=.80,size=.20,b0=.45, b1=.55,r=2,q=2)
@@ -32,6 +34,7 @@ test_that("Prediction identities to Nosofsky (1989)", {
 # expect_equivalent(predict(M2, newdata = test_d),
 #                   predict(M, newdata = test_d))
   
+# Estimate the parameter of Nosofsky (1989) using the aggregate data d
 test_that("Parameter estimates compared to Nosofsky (1989)", {
   expect_est_equal <- function(fix, target, tol = 0.01) {
     fix <- c(q=2, r=2, fix)
@@ -63,6 +66,40 @@ test_that("Parameter estimates compared to Nosofsky (1989)", {
     target = c(angle=.81, size=0.19, lambda=2.42))
   expect_est_equal(fix = list(b0 = "b1", b1 = 0.5),
     target = c(angle=.81, size=0.19, lambda=2.42)) 
+})
+
+# Estimate the parameter of Nosofsky (1989) using the raw data d_long
+test_that("Parameter estimates compared to Nosofsky (1989)", {
+  expect_est_equal <- function(fix, target, tol = 0.01) {
+    fix <- c(q=2, r=2, fix)
+    fitd <- d_long[d_long$condition == condition,]
+    M <- gcm(formula = response ~ angle + size, criterion = ~ true_cat, data = d_long[d_long$condition == condition & !is.na(d_long$true_cat), ], fix = fix, options = list(fit_data = fitd, fit_args = list(n = fitd$N), fit=T), discount = 0, choicerule = "none")
+    expect_equal(coef(M), target, tol = tol)
+  }
+  
+  condition <- "size"
+  expect_est_equal(fix = NULL,
+                   target = c(angle=.10,size=.90,lambda=1.60,b0=.50,b1=.50))
+  expect_est_equal(fix = c(angle = .5, size = .5),
+                   target = c(lambda=2.40, b0=.49, b1=.51))
+  expect_est_equal(fix = list(angle = .5, size = "angle"),
+                   target = c(lambda=2.40, b0=.49, b1=.51))
+  expect_est_equal(fix = list(angle = "size", size = 0.5),
+                   target = c(lambda=2.40, b0=.49, b1=.51))
+  expect_est_equal(fix = c(b0 = .5, b1 = .5),
+                   target = c(angle=.10, size=.90, lambda=1.60))
+  
+  condition <- "diag"
+  expect_est_equal(fix = NULL,
+                   target = c(angle=.81,size=.19,lambda=2.42,b0=.49,b1=.51))
+  expect_est_equal(fix = c(angle = .5, size = .5),
+                   target = c(lambda=1.81, b0=.48, b1=.52), tol = 0.04)
+  expect_est_equal(fix = c(b0 = .5, b1 = .5),
+                   target = c(angle=.81, size=0.19, lambda=2.42))
+  expect_est_equal(fix = list(b0 = .5, b1 = "b0"),
+                   target = c(angle=.81, size=0.19, lambda=2.42))
+  expect_est_equal(fix = list(b0 = "b1", b1 = 0.5),
+                   target = c(angle=.81, size=0.19, lambda=2.42)) 
 })
 
 # Tests that the model spits out an error
