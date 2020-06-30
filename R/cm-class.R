@@ -108,19 +108,22 @@ Cm <- R6Class(
     #' @description
     #' Initializes a new model
     initialize = function(formula, data = NULL, parspace = make_parspace(), fix = NULL, choicerule = if (grepl("^c", mode)) { "none" } else { NULL }, title = NULL, discount = NULL, mode = NULL, options = NULL) {
-      self$title        <- title
-      self$formula      <- as.Formula(formula)
-      self$pass_checks  <- length(data) == 0
+      # store the call, this is ugly code, fixme
       self$call  <- if (deparse(sys.call()[[1L]]) == "super$initialize") {
         if (!inherits(self, "csm")) { rlang::call_standardise(sys.calls()[[sys.nframe()-4L]]) }
         } else { rlang::call_standardise(sys.call(sys.nframe()-1L)) }
-      self$discount     <- private$init_discount(x = discount)
-      mode <- match.arg(mode, c("continuous", "discrete"))
-      self$choicerule   <- .check_and_match_choicerule(x = choicerule, mode = mode)
+
+      # Store values for later use in the model object (= self)
+      self$title       <- title
+      self$formula     <- as.Formula(formula)
+      self$pass_checks <- length(data) == 0
+      self$discount    <- private$init_discount(x = discount)
+      mode             <- match.arg(mode, c("continuous", "discrete"))
+      self$choicerule  <- .check_and_match_choicerule(x=choicerule, mode=mode)
       
       # Initialize slots of the model
       self$set_data(data = data)
-      private$init_par(parspace = parspace, fix = fix, options = options, mode = mode)
+      private$init_par(parspace=parspace, fix=fix, options=options, mode=mode)
       private$init_stimnames()
       private$init_prednames()
       private$init_options(options = options)
@@ -252,14 +255,14 @@ Cm <- R6Class(
         "\n  * Did you forget to name the argument (data = ...) in the model?")
 
       } 
-      formula <- self$formula
-      self$nobs <- nrow(data)
-      self$nstim <- length(self$formula)[2]
-      self$natt <- vapply(1:self$nstim, function(i) length(attr(terms(formula(self$formula, lhs=0, rhs=i)), "term.labels")), 1L)
-      self$input <- private$get_input(f = formula, d = data)
+      formula         <- self$formula
+      self$nobs       <- nrow(data)
+      self$nstim      <- length(self$formula)[2]
+      self$natt       <- vapply(1:self$nstim, function(i) length(attr(terms(formula(self$formula, lhs=0, rhs=i)), "term.labels")), 1L)
+      self$input      <- private$get_input(f = formula, d = data)
       self$more_input <- private$get_more_input(d = data)
-      self$res <- private$get_res(f = formula, d = data)
-      self$nres <- max(0, dim(self$res)[2])
+      self$res        <- private$get_res(f = formula, d = data)
+      self$nres       <- max(0, dim(self$res)[2])
       invisible(return(self))
     },
 
@@ -309,7 +312,7 @@ Cm <- R6Class(
       } else {
         switch(x,
           "free" = nrow(self$parspace) - self$ncon,
-           "all" = nrow(self$parspace))
+          "all" = nrow(self$parspace))
       }
     }, 
 
@@ -362,6 +365,7 @@ Cm <- R6Class(
         return(gof)
       }
     },
+
     #' @description
     #' Log likelihood of the observed responses under the model predictions
     #' @param ... other arguments (ignored)
@@ -552,13 +556,12 @@ Cm <- R6Class(
         stop("Can't find variables from 'formula' in 'data': ", .brackify(setdiff(unlist(.rhs_varnames(f)), names(d))), ".")
       }
      
-      # n observations
+      # num. observations, stimuli, attributes
       no <- nrow(d)
-      # n stimuli
       ns <- length(f)[2] 
-      # n attributes
       na <- .rhs_length(f)
       arr <- array(NA, dim = c(no, max(na), ns))
+
       for (s in seq_len(ns)) {
         arr[, 1:na[s], s][] <- as.matrix(model.frame(formula(f, lhs=0, rhs=s), data = d, ...))
       }
@@ -583,11 +586,6 @@ Cm <- R6Class(
           return(NULL)
         }    
       }
-    },
-    # Set the mode
-    set_mode = function(x) {
-      x <- match.arg(x, c("discrete", "continuous"))
-      self$mode <- x
     },
     get_lb = function(x = "all") {
       return(setNames(self$parspace[private$get_parnames(x), "lb"], private$get_parnames(x)))
@@ -633,13 +631,13 @@ Cm <- R6Class(
     # INITIALIZE METHODS
     # -------------------------------------------------------------------------
     init_parspace = function(p, choicerule, options = list(), mode, addpar = TRUE) {
-      private$init_mode(mode = mode)
-      sigma_par <- choicerule_par <- NULL
-      if (!length(choicerule) & addpar == TRUE) {
-        choicerule_par <- if (choicerule == "softmax") {
-          make_parspace(tau = c(0.001, 10, 0.5, NA))
+      private$init_mode(mode)
+
+      if (length(choicerule) & addpar == TRUE) {
+       if (choicerule == "softmax") {
+          p <- rbind(p, make_parspace(tau = c(0.001, 10, 0.5, NA)))
         } else if (choicerule == "epsilon") {
-          make_parspace(eps = c(0.001, 1L, 0.2, NA))
+          p <- rbind(p, make_parspace(eps = c(0.001, 1L, 0.2, NA)))
         }
       }
       if (self$mode == "continuous" & !length(options) & addpar == TRUE) {
@@ -649,14 +647,11 @@ Cm <- R6Class(
             rg <- max(self$res) - min(self$res)
             sigma_par <- make_parspace(sigma = c(0, rg, rg/2, NA))
           }
-          if ("sigma" %in% rownames(p)) {
-            if (identical(p["sigma",,drop = FALSE], sigma_par)) {
-              sigma_par <- NULL
-            }
+          if (!"sigma" %in% rownames(p)) {
+            p <- rbind(p, sigma_par)
           } 
         }
       }
-      p <- rbind(p, choicerule_par, sigma_par)
       
       if (length(options$lb)) {
         p[names(options$lb), "lb"] <- options$lb
@@ -664,11 +659,14 @@ Cm <- R6Class(
       if (length(options$ub)) {
         p[names(options$ub), "ub"] <- options$ub
       }
-      not_btw <- (!p[intersect(names(options$lb),names(options$ub)), "start"] %between% list(options$lb, options$ub))
-      p[not_btw, "start"] <- rowMeans(p[not_btw, c("lb", "ub"), drop=FALSE])
+      if (length(c(options$ub, options$lb))) {
+        not_btw <- (!p[intersect(names(options$lb),names(options$ub)), "start"] %between% list(options$lb, options$ub))
+        p[not_btw, "start"] <- rowMeans(p[not_btw, c("lb", "ub"), drop=FALSE])
+      }
       if (length(options$start)) {
         p[names(options$start), "start"] <- options$start
       }
+
       self$parspace <- p
     },
     init_fix = function(fix) {
@@ -693,7 +691,8 @@ Cm <- R6Class(
         constrained = NA
       )
     },
-    init_par = function(parspace, fix, options, mode, addpar=TRUE) {
+    init_par = function(parspace, fix, options, mode, addpar = TRUE) {
+      if (is.vector(parspace)) stop("'parspace' must be a matrix, not a vector.\n  * See ?make_parspace to make a parspace.\n  * Do you need 'drop = FALSE'?")
       private$init_parspace(p = parspace, choicerule = self$choicerule, options = options, mode = mode, addpar = addpar)
       .check_par(fix, self$parspace, self$pass_checks)
       private$init_fix(fix)
@@ -729,14 +728,10 @@ Cm <- R6Class(
       }
     },
     init_mode = function(mode = NULL) {
-      if (is.null(mode)) {
-        if (is.null(self$res)) { stop("init_mode() called before data was initialized. -> move init_mode() after set_data().")}
+      if (!length(mode)) {
         self$mode <- private$infer_mode(y = self$res)
       }
-      private$set_mode(mode)
-       if (self$mode == "continuous") {
-        self$choicerule <- "none"
-      }
+      self$mode <- mode
     },
     init_stimnames = function() {
       self$stimnames <- abbreviate(private$make_stimnames(), minlength = 1, use.classes = FALSE)
@@ -745,24 +740,25 @@ Cm <- R6Class(
       self$prednames <- paste("pr", abbreviate(private$make_prednames(), minlength = 1), sep="_")
     },
     init_options = function(options = list(), ...) {
-      .args <- list(...)
-      .args <- if (length(.args)) { c(options, .args) } else { options }
-      .args <- .args[!duplicated(names(.args))]
-      solver <- cognitivemodels:::.check_and_match_solver(.args[["solver"]])
-      if (!is.null(solver)) {
+      .args   <- list(...)
+      .args   <- if (length(.args)) { c(options, .args) } else { options }
+      .args   <- .args[!duplicated(names(.args))]
+      solver  <- .check_and_match_solver(.args$solver)
+      if (length(solver)) {
         if(solver[1] == "grid" & length(solver) > 1L) {
           npar <- self$npar("free")
-          if (is.null(.args$solver_args$nbest)) {
+          if (!length(.args$solver_args$nbest)) {
             .args$solver_args$nbest <- npar
-          }       
+          }  
           ub <- private$get_ub("free")
           lb <- private$get_lb("free")
           ## offset, scales logistically from super small to 10% of the range of each parameter
-          if (is.null(.args$solver_args$offset))
+          if (!length(.args$solver_args$offset))
             .args$solver_args$offset <- as.list(0.10 / (1 + exp(-(ub - lb))))
           ## make the steps exponentially bigger with the parameter range
-          if (is.null(.args$solver_args$nsteps))
+          if (!length(.args$solver_args$nsteps)) {
             .args$solver_args$nsteps <- round(pmax(log(ub - lb) * 2, 3) * max(1, log(npar)))
+          }
         }
       }
       self$options <- do.call(cm_options, args = as.list(.args))
@@ -938,9 +934,6 @@ Cm <- R6Class(
 
     # OTHER USEFUL STUFF
     constrain = function(par, C = self$constraints) {
-      if (is.null(self$parspace)) { stop('constrain() called before parspace was initialized -> move it after init_parspace().') }
-      if (is.null(self$parnames) & length(self$parspace)) { stop('constrain() called before parnames was initialized -> move it after init_parnames().') }
-      if (is.null(self$par)) { stop('constrain() called before par were initialized -> move it after init_par().') }
       A <- as.matrix(C$L)
       eq <- rowSums(A) == 0 & (rowSums(A != 0) == 2)
       if (length(eq)) {

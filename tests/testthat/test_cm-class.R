@@ -210,7 +210,7 @@ test_that('Error messages', {
 test_that("Grid nsteps with parameters between 0 - 1", {
   PS <- make_parspace(a=c(0,1), b=c(0,1), c=c(0,1), d=c(0,1), e = c(0,1))
   O <- list(solver = c("grid", "solnp"), fit = FALSE)
-  M <- Cm$new(y ~ x1, make_data(), PS[1,],mode="discrete", choicerule = "none", options = O)
+  M <- Cm$new(y ~ x1, make_data(), PS[1, ,drop = FALSE], mode="discrete", choicerule = "none", options = O)
   expect_equivalent(M$options$solver_args$nsteps, 3)
 
   M <- Cm$new(y ~ x1, make_data(), PS[1:2,], mode="discrete", choicerule = "none", options = O)
