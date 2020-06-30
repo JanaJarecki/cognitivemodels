@@ -323,9 +323,8 @@ Cm <- R6Class(
     #' @param newdata (optional) A data frame with new data - experimental!
     #' @param ... other arguments (ignored)
     gof = function(type = self$options$fit_measure, n = self$options$fit_args$n, newdata = self$options$fit_data, discount = FALSE, ...) {
-      if (length(self$res) == 0L) { stop("Model must have response variable to calculate the goodness of fit, but response are ", self$res, ".",
-        "\n  * Did you forget a left side in 'formula'?", call.=FALSE) }
-
+      if (length(self$res) == 0) { stop("Can't compute goodness of fit, because the model has no observed resonses.", self$res, ".",
+        "\n  * Did you forget a left side in 'formula'? (such as 'y' in y ~ x1 + x2)", call. = FALSE)}
 
       if (length(newdata) == 0L) {
         obs <- as.matrix(self$res)
@@ -359,7 +358,7 @@ Cm <- R6Class(
         )
       gof <- try(do.call(cognitiveutils::gof, args = .args, envir = parent.frame()), silent = TRUE)
       if (inherits(gof, "try-error")) {
-        stop("Can't compute the model fit ", type, ", because:\n  ", geterrmessage(),
+        stop("Can't compute the goodness of fit ", type, ", because:\n  ", geterrmessage(),
           call.= FALSE)
       } else {
         return(gof)
@@ -791,11 +790,15 @@ Cm <- R6Class(
     },
     fit_roi = function(start = private$get_start("free"), cons) {
       if (length(cons) == 0) { cons <- NULL }
-      objective <- ROI::F_objective(
+      objective <- try(ROI::F_objective(
         F = function(par) { private$objective(par, self = self) },
         n = self$npar("free"),
         names = private$get_parnames("free")
-      )      
+      ), silent = TRUE)
+      if (inherits(objective, "try-error")) {
+        private$objective(rep(0, self$npar("free")), self = self)
+      }
+            
       bounds <- ROI::V_bound(
         li = seq_len(self$npar("free")), lb = private$get_lb("free"),
         ui = seq_len(self$npar("free")), ub = private$get_ub("free"),

@@ -266,3 +266,25 @@ test_that("Zero RHS of formula", {
   expect_equal(Cm$new( ~ x1, make_data(), mode="discrete", choicerule = "none")$res, NULL)
   expect_equivalent(Cm$new(y ~ x1, make_data(), mode="discrete", choicerule = "none")$res, make_data()[, "y", drop=FALSE])
 })
+
+
+
+test_that("Adding the choicerule", {
+  # Fix choicerule parameter
+  expect_crpar_equal <- function(choicerule, target) {
+    M <- Cm$new( ~ x1, make_data(),
+      mode="discrete", choicerule=choicerule, fix=target)
+    expect_equal(M$npar("all"), 1)
+    expect_equal(M$par, target)
+  }
+  expect_crpar_equal(choicerule = "softmax", list(tau = 1))
+  expect_crpar_equal(choicerule = "softmax", list(tau = 10))
+  expect_crpar_equal(choicerule = "epsilon", list(eps = 1))
+  expect_crpar_equal(choicerule = "epsilon", list(eps = 0.5))  
+
+  # Free choicerule parameter but dont fit
+  M <- Cm$new(~ x1, make_data(), mode="discrete", choicerule="softmax", options = list(fit = FALSE))
+  expect_equal(coef(M), c(tau = 0.5))
+  M <- Cm$new(~ x1, make_data(), mode="discrete", choicerule="epsilon", options = list(fit = FALSE))
+  expect_equal(coef(M), c(eps = 0.2))
+})
