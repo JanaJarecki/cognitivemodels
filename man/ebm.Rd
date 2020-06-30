@@ -29,11 +29,19 @@ ebm_j(
 ebm(formula, criterion, data, mode, fix = NULL, options = NULL, ...)
 }
 \arguments{
-\item{formula}{A \href{stats::formula}{formula}, the variables in \code{data} to be modeled. For example, \code{y ~ x1 + x2 | z1 + z2} models the response \code{y} as function of one stimulus with features \code{x1}, \code{x2} and one stimulus with features \code{z1}, \code{z2}. Lines (\code{|}) separate different stimuli, plus (\code{+}) separate features within each stimulus.}
+\item{formula}{A formula, variables in \code{data} to be modeled, e.g., \code{y ~ x1 + x2 + x3} models the observed response, \code{y}, based on the features of the stimuli, \code{x1}, \code{x2}, \code{x3}. The response variable can be omitted if no parameters are fitted.}
 
 \item{class}{A formula, variable in \code{data} that has the class feedback, e.g. \code{~ category}. \code{NA}s are interpreted as trials without feedback (partial feedback, see details).}
 
-\item{data}{A data frame.}
+\item{data}{A data frame, data to be modeled.}
+
+\item{fix}{(optional) A list or the string \code{"start"}, the model parameters that are fixed and not estimated. Model parameters are called \emph{\code{f1}, \code{f2}, \code{lambda}, \code{r}, \code{q}, \code{b}} (see details), if this argument is empty all parameters are estimated.
+\itemize{
+\item \code{"start"} sets all parameters equal to their initial values (estimates none). Useful for building a first test model.
+\item \code{list(f1 = 0.62)} sets parameter \emph{\code{f1}} equal to 0.62.
+\item \code{list(f1 = "f2")} sets parameter \emph{\code{f1}} equal to parameter \emph{\code{f2}} (estimates \emph{\code{f2}}).
+\item \code{list(f2 = "f1", f1 = 0.62)} sets parameter \emph{\code{f1}} equal to parameter \emph{\code{f2}} and sets parameter \emph{\code{f2}} equal to 0.62 (estimates none of the two).
+}}
 
 \item{options}{(optional) A list to change the parameter estimation process, see \code{\link[=cm_options]{cm_options()}} or the section Options below.}
 

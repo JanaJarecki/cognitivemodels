@@ -22,13 +22,13 @@
 #' @importFrom Rcpp sourceCpp
 #' @importFrom abind abind
 #' 
-#' @inheritParams Cm
+#' @template cm
 #' @param formula A formula, variables in `data` to be modeled, e.g., `y ~ x1 + x2 + x3` models the observed response, `y`, based on the features of the stimuli, `x1`, `x2`, `x3`. The response variable can be omitted if no parameters are fitted.
 #' @param class A formula, variable in `data` that has the class feedback, e.g. `~ category`. `NA`s are interpreted as trials without feedback (partial feedback, see details).
 #' @param criterion A formula, variable in `data` that has the criterion feedback, e.g. `~ value` `NA`s are interpreted as trials without feedback (partial feedback, see details).
 #' @param data A data frame, data to be modeled.
 #' @param similarity (optional) A string, similarity function, currently only `"minkowski"`.
-#' @template cm
+#' @eval .param_fix("gcm")
 #' @return Returns the fitted model which has class `cm`. A model called \code{M} can be viewed with \code{summary(M)}, or \code{anova(M)}.
 #' 
 #' @references {Medin, D. L., & Schaffer, M. M. (1978). Context theory of classification learning. \emph{Psychological Review, 85}, 207-238. \url{http://dx.doi.org/10.1037//0033-295X.85.3.207}}
