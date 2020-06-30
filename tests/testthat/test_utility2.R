@@ -32,6 +32,11 @@ test_that("Discrete Power utility: predicted value identities", {
 })
 
 test_that("Discrete Power utility: parameter fitting", {
+  # calculates the certainty equivalent
+  ce <- function(pred, pow, p) {
+    y <- rowSums((abs(pred) * p))
+    unname(sign(y) * if(pow != 0) { y^(1/pow) } else { exp(y) })
+  }
   M <- cognitivemodel(D) +
     utility_pow_d(y ~ x | x2, choicerule = "none") +
     function(pred, data, par) matrix(ce(pred = pred, pow = par[["rp"]], p = D[, c("p", "p2")]))
