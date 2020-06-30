@@ -116,8 +116,7 @@ Cm <- R6Class(
         } else { rlang::call_standardise(sys.call(sys.nframe()-1L)) }
       self$discount     <- private$init_discount(x = discount)
       mode <- match.arg(mode, c("continuous", "discrete"))
-      if (mode == "continuous") choicerule <- "none"
-      self$choicerule   <- .check_and_match_choicerule(x = choicerule)
+      self$choicerule   <- .check_and_match_choicerule(x = choicerule, mode = mode)
       
       # Initialize slots of the model
       self$set_data(data = data)
@@ -459,18 +458,24 @@ Cm <- R6Class(
       note <- NULL
       if (self$npar("free") > 0L) {
         title <- "Free parameter:" 
-        if(self$options$fit == TRUE && self$fitobj$convergence == 0) {
-          title <- "Free parameter estimates:"
+        if (self$options$fit == TRUE) {
+          title <- "Free parameters:"
+          if (!is.null(self$fitobj)) {
+             title <- paste(title, "estimates")
+            if (self$fitobj$convergence != 0) {
+              title <- paste(title, "(NOT CONVERGED!)")
+            }
+          }
         }
         cat(title, "\n")
         par <- self$get_par()[self$parnames$free2]
         print.default(format(par, digits = digits, justify = 'centre', width = digits+2L), print.gap=2L, quote=FALSE)
         cat("\n")
       } else {
-        note <- 'No free parameter.'
+        note <- 'No free parameters.'
       }
       if (self$ncon > 0L) {
-        cat("Constrained and fixed parameter:\n")
+        cat("Constrained and fixed parameters:\n")
         par <- self$get_par()[!.which_free(self$constraints)]
         print.default(format(par, digits = digits, justify = 'centre', width = digits+2L), print.gap=2L, quote=FALSE)
       } else {

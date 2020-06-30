@@ -72,8 +72,8 @@ cm_options = function(
 #' @examples
 #' cm_choicerules()
 #' @export
-cm_choicerules <- function() {
-  cat("\nAvailable choice rules:\n")
+cm_choicerules <- function(msg = TRUE) {
+  if (msg == TRUE) cat("\nAvailable choice rules:\n")
   return(sort(c("softmax", "luce", "epsilon", "argmax")))
 }
 
@@ -83,7 +83,7 @@ cm_choicerules <- function() {
 #' @examples
 #' cm_solvers()
 #' @export
-cm_solvers <- function() {
-  cat("\nAvailable optimization solvers:\n")
+cm_solvers <- function(msg = TRUE) {
+  if (msg == TRUE) cat("\nAvailable optimization solvers:\n")
   return(solvers())
 }
