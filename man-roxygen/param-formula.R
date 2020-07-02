@@ -1,1 +1,0 @@
-#' @param formula A (formula)[stats::formula()], the variables in `data` to be modeled. For example, `y ~ x1 + x2 | z1 + z2` models the response `y` as function of one stimulus with features `x1`, `x2` and one stimulus with features `z1`, `z2`. Horizontal lines (`|`) separate different stimuli.

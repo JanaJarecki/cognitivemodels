@@ -311,25 +311,6 @@ parspace.character <- function(x, ...) {
   cat("---\nNote. lb/ub = lower/upper bound, start = start value.\n")
 }
 
-#' Returns a cognitive model without data
-#' 
-#' @param x A string, the model call. For example `"gcm"`, `"cpt"`, `"bayes_beta_c"`.
-#' @param formula (optional) A formula.
-#' 
-#' @noRd
-.cm_dummy_model <- function(x, formula = ~ x1, ...) {
-  args <- c(list(...), list(formula = formula, options = list(fit = FALSE), choicerule = "none"))
-  if (grepl("ebm|mem", x)) {
-    args <- c(args, criterion = ~c)
-    args[["formula"]] <- ~ f1 + f2
-  } else if (grepl("gcm", x)) {
-    args <- c(args, class = ~c)
-    args[["formula"]] <- ~ f1 + f2
-  }
-  return(
-    do.call(x, args)
-  )
-}
 
 #' Show the constraints of a cognitive model
 #' 

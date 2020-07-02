@@ -18,14 +18,14 @@ test_that("Prediction identities to Tversky & Kahneman (1992)", {
   tol <- .001
 
   # Two two-outcome stimuli
-  M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, , data = dt, fix = tk_par, choicerule = "none")
+  M <- cpt_d(rp ~ x1 + px + x2 | y1 + py + y2, , data = dt, fix = tk_par, choicerule = "none")
   expect_equal(M$predict('value')[1,'pr_x'], c('pr_x'=57), tol = .01)
   expect_equal(M$predict('value')[1,'pr_y'], c('pr_y'=57), tol = .01)
   expect_equal(M$predict('value')[2,'pr_x'], c('pr_x'=-129), tol = .01)
   expect_equal(M$predict('value')[2,'pr_y'], c('pr_y'=-129), tol = .01)
 
   # Three two-ourcome stimuli
-  M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2 | z1 + pz + z2, data = dt, fix = tk_par, choicerule = "none")
+  M <- cpt_d(rp ~ x1 + px + x2 | y1 + py + y2 | z1 + pz + z2, data = dt, fix = tk_par, choicerule = "none")
   expect_equal(M$predict('value')[1,'pr_x'], c('pr_x'=57), tol = .01)
   expect_equal(M$predict('value')[1,'pr_y'], c('pr_y'=57), tol = .01)
   expect_equal(M$predict('value')[1,'pr_z'], c('pr_z'=57), tol = .01)
@@ -38,11 +38,11 @@ test_that("Prediction identities to Tversky & Kahneman (1992)", {
     x1 = c(100, -100), px1 =   0.4,       x2 = 50, px2 = 0.4, x3 = 0,
     y1 = c(200, -200), py1 = c(.71, .64), y2 = 0,  py2 = 0.1, y3 = 30,
     z1 = c(300, -300), pz1 = c(.42, .38), z2 = 0,  pz2 = .22, z3 = 100)
-  M <- cpt(rp ~ x1 + px1 + x2 + px2 + x3 | y1 + py1 + y2 + py2 + y3, data = dt[1,], fix = tk_par, choicerule = "none")
+  M <- cpt_d(rp ~ x1 + px1 + x2 + px2 + x3 | y1 + py1 + y2 + py2 + y3, data = dt[1,], fix = tk_par, choicerule = "none")
   expect_equal(M$predict("value"), c(pr_x = 28.716, pr_y = 60.6477), tol = tol)
 
   # Three three-outcome stimuli
-  M <- cpt(rp ~ x1 + px1 + x2 + px2 + x3 | y1 + py1 + y2 + py2 + y3 | z1 + pz1 + z2 + pz2 + z3, data = dt[1,], fix = tk_par, choicerule = "none")
+  M <- cpt_d(rp ~ x1 + px1 + x2 + px2 + x3 | y1 + py1 + y2 + py2 + y3 | z1 + pz1 + z2 + pz2 + z3, data = dt[1,], fix = tk_par, choicerule = "none")
   expect_equal(M$predict("value"), c(pr_x = 28.716, pr_y = 60.6477, pr_z = 69.6543), tol = tol)
 })
 
@@ -55,7 +55,7 @@ test_that("Prediction identities after parameter change", {
       y1 = c(200, -200), py = c(.71, .64), y2 = 0)
     tk_par <- c(alpha=0.88, beta=0.88, lambda=2.25, gammap=0.61, gamman=0.69)
     fix <- replace(tk_par, names(tk_par) == par, value)
-    M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, , data = dt, fix = fix, choicerule = "none")
+    M <- cpt_d(rp ~ x1 + px + x2 | y1 + py + y2, , data = dt, fix = fix, choicerule = "none")
     tol <- .01
     expect_equal(c(M$predict('value')), result, tol = tol)
   }
@@ -95,7 +95,7 @@ test_that("Prediction identitites with equal parameters", {
   expect_equ_equal <- function(x, target, tol = 0.001, d = dt) {
     tk_par <- list(alpha=0.88, beta=0.88, lambda=2.25,gammap=0.61,gamman=0.69)
     fix <- replace(tk_par, names(tk_par) %in% names(x), x)
-    M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, data = d, fix = fix, choicerule = "none")
+    M <- cpt_d(rp ~ x1 + px + x2 | y1 + py + y2, data = d, fix = fix, choicerule = "none")
     expect_equal(M$predict("value"), target, tol = tol)
   }
 
@@ -106,8 +106,8 @@ test_that("Prediction identitites with equal parameters", {
     cbind(pr_x = c(57.5, -129.5), pr_y = c(63, -129.9)))
 
   # Errors on wrong restriction specification
-  expect_error(cpt(rp ~ x1 + px + x2 | y1 + py + y2, data = dt, fix = list(angle = "size"), choicerule = "none"))
-  expect_error(cpt(rp ~ x1 + px + x2 | y1 + py + y2, , data = dt, fix = list(c(tk_par[names(tk_par) != "lambda"], lambda = NA)), choicerule = "none"))
+  expect_error(cpt_d(rp ~ x1 + px + x2 | y1 + py + y2, data = dt, fix = list(angle = "size"), choicerule = "none"))
+  expect_error(cpt_d(rp ~ x1 + px + x2 | y1 + py + y2, , data = dt, fix = list(c(tk_par[names(tk_par) != "lambda"], lambda = NA)), choicerule = "none"))
 })
 
 
@@ -116,26 +116,26 @@ test_that("Parameter recovery equal to Pachur et al.", {
   # Skip the tests below skip() (takes too long)
   # Uncomment for running the test
   skip("Skipping parameter estimation tests")
-  data(cpttest)
-  cpttest[, decision := 1 - (decision - 1)]
+  data(cpt_dtest)
+  cpt_dtest[, decision := 1 - (decision - 1)]
   fml <- decision ~ o1 + p1 + o2 + p2 | o3 + p3 + o4 + p4
 
-  fit_cpt_5_g2 <- function(dt) {
-    cpt(fml, , data = dt, choicerule = "softmax", options = list(ub = c(tau = 25), solver = "solnp"), fix = list(alpha = "beta"))
+  fit_cpt_d_5_g2 <- function(dt) {
+    cpt_d(fml, , data = dt, choicerule = "softmax", options = list(ub = c(tau = 25), solver = "solnp"), fix = list(alpha = "beta"))
   }
-  fit_cpt_4_g2 <- function(dt) {
-    cpt(fml, , data = dt, choicerule = "softmax", options = list(ub = c(tau = 25), solver = "solnp"), fix = list(alpha = "beta", gammap = "gamman"))
+  fit_cpt_d_4_g2 <- function(dt) {
+    cpt_d(fml, , data = dt, choicerule = "softmax", options = list(ub = c(tau = 25), solver = "solnp"), fix = list(alpha = "beta", gammap = "gamman"))
   }
-  fit_cpt_4_pc <- function(dt) {
-    cpt(fml, , data = dt, choicerule = "argmax", options = list(fit_measure = "accuracy", solver = "solnp"), fix = list(alpha = "beta"))
+  fit_cpt_d_4_pc <- function(dt) {
+    cpt_d(fml, , data = dt, choicerule = "argmax", options = list(fit_measure = "accuracy", solver = "solnp"), fix = list(alpha = "beta"))
   }
-  fit_cpt_3_pc <- function(dt) {
-    cpt(fml, , data = dt, choicerule = "argmax", options = list(fit_measure = "accuracy", solver = "solnp"), fix = list(alpha = "beta", gammap = "gamman"))
+  fit_cpt_d_3_pc <- function(dt) {
+    cpt_d(fml, , data = dt, choicerule = "argmax", options = list(fit_measure = "accuracy", solver = "solnp"), fix = list(alpha = "beta", gammap = "gamman"))
   }
-  gp2012 <- cpttest[, list(fit_5_g2 = list(fit_cpt_5_g2(dt = .SD)),
-                         fit_4_g2 = list(fit_cpt_4_g2(dt = .SD)),
-                         fit_4_pc = list(fit_cpt_4_pc(dt = .SD)),
-                         fit_3_pc = list(fit_cpt_3_pc(dt = .SD))), by = list(repetition, subject)]
+  gp2012 <- cpt_dtest[, list(fit_5_g2 = list(fit_cpt_d_5_g2(dt = .SD)),
+                         fit_4_g2 = list(fit_cpt_d_4_g2(dt = .SD)),
+                         fit_4_pc = list(fit_cpt_d_4_pc(dt = .SD)),
+                         fit_3_pc = list(fit_cpt_d_3_pc(dt = .SD))), by = list(repetition, subject)]
 
   fit_5_g2 <- gp2012[, as.list(coef(fit_5_g2[[1]])), by = list(repetition, subject)][, -2][, lapply(.SD, median), by = repetition]
   fit_4_g2 <- gp2012[, as.list(coef(fit_4_g2[[1]])), by = list(repetition, subject)][, -2][, lapply(.SD, median), by = repetition]
@@ -163,7 +163,7 @@ test_that("Parameter recovery equal to Pachur et al.", {
 test_that("Formal test - single-row data and shuffled data", {
   expect_pred_equivalent <- function(data, result, tol = .001) {
     tk_par <- c(alpha=0.88, beta=0.88, lambda=2.25, gammap=0.61, gamman=0.69) 
-    M <- cpt(~x1+p+x2, data, fix = tk_par, choicerule = "none")
+    M <- cpt_d(~x1+p+x2, data, fix = tk_par, choicerule = "none")
     expect_equivalent(M$predict(), result, tol=tol)
   }
   D <- data.frame(x1=c(1,2,2),x2=c(2,1,1),p=c(0.66,0.66,0.50))
@@ -177,7 +177,7 @@ test_that("Formal test - single-row data and shuffled data", {
 test_that("Formal test - data.table", {
   skip("Skipping data.table tests to avoid dependency")
   expect_pred_equivalent <- function(data, result) {
-    M <- cpt(~x1+p+x2, L, data = as.data.table(data), fix = tk_par, choicerule = "none")
+    M <- cpt_d(~x1+p+x2, L, data = as.data.table(data), fix = tk_par, choicerule = "none")
     expect_equivalent(M$predict(), result, tol=tol)
   }
   expect_pred_equivalent(D[1, ], 1.285)
@@ -193,7 +193,7 @@ test_that("Formal test - tibble", {
   expect_pred_equivalent <- function(data, result) {
     tk_par <- c(alpha=0.88, beta=0.88, lambda=2.25, gammap=0.61, gamman=0.69) 
     D <- data.frame(x1=c(1,2,2),x2=c(2,1,1),p=c(0.66,0.66,0.50))
-    M <- cpt(~x1+p+x2, L, data = as_tibble(data), fix = tk_par, choicerule = "none")
+    M <- cpt_d(~x1+p+x2, L, data = as_tibble(data), fix = tk_par, choicerule = "none")
     expect_equivalent(M$predict(), result, tol=tol)
   }  
   expect_pred_equivalent(D[1, ], 1.285)
@@ -209,8 +209,8 @@ test_that("Formal test - tibble", {
 test_that("Formula formats", {
   expect_fml_equal <- function(f, data) {
     tk_par <- c(alpha=0.88, beta=0.88, lambda=2.25, gammap=0.61, gamman=0.69) 
-    target <- cpt(rp ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = data, fix = tk_par, choicerule = "none")$predict()
-    M <- cpt(f, data = data, fix = tk_par, choicerule = "none")
+    target <- cpt_d(rp ~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), data = data, fix = tk_par, choicerule = "none")$predict()
+    M <- cpt_d(f, data = data, fix = tk_par, choicerule = "none")
     expect_equal(M$predict(), target)
   }
   dt <- data.frame(rp = 1,
@@ -228,46 +228,46 @@ test_that("Formula formats", {
 
 
 # 3.c Errors ---------------------------------------------------------------
-test_that("CPT errors", {
+test_that("cpt_d errors", {
   dt <- data.frame(rp = 1,
       x1 = c(100, -100), px = 1,           x2 = 0,
       y1 = c(200, -200), py = c(.71, .64), y2 = 0)
 
   # Errors: Probabilities don't sum to 1
   expect_error( 
-    cpt(rp ~ x1 + px + x2 + I(1-py) | y1 + py + y2, data = dt, choicerule = "none"))
+    cpt_d(rp ~ x1 + px + x2 + I(1-py) | y1 + py + y2, data = dt, choicerule = "none"))
   expect_error(
-    cpt(rp ~ x1 + px + x2 | y1 + py + y2 + I(1-px), data = dt, choicerule = "none"))
+    cpt_d(rp ~ x1 + px + x2 | y1 + py + y2 + I(1-px), data = dt, choicerule = "none"))
   expect_error(
-    cpt(rp ~ x1 + px + x2 + I(1-py) | y1 + py + y2 + I(1-px), data = dt, choicerule = "none"))
+    cpt_d(rp ~ x1 + px + x2 + I(1-py) | y1 + py + y2 + I(1-px), data = dt, choicerule = "none"))
   expect_error( # wrong order, should be x1 + px + x2
-    cpt(rp ~ x2 + x1 + px, ref=0, data = dt, choicerule = "none")
+    cpt_d(rp ~ x2 + x1 + px, ref=0, data = dt, choicerule = "none")
     )
   expect_error( # Wrong order in the first of two RHS stimuli
-    cpt(rp ~ x2 + x1 + px | y1 + py + y2, ref=0, data = dt, choicerule = "none")
+    cpt_d(rp ~ x2 + x1 + px | y1 + py + y2, ref=0, data = dt, choicerule = "none")
     )
   expect_error( # Wrong order with last probability submitted
-    cpt(rp ~ x2 + x1 + px + I(1-px), ref=0, data = dt, choicerule = "none")
+    cpt_d(rp ~ x2 + x1 + px + I(1-px), ref=0, data = dt, choicerule = "none")
     )
   expect_error( 
-    cpt(rp ~ x2 + x1 + px + I(1-px) | y1 + py + y2, ref=0, data = dt, choicerule = "none")
+    cpt_d(rp ~ x2 + x1 + px + I(1-px) | y1 + py + y2, ref=0, data = dt, choicerule = "none")
     )
   expect_error( # Error in only the second of two RHS
-    cpt(rp ~ x1 + px + x2 | y2 + y1 + py, ref=0, data = dt, choicerule = "none")
+    cpt_d(rp ~ x1 + px + x2 | y2 + y1 + py, ref=0, data = dt, choicerule = "none")
     )
   expect_error( 
-    cpt(rp ~ x1 + px + x2 + I(1-px) | y2 + y1 + py + I(1-py), ref=0, data = dt, choicerule = "none")
+    cpt_d(rp ~ x1 + px + x2 + I(1-px) | y2 + y1 + py + I(1-py), ref=0, data = dt, choicerule = "none")
     )
   expect_error( # Error in both RHSs
-    cpt(rp ~ x2 + x1 + px | y2 + y1 + py, ref=0, data = dt, choicerule = "none")
+    cpt_d(rp ~ x2 + x1 + px | y2 + y1 + py, ref=0, data = dt, choicerule = "none")
     )
   expect_error(
-    cpt(rp ~ x2 + x1 + px + I(1-px) | y2 + y1 + py + I(1-py), ref=0, data = dt, choicerule = "none")
+    cpt_d(rp ~ x2 + x1 + px + I(1-px) | y2 + y1 + py + I(1-py), ref=0, data = dt, choicerule = "none")
     )
   expect_error( # matrix
-    cpt(rp ~ x1 + px + x2, ref=0L, data=as.matrix(dt[1,]), fix=tk_par, choicerule = "none")
+    cpt_d(rp ~ x1 + px + x2, ref=0L, data=as.matrix(dt[1,]), fix=tk_par, choicerule = "none")
     )
   expect_error(
-    cpt(rp ~ x1 + px + x2, ref=0L, data=as.matrix(dt), fix=tk_par, choicerule = "none")
+    cpt_d(rp ~ x1 + px + x2, ref=0L, data=as.matrix(dt), fix=tk_par, choicerule = "none")
     )
 })

@@ -8,29 +8,48 @@
 # Cognitive Model
 # ==========================================================================
 
+
 #' Cumulative Prospect Theory Models
-#' 
+#' @name cpt
 #' @description 
-#' cpt_* fit a cumulative prospect theory.
+#' Fits cumulative prospect theory, CPT (Tversky & Kahneman, 1992).
+#' * `cpt_d()` fits CPT for discrete responses = choices.
+#' * `cpt_c()` fits CPT for continuous responses = utility values.
+#' * `cpt_mem_d()` fits CPT with an editing step based on memory for discrete responses = choices (Thaler & Johnson, 1990).
+#' * `cpt_mem_c()` fits CPT with an editing step based on memory for continuous responses = utility values (Thaler & Johnson, 1990).
 #' 
-#' * `cpt()` fits cumulative prospect theory (Tversky & Kahneman, 1992)
-#' * `cpt_mem()` fits cumulative prospect theory with memory (Thaler & Johnson, 1990)
+#' @eval .param_formula(c(4,4), risky = TRUE)
+#' @eval .param_fix("cpt_d")
 #' 
 #' @importFrom stringr str_extract
 #' @importFrom abind abind
 #' @importFrom data.table %between%
 #' 
-#' @inheritParams Cm
-#' @templateVar parameter formula
-#' @param formula A \link{formula} such as \code{y ~ x1 + p1 + x2 | y1 + py + y2} specifying the columns in \code{data} that contain outcomes, probabilities and (optional) the observations. Lines (\code{|}) separate different gambles. The formula must alternate outcomes and probabilities (x + p + x2 + p2), the last probability can be omitted.
-#' @templateVar parameter choicerule
-#' @param ref (optional, default: 0) A number, string, or RHS \link{formula}. The reference point. Formula and string set the reference point to variables in data, and `ref = "myvar"` means `data$myvar`, and so does `ref = ~ myvar`.
-#' @param weighting (optional) A string, the weighting function. Currently only \code{"KT1992"}, the value function in Kahneman & Tversky (1992), is implemented.
-#' @param value (optional) A string, the value function. Currently, only \code{"KT1992"} the value function in Kahneman & Tversky (1992) is implemented.
+#' @eval .param_formula(c(4,4), risky = TRUE)
+#' @param ref (optional, default: 0) A number, string, or RHS [formula][stats::formula], the reference point or the variable in `data` that holds the reference point. For example `~ ref`.
+#' @param weighting (optional) A string, the weighting function. Currently only `"KT1992"`, the value function in Kahneman & Tversky (1992).
+#' @param value (optional) A string, the value function. Currently, only `"KT1992"`, the value function in Kahneman & Tversky (1992).
+#' @param mem (optional, default: 0) A number, string, or RHS [formula][stats::formula()], the prior gains or losses in memory. Formula and string refer to variables in `data`, for example `~ xoutc`.
+#' @param editing (optional) A string, the editing rule to use (see Thaler & Johnson, 1999, pp. 645), currently only `"hedonic"`.
+#' 
 #' @references Tversky, A., & Kahneman, D. (1992). Advances in prospect theory: cumulative representation of uncertainty. Journal of Risk and Uncertainty, 5, 297–-323. doi:[10.1007/BF00122574](https://doi.org/10.1007/BF00122574)
-#' @return An object of class R6 holding the model, it has free parameters. A model object `M` can be viewed with `M`, choice or utility predictions can be made by `predict(M)`, also for new data by `predict(M, newdata = ...`).
-#' @author Jana B. Jarecki, \email{jj@janajarecki.com}
-#' @details Fits cumulative prospect theory.
+#' 
+#' Thaler, R. H., & Johnson, E. J. (1990). Gambling with the House Money and Trying to Break Even: The Effects of Prior Outcomes on Risky Choice. Management Science, 36(6), 643--660. doi:[10.1287/mnsc.36.6.643](https://doi.org/10.1287/mnsc.36.6.643)
+#' 
+#' @details
+#' Fits cumulative prospect theory.
+#' 
+#' ## Parameter Space
+#' The model has the following free parameters:
+#'  * _**`alpha`**_ the utility exponent for positive outcomes.
+#'  * _**`beta`**_ the utility exponent for negative outcomes.
+#'  * _**`gammap`**_ the probability distortion for positive outcomes.
+#'  * _**`gamman`**_ the utility exponent for negative outcomes.
+#'  * _**`lambda`**_ the loss aversion.
+#'  * In `cpt_d()` and `cpt_mem_d()`: `r .rd_choicerules()`.
+#' 
+#' @template cm
+#' 
 #' @examples
 #' ## From Tversky, A., & Kahneman, D. (1992).
 # p. 313
@@ -43,37 +62,67 @@
 #'   y2 = 0,
 #'   rp = 1)
 #' 
-#' # Make the model, add fix parameters (don"t fit)
+#' # Make the model -------------------------------------------
+#' # add fix parameters (don't fit)
 #' # using the Parameter from the paper
-#' M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0,
+#' 
+#' # Discrete responses with choicerule
+#' M <- cpt_d(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0,
 #'          choicerule = "softmax", data = dt,
 #'          fix = list(alpha = 0.88, beta = 0.88, lambda = 2.25,
 #'          gammap = 0.61, gamman = 0.69, tau = 1))
-#' 
 #' # View the model
-#' M
+#' M        # has a parameter `tau`
 #' 
-#' # Methods
+#' # Continuous responses/utility
+#' M <- cpt_c(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0,
+#'          data = dt,
+#'          fix = list(alpha = 0.88, beta = 0.88, lambda = 2.25,
+#'          gammap = 0.61, gamman = 0.69))
+#' # View the model
+#' M        # No parameter `tau`
+#' 
+#' # Methods ---------------------------------------------------
 #' predict(M, "value") # predict values, also: M$predict("value")
 #' predict(M, "mode") # predict choice probability after softmax
 #' summary(M)
 #' anova(M)
+NULL
+
+
+#' @name cpt
 #' @export
-cpt <- function(formula, data, choicerule, ref = 0L, fix = list(), weighting = c("TK1992"), value = c("TK1992"), options = NULL) {
+cpt_d <- function(formula, data, choicerule, ref = 0L, fix = list(), weighting = c("TK1992"), value = c("TK1992"), options = NULL) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args["editing"] <- "none"
+  .args["mode"] <- "discrete"
   return(do.call(what = Cpt$new, args = .args, envir = parent.frame()))
 }
 
-#' Prospect Theory Model with an Editing Step
-#' @describeIn cpt Prospect Theory with Memory
-#' 
-#' @param mem (optional, default: 0) A number, string, or RHS \link{formula}. Thr prior gains or losses in memory. Formula and string refer to variables in the data, and `mem = "myvar"`means `data$myvar` and so does `mem = ~myvar`.
-#' @param editing (optional, default: \code{"hedonic"}) A string, the editing rule to use (see Thaler & Johnson, 1999, pp. 645). Currently only \code{"hedonic"}.
-#' @references  Thaler, R. H., & Johnson, E. J. (1990). Gambling with the House Money and Trying to Break Even: The Effects of Prior Outcomes on Risky Choice. Management Science, 36(6), 643–-660. doi:[10.1287/mnsc.36.6.643](https://doi.org/10.1287/mnsc.36.6.643)
+#' @name cpt
 #' @export
-cpt_mem <- function(formula, mem, data, choicerule, editing = "hedonic", ... ) {
+cpt_c <- function(formula, data, ref = 0L, fix = list(), weighting = c("TK1992"), value = c("TK1992"), options = NULL) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
+  .args["editing"] <- "none"
+  .args["mode"] <- "continuous"
+  return(do.call(what = Cpt$new, args = .args, envir = parent.frame()))
+}
+
+#' @name cpt
+#' @export
+cpt_mem_d <- function(formula, mem, data, choicerule, editing = "hedonic", options = NULL) {
+  warning("Model is under active development an not tested! Don't use.")
+  .args <- as.list(rlang::call_standardise(match.call())[-1])
+  .args["mode"] <- "discrete"
+  return(do.call(what = Cpt$new, args = .args, envir = parent.frame()))
+}
+
+#' @name cpt
+#' @export
+cpt_mem_c <- function(formula, mem, data, editing = "hedonic", options = NULL) {
+  warning("Model is under active development an not tested! Don't use.")
+  .args <- as.list(rlang::call_standardise(match.call())[-1])
+  .args["mode"] <- "continuous"
   return(do.call(what = Cpt$new, args = .args, envir = parent.frame()))
 }
 
@@ -85,7 +134,7 @@ Cpt <- R6Class("cpt",
     wfun = NULL,
     vfun = NULL,
     efun = NULL,
-    initialize = function(formula, ref = 0L, mem = 0L, fix = NULL, data = NULL, choicerule = NULL, weighting = c("TK1992"), value = c("TK1992"), editing = c("hedonic"), options = list()) {
+    initialize = function(formula, ref = 0L, mem = 0L, fix = NULL, data = NULL, mode, choicerule = NULL, weighting = c("TK1992"), value = c("TK1992"), editing = c("hedonic"), options = list()) {
       # Ranges of parameters following these studiese
       # 1. International comparison study
       # Rieger, M. O., Wang, M., & Hens, T. (2017). Estimating cumulative prospect theory parameters from an international survey. Theory and Decision, 82, 567–596. doi:10.1007/s11238-016-9582-8
@@ -112,9 +161,9 @@ Cpt <- R6Class("cpt",
         formula = formula,
         data = data,
         fix = fix,
-        choicerule =  choicerule,
+        choicerule = choicerule,
         discount = 0L,
-        mode = "discrete",
+        mode = mode,
         options = c(options, list(solver = c("grid", "solnp"))),
         parspace = parspace       
         )
@@ -234,6 +283,9 @@ Cpt <- R6Class("cpt",
     check_input = function() {
       .check_probabilities(self = self)
       super$check_input() # don"t change this, it runs default checks!
+    },
+    make_prednames = function() {
+      return(self$stimnames)
     }
   )
 )

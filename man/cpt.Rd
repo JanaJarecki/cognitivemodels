@@ -2,10 +2,13 @@
 % Please edit documentation in R/model-cpt.R
 \name{cpt}
 \alias{cpt}
-\alias{cpt_mem}
+\alias{cpt_d}
+\alias{cpt_c}
+\alias{cpt_mem_d}
+\alias{cpt_mem_c}
 \title{Cumulative Prospect Theory Models}
 \usage{
-cpt(
+cpt_d(
   formula,
   data,
   choicerule,
@@ -16,39 +19,132 @@ cpt(
   options = NULL
 )
 
-cpt_mem(formula, mem, data, choicerule, editing = "hedonic", ...)
+cpt_c(
+  formula,
+  data,
+  ref = 0L,
+  fix = list(),
+  weighting = c("TK1992"),
+  value = c("TK1992"),
+  options = NULL
+)
+
+cpt_mem_d(formula, mem, data, choicerule, editing = "hedonic", options = NULL)
+
+cpt_mem_c(formula, mem, data, editing = "hedonic", options = NULL)
 }
 \arguments{
-\item{formula}{A \link{formula} such as \code{y ~ x1 + p1 + x2 | y1 + py + y2} specifying the columns in \code{data} that contain outcomes, probabilities and (optional) the observations. Lines (\code{|}) separate different gambles. The formula must alternate outcomes and probabilities (x + p + x2 + p2), the last probability can be omitted.}
+\item{formula}{A \link[stats:formula]{formula}, the variables in \code{data} to be modeled. For example, \code{y ~ x1 + p2 + x3 + p4 | x5 + p6 + x7 + p8} models response y as function of two stimuli with features x1, p2, x3, p4 and x5, p6, x7, p8, alternating outcomes \code{x} and probabilities \code{p} (respectively). Lines \code{|} separate stimuli.}
 
-\item{ref}{(optional, default: 0) A number, string, or RHS \link{formula}. The reference point. Formula and string set the reference point to variables in data, and \code{ref = "myvar"} means \code{data$myvar}, and so does \code{ref = ~ myvar}.}
+\item{data}{A data frame, the data to be modeled.}
 
-\item{weighting}{(optional) A string, the weighting function. Currently only \code{"KT1992"}, the value function in Kahneman & Tversky (1992), is implemented.}
+\item{ref}{(optional, default: 0) A number, string, or RHS \link[stats:formula]{formula}, the reference point or the variable in \code{data} that holds the reference point. For example \code{~ ref}.}
 
-\item{value}{(optional) A string, the value function. Currently, only \code{"KT1992"} the value function in Kahneman & Tversky (1992) is implemented.}
+\item{fix}{(optional) A list or the string \code{"start"}, the fixed model parameters, if missing all parameters are estimated. Model parameter names are \emph{\code{alpha}, \code{beta}, \code{gammap}, \code{gamman}, \code{lambda}} (see details - model parameters).
+\itemize{
+\item \code{list(alpha = 1.08)} sets parameter \emph{\code{alpha}} equal to 1.08.
+\item \code{list(alpha = "beta")} sets parameter \emph{\code{alpha}} equal to parameter \emph{\code{beta}} (estimates \emph{\code{beta}}).
+\item \code{list(beta = "alpha", alpha = 1.08)} sets parameter \emph{\code{beta}} equal to parameter \emph{\code{alpha}} and sets \emph{\code{alpha}} equal to 1.08 (estimates none of the two).
+\item \code{list(alpha = NA)} omits the parameter \emph{\code{alpha}}, if possible.
+\item \code{"start"} sets all parameters equal to their initial values (estimates none). Useful for building a first test model.
+}}
 
-\item{mem}{(optional, default: 0) A number, string, or RHS \link{formula}. Thr prior gains or losses in memory. Formula and string refer to variables in the data, and \code{mem = "myvar"}means \code{data$myvar} and so does \code{mem = ~myvar}.}
+\item{weighting}{(optional) A string, the weighting function. Currently only \code{"KT1992"}, the value function in Kahneman & Tversky (1992).}
 
-\item{editing}{(optional, default: \code{"hedonic"}) A string, the editing rule to use (see Thaler & Johnson, 1999, pp. 645). Currently only \code{"hedonic"}.}
+\item{value}{(optional) A string, the value function. Currently, only \code{"KT1992"}, the value function in Kahneman & Tversky (1992).}
+
+\item{options}{(optional) A list to change the parameter estimation process, see \code{\link[=cm_options]{cm_options()}} or the section Options below.}
+
+\item{mem}{(optional, default: 0) A number, string, or RHS \link[stats:formula]{formula}, the prior gains or losses in memory. Formula and string refer to variables in \code{data}, for example \code{~ xoutc}.}
+
+\item{editing}{(optional) A string, the editing rule to use (see Thaler & Johnson, 1999, pp. 645), currently only \code{"hedonic"}.}
 }
 \value{
-An object of class R6 holding the model, it has free parameters. A model object \code{M} can be viewed with \code{M}, choice or utility predictions can be made by \code{predict(M)}, also for new data by \verb{predict(M, newdata = ...}).
+Returns a cognitive model object, which is an object of class \href{Cm}{cm}. A model, that has been assigned to \code{m}, can be summarized with \code{summary(m)} or \code{anova(m)}. The parameter space can be viewed using \code{parspace(m)}, constraints can be viewed using \code{constraints(m)}.
 }
 \description{
-cpt_* fit a cumulative prospect theory.
+Fits cumulative prospect theory, CPT (Tversky & Kahneman, 1992).
 \itemize{
-\item \code{cpt()} fits cumulative prospect theory (Tversky & Kahneman, 1992)
-\item \code{cpt_mem()} fits cumulative prospect theory with memory (Thaler & Johnson, 1990)
+\item \code{cpt_d()} fits CPT for discrete responses = choices.
+\item \code{cpt_c()} fits CPT for continuous responses = utility values.
+\item \code{cpt_mem_d()} fits CPT with an editing step based on memory for discrete responses = choices (Thaler & Johnson, 1990).
+\item \code{cpt_mem_c()} fits CPT with an editing step based on memory for continuous responses = utility values (Thaler & Johnson, 1990).
 }
 }
 \details{
 Fits cumulative prospect theory.
-}
-\section{Functions}{
-\itemize{
-\item \code{cpt_mem}: Prospect Theory with Memory
-}}
+\subsection{Parameter Space}{
 
+The model has the following free parameters:
+\itemize{
+\item \emph{\strong{\code{alpha}}} the utility exponent for positive outcomes.
+\item \emph{\strong{\code{beta}}} the utility exponent for negative outcomes.
+\item \emph{\strong{\code{gammap}}} the probability distortion for positive outcomes.
+\item \emph{\strong{\code{gamman}}} the utility exponent for negative outcomes.
+\item \emph{\strong{\code{lambda}}} the loss aversion.
+\item In \code{cpt_d()} and \code{cpt_mem_d()}: If \code{choicerule = "softmax"}: \emph{\strong{\code{tau}}}  is the temperature or choice softness, higher values cause more equiprobable choices. If \code{choicerule = "epsilon"}: \emph{\strong{\code{eps}}} is the error proportion, higher values cause more errors from maximizing..
+}
+}
+
+\subsection{Options}{
+
+\verb{   } (Optional) Set \code{options} to fine-tune the parameter estimation
+process. The values listed below must be supplied in list. For example
+\code{options = list(lb = c(k = -10))} changes a lower parameter bound.
+
+\describe{
+\item{\verb{   }\code{lb}}{Named numeric vector, changes lower parameter bounds;
+\code{lb = c(k = -10)} lets parameter \emph{k} start at -10.}
+\item{\verb{   }\code{ub}}{Named numeric vector, changes upper parameter bounds:
+\code{ub = c(k = 10)} lets parameter \emph{k} go until 10.}
+\item{\verb{   }\code{start}}{Named numeric vector, changes parameter start
+values: \code{start = c(k = 5)} lets parameter \emph{k} start at 5.}
+\item{\verb{   }\code{fit}}{Logical (default \code{TRUE}), \code{fit = FALSE} disables
+parameter estimation. Useful for testing models.}
+\item{\verb{   }\code{fit_measure}}{A string (default \code{"loglikelihood"}), the
+\href{https://en.wikipedia.org/wiki/Goodness_of_fit}{goodness of fit}
+measure to be optimized during parameter estimation.
+Can be any value of \code{type} in \code{\link[cognitiveutils:gof]{cognitiveutils::gof()}}.
+Loglikelihood uses a binomial PDF in models with discrete
+data and a normal PDF for continuous data, \eqn{N(\mu, \sigma)}
+with  \eqn{\mu}=predictions, \eqn{\sigma}=constant,
+estimated as additional free paramter. Change the PDF using
+\code{fit_args = list(pdf = "...")}}
+\item{\verb{   }\code{fit_args}}{Named list, options for parameter estimation.
+Can be any
+argument to \code{\link[cognitiveutils:gof]{cognitiveutils::gof()}}. For example,
+\code{list(pdf = "truncnorm", a = 0, b = 1)} changes the PDF
+in the log likelihood to a truncated normal between 0 and 1,
+\code{list(pdf = "multinom")} changes it to a multinomial PDF.
+\code{list(grid_offset = .01)} offsets the parameter in a grid search
+by 0.01 from the parameter boundaries, \code{list(nsteps = 10)} defines
+10 steps for each parameter in the regular grid in the grid search.}
+\item{\verb{   }\code{fit_data}}{A data frame, the data to estimate the model parameters
+from. Needed if the data for the parameter estimation differs from
+the data in the main \code{data} argument in a model.}
+\item{\verb{   }\code{solver}}{A string, the optimizer for the parameter estimation. Run
+\code{cm_solvers()} to list all solvers. Can be \code{"grid"}, \code{"solnp"}
+\code{"optimx"}, \code{"nloptr"}, \code{"nlminb"} and others from \link{ROI}. Can be
+\code{c("grid", "xxx")}: a grid-plus-optimization: A grid search, followed
+by an optimization with xxx using the \emph{n}
+best solutions as start values in the optimization; the overal best
+parameter set wins; and \emph{n} can be set in \code{solver_args$nbest}
+Changing the solver may cause warnings and ignored parameter bounds.}
+\item{\verb{   }\code{solver_args}}{A named list, additional arguments passed directly
+to the solver function, see the pages of the solver to see which
+arguments the solver function has. For example:
+\code{list(offset = 0.01)} offset the parameters from their boundaries
+when \code{solver = "grid"}.
+\code{list(nsteps = 10)} uses 10 steps for each parameter in the regular
+grid, for \code{solver = "grid"}), \code{list(nbest = 3)} uses the 3 best
+parameter sets from the grid search as starting values in a
+grid-plus-optimization solver, for \code{solver = c("grid", "xxx")}.
+\code{list(control = )} control arguments in the solver
+\href{Rsolnp::solnp()}{solnp} and the
+\href{https://rdrr.io/cran/ROI/man/ROI_solve.html}{ROI solvers}}
+}
+}
+}
 \examples{
 ## From Tversky, A., & Kahneman, D. (1992).
 dt <- data.frame(
@@ -60,17 +156,27 @@ dt <- data.frame(
   y2 = 0,
   rp = 1)
 
-# Make the model, add fix parameters (don"t fit)
+# Make the model -------------------------------------------
+# add fix parameters (don't fit)
 # using the Parameter from the paper
-M <- cpt(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0,
+
+# Discrete responses with choicerule
+M <- cpt_d(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0,
          choicerule = "softmax", data = dt,
          fix = list(alpha = 0.88, beta = 0.88, lambda = 2.25,
          gammap = 0.61, gamman = 0.69, tau = 1))
-
 # View the model
-M
+M        # has a parameter `tau`
 
-# Methods
+# Continuous responses/utility
+M <- cpt_c(rp ~ x1 + px + x2 | y1 + py + y2, ref = 0,
+         data = dt,
+         fix = list(alpha = 0.88, beta = 0.88, lambda = 2.25,
+         gammap = 0.61, gamman = 0.69))
+# View the model
+M        # No parameter `tau`
+
+# Methods ---------------------------------------------------
 predict(M, "value") # predict values, also: M$predict("value")
 predict(M, "mode") # predict choice probability after softmax
 summary(M)
@@ -79,8 +185,19 @@ anova(M)
 \references{
 Tversky, A., & Kahneman, D. (1992). Advances in prospect theory: cumulative representation of uncertainty. Journal of Risk and Uncertainty, 5, 297–-323. doi:\href{https://doi.org/10.1007/BF00122574}{10.1007/BF00122574}
 
-Thaler, R. H., & Johnson, E. J. (1990). Gambling with the House Money and Trying to Break Even: The Effects of Prior Outcomes on Risky Choice. Management Science, 36(6), 643–-660. doi:\href{https://doi.org/10.1287/mnsc.36.6.643}{10.1287/mnsc.36.6.643}
+Thaler, R. H., & Johnson, E. J. (1990). Gambling with the House Money and Trying to Break Even: The Effects of Prior Outcomes on Risky Choice. Management Science, 36(6), 643--660. doi:\href{https://doi.org/10.1287/mnsc.36.6.643}{10.1287/mnsc.36.6.643}
+}
+\seealso{
+Other cognitive models: 
+\code{\link{baseline_const_c}()},
+\code{\link{bayes}()},
+\code{\link{choicerules}},
+\code{\link{ebm}()},
+\code{\link{hm1988}()},
+\code{\link{shortfall}},
+\code{\link{utility}}
 }
 \author{
 Jana B. Jarecki, \email{jj@janajarecki.com}
 }
+\concept{cognitive models}

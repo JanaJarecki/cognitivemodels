@@ -20,7 +20,7 @@ baseline_mean_d(formula, data, ...)
 
 \item{const}{A number, the value to predict.}
 
-\item{data}{A data frame.}
+\item{data}{A data frame, the data to be modeled.}
 
 \item{options}{(optional) A list to change the parameter estimation process, see \code{\link[=cm_options]{cm_options()}} or the section Options below.}
 }
@@ -124,9 +124,15 @@ npar(M)                            # 1 free parameter, the mean
 }
 \seealso{
 Other cognitive models: 
-\code{\link{Cm}},
 \code{\link{bayes}()},
-\code{\link{gcm}()},
+\code{\link{choicerules}},
+\code{\link{cpt}},
+\code{\link{ebm}()},
+\code{\link{hm1988}()},
+\code{\link{shortfall}},
 \code{\link{utility}}
+}
+\author{
+Jana B. Jarecki, \email{jj@janajarecki.com}
 }
 \concept{cognitive models}

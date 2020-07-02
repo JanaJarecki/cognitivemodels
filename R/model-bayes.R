@@ -9,37 +9,44 @@
 # ==========================================================================
 
 #' Bayesian Inference Cognitive Model
-#' 
+#' @name bayes
+#' @description
 #' `bayes()` fits a Bayesian cognitive model, updating beliefs about the probability of discrete event outcomes based on the frequencies of outcomes.
 #'   * `bayes_beta_c()` fits a model for 2 outcomes (beta-binomial) for continuous responses
 #'   * `bayes_beta_d()` fits a model for 2 outcomes (beta-binomial) for discrete responses
-#'   * `bayes_dirichlet_c()` fits a model for n outcomes (dirichlet-categorical/multinomial) for continuous responses
-#'   * `bayes_dirichlet_d()` fits a model for n outcomes (dirichlet-categorical/multinomial) for discrete responses
+#'   * `bayes_dirichlet_c()` fits a model for _n > 2_ outcomes (dirichlet-categorical/multinomial) for continuous responses
+#'   * `bayes_dirichlet_d()` fits a model for _n > 2_ outcomes (dirichlet-categorical/multinomial) for discrete responses
 #' 
 #' @useDynLib cognitivemodels, .registration = TRUE
 #' @importFrom gtools rdirichlet
 #' 
-#' @template cm
-#' @param formula A [formula](stats::formula), the variables in `data` to be modeled. For example, `y ~ heads + tails` models a response, `y`, based on events in the variables called `heads` and `tails`.
-#' @param format A string (default `"raw"`), the format of the events in `data`. Can be abbreviated. Allowed values:
-#'  * `"raw"` - event variables are binary occurrence indicators for each trial (e.g., 1, 0, 1, ..., where 1 means the event happened in this trial).
-#'  * `"cumulative"` - event variables are cumulative counts of events for each trial (e.g., 0, 1, 1, ..., counting how often the event happened up to this trial).
-#'  * `"count"` - event variables are sum counts of events after the trials, ignoring the order of events (e.g., 2, 10, ..., where 2 indicates that in this block the event occurred 2 times, in the next block 10 times).
+#' @eval .param_formula(2)
+#' @eval .param_fix("bayes_beta_d", dyn_args = "formula", which = 2)
+#' @param format (optional) A string,, the format the data to be modeled, can be abbreviated, default is `"raw"`; allowed values:
+#'  * `"raw"` means that the data are trial-by-trial binary occurrence indicators: 1, 0, 1, ... means the event happened in trial with a value of 1.
+#'  * `"cumulative"` means the data are trial-by-trial cumulative counts of events: 0, 1, 1, 2, ... counts how often the event happened up to the trial.
+#'  * `"count"` means the data are total events counts, ignoring the trial-by-trial order of events: 2, 10, ... means the event happened 2 times, then (starting from zero!) it happened 10 times.
 #' @param type (optional) A string, the type of inference, `"beta-binomial"` or `"dirichlet-multinomial"`. Can be abbreviated. Will be inferred, if missing.
 #' 
-#' @section Parameters:
-#' View the number of free parameters of a model `M` using `npar(M)` and the whole parameter space using `parspace(m)`. The model has n + 1 (n = number of events) free parameters, which are:
-#' * `delta` from 0 - 10 is the weight of one observation during learning, < 1 yields conservatism, > 1 yields liberal learning, and 1 is optimal Bayesian
-#' * n prior parameter named like the events, each from 0.001 - n, the prior parameter, aka. the hyperparameter of the prior belief distribution before trial 1. If they are constrainted to sum to n, n - 1 parameter are fit.
+#' @details
+#' The model models -- as response -- the belief about the occurrence of the first event in the `formula` as follows:
+#' * `y ~ x1` models the beliefe about event **x1 occurring** versus it not occurring.
+#' * `y ~ x1 + x2` models beliefs about **x1 versus x2** occurring.
+#' * `y ~ x1 + x2 + x3` models beliefs about x1, x2, and x3 occurring.
 #' 
-#' @author Jana B. Jarecki, Markus Steiner
-#' @references {Griffiths, T. L., & Yuille, A. (2008). Technical Introduction: A primer on probabilistic inference. In N. Chater & M. Oaksford (Eds.), \emph{The Probabilistic Mind: Prospects for Bayesian Cognitive Science (pp. 1 - 2)}. Oxford University Press. \url{https://doi.org/10.1093/acprof:oso/9780199216093.003.0002}}
-#' @references {Tauber, S., Navarro, D. J., Perfors, A., & Steyvers, M. (2017). Bayesian models of cognition revisited: Setting optimality aside and letting data drive psychological theory. \emph{Psychological Review, 124(4)}, 410 - 441. \url{http://dx.doi.org/10.1037/rev0000052}}
+#' ## Model Parameters
+#' The model has _n + 1_ (_n_ = number of events) free parameters, which are:
+#' * `delta` is the learning rate, it weights the observation during learning, value < 1 causes conservatism, > 1 causes liberal learning, and 1 is optimal Bayesian.
+#' * `x1, x2` (dynamic names) are the prior parameter, their names correspond to the right side of `formula`. Also known as the hyperparameter of the prior belief distribution before trial 1. If they are constrainted to sum to _n_ and _n_ - 1 parameter are estimated.
+#' * In `bayes_beta_d()` or `bayes_dirichlet_d()`: `r .rd_choicerules()`
 #' 
-#' @details The model models, as response variable, the belief about the occurrence of the first event in the `formula` as follows:
-#' * `y ~ a` models the beliefe about event a occurring (versus a not occurring)
-#' * `y ~ a + b` models beliefs about a occurring (versus b occurring)
-#' * `y ~ a + b + c` models beliefs about a, b, and c occurring
+#' @author Markus Steiner
+#' @template cm
+#' 
+#' @references 
+#' {Griffiths, T. L., & Yuille, A. (2008). Technical Introduction: A primer on probabilistic inference. In N. Chater & M. Oaksford (Eds.), \emph{The Probabilistic Mind: Prospects for Bayesian Cognitive Science (pp. 1 - 2)}. Oxford University Press. \url{https://doi.org/10.1093/acprof:oso/9780199216093.003.0002}}
+#' 
+#' {Tauber, S., Navarro, D. J., Perfors, A., & Steyvers, M. (2017). Bayesian models of cognition revisited: Setting optimality aside and letting data drive psychological theory. \emph{Psychological Review, 124(4)}, 410 - 441. \url{http://dx.doi.org/10.1037/rev0000052}}
 #' 
 #' 
 #' @examples 
@@ -92,14 +99,9 @@
 #' bayes(y ~ a + b, D, list(priorpar=c(1.5, 0.5)))     # -- (same) --
 #' bayes(y ~ a + b, D, c(a = 0.1, b=1.9))              # prior: b more likely
 #' bayes(y ~ a + b, D, list(priorpar = c(0.1, 1.9)))   # -- (same) --
-#' 
-#' @export
-bayes <- function(formula, data = data.frame(), fix = list(), format = c("raw", "count", "cumulative"), type = NULL, discount = 0L, options = list(), ...) {
-  .args <- as.list(rlang::call_standardise(match.call())[-1])
-  return(do.call(what = Bayes$new, args = .args, envir = parent.frame()))
-}
+NULL
 
-#' Bayesian Inference Cognitive Model
+
 #' @rdname bayes
 #' @export
 bayes_beta_c <- function(formula, data, fix = NULL, format = c("raw", "count", "cumulative"), ...) {
@@ -109,7 +111,7 @@ bayes_beta_c <- function(formula, data, fix = NULL, format = c("raw", "count", "
   return(do.call(what = Bayes$new, args = .args, envir = parent.frame()))
 }
 
-#' Bayesian Inference Cognitive Model
+
 #' @rdname bayes
 #' @export
 bayes_beta_d <- function(formula, data, fix = NULL, format = NULL, ...) {
@@ -118,7 +120,7 @@ bayes_beta_d <- function(formula, data, fix = NULL, format = NULL, ...) {
   return(do.call(what = Bayes$new, args = .args, envir = parent.frame()))
 }
 
-#' Bayesian Inference Cognitive Model
+
 #' @rdname bayes
 #' @export
 bayes_dirichlet_d <- function(formula, data, fix = NULL, format = NULL, ...) {
@@ -127,7 +129,7 @@ bayes_dirichlet_d <- function(formula, data, fix = NULL, format = NULL, ...) {
   return(do.call(what = Bayes$new, args = .args, envir = parent.frame()))
 }
 
-#' Bayesian Inference Cognitive Model
+
 #' @rdname bayes
 #' @export
 bayes_dirichlet_c <- function(formula, data, fix = NULL, format = NULL, ...) {
@@ -135,6 +137,14 @@ bayes_dirichlet_c <- function(formula, data, fix = NULL, format = NULL, ...) {
   .args[["mode"]] <- "continuous"
   return(do.call(what = Bayes$new, args = .args, envir = parent.frame()))
 }
+
+#' @rdname bayes
+#' @export
+bayes <- function(formula, data = data.frame(), fix = list(), format = c("raw", "count", "cumulative"), type = NULL, discount = 0L, options = list(), ...) {
+  .args <- as.list(rlang::call_standardise(match.call())[-1])
+  return(do.call(what = Bayes$new, args = .args, envir = parent.frame()))
+}
+
 
 Bayes <- R6Class("Bayes",
   inherit = Cm,

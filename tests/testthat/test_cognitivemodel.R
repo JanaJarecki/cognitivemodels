@@ -6,11 +6,10 @@
 
 # 1. Model predictions -----------------------------------------------------
 test_that("Bayesian - predictions", {
-  DC <- as.data.frame(apply(D, 2, cumsum)) # cumulative data
   expect_equiv <- function(data, x, target) {
     fp <- list(delta = 1, x=1, y=1, z=1, `I(1 - x)`=1, `I(1 - y)`=1)
     M <- cognitivemodel(data = data) +
-      bayes(~ x + y, fix = fp[1:3])
+      bayes_beta_d(~ x + y, fix = fp[1:3], choicerule = "none")
     expect_equivalent(M$predict(x), target)
   }
 
@@ -58,7 +57,7 @@ test_that("Bayesian + Utility - Predicted Values for 2 alternatives", {
   DC <- as.data.frame(apply(D, 2, cumsum)) # cumulative data
   fp <- list(delta = 1, x=1, y=1, z=1, `I(1 - x)`=1, `I(1 - y)`=1)
   m1 <- cognitivemodel(data = D) +
-    bayes_beta_c(~ x + y,fix = list(delta=1,x=1,y=1)) +
+    bayes_beta_c(~ x + y,fix = list(delta=1,x=1,y=1,sigma=0)) +
     utility_pow_c(y ~ x, fix = list(rp=NA,rn=NA)) + 
     function (pred, data, par) {
       y <- data$pr_x * pred

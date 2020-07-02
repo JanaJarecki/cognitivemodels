@@ -1,5 +1,4 @@
-#' @param data A data frame.
-#' @param formula A [formula](stats::formula), the variables in `data` to be modeled. For example, `y ~ x1 + x2 | z1 + z2` models the response `y` as function of one stimulus with features `x1`, `x2` and one stimulus with features `z1`, `z2`. Lines (`|`) separate different stimuli, plus (`+`) separate features within each stimulus.
+#' @param data A data frame, the data to be modeled.
 #' @param options (optional) A list to change the parameter estimation process, see [cm_options()] or the section Options below.
 #' @details
 #' ## Options
@@ -61,3 +60,4 @@
 #' @return
 #' Returns a cognitive model object, which is an object of class [cm](Cm). A model, that has been assigned to `m`, can be summarized with `summary(m)` or `anova(m)`. The parameter space can be viewed using `parspace(m)`, constraints can be viewed using `constraints(m)`.
 #' @family cognitive models
+#' @author Jana B. Jarecki, \email{jj@janajarecki.com}

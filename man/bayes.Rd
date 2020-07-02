@@ -8,17 +8,6 @@
 \alias{bayes_dirichlet_c}
 \title{Bayesian Inference Cognitive Model}
 \usage{
-bayes(
-  formula,
-  data = data.frame(),
-  fix = list(),
-  format = c("raw", "count", "cumulative"),
-  type = NULL,
-  discount = 0L,
-  options = list(),
-  ...
-)
-
 bayes_beta_c(
   formula,
   data,
@@ -32,17 +21,37 @@ bayes_beta_d(formula, data, fix = NULL, format = NULL, ...)
 bayes_dirichlet_d(formula, data, fix = NULL, format = NULL, ...)
 
 bayes_dirichlet_c(formula, data, fix = NULL, format = NULL, ...)
+
+bayes(
+  formula,
+  data = data.frame(),
+  fix = list(),
+  format = c("raw", "count", "cumulative"),
+  type = NULL,
+  discount = 0L,
+  options = list(),
+  ...
+)
 }
 \arguments{
-\item{formula}{A \href{stats::formula}{formula}, the variables in \code{data} to be modeled. For example, \code{y ~ heads + tails} models a response, \code{y}, based on events in the variables called \code{heads} and \code{tails}.}
+\item{formula}{A \link[stats:formula]{formula}, the variables in \code{data} to be modeled. For example, \code{y ~ x1 + x2} models response y as function of one stimulus with features x1, x2.}
 
-\item{data}{A data frame.}
+\item{data}{A data frame, the data to be modeled.}
 
-\item{format}{A string (default \code{"raw"}), the format of the events in \code{data}. Can be abbreviated. Allowed values:
+\item{fix}{(optional) A list or the string \code{"start"}, the fixed model parameters, if missing all parameters are estimated. Model parameter names depend on \code{formula} and can be \emph{\code{delta}, \code{x1}, \code{x2}} (see details - model parameters).
 \itemize{
-\item \code{"raw"} - event variables are binary occurrence indicators for each trial (e.g., 1, 0, 1, ..., where 1 means the event happened in this trial).
-\item \code{"cumulative"} - event variables are cumulative counts of events for each trial (e.g., 0, 1, 1, ..., counting how often the event happened up to this trial).
-\item \code{"count"} - event variables are sum counts of events after the trials, ignoring the order of events (e.g., 2, 10, ..., where 2 indicates that in this block the event occurred 2 times, in the next block 10 times).
+\item \code{list(x1 = 3.09)} sets parameter \emph{\code{x1}} equal to 3.09.
+\item \code{list(x1 = "x2")} sets parameter \emph{\code{x1}} equal to parameter \emph{\code{x2}} (estimates \emph{\code{x2}}).
+\item \code{list(x2 = "x1", x1 = 3.09)} sets parameter \emph{\code{x2}} equal to parameter \emph{\code{x1}} and sets \emph{\code{x1}} equal to 3.09 (estimates none of the two).
+\item \code{list(x1 = NA)} omits the parameter \emph{\code{x1}}, if possible.
+\item \code{"start"} sets all parameters equal to their initial values (estimates none). Useful for building a first test model.
+}}
+
+\item{format}{(optional) A string,, the format the data to be modeled, can be abbreviated, default is \code{"raw"}; allowed values:
+\itemize{
+\item \code{"raw"} means that the data are trial-by-trial binary occurrence indicators: 1, 0, 1, ... means the event happened in trial with a value of 1.
+\item \code{"cumulative"} means the data are trial-by-trial cumulative counts of events: 0, 1, 1, 2, ... counts how often the event happened up to the trial.
+\item \code{"count"} means the data are total events counts, ignoring the trial-by-trial order of events: 2, 10, ... means the event happened 2 times, then (starting from zero!) it happened 10 times.
 }}
 
 \item{type}{(optional) A string, the type of inference, \code{"beta-binomial"} or \code{"dirichlet-multinomial"}. Can be abbreviated. Will be inferred, if missing.}
@@ -57,11 +66,27 @@ Returns a cognitive model object, which is an object of class \href{Cm}{cm}. A m
 \itemize{
 \item \code{bayes_beta_c()} fits a model for 2 outcomes (beta-binomial) for continuous responses
 \item \code{bayes_beta_d()} fits a model for 2 outcomes (beta-binomial) for discrete responses
-\item \code{bayes_dirichlet_c()} fits a model for n outcomes (dirichlet-categorical/multinomial) for continuous responses
-\item \code{bayes_dirichlet_d()} fits a model for n outcomes (dirichlet-categorical/multinomial) for discrete responses
+\item \code{bayes_dirichlet_c()} fits a model for \emph{n > 2} outcomes (dirichlet-categorical/multinomial) for continuous responses
+\item \code{bayes_dirichlet_d()} fits a model for \emph{n > 2} outcomes (dirichlet-categorical/multinomial) for discrete responses
 }
 }
 \details{
+The model models -- as response -- the belief about the occurrence of the first event in the \code{formula} as follows:
+\itemize{
+\item \code{y ~ x1} models the beliefe about event \strong{x1 occurring} versus it not occurring.
+\item \code{y ~ x1 + x2} models beliefs about \strong{x1 versus x2} occurring.
+\item \code{y ~ x1 + x2 + x3} models beliefs about x1, x2, and x3 occurring.
+}
+\subsection{Model Parameters}{
+
+The model has \emph{n + 1} (\emph{n} = number of events) free parameters, which are:
+\itemize{
+\item \code{delta} is the learning rate, it weights the observation during learning, value < 1 causes conservatism, > 1 causes liberal learning, and 1 is optimal Bayesian.
+\item \verb{x1, x2} (dynamic names) are the prior parameter, their names correspond to the right side of \code{formula}. Also known as the hyperparameter of the prior belief distribution before trial 1. If they are constrainted to sum to \emph{n} and \emph{n} - 1 parameter are estimated.
+\item In \code{bayes_beta_d()} or \code{bayes_dirichlet_d()}: If \code{choicerule = "softmax"}: \emph{\strong{\code{tau}}}  is the temperature or choice softness, higher values cause more equiprobable choices. If \code{choicerule = "epsilon"}: \emph{\strong{\code{eps}}} is the error proportion, higher values cause more errors from maximizing.
+}
+}
+
 \subsection{Options}{
 
 \verb{   } (Optional) Set \code{options} to fine-tune the parameter estimation
@@ -120,23 +145,7 @@ grid-plus-optimization solver, for \code{solver = c("grid", "xxx")}.
 \href{https://rdrr.io/cran/ROI/man/ROI_solve.html}{ROI solvers}}
 }
 }
-
-The model models, as response variable, the belief about the occurrence of the first event in the \code{formula} as follows:
-\itemize{
-\item \code{y ~ a} models the beliefe about event a occurring (versus a not occurring)
-\item \code{y ~ a + b} models beliefs about a occurring (versus b occurring)
-\item \code{y ~ a + b + c} models beliefs about a, b, and c occurring
 }
-}
-\section{Parameters}{
-
-View the number of free parameters of a model \code{M} using \code{npar(M)} and the whole parameter space using \code{parspace(m)}. The model has n + 1 (n = number of events) free parameters, which are:
-\itemize{
-\item \code{delta} from 0 - 10 is the weight of one observation during learning, < 1 yields conservatism, > 1 yields liberal learning, and 1 is optimal Bayesian
-\item n prior parameter named like the events, each from 0.001 - n, the prior parameter, aka. the hyperparameter of the prior belief distribution before trial 1. If they are constrainted to sum to n, n - 1 parameter are fit.
-}
-}
-
 \examples{
 D <- data.frame(
   a = c(0,0,1,1,1),              # event A, e.g. coin toss "heads"
@@ -187,7 +196,6 @@ bayes(y ~ a + b, D, c(a=1.5, b=0.5))                # prior: a more likely
 bayes(y ~ a + b, D, list(priorpar=c(1.5, 0.5)))     # -- (same) --
 bayes(y ~ a + b, D, c(a = 0.1, b=1.9))              # prior: b more likely
 bayes(y ~ a + b, D, list(priorpar = c(0.1, 1.9)))   # -- (same) --
-
 }
 \references{
 {Griffiths, T. L., & Yuille, A. (2008). Technical Introduction: A primer on probabilistic inference. In N. Chater & M. Oaksford (Eds.), \emph{The Probabilistic Mind: Prospects for Bayesian Cognitive Science (pp. 1 - 2)}. Oxford University Press. \url{https://doi.org/10.1093/acprof:oso/9780199216093.003.0002}}
@@ -196,12 +204,17 @@ bayes(y ~ a + b, D, list(priorpar = c(0.1, 1.9)))   # -- (same) --
 }
 \seealso{
 Other cognitive models: 
-\code{\link{Cm}},
 \code{\link{baseline_const_c}()},
-\code{\link{gcm}()},
+\code{\link{choicerules}},
+\code{\link{cpt}},
+\code{\link{ebm}()},
+\code{\link{hm1988}()},
+\code{\link{shortfall}},
 \code{\link{utility}}
 }
 \author{
-Jana B. Jarecki, Markus Steiner
+Markus Steiner
+
+Jana B. Jarecki, \email{jj@janajarecki.com}
 }
 \concept{cognitive models}

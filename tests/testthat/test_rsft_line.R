@@ -1,7 +1,3 @@
-context("rsft_line")
-library(cogscimodels)
-
-
 # dt <- data.frame(x1 = rep(1,3), x2 = rep(2,3), px = rep(.5,3),
 #                 y1 = 0:2,      y2 = rep(3,3), py = rep(.5,3),
 #                 aspiration = rep(1,3),
@@ -43,15 +39,16 @@ library(cogscimodels)
 
 # shortfalltest <- rbindlist(lapply(c(2,5,14), prep))
 # save(shortfalltest, file="../../data/shortfalltest.RData")
-D <- data.frame(
+# Do tests
+test_that("Prediction identities", {
+  skip("skipping because under deveopment")
+  D <- data.frame(
     x1 = 0, x2 = 4, px = 0.5,
     y1 = 1, y2 =3, py = 0.5,
     s = 0,
     t = 1,
     nt = 1,
     b = 2)
-# Do tests
-test_that("Parameter estimates == estimates in paper", {
   model <- rsft_line(~ x1 + px + x2 + I(1-px) | y1 + py + y2 + I(1-py), states = ~s, trials = ~t, ntrials = ~nt, budget = ~b, data = D, choicerule = "softmax", fix = list(tau = .5))
   model$predict() 
 })

@@ -11,11 +11,12 @@
 
 #' Utility Function Models
 #' @description
-#'  `utility()` fits utility models. 
+#'  Fits utility models. 
 #' * `utility_pow_c()` fits a power utility for continuous responses.
 #' * `utility_pow_d()` fits a power utility for discrete respoonses.
 #' @name utility
 #' 
+#' @eval .param_formula(1)
 #' @template param-choicerule
 #' @param type (optional) A string, utility function, currently only `"power"` for power utility.
 #' @eval .param_fix("utility_pow_d")
@@ -28,14 +29,13 @@
 #' * _**`rp`**_ is the power utility exponent for positive data \eqn{x \ge} 0 (omitted if all \eqn{x <} 0). 
 #' * _**`rn`**_ is the exponent for negative data \eqn{x < 0} (omitted if all \eqn{x \ge} 0).
 #' * In `utility_pow_c()`: _**`sigma`**_ is the standard deviation of the normally-distributed loglikelihood of the responses.
-#' * In `utility_pow_d()`:  If `choicerule = "softmax"`: _**`tau`**_  is the temperature or choice softness, higher values cause more equiprobable choices. If `choicerule = "epsilon"`: _**`eps`**_ is the error proportion, higher values cause more errors from maximizing.
+#' * In `utility_pow_d()`: `r .rd_choicerules()`
 #' 
 #' @references {Wakker, P. P. (2008). Explaining the characteristics of the power (CRRA) utility family. \emph{Health Economics, 17(12)}, 1329-1344. doi:[10.1002/hec.1331](htrps://doi.org/10.1002/hec.1331)}
 #' 
 #' {Tversky, A. (1967). Utility theory and additivity analysis of risky choices. \emph{Journal of Experimental Psychology, 75(1)}, 27-36. doi:[10.1037/h0024915](htrp://dx.doi.org/10.1037/h0024915)}
 #' 
 #' @template cm
-#' @param formula A formula, the variables in data to be modeled. For example, `y ~ x | z` models the response `y` as function of a stimulus value `x` and `z`. Lines (|) separate stimuli.
 NULL
 
 

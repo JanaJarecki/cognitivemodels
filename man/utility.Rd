@@ -19,18 +19,19 @@ utility_pow_d(
 utility_pow_c(formula, data, fix = list(), discount = 0, options = list(), ...)
 }
 \arguments{
-\item{formula}{A formula, the variables in data to be modeled. For example, \code{y ~ x | z} models the response \code{y} as function of a stimulus value \code{x} and \code{z}. Lines (|) separate stimuli.}
+\item{formula}{A \link[stats:formula]{formula}, the variables in \code{data} to be modeled. For example, \code{y ~ x1} models response y as function of one stimulus value x1.}
 
-\item{data}{A data frame.}
+\item{data}{A data frame, the data to be modeled.}
 
-\item{choicerule}{(discrete responses only) A string, the choice rule.  \code{cm_choicerules()} shows the allowed values. \code{"none"} is no choice rule, \code{"softmax"} is \href{https://en.wikipedia.org/wiki/Softmax_function}{soft-maximum}, \code{"luce"} is \href{https://en.wikipedia.org/wiki/Luce\%27s_choice_axiom}{Luce's axiom}.}
+\item{choicerule}{A string, the choice rule. Allowed values, see  \code{cm_choicerules()}: \code{"none"} is no choice rule, \code{"softmax"} is \href{https://en.wikipedia.org/wiki/Softmax_function}{soft-maximum}, \code{"luce"} is \href{https://en.wikipedia.org/wiki/Luce\%27s_choice_axiom}{Luce's axiom}.}
 
-\item{fix}{(optional) A list or the string \code{"start"}, the model parameters that are fixed and not estimated. Model parameters are called \emph{\code{rp}, \code{rn}} (see details), if this argument is empty all parameters are estimated.
+\item{fix}{(optional) A list or the string \code{"start"}, the fixed model parameters, if missing all parameters are estimated. Model parameter names are \emph{\code{rp}, \code{rn}} (see details - model parameters).
 \itemize{
-\item \code{"start"} sets all parameters equal to their initial values (estimates none). Useful for building a first test model.
 \item \code{list(rp = 5.40)} sets parameter \emph{\code{rp}} equal to 5.40.
 \item \code{list(rp = "rn")} sets parameter \emph{\code{rp}} equal to parameter \emph{\code{rn}} (estimates \emph{\code{rn}}).
-\item \code{list(rn = "rp", rp = 5.40)} sets parameter \emph{\code{rp}} equal to parameter \emph{\code{rn}} and sets parameter \emph{\code{rn}} equal to 5.40 (estimates none of the two).
+\item \code{list(rn = "rp", rp = 5.40)} sets parameter \emph{\code{rn}} equal to parameter \emph{\code{rp}} and sets \emph{\code{rp}} equal to 5.40 (estimates none of the two).
+\item \code{list(rp = NA)} omits the parameter \emph{\code{rp}}, if possible.
+\item \code{"start"} sets all parameters equal to their initial values (estimates none). Useful for building a first test model.
 }}
 
 \item{options}{(optional) A list to change the parameter estimation process, see \code{\link[=cm_options]{cm_options()}} or the section Options below.}
@@ -41,7 +42,7 @@ utility_pow_c(formula, data, fix = list(), discount = 0, options = list(), ...)
 Returns a cognitive model object, which is an object of class \href{Cm}{cm}. A model, that has been assigned to \code{m}, can be summarized with \code{summary(m)} or \code{anova(m)}. The parameter space can be viewed using \code{parspace(m)}, constraints can be viewed using \code{constraints(m)}.
 }
 \description{
-\code{utility()} fits utility models.
+Fits utility models.
 \itemize{
 \item \code{utility_pow_c()} fits a power utility for continuous responses.
 \item \code{utility_pow_d()} fits a power utility for discrete respoonses.
@@ -56,7 +57,7 @@ The model has between 1 and 3 free parameters, depending on model and \code{data
 \item \emph{\strong{\code{rp}}} is the power utility exponent for positive data \eqn{x \ge} 0 (omitted if all \eqn{x <} 0).
 \item \emph{\strong{\code{rn}}} is the exponent for negative data \eqn{x < 0} (omitted if all \eqn{x \ge} 0).
 \item In \code{utility_pow_c()}: \emph{\strong{\code{sigma}}} is the standard deviation of the normally-distributed loglikelihood of the responses.
-\item In \code{utility_pow_d()}:  If \code{choicerule = "softmax"}: \emph{\strong{\code{tau}}}  is the temperature or choice softness, higher values cause more equiprobable choices. If \code{choicerule = "epsilon"}: \emph{\strong{\code{eps}}} is the error proportion, higher values cause more errors from maximizing.
+\item In \code{utility_pow_d()}: If \code{choicerule = "softmax"}: \emph{\strong{\code{tau}}}  is the temperature or choice softness, higher values cause more equiprobable choices. If \code{choicerule = "epsilon"}: \emph{\strong{\code{eps}}} is the error proportion, higher values cause more errors from maximizing.
 }
 }
 
@@ -129,9 +130,15 @@ grid-plus-optimization solver, for \code{solver = c("grid", "xxx")}.
 }
 \seealso{
 Other cognitive models: 
-\code{\link{Cm}},
 \code{\link{baseline_const_c}()},
 \code{\link{bayes}()},
-\code{\link{gcm}()}
+\code{\link{choicerules}},
+\code{\link{cpt}},
+\code{\link{ebm}()},
+\code{\link{hm1988}()},
+\code{\link{shortfall}}
+}
+\author{
+Jana B. Jarecki, \email{jj@janajarecki.com}
 }
 \concept{cognitive models}

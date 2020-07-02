@@ -84,9 +84,9 @@ Cm <- R6Class(
     parnames = list(),    
     #' @field stimnames Stimuli names
     stimnames = character(),
-    #' @field prednames Predictio names
+    #' @field prednames Prediction column names if > 1 prediction
     prednames = character(),
-    #' @field mode A string the modality of the predicted responses "\code{continuous}"" or "\code{discrete}"
+    #' @field mode A string the modality of the predicted responses `"continuous"` or `"discrete"`
     mode = NULL,
     #' @field choicerule A string with the choicerule that the model uses (e.g. "\code{softmax}"")
     choicerule = NULL, 
@@ -100,13 +100,14 @@ Cm <- R6Class(
     fitobj = NULL,
     #' @field options A list with options
     options = list(),
-    #' @field pass_checks A logical if \code{TRUE} the model passes all internal checks
+    #' @field pass_checks A logical, `TRUE` means the model passes all internal checks
     pass_checks = FALSE,
     # this is for testing purposes
     # make_prediction = NA,
 
     #' @description
     #' Initializes a new model
+    #' @noRd
     initialize = function(formula, data = NULL, parspace = make_parspace(), fix = NULL, choicerule = if (grepl("^c", mode)) { "none" } else { NULL }, title = NULL, discount = NULL, mode = NULL, options = NULL) {
       # store the call, this is ugly code, fixme
       self$call  <- if (deparse(sys.call()[[1L]]) == "super$initialize") {
@@ -126,7 +127,7 @@ Cm <- R6Class(
       private$init_par(parspace=parspace, fix=fix, options=options, mode=mode)
       private$init_stimnames()
       private$init_prednames()
-      private$init_options(options = options)
+      private$init_options(options = options, mode = mode)
 
       # Checks
       # ! after setting formula, parspace, choicerule, etc.
@@ -145,10 +146,14 @@ Cm <- R6Class(
     #' @param measure (optional) A string with the goodness-of-fit measure that the solver optimizes (e.g. \code{"loglikelihood"}). Possible values, see the \code{type} argument in \link[cognitiveutils]{gof}
     #' @param ... other arguments
     fit = function(solver = self$options$solver, measure = self$options$fit_measure, ...) {
+      solver <- .check_and_match_solver(solver = solver)
+
       message("Fitting free parameters ",
           .brackify(self$parnames$free2),
-          " by ", ifelse(grepl("loglikelihood|accuracy", self$options$fit_measure), "maximizing ", "minimizing "), self$options$fit_measure, " with ", paste(self$options$solver, collapse=", "))
-      solver <- .check_and_match_solver(solver = solver)
+          " by ", ifelse(grepl("loglikelihood|accuracy", measure), "maximizing ", "minimizing "), measure,
+          if (measure=="loglikelihood") paste0(" (", self$options$fit_args$pdf, " pdf)"),
+          " with ", paste(solver, collapse=", "), ".")
+      
       constraints <- .simplify_constraints(self$constraints)
 
       if (solver[1] == "grid") {
@@ -221,11 +226,10 @@ Cm <- R6Class(
 
       # And we apply the choice rule if needed
       type <- try(match.arg(type, c("response", "value")), silent = TRUE)
-      # fixme: ugly hack to allow for more types than the two
+      # fixme: a hack to allow for more types than the two
       if (inherits(type, "try-error")) { type <- "response" }
-      RES <- switch(type,
-        value = RES,
-        response = private$apply_choicerule(RES))
+      if (type == "response") RES <- private$apply_choicerule(RES)
+
       return(drop(RES))
     },
     
@@ -250,9 +254,9 @@ Cm <- R6Class(
       if (missing(data) || is.null(data) || length(data) == 0) {
         data <- data.frame()
       } else if (!inherits(data, "data.frame")) {
-        stop("'data' must be a data.frame, but is a ", class(data)[1], ifelse(is.vector(data), " vector ", ""), "", .brackify(data), ".",
+        stop("'data' must be a data.frame, but is a ", class(data)[1], ifelse(is.vector(data), " vector ", ""), ". Check 'data'.",
         "\n  * Do you need to re-format your data?",
-        "\n  * Did you forget to name the argument (data = ...) in the model?")
+        "\n  * Did you forget to name the argument name (data = ...) in the model?")
 
       } 
       formula         <- self$formula
@@ -340,8 +344,8 @@ Cm <- R6Class(
       if (discount == TRUE) {
         pred[self$discount, ] <- NA
       }
-      options <- c(list(...), self$options$fit_args)
-      options <- options[!duplicated(names(options)) & !grepl("n", names(options))]
+      .args <- c(list(...), self$options$fit_args)
+      .args <- .args[!duplicated(names(.args)) & !grepl("n", names(.args))]
 
       .args <- c(
         list(
@@ -354,15 +358,14 @@ Cm <- R6Class(
           sigma = if (self$mode == "continuous" & type == "loglikelihood") {
                 self$get_par()["sigma"] }
           ),
-          options
+          .args
         )
+
       gof <- try(do.call(cognitiveutils::gof, args = .args, envir = parent.frame()), silent = TRUE)
       if (inherits(gof, "try-error")) {
-        stop("Can't compute the goodness of fit ", type, ", because:\n  ", geterrmessage(),
-          call.= FALSE)
-      } else {
-        return(gof)
+        stop("Can't compute the goodness of fit ", type, ", because:\n  ", geterrmessage(), call.= FALSE)
       }
+      return(gof)
     },
 
     #' @description
@@ -629,7 +632,7 @@ Cm <- R6Class(
 
     # INITIALIZE METHODS
     # -------------------------------------------------------------------------
-    init_parspace = function(p, choicerule, options = list(), mode, addpar = TRUE) {
+    init_parspace = function(p, choicerule, options = list(), mode = self$mode, addpar = TRUE) {
       private$init_mode(mode)
 
       if (length(choicerule) & addpar == TRUE) {
@@ -639,16 +642,12 @@ Cm <- R6Class(
           p <- rbind(p, make_parspace(eps = c(0.001, 1L, 0.2, NA)))
         }
       }
-      if (self$mode == "continuous" & !length(options) & addpar == TRUE) {
-        options <- do.call(cm_options, options[!duplicated(names(options))])
-        if (options$fit_measure == "loglikelihood") {
-          if (!is.null(self$res)) {
-            rg <- max(self$res) - min(self$res)
-            sigma_par <- make_parspace(sigma = c(0, rg, rg/2, NA))
-          }
-          if (!"sigma" %in% rownames(p)) {
-            p <- rbind(p, sigma_par)
-          } 
+      options <- private$init_options(options)
+      if (mode == "continuous" & addpar == TRUE) {
+        if (options$fit_measure=="loglikelihood" & !"sigma" %in% rownames(p)) {
+          rg <- 1
+          if (length(self$res)) rg <- max(self$res) - min(self$res)
+          p <- rbind(p, make_parspace(sigma = c(0, rg, rg/2, NA)))
         }
       }
       
@@ -735,32 +734,36 @@ Cm <- R6Class(
     init_stimnames = function() {
       self$stimnames <- abbreviate(private$make_stimnames(), minlength = 1, use.classes = FALSE)
     },
-    init_prednames = function() {
+    init_prednames = function(mode = self$mode) {
       self$prednames <- paste("pr", abbreviate(private$make_prednames(), minlength = 1), sep="_")
     },
-    init_options = function(options = list(), ...) {
-      .args   <- list(...)
-      .args   <- if (length(.args)) { c(options, .args) } else { options }
+    init_options = function(options = list(), mode = self$mode, ...) {
+      .args   <- c(options, list(...))
       .args   <- .args[!duplicated(names(.args))]
+
       solver  <- .check_and_match_solver(.args$solver)
       if (length(solver)) {
         if(solver[1] == "grid" & length(solver) > 1L) {
-          npar <- self$npar("free")
-          if (!length(.args$solver_args$nbest)) {
-            .args$solver_args$nbest <- npar
-          }  
+          S  <- .args$solver_args
+          np <- self$npar("free")
           ub <- private$get_ub("free")
           lb <- private$get_lb("free")
-          ## offset, scales logistically from super small to 10% of the range of each parameter
-          if (!length(.args$solver_args$offset))
-            .args$solver_args$offset <- as.list(0.10 / (1 + exp(-(ub - lb))))
-          ## make the steps exponentially bigger with the parameter range
-          if (!length(.args$solver_args$nsteps)) {
-            .args$solver_args$nsteps <- round(pmax(log(ub - lb) * 2, 3) * max(1, log(npar)))
-          }
+          if (!length(S$nbest))  S$nbest  <- np
+          if (!length(S$offset)) S$offset <- as.list(0.10/(1 + exp(-(ub-lb))))
+          if (!length(S$nsteps)) S$nsteps <- round(pmax(log(ub-lb)*2,3)*max(1,log(np)))
+          .args$solver_args <- S
         }
       }
-      self$options <- do.call(cm_options, args = as.list(.args))
+
+      .args <- do.call(cm_options, args = as.list(.args))
+
+      if (.args$fit_measure == "loglikelihood" & !length(.args$fit_args$pdf)) {
+        if (mode == "continuous") pdf <- "normal"
+        if (mode == "discrete") pdf <- ifelse(self$nres==1, "binomial", "multinomial")
+        .args$fit_args$pdf <- pdf
+      }
+
+      self$options <- .args
     },
 
     # FIT FUNCTIONS
@@ -871,12 +874,9 @@ Cm <- R6Class(
       }
       return(sn)
     },
-    make_prednames = function() {
-      if (self$mode == "discrete") {
-        return(self$stimnames)
-      } else {
-        return(.lhs_var(self$formula))
-      }
+    make_prednames = function(nres = max(1, self$nres), nstim = max(1, self$nstim)) {
+      if (self$mode == "continuous") return(self$stimnames)
+      if (self$mode == "discrete") return(.lhs_var(self$formula))
     },
     make_pargrid = function(offset = NULL, nsteps = NULL,  par = NULL, ...) {
       if (is.null(offset)) offset <- self$options$solver_args$offset

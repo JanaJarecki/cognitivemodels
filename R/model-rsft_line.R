@@ -9,7 +9,7 @@
 # ==========================================================================
 
 
-#' Shortfall Risky Choice Model
+#' Line risk-sensitive foraging model
 #' 
 #' shortfall(formula, data)
 #' 
@@ -28,6 +28,7 @@
 #' @author Jana B. Jarecki, \email{jj@janajarecki.com}
 #' @examples
 #' # None yet
+#' @noRd
 #' @export
 rsft_line <- function(formula, trials, states, budget, ntrials, data, fix = list(), choicerule, options) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])

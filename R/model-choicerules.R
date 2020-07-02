@@ -5,52 +5,59 @@
 # ==========================================================================
 
 # ==========================================================================
-# Cognitive Model
+# Cognitive Model only for Choicerules
 # ==========================================================================
 
-#' Models for Choice Rules (decision rules for action selection)
+#' Choicerule Models (action-selection rules)
 #' 
-#' \code{softmax()} soft-maximizes, \code{argmax()} maximizes deterministically, \code{epsilon_greedy()} is epsilon-greedy, \code{epsilon()} is probabilistic-epsilon, \code{luce()} selects proportionally (Luce's rule).
+#' @name choicerules
+#' @description
+#' Models discrete action selection: applies a choce rule/decision rule/action selection rule to select among values.
+#' * `softmax()` fits a soft-maximum = soft approximation to argmax (Sutton & Barto, 2018).
+#' * `epsilon_greedy()` fits epsilon-greedy.
+#' * `epsilon()` fits probabilistic-epsilon.
+#' * `argmax()` maximizes deterministically.
+#' * `luce()` selects proportionally (Luce's rule aka Luce's axiom, Luce, 1959).
 #' 
 #' @importFrom cognitiveutils cr_softmax
 #' @importFrom cognitiveutils cr_epsilon
 #' @importFrom cognitiveutils cr_argmax
 #' @importFrom cognitiveutils cr_luce
 #' 
-#' @inheritParams Cm
-#' @rdname choicerules
-#' @param formula A \code{\link{formula}} like responses ~ action-values (e.g.,  \code{y ~ a | b}). \emph{Note}, that bars (\code{|}) separate different actions.
+#' @eval .param_formula(c(1,1))
+#' @eval .param_fix("softmax")
 #' 
-#' @return An object of class R6 holding a model.
+#' @details
+#' This is how the model predicts and treats observations:
+#' * For `formula = y ~ x1` and `y ~ x1 | x2` it predicts the probability to **select x1**, thus `y = 1` must mean select x1.
+#' * For `formula = y ~ x1 | x2 | x3` it predicts three columns, the probabilities to select x1, x2, and x3, respectively.
 #' 
-#' @author Jana B. Jarecki
+#' ## Model Parameters
+#' Most models have no free parameters, except softmax and epsilon greedy which have 1 free parameter each:
+#'  * In `softmax()`: _**`tau`**_: the softness of the choices, high values cause more equiprobable choices.
+#'  * In `epsilon()` and `epsilon_greedy()`: _**`eps`**_: the error proportion of the choices, high values cause more errors.
 #' 
-#' @section Parameter Space:
-#' \tabular{llrcllr}{\tab \verb{   }\strong{Name} \tab \verb{    }\strong{LB} \tab  \strong{-} \tab \strong{UB}\verb{    } \tab \strong{Description} \tab \strong{Start Value}\cr
-#' \code{softmax()} \tab \verb{   }\code{tau} \tab  0.0001 \tab  - \tab  10 \tab  Temparature, small \code{tau} yields maximizing, high yields randomizing \tab  1\cr
-#' \code{epsilon()} \tab \verb{   }\code{eps} \tab  0 \tab  - \tab  1 \tab  Exploration probability; small \code{eps} yields original input, high yields randomizing \tab  0.5 \cr
-#' \code{epsilon_greedy()} \tab \verb{   }\code{eps} \tab  0 \tab  - \tab  1 \tab  Exploration probability; small \code{eps} yields maximizing, high yields randomizing \tab  0.5
-#' }
+#' ## Background
+#' `epsilon()` picks action \eqn{i} with probability \eqn{(1 - \epsilon)*p(i)} and with \eqn{\epsilon} it picks randomly from all actions. For \eqn{\epsilon = 0} it gives \eqn{p(i)}, that is the  original probabilistic policy.
 #' 
-#' @details This is how the model predicts and treats observations:
-#' \itemize{
-#'    \item{For \code{y ~ a} it predicts 1 response column (\code{pred_a}) and interprets observations in \code{y} as \emph{0 = \bold{not}-a}, \emph{1 = a}}
-#'    \item{For \code{y ~ a | b} it predicts 2 response columns (\code{pred_a, pred_b}) and interprets observations in \code{y} as \emph{0 = a}, \emph{1 = b}}
-#' \item{For \code{y ~ a | b | c} it predicts 3 response columns (\code{pred_a, pred_b, pred_c}) and interprets observations in \code{y} as \emph{0 = a}, \emph{1 = b}, \emph{2 = c}}
-#' \item{etc.}
-#' }
+#' `epsilon_greedy()` picks the best action with probability \eqn{1 - \epsilon}, and with \eqn{\epsilon} it picks randomly from all actions, including the best.
 #' 
-#' \code{softmax()} picks action \eqn{i} with \eqn{exp[v(i)]/\tau / \sum exp[v]/\tau}. It equals a logistic action selection for binary actions and \eqn{\tau=1}.
+#' `argmax()` picks the highest-valued action with probability 1, and in case of ties it picks equiprobable.
 #' 
-#' @family Choicerules for cognitive models
+#' `luce()` picks action \eqn{i} with probability \eqn{v(i) / \sum v}.
 #' 
-#' @references Sutton, R. S., & Barto, A. G. (2018). \emph{Reinforcement Learning: An Introduction (2nd Ed.)}. MIT Press, Cambridge, MA. \url{http://incompleteideas.net/book/the-book-2nd.html}
-#' @references Luce, R. D. (1959). On the possible psychophysical laws. \emph{Psychological Review, 66(2)}, 81-95. \url{https://doi.org/10.1037/h0043178}
+#' 
+#' @references 
+#' Sutton, R. S., & Barto, A. G. (2018). \emph{Reinforcement Learning: An Introduction (2nd Ed.)}. MIT Press, Cambridge, MA. [http://incompleteideas.net/book/the-book-2nd.html]
+#' 
+#' Luce, R. D. (1959). On the possible psychophysical laws. \emph{Psychological Review, 66(2)}, 81-95. doi:[10.1037/h0043178](https://doi.org/10.1037/h0043178)
+#' 
+#' @template cm
 #' 
 #' @examples
 #' # Make some fake data
-#' D <- data.frame(a = c(.3,.4,.5),       # value of option A
-#'                 b = c(.7,.6,.5),       # value of option B
+#' D <- data.frame(a = c(.3,.8,.5),       # value of option A
+#'                 b = c(.7,.2,.5),       # value of option B
 #'                 y = c(0,1,1))          # respondent's choice (0=A, 1=B)
 #' 
 #' M <- softmax(y ~ a | b, D, c(tau=1))   # creates soft-max model w tau=1
@@ -66,17 +73,24 @@
 #' logLik(M)                              # log likelihood
 #' 
 #' 
-#' ### Parameter specification and fitting
-#' # -------------------------------------
+#' ### Parameter specification and fitting ---------------------------------
 #' softmax(y ~ a | b, D, fix="start")     # fix 'tau' to its start value
 #' softmax(y ~ a | b, D, fix=c(tau=0.2))  # fix 'tau' to 0.2
 #' softmax(y ~ a | b, D)                  # fit 'tau' to data y in D
 #' 
 #' 
-#' ### The different choice rules
-#' # -----------------------------------
+#' ### The different choice rules ------------------------------------------
 #' softmax(y ~ a | b, D,  fix=c(tau=0.5)) # fix 'tau' to 0.5
 #' softmax(y ~ a | b, D)                  # fit 'tau' to y
+#' epsilon_greedy(y~a | b, D, c(eps=0.1)) # fix 'eps' to 10 %
+#' epsilon_greedy(y~a | b, D )            # fit 'eps' to y
+#' epsilon(y ~ a | b, D, c(eps=0.1))      # fix 'eps' to 0.1
+#' epsilon(y ~ a | b, D)                  # fit 'eps' to y
+#' luce(y ~ a | b, D)                     # Luce's choice rule, 0 parameter
+#' argmax(y ~ a | b, D)                   # Argmax choice rule, 0 parameter
+NULL
+
+#' @name choicerules
 #' @export
 softmax <- function(formula, data, fix = list(), options = NULL) {
   .args <- as.list(match.call()[-1])
@@ -84,15 +98,8 @@ softmax <- function(formula, data, fix = list(), options = NULL) {
    return(do.call(what = Choicerule$new, args = .args, envir = parent.frame()))
 }
 
-#' Models for Choice Rules (decision rules for action selection)
-#' 
-#' @rdname choicerules
-#' @family Choicerules for cognitive models
-#' @details
-#' \code{epsilon_greedy()} picks the best action with probability \eqn{1 - \epsilon}, and with \eqn{\epsilon} it picks randomly from all actions, including the best.
-#' @examples
-#' epsilon_greedy(y~a | b, D, c(eps=0.1)) # fix 'eps' to 10 %
-#' epsilon_greedy(y~a | b, D )            # fit 'eps' to y
+
+#' @name choicerules
 #' @export
 epsilon_greedy <- function(formula, data, fix = list(), options = NULL) {
   .args <- as.list(match.call()[-1])
@@ -100,16 +107,8 @@ epsilon_greedy <- function(formula, data, fix = list(), options = NULL) {
    return(do.call(what = Choicerule$new, args = .args, envir = parent.frame()))
 }
 
-#' Models for Choice Rules (decision rules for action selection)
-#' 
-#' @inheritParams softmax
-#' @rdname choicerules
-#' @family Choicerules for cognitive models
-#' @details
-#' \code{epsilon()} picks action \eqn{i} with probability \eqn{(1 - \epsilon)*p(i)} and with \eqn{\epsilon} it picks randomly from all actions. For \eqn{\epsilon = 0} it gives \eqn{p(i)}, that is the  original probabilistic policy.
-#' @examples
-#' epsilon(y ~ a | b, D, c(eps=0.1))      # fix 'eps' to 0.1
-#' epsilon(y ~ a | b, D)                  # fit 'eps' to y
+
+#' @name choicerules
 #' @export
 epsilon <- function(formula, data, fix = list(), options = NULL) {
   .args <- as.list(match.call()[-1])
@@ -117,14 +116,7 @@ epsilon <- function(formula, data, fix = list(), options = NULL) {
    return(do.call(what = Choicerule$new, args = .args, envir = parent.frame()))
 }
 
-#' Models for Choice Rules (decision rules for action selection)
-#' 
-#' @rdname choicerules
-#' @family Choicerules for cognitive models
-#' @details
-#' \code{luce()} picks action \eqn{i} with probability \eqn{v(i) / \sum v}.
-#' @examples
-#' luce(y ~ a | b, D)                     # Luce's choice rule
+#' @name choicerules
 #' @export
 luce <- function(formula, data, ...) {
   .args <- as.list(match.call()[-1])
@@ -133,20 +125,15 @@ luce <- function(formula, data, ...) {
 }
 
 
-#' Models for Choice Rules (decision rules for action selection)
-#' 
-#' @rdname choicerules
-#' @family Choicerules for cognitive models
-#' @details
-#' \code{argmax()} picks the highest-values action with probability 1, and in case of ties it picks equi-probable
-#' @examples
-#' argmax(y ~ a | b, D)                    # Argmax choice rule
+
+#' @name choicerules
 #' @export
 argmax <- function(formula, data, ...) {
   .args <- as.list(match.call()[-1])
   .args[["type"]] <- "argmax"
    return(do.call(what = Choicerule$new, args = .args, envir = parent.frame()))
 }
+
 
 
 #' @noRd
@@ -200,7 +187,8 @@ Choicerule <- R6Class("choicerule",
       res <- do.call(what = fun, args = .args, envir = parent.frame())
       res <- matrix(res, nrow = dim(D)[1])
       colnames(res) <- paste0("pr_", private$get_stimnames())
-      return(res[, 1:ncol(res)])
+      nn <- ifelse(ncol(res) <= 2, 1, ncol(res))
+      return(res[, 1:nn])
     }
   )
 )

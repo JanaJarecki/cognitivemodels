@@ -10,41 +10,89 @@
 
 
 #' Shortfall Risky Choice Model
-#' 
-#' shortfall(formula, data)
+#' @name shortfall
+#' @description
+#' Fits the shortfall model for risky choices and judgments (Andraszewicz, 2014).
+#' * `shortfall_d()` fits the shortfall model for discrete responses (select option).
+#' * `shortfall_c()` fits the shortfall model for continuous responses (judge options). 
 #' 
 #' @importFrom stringr str_extract
 #' @importFrom Rcpp sourceCpp
 #' 
-#' @description Fits the shortfall model, a cognitive model for risky choices. It trades off a risky option's expected value with a \eqn{\beta}-weighted measure of risk; risk being the chance of falling short of a \eqn{\delta}-weighted aspiration level (based on Andraszewicz, von Helversen, and Rieskamp). Model inputs are the risky options and the aspiration level. The value \eqn{v} of option \eqn{o}, with free parameters \eqn{\delta, \beta}, is
+#' @eval .param_formula(c(4,4), risky = TRUE)
+#' @eval .param_fix("shortfall_d")
+#' @param asp A [formula][stats::formula] or a string, the variable in `data` with the aspiration level. For example, `~ x9` or `"x9"`. Can be stimulus-specific: for example `~ x9 | x10` sets x9, x10 as aspiration levels for the 1. and 2. stimulus (respectively).
+#'
+#' @references
+#' {Andraszewicz, S. (2014). Quantitative analysis of risky decision making in economic environments \(Doctoral dissertation, University of Basel\). doi:10.5451/unibas-006268585 }
+#'
+#'  
+#' @details
+#' The model trades off the expected value of a risky option with a \eqn{\beta}-weighted measure of the risk of the option. Risk is defined as the chance of falling short of a \eqn{\delta}-weighted aspiration level (see Andraszewicz, 2014). Model inputs are the risky options and the aspiration level. The subjective value \eqn{v} of option \eqn{o} given parameters \eqn{\delta, \beta} is modeled by
 #' \deqn{v(o) = EV(o) - \beta R(o)}
-#' \deqn{R(o) = \sum_i ( p_i ( max [ \delta asp_{o} - out_{o,i} , 0 ] ),}
-#' where the parameter \eqn{\beta} represents risk aversion (\eqn{0 \le \beta \le 15}), the parameter \eqn{\delta} represents weight of the aspiration level (\eqn{0 \le \delta \le 1}).
+#' \deqn{R(o) = \sum_i ( p_i ( max [ \delta asp_{o} - x_{o,i} , 0 ] )}.
 #' 
-#' @param formula A \link{formula} defining the observations and stimuli in data. Stimuli are defined by outcomes and probabilities, separated by a pipe (\code{|}), like this: \code{mode ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py)}, where x1 and x2 are the first option's outcomes, px is the probability Pr(x1), y1 and y2 are the second option's outcomes, and py is the probability Pr(y1).
-#' @param asp A \link{formula} defining the aspiration level in data, e.g., (\code{~aspirlev}), strings will be reformulated.
-#' @inheritParams Cm
-#' @references { Andraszewicz, S. (2014). Quantitative analysis of risky decision making in economic environments \(Doctoral dissertation, University of Basel\). doi:10.5451/unibas-006268585 }
-#' @return An object of class R6 holding the model, it has free parameters. A model object \code{M} can be viewed with \code{M}, predictions can be made with \code{M$predict()} for choice predictions, and \code{M$predict("ev")} for the expected value of the optimal choice and \code{M$predict("value", 1:2)} for the expected value of all choices.
-#' @author Jana B. Jarecki, \email{jj@janajarecki.com}
-#' @details Risk-sensitive foraging means you have, for instance, four choices between the same two risky lotteries and after the four choices you need to have accumulated at least 12 points to get a reward. The optimal solution to this choice problem relies on dynamic programming. The function creates all possible future states given the possible remaining trials, and predicts the optimal choice polica or the expected value of chosing either option given a certain state and a certain time horizon.
+#' ## Model Parameters
+#' * _**`beta`**_: the weight of the risk, risk aversion (\eqn{0 \le \beta \le 10}).
+#' * _**`delta`**_: the weight of the aspiration level (\eqn{0 \le \delta \le 1}).
+#' * In `shortfall_d()`: `r .rd_choicerules()`
+#' 
+#' @template cm
+#' 
 #' @examples
-#' # None yet
+#' # Make some data -----------------------------------
+#' dt <- data.frame(
+#'    x1 = rep(1,3), x2 = rep(2,3), px = rep(.5,3), 
+#'    y1 = 0:2, y2 = rep(3,3), py = rep(.5,3),
+#'    aspiration = rep(1,3), choice = c(1,1,0))
+#' 
+#' # Make model ----------------------------------------
+#' # 1. Continuous model - normal log likelihood
+#' m <- shortfall_c(
+#'    formula = choice ~ x1 + px + x2,
+#'    asp = "aspiration",
+#'    data = dt)
+#' 
+#' m            # view model
+#' predict(m)   # predict values/ratings
+#' parspace(m)  # view parameter space
+#' 
+#' # 2. Discrete model - binomial log likelihood
+#' m <- shortfall_d(
+#'    formula = choice ~ x1 + px + x2 | y1 + py + y2,
+#'    asp = "aspiration",
+#'    data = dt,
+#'    choicerule = "softmax")
+#' 
+#' m            # View model
+#' predict(m)   # predict choice, Pr(select "x")
+#' parspace(m)  # View parameter space
+
+#' @rdname shortfall
 #' @export
-shortfall <- function(formula, asp, data, fix = list(), choicerule, options) {
+shortfall_d <- function(formula, asp, data, choicerule, fix = list(), options = NULL) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
+  .args$mode <- "discrete"
   return(do.call(what = Shortfall$new, args = .args, envir = parent.frame()))
 }
 
+#' @rdname shortfall
+#' @export
+shortfall_c <- function(formula, asp, data, fix = list(), options = NULL) {
+  .args <- as.list(rlang::call_standardise(match.call())[-1])
+  .args$mode <- "continuous"
+  return(do.call(what = Shortfall$new, args = .args, envir = parent.frame()))
+}
 
 Shortfall <- R6Class("shortfall",
   inherit = Cm,
   public = list(
     asplevel = NULL,
     formulaAsp = NULL,
-    initialize = function(formula, asp, fix = NULL, data = NULL, choicerule = NULL, options = NULL) {
+    initialize = function(formula, asp, fix = NULL, data = NULL, choicerule = NULL, mode, options = NULL) {
       self$formulaAsp <- chr_as_rhs(asp) # store the formula for aspir. level
-      # create the allowed parameter space
+
+      # Parameter space
       # Two free parameter
       #    beta: from 0 - 10, initial value: 1, ignore value: 0
       #    delta: from 0 - 1, initial value: 0.5, ignore with 1
@@ -61,7 +109,7 @@ Shortfall <- R6Class("shortfall",
         fix = fix,
         choicerule = choicerule,
         discount = 0L,
-        mode = "discrete",
+        mode = mode,
         # Note: keep "grid" as first solver! (flat maximum issues)
         options = c(options, list(solver = c("grid", "solnp")))
       )
@@ -108,6 +156,9 @@ Shortfall <- R6Class("shortfall",
     check_input = function() {
       .check_probabilities(self = self)
       super$check_input() # Do not delete this, it runs default sanity checks
+    },
+    make_prednames = function() {
+      return(self$stimnames)
     }
   )
 )

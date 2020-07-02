@@ -16,7 +16,11 @@ pred_by_hand <- function(d, lambda, tau) {
   res    
 }
 
+
+# 1. Predictions -------------------------------------------------------
+# 1.a Predicted values
 test_that("Prediction of MEM model", {  
+  skip("work in progress")
   d <- data.frame(
     f1 = c(1,  1, 0),
     f2 = c(1,  0, 0),
@@ -37,6 +41,7 @@ pred <- pred_by_hand(d, lambda = 0.5, tau = 2)
 
 
 test_that("Fitting of MEM model", {
+  skip("wip")
     d <- data.frame(
     f1 = c(1,  1, 0),
     f2 = c(1,  0, 0),
@@ -69,4 +74,4 @@ test_that("Fitting of MEM model", {
   M$fit(options = list(solver = c("grid", "solnp")))
 
   expect_equal(coef(M), c(lambda = 5, tau = 0.6), tol = 0.001)
-}
+})
