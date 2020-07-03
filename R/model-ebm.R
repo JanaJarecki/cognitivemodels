@@ -292,7 +292,7 @@ Ebm <- R6Class('ebm',
       if (x == "weights") {
         return(head(super$get_parnames(), self$natt))
       } else if (x == "biases") {
-        return(tail(super$get_parnames(), -(self$natt + 3L)))
+        return(setdiff(tail(super$get_parnames(), -(self$natt + 3L)), c("tau", "eps")))
       } else {
         return(super$get_parnames(x))
       }

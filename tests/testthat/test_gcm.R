@@ -189,3 +189,4 @@ test_that('EBM error handlers', {
   # expect_equal(unlist(M$par), c(angle=.50, size=.50, lambda=1.23, r=2, q=2, b0=.45, b1=.55), tol = .01)
   # M <- ebm(fml, data = d[keep, ], fix = list(q = 2, r = 2, b0 = .5, b1 = .5), mode = 'c', fit.options = list(n = nn, newdata = d), discount = 0) # bias constrained
   # expect_equal(unlist(M$par), c(angle=.93, size=0.07, lambda=3, r=2, q=2, b0=.50, b1=.50), tol = .01)
+
