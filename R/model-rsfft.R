@@ -17,7 +17,7 @@
 #' @keywords internal
 #' @importFrom arrangements permutations
 #' @useDynLib cognitivemodels, .registration = TRUE
-#' @inheritParams Cm
+#' @noRd
 rsfft <- function(formula = NULL, sbt = NULL, nopt = NULL, nout = NULL, fix = NULL, data = NULL, env = NULL, choicerule, terminal.fitness.fun) {
     obj <- Rsfft$new(env = env, formula = formula, sbt = sbt, nopt = nopt, nout = nout, data = data, fix = fix, terminal.fitness.fun = terminal.fitness.fun, choicerule)
   if (length(obj$fixnames) < length(obj$par)) {

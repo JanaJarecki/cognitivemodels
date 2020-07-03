@@ -56,7 +56,7 @@ bayes(
 
 \item{type}{(optional) A string, the type of inference, \code{"beta-binomial"} or \code{"dirichlet-multinomial"}. Can be abbreviated. Will be inferred, if missing.}
 
-\item{options}{(optional) A list to change the parameter estimation process, see \code{\link[=cm_options]{cm_options()}} or the section Options below.}
+\item{options}{(optional) A list, entries change the parameter estimation process. For example, \code{list(lb = c(k=0))} lets parameter \emph{k} start at 0, or \code{list(fit_measure = "mse")} uses mean-squared error as fit measure. see \code{\link[=cm_options]{cm_options()}}.}
 }
 \value{
 Returns a cognitive model object, which is an object of class \href{Cm}{cm}. A model, that has been assigned to \code{m}, can be summarized with \code{summary(m)} or \code{anova(m)}. The parameter space can be viewed using \code{parspace(m)}, constraints can be viewed using \code{constraints(m)}.
@@ -84,65 +84,6 @@ The model has \emph{n + 1} (\emph{n} = number of events) free parameters, which 
 \item \code{delta} is the learning rate, it weights the observation during learning, value < 1 causes conservatism, > 1 causes liberal learning, and 1 is optimal Bayesian.
 \item \verb{x1, x2} (dynamic names) are the prior parameter, their names correspond to the right side of \code{formula}. Also known as the hyperparameter of the prior belief distribution before trial 1. If they are constrainted to sum to \emph{n} and \emph{n} - 1 parameter are estimated.
 \item In \code{bayes_beta_d()} or \code{bayes_dirichlet_d()}: If \code{choicerule = "softmax"}: \emph{\strong{\code{tau}}}  is the temperature or choice softness, higher values cause more equiprobable choices. If \code{choicerule = "epsilon"}: \emph{\strong{\code{eps}}} is the error proportion, higher values cause more errors from maximizing.
-}
-}
-
-\subsection{Options}{
-
-\verb{   } (Optional) Set \code{options} to fine-tune the parameter estimation
-process. The values listed below must be supplied in list. For example
-\code{options = list(lb = c(k = -10))} changes a lower parameter bound.
-
-\describe{
-\item{\verb{   }\code{lb}}{Named numeric vector, changes lower parameter bounds;
-\code{lb = c(k = -10)} lets parameter \emph{k} start at -10.}
-\item{\verb{   }\code{ub}}{Named numeric vector, changes upper parameter bounds:
-\code{ub = c(k = 10)} lets parameter \emph{k} go until 10.}
-\item{\verb{   }\code{start}}{Named numeric vector, changes parameter start
-values: \code{start = c(k = 5)} lets parameter \emph{k} start at 5.}
-\item{\verb{   }\code{fit}}{Logical (default \code{TRUE}), \code{fit = FALSE} disables
-parameter estimation. Useful for testing models.}
-\item{\verb{   }\code{fit_measure}}{A string (default \code{"loglikelihood"}), the
-\href{https://en.wikipedia.org/wiki/Goodness_of_fit}{goodness of fit}
-measure to be optimized during parameter estimation.
-Can be any value of \code{type} in \code{\link[cognitiveutils:gof]{cognitiveutils::gof()}}.
-Loglikelihood uses a binomial PDF in models with discrete
-data and a normal PDF for continuous data, \eqn{N(\mu, \sigma)}
-with  \eqn{\mu}=predictions, \eqn{\sigma}=constant,
-estimated as additional free paramter. Change the PDF using
-\code{fit_args = list(pdf = "...")}}
-\item{\verb{   }\code{fit_args}}{Named list, options for parameter estimation.
-Can be any
-argument to \code{\link[cognitiveutils:gof]{cognitiveutils::gof()}}. For example,
-\code{list(pdf = "truncnorm", a = 0, b = 1)} changes the PDF
-in the log likelihood to a truncated normal between 0 and 1,
-\code{list(pdf = "multinom")} changes it to a multinomial PDF.
-\code{list(grid_offset = .01)} offsets the parameter in a grid search
-by 0.01 from the parameter boundaries, \code{list(nsteps = 10)} defines
-10 steps for each parameter in the regular grid in the grid search.}
-\item{\verb{   }\code{fit_data}}{A data frame, the data to estimate the model parameters
-from. Needed if the data for the parameter estimation differs from
-the data in the main \code{data} argument in a model.}
-\item{\verb{   }\code{solver}}{A string, the optimizer for the parameter estimation. Run
-\code{cm_solvers()} to list all solvers. Can be \code{"grid"}, \code{"solnp"}
-\code{"optimx"}, \code{"nloptr"}, \code{"nlminb"} and others from \link{ROI}. Can be
-\code{c("grid", "xxx")}: a grid-plus-optimization: A grid search, followed
-by an optimization with xxx using the \emph{n}
-best solutions as start values in the optimization; the overal best
-parameter set wins; and \emph{n} can be set in \code{solver_args$nbest}
-Changing the solver may cause warnings and ignored parameter bounds.}
-\item{\verb{   }\code{solver_args}}{A named list, additional arguments passed directly
-to the solver function, see the pages of the solver to see which
-arguments the solver function has. For example:
-\code{list(offset = 0.01)} offset the parameters from their boundaries
-when \code{solver = "grid"}.
-\code{list(nsteps = 10)} uses 10 steps for each parameter in the regular
-grid, for \code{solver = "grid"}), \code{list(nbest = 3)} uses the 3 best
-parameter sets from the grid search as starting values in a
-grid-plus-optimization solver, for \code{solver = c("grid", "xxx")}.
-\code{list(control = )} control arguments in the solver
-\href{Rsolnp::solnp()}{solnp} and the
-\href{https://rdrr.io/cran/ROI/man/ROI_solve.html}{ROI solvers}}
 }
 }
 }

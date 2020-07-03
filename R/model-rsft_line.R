@@ -15,7 +15,6 @@
 #' 
 #' @importFrom stringr str_extract
 #' @importFrom Rcpp sourceCpp
-#' @inheritParams Cm
 #' @description Fits the shortfall model, a cognitive model for risky choices. It trades off a risky option's expected value with a \eqn{\beta}-weighted measure of risk; risk being the chance of falling short of a \eqn{\delta}-weighted aspiration level (based on Andraszewicz, von Helversen, and Rieskamp). Model inputs are the risky options and the aspiration level. The value \eqn{v} of option \eqn{o}, with free parameters \eqn{\delta, \beta}, is
 #' \deqn{v(o) = EV(o) - \beta R(o)}
 #' \deqn{R(o) = \sum_i ( p_i ( max [ \delta asp_{o} - out_{o,i} , 0 ] ),}
