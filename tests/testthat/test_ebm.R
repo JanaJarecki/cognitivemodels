@@ -39,11 +39,11 @@ test_that("Parameter estimates compared to Nosofsky (1989)", {
   expect_est_equal <- function(fix, target, tol = 0.01) {
     fix <- c(q=2, r=2, fix)
     fitd <- d[d$condition == condition,]
-    M <- gcm(formula = pobs ~ angle + size, criterion = ~ true_cat, data = d[d$condition == condition & !is.na(d$true_cat), ], fix = fix, options = list(fit_data = fitd, fit_args = list(n = fitd$N), fit=T), discount = 0, choicerule = "none")
+    M <- gcm(formula = pobs ~ angle + size, criterion = ~ true_cat, data = d[d$condition == cond & !is.na(d$true_cat), ], fix = fix, options = list(fit_data = fitd, fit_args = list(n = fitd$N), fit=T), discount = 0, choicerule = "none")
     expect_equal(coef(M), target, tol = tol)
   }
 
-  condition <- "size"
+  cond <- "size"
   expect_est_equal(fix = NULL,
     target = c(angle=.10,size=.90,lambda=1.60,b0=.50,b1=.50))
   expect_est_equal(fix = c(angle = .5, size = .5),
@@ -55,7 +55,7 @@ test_that("Parameter estimates compared to Nosofsky (1989)", {
   expect_est_equal(fix = c(b0 = .5, b1 = .5),
     target = c(angle=.10, size=.90, lambda=1.60))
 
-  condition <- "diag"
+  cond <- "diag"
   expect_est_equal(fix = NULL,
     target = c(angle=.81,size=.19,lambda=2.42,b0=.49,b1=.51))
   expect_est_equal(fix = c(angle = .5, size = .5),
@@ -72,12 +72,12 @@ test_that("Parameter estimates compared to Nosofsky (1989)", {
   test_that("Parameter estimates compared to Nosofsky (1989)", {
     expect_est_equal <- function(fix, target, tol = 0.01) {
       fix <- c(q=2, r=2, fix)
-      fitd <- d_long[d_long$condition == condition,]
-      M <- gcm(formula = response ~ angle + size, criterion = ~ true_cat, data = d_long[d_long$condition == condition & !is.na(d_long$true_cat), ], fix = fix, options = list(fit_data = fitd, fit_args = list(n = fitd$N), fit=T), discount = 0, choicerule = "none")
+      fitd <- d_long[d_long$condition == cond,]
+      M <- gcm(formula = response ~ angle + size, criterion = ~ true_cat, data = d_long[(d_long$condition == cond) & !is.na(d_long$true_cat), ], fix = fix, options = list(fit_data = fitd, fit_args = list(n = fitd$N), fit=T), discount = 0, choicerule = "none")
       expect_equal(coef(M), target, tol = tol)
     }
     
-    condition <- "size"
+    cond <- "size"
     expect_est_equal(fix = NULL,
                      target = c(angle=.10,size=.90,lambda=1.60,b0=.50,b1=.50))
     expect_est_equal(fix = c(angle = .5, size = .5),
@@ -89,7 +89,7 @@ test_that("Parameter estimates compared to Nosofsky (1989)", {
     expect_est_equal(fix = c(b0 = .5, b1 = .5),
                      target = c(angle=.10, size=.90, lambda=1.60))
     
-    condition <- "diag"
+    cond <- "diag"
     expect_est_equal(fix = NULL,
                      target = c(angle=.81,size=.19,lambda=2.42,b0=.49,b1=.51))
     expect_est_equal(fix = c(angle = .5, size = .5),
