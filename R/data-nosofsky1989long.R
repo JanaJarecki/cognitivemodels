@@ -6,7 +6,7 @@
 #'   \item condition. experimental condition (size, angle, criss, diag)
 #'   \item angle. feature value of the angle feature
 #'   \item size. feature value of the size feature
-#'   \item response. Which category has been selected? 
+#'   \item obs_cat. Which category has been selected? 
 #'   \item true_cat. True category label of this feature combination (0 or 1)
 #' }
 #' @name nosofsky1989long
