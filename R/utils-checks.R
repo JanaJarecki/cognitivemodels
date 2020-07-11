@@ -112,7 +112,12 @@
 #' @export
 #' @noRd
 solvers <- function() {
-  roi_solvers <- gsub("ROI.plugin.", "", ROI::ROI_available_solvers()$Package)
+  roi_solvers <- suppressWarnings(try(ROI::ROI_available_solvers()$Package, silent = TRUE))
+  if (!inherits(roi_solvers, "try-error")) {
+      roi_solvers <- gsub("ROI.plugin.", "", roi_solvers)
+  } else {
+    roi_solvers <- NULL
+  }
   roi_registered <- names(ROI::ROI_registered_solvers())
   roi_solvers <- unique(c(roi_solvers, roi_registered))
   return(c("grid", "solnp", "auto", roi_solvers))

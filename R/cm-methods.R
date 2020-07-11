@@ -315,7 +315,7 @@ parspace.character <- function(x, ...) {
 #' Show the constraints of a cognitive model
 #' 
 #' @description
-#' \code{constraints(x)} shows the parameter constraints  of a cognitive model named \code{x} nicely formatted
+#' `constraints(x)` prints the parameter constraints of a cognitive model named `x` nicely formatted
 #' 
 #' @usage constraints(x)
 #' @param x a model object of class cm
