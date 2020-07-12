@@ -1,7 +1,9 @@
 #' @param data A data frame, the data to be modeled.
-#' @param options (optional) A list, entries change the parameter estimation process. For example, `list(lb = c(k=0))` lets parameter _k_ start at 0, or `list(fit_measure = "mse")` uses mean-squared error as fit measure. see [cm_options()].
+#' @param options (optional) A list, list entries change the modeling procedure. For example, `list(lb = c(k=0))` changes the lower bound of parameter _k_ to 0, or `list(fit_measure = "mse")` changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see [cm_options()].
+#' @param discount A number, how many initial trials to not use during parameter fitting.
+#' @param ... other arguments, ignored.
 #' @return
-#' Returns a cognitive model object, which is an object of class [cm](Cm). A model, that has been assigned to `m`, can be summarized with `summary(m)` or `anova(m)`. The parameter space can be viewed using `parspace(m)`, constraints can be viewed using `constraints(m)`.
+#' Returns a cognitive model object, which is an object of class [cm](Cm). A model, that has been assigned to `m`, can be summarized with `summary(m)` or `anova(m)`. The parameter space can be viewed using `pa. rspace(m)`, constraints can be viewed using `constraints(m)`.
 #' @family cognitive models
 #' @author Jana B. Jarecki, \email{jj@janajarecki.com}
 

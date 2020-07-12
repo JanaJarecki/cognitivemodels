@@ -18,7 +18,6 @@
 #' 
 #' @eval .param_formula(1)
 #' @template param-choicerule
-#' @param type (optional) A string, utility function, currently only `"power"` for power utility.
 #' @eval .param_fix("utility_pow_d")
 #' 
 #' @details  
@@ -73,6 +72,7 @@ utility_exp <- function(formula, data, fix = list(), choicerule = NULL, mode = N
 }
 
 # This is the back-end class for the utility models
+#' @noRd
 Utility <- R6Class("utility",
   inherit = Cm,
   public = list(

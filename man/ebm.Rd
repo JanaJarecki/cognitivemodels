@@ -44,7 +44,7 @@ ebm(formula, criterion, data, mode, fix = NULL, options = NULL, ...)
 \item \code{"start"} sets all parameters equal to their initial values (estimates none). Useful for building a first test model.
 }}
 
-\item{options}{(optional) A list, entries change the parameter estimation process. For example, \code{list(lb = c(k=0))} lets parameter \emph{k} start at 0, or \code{list(fit_measure = "mse")} uses mean-squared error as fit measure. see \code{\link[=cm_options]{cm_options()}}.}
+\item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \code{\link[=cm_options]{cm_options()}}.}
 
 \item{similarity}{(optional) A string, similarity function, currently only \code{"minkowski"}.}
 
@@ -55,7 +55,7 @@ ebm(formula, criterion, data, mode, fix = NULL, options = NULL, ...)
 \item{choicerule}{A string, the choice rule. Allowed values, see  \code{cm_choicerules()}: \code{"none"} is no choice rule, \code{"softmax"} is \href{https://en.wikipedia.org/wiki/Softmax_function}{soft-maximum}, \code{"luce"} is \href{https://en.wikipedia.org/wiki/Luce\%27s_choice_axiom}{Luce's axiom}.}
 }
 \value{
-Returns a cognitive model object, which is an object of class \href{Cm}{cm}. A model, that has been assigned to \code{m}, can be summarized with \code{summary(m)} or \code{anova(m)}. The parameter space can be viewed using \code{parspace(m)}, constraints can be viewed using \code{constraints(m)}.
+Returns a cognitive model object, which is an object of class \href{Cm}{cm}. A model, that has been assigned to \code{m}, can be summarized with \code{summary(m)} or \code{anova(m)}. The parameter space can be viewed using \verb{pa. rspace(m)}, constraints can be viewed using \code{constraints(m)}.
 }
 \description{
 \code{ebm()} fits an exemplar-based model.

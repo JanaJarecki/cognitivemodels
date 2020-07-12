@@ -48,7 +48,7 @@
 #' 
 #' 
 #' @references 
-#' Sutton, R. S., & Barto, A. G. (2018). \emph{Reinforcement Learning: An Introduction (2nd Ed.)}. MIT Press, Cambridge, MA. [http://incompleteideas.net/book/the-book-2nd.html]
+#' Sutton, R. S., & Barto, A. G. (2018). \emph{Reinforcement Learning: An Introduction (2nd Ed.)}. MIT Press, Cambridge, MA. (http://incompleteideas.net/book/the-book-2nd.html)
 #' 
 #' Luce, R. D. (1959). On the possible psychophysical laws. \emph{Psychological Review, 66(2)}, 81-95. doi:[10.1037/h0043178](https://doi.org/10.1037/h0043178)
 #' 
@@ -137,7 +137,6 @@ argmax <- function(formula, data, ...) {
 
 
 #' @noRd
-#' @export
 Choicerule <- R6Class("choicerule",
   inherit = Cm,
   public = list(

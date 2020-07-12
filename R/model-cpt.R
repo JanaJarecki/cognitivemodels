@@ -49,6 +49,7 @@
 #'  * In `cpt_d()` and `cpt_mem_d()`: `r .rd_choicerules()`.
 #' 
 #' @template cm
+#' @template param-choicerule
 #' 
 #' @examples
 #' ## From Tversky, A., & Kahneman, D. (1992).

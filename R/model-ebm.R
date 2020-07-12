@@ -55,6 +55,7 @@
 #' {Juslin, P., Olsson, H., & Olsson, A.-C. (2003). Exemplar effects in categorization and multiple-cue judgment. \emph{Journal of Experimental Psychology: General, 132}, 133-156. \url{http://dx.doi.org/10.1037/0096-3445.132.1.133}}
 #' 
 #' @template cm
+#' @template param-choicerule
 #' 
 #' @examples 
 #' # Make some fake data
@@ -107,7 +108,7 @@ NULL
 
 #' @name ebm
 #' @export
-gcm <- function(formula, class, data, fix = NULL, options = NULL, similarity = "minkowski", ...) {
+gcm <- function(formula, class, data, choicerule, fix = NULL, options = NULL, similarity = "minkowski", ...) {
    .args <- as.list(rlang::call_standardise(match.call())[-1])
    names(.args)[which(names(.args) == "class")] <- "criterion"
    .args[["mode"]] <- "discrete"
@@ -127,9 +128,8 @@ ebm_j <- function(formula, criterion, data, fix = NULL, options = NULL, similari
 
 
 #' @name ebm
-#' @noRd
 #' @export
-mem <- function(formula, criterion, data, options = NULL, ...) {
+mem <- function(formula, criterion, data, choicerule, options = NULL, ...) {
    .args <- as.list(rlang::call_standardise(match.call())[-1])
    weights <- lapply(.rhs_var(formula), function(x) setNames(rep(1/length(x), length(x)), x))
    .args[["fix"]] <- c(list(r = 1L, q = 1L), unlist(weights))

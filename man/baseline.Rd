@@ -22,10 +22,10 @@ baseline_mean_d(formula, data, ...)
 
 \item{data}{A data frame, the data to be modeled.}
 
-\item{options}{(optional) A list, entries change the parameter estimation process. For example, \code{list(lb = c(k=0))} lets parameter \emph{k} start at 0, or \code{list(fit_measure = "mse")} uses mean-squared error as fit measure. see \code{\link[=cm_options]{cm_options()}}.}
+\item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \code{\link[=cm_options]{cm_options()}}.}
 }
 \value{
-Returns a cognitive model object, which is an object of class \href{Cm}{cm}. A model, that has been assigned to \code{m}, can be summarized with \code{summary(m)} or \code{anova(m)}. The parameter space can be viewed using \code{parspace(m)}, constraints can be viewed using \code{constraints(m)}.
+Returns a cognitive model object, which is an object of class \href{Cm}{cm}. A model, that has been assigned to \code{m}, can be summarized with \code{summary(m)} or \code{anova(m)}. The parameter space can be viewed using \verb{pa. rspace(m)}, constraints can be viewed using \code{constraints(m)}.
 }
 \description{
 Fits baseline models. Baseline models are stimulus-agostic models used as sanity checks in cognitive model comparisons. Other cognitive models should beat a baseline model -- if not, the other cognitive models don't describe patterns in the responses well.

@@ -11,8 +11,7 @@
 
 
 #' The R6 class underlying all "cm" (cognitive model) objects
-#' 
-#' \code{Cm$new(formula, data, parspace)}
+#' 'Cm$new(formula, data, parspace)'
 #' 
 #' @import methods
 #' @import stats
@@ -28,9 +27,9 @@
 #' 
 #' @template cm
 #' 
+#' @eval .param_formula(2)
+#' @eval .param_fix("bayes_beta_d", dyn_args = "formula", which = 2)
 #' @param parspace  (optional, \bold{required} to add model parameters) A n x 4 matrix, the parameter space. Use \link{make_parspace} to construct it. Column names must be `"lb","ub","start","na"`, row names must be parameter names. Columns contain the lower limit, upper limit, starting value in fitting, and (optional) a value that makes a parameter have zero effect, which can be NA. See details.
-#' @template param-choicerule
-#' @template param-fix
 #' @param title (optional, default is the class name) A string, the model's name.
 #' @param mode A string, the response mode. Allowed are `"discrete"`, `"continuous". Discrete responses are binary (0 or 1), continuous responses are numbers-
 #' @param discount (optional) An integer or integer vector (default \code{0}), ddefining which or how many, starting from trial 1, to discount when fitting. 
@@ -43,7 +42,7 @@
   #' \item{\code{beta="alpha"}}{: fix beta to the value of alpha; alpha may be a free or fixed model parameter in \code{parspace}.}
   #' \item{\code{delta=NA}}{: ignore delta if it can be ignored by setting delta equal to the value in the column "na" of \code{parspace}, given that parspace has a value in the column "na" for delta.}
 #' }
-#' You can ignore a model parameter by setting it to \code{NA} in \code{fix}, in this case your \code{parspace} needs to contain a value in the column na nullifying the effect of the parameter.
+#' You can ignore a model parameter by setting it to \code{NA} in 'fix', in this case your 'parspace' needs to contain a value in the column na nullifying the effect of the parameter.
 #' @examples 
 #' # No examples yet.
 #' @export

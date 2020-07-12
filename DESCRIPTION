@@ -14,6 +14,7 @@ Imports:
     cognitiveutils (>= 0.0.11),
     combinat,
     data.table,
+    english,
     Formula,
     gtools,
     matlib (>= 0.9.3),

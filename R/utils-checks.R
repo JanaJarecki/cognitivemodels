@@ -109,7 +109,6 @@
 
 #' Prints the possible optimization solvers
 #' 
-#' @export
 #' @noRd
 solvers <- function() {
   roi_solvers <- suppressWarnings(try(ROI::ROI_available_solvers()$Package, silent = TRUE))

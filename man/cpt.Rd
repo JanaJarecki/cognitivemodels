@@ -53,14 +53,14 @@ cpt_mem_c(formula, mem, data, editing = "hedonic", options = NULL)
 
 \item{value}{(optional) A string, the value function. Currently, only \code{"KT1992"}, the value function in Kahneman & Tversky (1992).}
 
-\item{options}{(optional) A list, entries change the parameter estimation process. For example, \code{list(lb = c(k=0))} lets parameter \emph{k} start at 0, or \code{list(fit_measure = "mse")} uses mean-squared error as fit measure. see \code{\link[=cm_options]{cm_options()}}.}
+\item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \code{\link[=cm_options]{cm_options()}}.}
 
 \item{mem}{(optional, default: 0) A number, string, or RHS \link[stats:formula]{formula}, the prior gains or losses in memory. Formula and string refer to variables in \code{data}, for example \code{~ xoutc}.}
 
 \item{editing}{(optional) A string, the editing rule to use (see Thaler & Johnson, 1999, pp. 645), currently only \code{"hedonic"}.}
 }
 \value{
-Returns a cognitive model object, which is an object of class \href{Cm}{cm}. A model, that has been assigned to \code{m}, can be summarized with \code{summary(m)} or \code{anova(m)}. The parameter space can be viewed using \code{parspace(m)}, constraints can be viewed using \code{constraints(m)}.
+Returns a cognitive model object, which is an object of class \href{Cm}{cm}. A model, that has been assigned to \code{m}, can be summarized with \code{summary(m)} or \code{anova(m)}. The parameter space can be viewed using \verb{pa. rspace(m)}, constraints can be viewed using \code{constraints(m)}.
 }
 \description{
 Fits cumulative prospect theory, CPT (Tversky & Kahneman, 1992).

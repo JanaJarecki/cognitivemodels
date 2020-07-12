@@ -146,6 +146,7 @@ bayes <- function(formula, data = data.frame(), fix = list(), format = c("raw", 
 }
 
 
+#' @noRd
 Bayes <- R6Class("Bayes",
   inherit = Cm,
   public = list(

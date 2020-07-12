@@ -22,6 +22,7 @@
 #' @param budget A number; the goal/requirement/critical state, that matters in the terminal payout function. Can also be a numeric vector of length `nrow(data)`, or a right-side formula that refers to a variable in `data`.
 #' @param ntrials A number; the total number of trials available. Can also be a numeric vector of length `nrow(data)`, or a right-side formula that refers to a variable in `data`.
 #' @param initstate (default 0) A number; the starting state in the first trial. Can also be a numeric vector of length `nrow(data)`, or a right-side formula that refers to a variable in `data`.
+#' @param fitnessfun (optional) A function, the terminal fitness function, needs two arguments, `budget` and `state`.
 #' @template param-choicerule
 #' 
 #' @references Houston, A. I., & McNamara, J. M. (1988). A framework for the functional analysis of behaviour. Behavioural and Brain Science, 11, 117-163. [doi:10.1017/S0140525X00053061](https://doi.org/10.1017/S0140525X00053061)

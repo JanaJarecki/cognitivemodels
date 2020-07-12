@@ -28,13 +28,12 @@
 #' @examples
 #' # None yet
 #' @noRd
-#' @export
 rsft_line <- function(formula, trials, states, budget, ntrials, data, fix = list(), choicerule, options) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   return(do.call(what = Rsft_line$new, args = .args, envir = parent.frame()))
 }
 
-
+#' @noRd
 Rsft_line <- R6Class("rsft_line",
   inherit = Cm,
   public = list(
