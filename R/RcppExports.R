@@ -23,11 +23,13 @@ minkowski <- function(x, y, w, r, q) {
 #' @param q exponent in distance metric (model parameter)
 #' @param lambda sensitivity (model parameter)
 #' @param b bias parameter vector for classification (model parameter), must be NA for judgments
-#' @param fw weight vector with a weight for each feature combination
+#' @param wf weight vector with a weight for each feature combination
+#' @param init value for the initial trials
+#' @param has_criterion vector where a criterion is present
+#' @param ismultiplicative A number (0 or 1), 1 means the combination of exemplars is multiplicative, i.e. multiplicative exemplar model
 #' @param lastLearnTrial integer last trial of learning phase
 #' @param firstOutTrial integer first trial of output, starting the predictions later
 #' @param similarity A string, the similarity function
-#' @param is_additive A number (0 or 1), 0 means multiplicative exemplar model
 #' @examples
 #' # none
 ebm_cpp <- function(criterion, features, w, r, q, lambda, b, wf, lastLearnTrial, firstOutTrial, init, has_criterion, similarity, ismultiplicative) {
