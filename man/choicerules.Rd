@@ -31,6 +31,10 @@ argmax(formula, data, ...)
 }}
 
 \item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \code{\link[=cm_options]{cm_options()}}.}
+
+\item{...}{other arguments, ignored.}
+
+\item{discount}{A number, how many initial trials to not use during parameter fitting.}
 }
 \value{
 Returns a cognitive model object, which is an object of class \href{Cm}{cm}. A model, that has been assigned to \code{m}, can be summarized with \code{summary(m)} or \code{anova(m)}. The parameter space can be viewed using \verb{pa. rspace(m)}, constraints can be viewed using \code{constraints(m)}.
@@ -107,7 +111,7 @@ luce(y ~ a | b, D)                     # Luce's choice rule, 0 parameter
 argmax(y ~ a | b, D)                   # Argmax choice rule, 0 parameter
 }
 \references{
-Sutton, R. S., & Barto, A. G. (2018). \emph{Reinforcement Learning: An Introduction (2nd Ed.)}. MIT Press, Cambridge, MA. \link{http://incompleteideas.net/book/the-book-2nd.html}
+Sutton, R. S., & Barto, A. G. (2018). \emph{Reinforcement Learning: An Introduction (2nd Ed.)}. MIT Press, Cambridge, MA. (http://incompleteideas.net/book/the-book-2nd.html)
 
 Luce, R. D. (1959). On the possible psychophysical laws. \emph{Psychological Review, 66(2)}, 81-95. doi:\href{https://doi.org/10.1037/h0043178}{10.1037/h0043178}
 }

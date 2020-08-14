@@ -132,7 +132,7 @@ test_that("Estimated parameter values", {
     D <- data.frame(x=rep(0,10), z=rep(1,10),
       y = c(0.5,0.3,0.25,0.19,0.16,0.14,0.12,0.11,0.1,0.08))
     if (y==1) D$y <- 1-D$y
-    if (y==2) D$y <- rep(.99, 10)
+    if (y==2) D$y <- rep(.999, 10)
     if (y==3) D$y <- rep(.01, 10)
     M <- bayes_beta_d(y ~ x + z, data = D, fix=as.list(fix), choicerule="none")
     expect_equivalent(coef(M), target, tol=0.09)

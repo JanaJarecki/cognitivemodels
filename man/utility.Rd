@@ -34,9 +34,11 @@ utility_pow_c(formula, data, fix = list(), discount = 0, options = list(), ...)
 \item \code{"start"} sets all parameters equal to their initial values (estimates none). Useful for building a first test model.
 }}
 
+\item{discount}{A number, how many initial trials to not use during parameter fitting.}
+
 \item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \code{\link[=cm_options]{cm_options()}}.}
 
-\item{type}{(optional) A string, utility function, currently only \code{"power"} for power utility.}
+\item{...}{other arguments, ignored.}
 }
 \value{
 Returns a cognitive model object, which is an object of class \href{Cm}{cm}. A model, that has been assigned to \code{m}, can be summarized with \code{summary(m)} or \code{anova(m)}. The parameter space can be viewed using \verb{pa. rspace(m)}, constraints can be viewed using \code{constraints(m)}.

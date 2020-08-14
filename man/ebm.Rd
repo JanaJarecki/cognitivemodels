@@ -4,12 +4,14 @@
 \alias{ebm}
 \alias{gcm}
 \alias{ebm_j}
+\alias{mem}
 \title{Exemplar-based Cognitive Models}
 \usage{
 gcm(
   formula,
   class,
   data,
+  choicerule,
   fix = NULL,
   options = NULL,
   similarity = "minkowski",
@@ -26,6 +28,8 @@ ebm_j(
   ...
 )
 
+mem(formula, criterion, data, choicerule, options = NULL, ...)
+
 ebm(formula, criterion, data, mode, fix = NULL, options = NULL, ...)
 }
 \arguments{
@@ -34,6 +38,8 @@ ebm(formula, criterion, data, mode, fix = NULL, options = NULL, ...)
 \item{class}{A \link[stats:formula]{formula}, the variable in \code{data} with the feedback about the true class/category. For example \code{~ cat}. \code{NA}s are interpreted as trials without feedback (partial feedback, see details).}
 
 \item{data}{A data frame, the data to be modeled.}
+
+\item{choicerule}{A string, the choice rule. Allowed values, see  \code{cm_choicerules()}: \code{"none"} is no choice rule, \code{"softmax"} is \href{https://en.wikipedia.org/wiki/Softmax_function}{soft-maximum}, \code{"luce"} is \href{https://en.wikipedia.org/wiki/Luce\%27s_choice_axiom}{Luce's axiom}.}
 
 \item{fix}{(optional) A list or the string \code{"start"}, the fixed model parameters, if missing all parameters are estimated. Model parameter names depend on \code{formula}, \code{class} and can be \emph{\code{x1}, \code{x2}, \code{lambda}, \code{r}, \code{q}, \code{b0}, \code{b1}} (see details - model parameters).
 \itemize{
@@ -48,11 +54,13 @@ ebm(formula, criterion, data, mode, fix = NULL, options = NULL, ...)
 
 \item{similarity}{(optional) A string, similarity function, currently only \code{"minkowski"}.}
 
+\item{...}{other arguments, ignored.}
+
 \item{criterion}{A \link[stats:formula]{formula}, the variable in \code{data} with the feedback about the continous criterion. For example, \code{~ val} \code{NA}s are interpreted as trials without feedback (partial feedback, see details).}
 
 \item{mode}{(optional) A string, the response mode, can be \code{"discrete"} or \code{"continuous"}, can be abbreviated. If missing, will be inferred from \code{criterion}.}
 
-\item{choicerule}{A string, the choice rule. Allowed values, see  \code{cm_choicerules()}: \code{"none"} is no choice rule, \code{"softmax"} is \href{https://en.wikipedia.org/wiki/Softmax_function}{soft-maximum}, \code{"luce"} is \href{https://en.wikipedia.org/wiki/Luce\%27s_choice_axiom}{Luce's axiom}.}
+\item{discount}{A number, how many initial trials to not use during parameter fitting.}
 }
 \value{
 Returns a cognitive model object, which is an object of class \href{Cm}{cm}. A model, that has been assigned to \code{m}, can be summarized with \code{summary(m)} or \code{anova(m)}. The parameter space can be viewed using \verb{pa. rspace(m)}, constraints can be viewed using \code{constraints(m)}.

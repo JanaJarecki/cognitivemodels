@@ -13,14 +13,36 @@ bayes_beta_c(
   data,
   fix = NULL,
   format = c("raw", "count", "cumulative"),
+  priorsconstrained = FALSE,
   ...
 )
 
-bayes_beta_d(formula, data, fix = NULL, format = NULL, ...)
+bayes_beta_d(
+  formula,
+  data,
+  fix = NULL,
+  format = NULL,
+  priorsconstrained = FALSE,
+  ...
+)
 
-bayes_dirichlet_d(formula, data, fix = NULL, format = NULL, ...)
+bayes_dirichlet_d(
+  formula,
+  data,
+  fix = NULL,
+  format = NULL,
+  priorsconstrained = FALSE,
+  ...
+)
 
-bayes_dirichlet_c(formula, data, fix = NULL, format = NULL, ...)
+bayes_dirichlet_c(
+  formula,
+  data,
+  fix = NULL,
+  format = NULL,
+  priorsconstrained = FALSE,
+  ...
+)
 
 bayes(
   formula,
@@ -30,6 +52,7 @@ bayes(
   type = NULL,
   discount = 0L,
   options = list(),
+  priorsconstrained = FALSE,
   ...
 )
 }
@@ -54,7 +77,13 @@ bayes(
 \item \code{"count"} means the data are total events counts, ignoring the trial-by-trial order of events: 2, 10, ... means the event happened 2 times, then (starting from zero!) it happened 10 times.
 }}
 
+\item{priorsconstrained}{(optional, default \code{FALSE}) Logical, \code{TRUE} constrains the prior parameter to sum to the number of options.}
+
+\item{...}{other arguments, ignored.}
+
 \item{type}{(optional) A string, the type of inference, \code{"beta-binomial"} or \code{"dirichlet-multinomial"}. Can be abbreviated. Will be inferred, if missing.}
+
+\item{discount}{A number, how many initial trials to not use during parameter fitting.}
 
 \item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \code{\link[=cm_options]{cm_options()}}.}
 }

@@ -12,7 +12,7 @@ npar(x)
 \arguments{
 \item{x}{a model object}
 
-\item{...}{other arguments (ignored)}
+\item{...}{ignored}
 
 \item{type}{A string: \code{"all"} counts all parameters, \code{"free"} counts the free parameters, \code{"fix"} countes the fixed parameters, \code{"constrained"} counts constrained parameters.}
 }

@@ -38,6 +38,8 @@ cpt_mem_c(formula, mem, data, editing = "hedonic", options = NULL)
 
 \item{data}{A data frame, the data to be modeled.}
 
+\item{choicerule}{A string, the choice rule. Allowed values, see  \code{cm_choicerules()}: \code{"none"} is no choice rule, \code{"softmax"} is \href{https://en.wikipedia.org/wiki/Softmax_function}{soft-maximum}, \code{"luce"} is \href{https://en.wikipedia.org/wiki/Luce\%27s_choice_axiom}{Luce's axiom}.}
+
 \item{ref}{(optional, default: 0) A number, string, or RHS \link[stats:formula]{formula}, the reference point or the variable in \code{data} that holds the reference point. For example \code{~ ref}.}
 
 \item{fix}{(optional) A list or the string \code{"start"}, the fixed model parameters, if missing all parameters are estimated. Model parameter names are \emph{\code{alpha}, \code{beta}, \code{gammap}, \code{gamman}, \code{lambda}} (see details - model parameters).
@@ -58,6 +60,10 @@ cpt_mem_c(formula, mem, data, editing = "hedonic", options = NULL)
 \item{mem}{(optional, default: 0) A number, string, or RHS \link[stats:formula]{formula}, the prior gains or losses in memory. Formula and string refer to variables in \code{data}, for example \code{~ xoutc}.}
 
 \item{editing}{(optional) A string, the editing rule to use (see Thaler & Johnson, 1999, pp. 645), currently only \code{"hedonic"}.}
+
+\item{discount}{A number, how many initial trials to not use during parameter fitting.}
+
+\item{...}{other arguments, ignored.}
 }
 \value{
 Returns a cognitive model object, which is an object of class \href{Cm}{cm}. A model, that has been assigned to \code{m}, can be summarized with \code{summary(m)} or \code{anova(m)}. The parameter space can be viewed using \verb{pa. rspace(m)}, constraints can be viewed using \code{constraints(m)}.
