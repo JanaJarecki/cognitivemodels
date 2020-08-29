@@ -111,6 +111,13 @@
 #' 
 #' @noRd
 solvers <- function() {
+  warning("Function 'solvers()' is depreciated, use 'cm_solvers()' instead.")
+  #   "clp"          "deoptim"   "glpk"     "lpsolve"  "neos"     "nloptr" "symphony" "cccp"     ipop"  "mosek"    "cbc"      "nlminb"
+
+  # "nloptr.lbfgs"
+
+  # out: "alabama", "glpk", "qpoases", "gurobi", "scs", "msbinlp", "optimx", "ecos", "quadprog", "cplex"
+
   roi_solvers <- suppressWarnings(try(ROI::ROI_available_solvers()$Package, silent = TRUE))
   if (!inherits(roi_solvers, "try-error")) {
       roi_solvers <- gsub("ROI.plugin.", "", roi_solvers)
@@ -119,21 +126,27 @@ solvers <- function() {
   }
   roi_registered <- names(ROI::ROI_registered_solvers())
   roi_solvers <- unique(c(roi_solvers, roi_registered))
-  return(c("grid", "solnp", "auto", roi_solvers))
+  # hack because not clear what the solvers are
+  roi_solvers <- c(
+    grep("nloptr", roi_solvers, value=T, invert=T),
+    paste0("nloptr.", c("lbfgs", "mma", "auglag", "bobyqa", "cobyla", "crs2lm", "direct", "directL", "isres", "lbfgs", "neldermead", "newuoa", "sbplx", "slsqp", "stogo", "tnewton", "varmetric")))
+  return(sort(c("grid", "solnp", "auto", roi_solvers)))
 }
 
 
 
-#' Checks and optionally installs missing solvers
+#' Checks and matches the solver name
 #' 
-#' @param solver_name the name of the solver
+#' @param solver the name of the solver
 #' @export
 #' @noRd
 .check_and_match_solver <- function(solver) {
-  allowed <- cognitivemodels:::solvers()
+  if (is.null(solver)) solver <- "auto"
+  solver <- tolower(solver)
+  allowed <- cognitivemodels::cm_solvers(msg = FALSE)
   for (s in solver) {
     if (inherits(try(match.arg(s, allowed), silent = TRUE), "try-error")) {
-      stop("'solver' must be a valid name, not ", dQuote(setdiff(s, allowed)), ".\n  * ", .didyoumean(s, allowed), "\n  * Would you like to see all valid names? cognitivemodels:::solvers()", call. = FALSE)
+      stop("'solver' must be a valid name, not ", dQuote(setdiff(s, allowed)), ".\n  * ", .didyoumean(s, allowed), "\n  * Would you like to see all valid names? cm_solvers()", call. = FALSE)
     }
   }
   
@@ -149,21 +162,32 @@ solvers <- function() {
       warning("Using solver 'grid' first, then '", solver[2], "'.", call. = FALSE)
     }
   }
+  return(solver)
+}
+
+#' Optionally installs missing solver
+#' 
+#' @param solver the name of the solver
+#' @export
+#' @noRd
+.install_solver_if_missing <- function(solver) {
+  # because ROI plugins names are the first string before the "."
   missing <- is.na(match(solver, c("grid", "solnp", "auto", names(ROI::ROI_registered_solvers()))))
+  print
   if (any(missing)) {
-    install <- utils::menu(c("Yes", "No, stop the model."), title = paste0("The solver '", solver[missing], "' is not (yet) installed. Want to install it?"))
+    plugin <- gsub("\\..*", "", solver)
+    install <- utils::menu(c("Yes", "No, stop the model."), title = paste0("The package for solver '", plugin[missing], "' is not yet installed. Want to install it? (Type 1 or 2)"))
     if (install == 1) {
-      install.packages(paste0("ROI.plugin.", solver[missing]))
-      library(paste0("ROI.plugin.", solver[missing]), character.only=TRUE)
+      install.packages(paste0("ROI.plugin.", plugin[missing]))
+      library(paste0("ROI.plugin.", plugin[missing]), character.only=TRUE)
       return(solver)
     } else {
-      stop("Model stopped, because the ROI solver plugin was not (yet) installed. \n  * Would you like to see the solvers that are installed, ROI::ROI_registered_solvers()?\n  * Would you like to change the solver?", call. = FALSE)
+      stop("Model stopped, because the ROI solver plugin was not (yet) installed. \n  * Would you like to see the solvers plugins that are installed, ROI::ROI_registered_solvers()?\n  * Would you like to change the solver, options = list(solver = \"...\")?", call. = FALSE)
     }
-  } else {
-    return(solver)
   }
 }
 
+solver <- "nloptr.stogo"
 
 
 

@@ -176,7 +176,7 @@ Csm <- R6Class("csm",
       self$call$fix <- self$fix
       self$call <- as.call(self$call)
     },
-    end = function(discount = 0L, options = NULL) {
+    end = function(discount = 0L, options = self$options) {
       # TODO: put some sanitize names code here for the model names
       # fixme: the constraints in fix are giving rise to duplicated constraints
       # idea: maybe using "fix" only from the global parameters?

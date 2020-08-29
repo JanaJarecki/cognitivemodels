@@ -87,5 +87,5 @@ cm_choicerules <- function(msg = TRUE) {
 #' @export
 cm_solvers <- function(msg = TRUE) {
   if (msg == TRUE) cat("\nAvailable optimization solvers:\n")
-  return(solvers())
+  return(suppressWarnings(solvers()))
 }

@@ -1,18 +1,17 @@
 # ==========================================================================
 # Test for Cognitive Model
-#
+# Stacking of models
 # ==========================================================================
 
 
 # 1. Model predictions -----------------------------------------------------
-test_that("Bayesian - predictions", {
+test_that("Bayesian model - predictions", {
   expect_equiv <- function(data, x, target) {
     fp <- list(delta = 1, x=1, y=1, z=1, `I(1 - x)`=1, `I(1 - y)`=1)
     M <- cognitivemodel(data = data) +
       bayes_beta_d(~ x + y, fix = fp[1:3], choicerule = "none")
     expect_equivalent(M$predict(x), target)
   }
-
   # Two alternatives
   D <- data.frame(x = c(0,0,1,1), y = c(1,1,0,0), z = c(0,0,0,0))
   expect_equiv(data = D[1,], x = "mean", 0.50)
@@ -26,7 +25,7 @@ test_that("Bayesian - predictions", {
 test_that("Parameter estimation", {
   expect_par_equal <- function(fix, target) {
     M <- cognitivemodel(data = D) +
-      bayes_beta_d(y ~ x + z, fix = fix, choicerule = "none")
+      bayes_beta_d(y ~ x + z, fix = fix, choicerule = "none", priorsconstrained = TRUE)
     fit(M)
     expect_equal(M$coef(), target, tol=0.09)
   }
@@ -46,10 +45,13 @@ test_that("Parameter estimation", {
   expect_par_equal(NULL, c(delta=0, x=2, z=0))
   
   # all p(x) = 0.01 -> prior on z
+  # @todo If y = 0.001 the bayes_beta_c model fails to converge
+  # @body The model does not converge, but it converges fine if y = 0.01. Why?
   D$y  <- rep(0.01, 10)
-  expect_par_equal(list(delta=1), c(x=0.01,z=1.99))
-  expect_par_equal(NULL, c(delta=0, x=0, z=2))
+  expect_par_equal(fix=list(delta=1), c(x=0.01,z=1.99))
+  expect_par_equal(fix=NULL, c(delta=0, x=0, z=2))
 })
+
 
 
 test_that("Bayesian + Utility - Predicted Values for 2 alternatives", {
@@ -57,7 +59,7 @@ test_that("Bayesian + Utility - Predicted Values for 2 alternatives", {
   DC <- as.data.frame(apply(D, 2, cumsum)) # cumulative data
   fp <- list(delta = 1, x=1, y=1, z=1, `I(1 - x)`=1, `I(1 - y)`=1)
   m1 <- cognitivemodel(data = D) +
-    bayes_beta_c(~ x + y,fix = list(delta=1,x=1,y=1,sigma=0)) +
+    bayes_beta_c(~ x + y,fix = list(delta=1,x=1,y=1,sigma=0), priorsconstrained=TRUE) +
     utility_pow_c(y ~ x, fix = list(rp=NA,rn=NA)) + 
     function (pred, data, par) {
       y <- data$pr_x * pred
@@ -72,7 +74,20 @@ test_that("Bayesian + Utility - Predicted Values for 2 alternatives", {
 })
 
 
-context("chain models")
+
+test_that("Bayesian + Utility - Parameter estimation", {
+  expect_par_equal <- function(fix, target) {
+    M <- cognitivemodel(data = D) +
+      bayes_beta_d( ~ x + z, fix = fix, choicerule="none", priorsconstrained = TRUE) +
+      utility_pow_c(y ~ pr_x, fix = list(rn=NA,sigma=0.0001))
+    fit(M, options = list(solver = "solnp"))
+    expect_equal(M$coef(), target, tol=0.09)
+  }
+  D <- data.frame(x = c(1,1,0,0), z = c(0,1,1,1), y = c(.7,.7,0,0))
+  expect_par_equal(fix = c(delta = 1), target = c(x = 2, z = 0, rp = 20))
+})
+
+
 
 # test_that("csm - prediced value identities", {
 #   D <- data.frame(x1 = 1, x2 = 2, obsx = c(0,0,0), y1=1, y2=0, obsy = c(1,0,1), y=1)

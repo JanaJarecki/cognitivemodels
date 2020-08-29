@@ -145,7 +145,9 @@ Cm <- R6Class(
     #' @param measure (optional) A string with the goodness-of-fit measure that the solver optimizes (e.g. \code{"loglikelihood"}). Possible values, see the \code{type} argument in \link[cognitiveutils]{gof}
     #' @param ... other arguments
     fit = function(solver = self$options$solver, measure = self$options$fit_measure, ...) {
+
       solver <- .check_and_match_solver(solver = solver)
+      .install_solver_if_missing(solver)
 
       message("Fitting free parameters ",
           .brackify(self$parnames$free2),
@@ -154,7 +156,6 @@ Cm <- R6Class(
           " with ", paste(solver, collapse=", "), ".")
       
       constraints <- .simplify_constraints(self$constraints)
-
       if (solver[1] == "grid") {
         fit <- private$fit_grid(...)
         if (length(solver) == 2) {
@@ -175,8 +176,13 @@ Cm <- R6Class(
       }
       self$fitobj <- fit
       solution <- setNames(fit$solution, self$parnames$free)
+      if (fit$status$code != 0) {
+        message("No optimal parameters found. The solver did not converge.")
+        print(fit$status$message)
+      }
       #! Set only the free parameter
       self$set_par(solution[self$parnames$free], check = FALSE, constrain = FALSE)
+
     },
 
     #' @description
@@ -467,8 +473,8 @@ Cm <- R6Class(
           title <- "Free parameters:"
           if (!is.null(self$fitobj)) {
              title <- paste(title, "estimates")
-            if (self$fitobj$convergence != 0) {
-              title <- paste(title, "(NOT CONVERGED!)")
+            if (self$fitobj$status$code != 0) {
+              title <- paste(title, "(NOT CONVERGED! see m$fitobj$status)")
             }
           }
         }
@@ -589,13 +595,16 @@ Cm <- R6Class(
       }
     },
     get_lb = function(x = "all") {
-      return(setNames(self$parspace[private$get_parnames(x), "lb"], private$get_parnames(x)))
+      return(
+        setNames(self$parspace[self$parnames[[x]], "lb"], self$parnames[[x]]))
     },
     get_ub = function(x = "all") {
-      return(setNames(self$parspace[private$get_parnames(x), "ub"], private$get_parnames(x)))
+      return(
+        setNames(self$parspace[self$parnames[[x]], "ub"], self$parnames[[x]]))
     },
     get_start = function(x = "all") {
-      return(setNames(self$parspace[private$get_parnames(x), "start"], private$get_parnames(x)))
+      return(
+        setNames(self$parspace[self$parnames[[x]],"start"],self$parnames[[x]]))
     },
     get_parnames = function(x = "all") {
       x <- match.arg(x, c("all", "free", "fix", "choicerule", "constrained", "ignored", "equal", "constant"))
@@ -646,7 +655,7 @@ Cm <- R6Class(
         if (options$fit_measure=="loglikelihood" & !"sigma" %in% rownames(p)) {
           rg <- 1
           if (length(self$res)) rg <- max(self$res) - min(self$res)
-          p <- rbind(p, make_parspace(sigma = c(0, rg, rg/2, NA)))
+          p <- rbind(p, make_parspace(sigma = c(.0000001, rg, rg/2, NA)))
         }
       }
       
@@ -771,7 +780,7 @@ Cm <- R6Class(
       # The parameter here are only the free parameter!
       # the other parameters are retrieved in get_par() in the predict function
       if (all(par == 0L) & is.null(names(par))) {
-        par <- private$get_start() # hack because ROI solver strips names
+        par <- private$get_start("free") # hack because ROI solver strips names
       }
       if (any(par < private$get_lb()[names(par)] | par > private$get_ub()[names(par)])) {
         return(-1e10)
@@ -792,26 +801,30 @@ Cm <- R6Class(
     },
     fit_roi = function(start = private$get_start("free"), cons) {
       if (length(cons) == 0) { cons <- NULL }
+      # Hack because ROI can't deal with pre-pended constraints
+      class(cons) <- grep("csm_constraint",class(cons),invert=TRUE,value=TRUE)
+      n <- length(self$parnames[["free"]])
+
       objective <- try(ROI::F_objective(
         F = function(par) { private$objective(par, self = self) },
-        n = self$npar("free"),
-        names = private$get_parnames("free")
+        n = n,
+        names = self$parnames[["free"]]
       ), silent = TRUE)
+
       if (inherits(objective, "try-error")) {
-        private$objective(rep(0, self$npar("free")), self = self)
+        private$objective(rep(0, n), self = self)
       }
-            
       bounds <- ROI::V_bound(
-        li = seq_len(self$npar("free")), lb = private$get_lb("free"),
-        ui = seq_len(self$npar("free")), ub = private$get_ub("free"),
-        names = private$get_parnames("free")
+        li = seq_len(n), lb = private$get_lb("free"),
+        ui = seq_len(n), ub = private$get_ub("free"),
+        names = self$parnames[["free"]]
       )
       problem <- ROI::OP(
         objective = objective,
         constraints = cons,
         bounds = bounds
       )
-      sol <- do.call(
+      sol <- try(do.call(
         what = ROI::ROI_solve,
         args = c(list(
           x = problem,
@@ -819,9 +832,15 @@ Cm <- R6Class(
           start = start),
           self$options$solver_args$control
           ),
-        envir = parent.frame())
-      if (sol$status$code == 1L) {
-        print(sol)
+        envir = parent.frame()), silent = TRUE)
+
+
+      if (inherits(sol, "try-error")) {
+        err <- geterrmessage()
+        stop(err,
+          "\nThe solver \"", self$options$solver, "\" cannot solve this parameter estimation problem.", 
+          "\n * Change the solver by supplying 'options = list(solver = \"newsolver\")'",
+          "\n * View a list of solvers by running 'cm_solvers()'")
       }
       return(sol)
     },
@@ -842,13 +861,12 @@ Cm <- R6Class(
           return(force(A) %*% par)
         }
       }
-      fit <- do.call(Rsolnp::solnp, args = force(.args), env = parent.frame())
-      fit$solution <- fit$pars
-      fit$objval <- tail(fit$value, 1)
-      if (fit$convergence != 0) {
-        message("No optimal solution found.\nThe solver did not converge.")
-      }
-      return(fit)
+
+      sol <- do.call(Rsolnp::solnp, args = force(.args), env = parent.frame())
+      sol$solution <- sol$pars
+      sol$objval <- tail(sol$value, 1)
+      sol$status <- list(code = sol$convergence, msg = NULL)
+      return(sol)
     },
     fit_grid = function(par = self$get_par("free"), ...) {
       G <- private$make_pargrid(which_par = par, ...)
@@ -861,7 +879,8 @@ Cm <- R6Class(
       best_par <- t(sapply(best_ids, get_id_in_grid, grid = G))
       return(list(
         solution = best_par[, private$get_parnames("free"), drop = FALSE],
-        objval = objvals[best_ids])
+        objval = objvals[best_ids],
+        status = list(code == 0, msg == NULL))
       )
     },
     make_stimnames = function() {
