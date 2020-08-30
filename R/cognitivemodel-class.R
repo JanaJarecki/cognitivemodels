@@ -151,14 +151,6 @@ Csm <- R6Class("csm",
       # TODO: add checks for fun() arguments data, par
       return(invisible(self))
     },
-    check_varnames = function(x) {
-      if (any(x %in% colnames(self$data))) {
-          stop("A variable in 'data' has the same name as the prediction of the ", i, ". model. Duplicated names are not allowed.\n  * Do you want to rename each of these variables in data? - ", .brackify(x[which(x %in% colnames(self$data))]), "?")
-        }
-    },
-    call_to_list = function(x) {
-      return(as.list(rlang::call_standardise(as.call(x))))
-    },
     add_title = function(x) {
       self$title <- paste0(c(self$title, x), collapse = " > ")
     },
@@ -170,6 +162,12 @@ Csm <- R6Class("csm",
       parspace <- rbind(self$parspace, x)
       parspace[!duplicated(rownames(parspace))]
       self$parspace <- parspace
+    },
+    check_varnames = function(x) {
+      if (any(x %in% colnames(self$data))) { stop("A variable in 'data' has the same name as the prediction of the ", i, ". model. Duplicated names are not allowed.\n  * Do you want to rename each of these variables in data? - ", .brackify(x[which(x %in% colnames(self$data))]), "?") }
+    },
+    call_to_list = function(x) {
+      return(as.list(rlang::call_standardise(as.call(x))))
     },
     init_call = function() {
       self$call[[1]] <- paste0(self$titel, collapse="+")
@@ -205,19 +203,22 @@ Csm <- R6Class("csm",
       }    
     },
     add_constraints = function(cons = NULL) {
-      if (length(cons) == 0L) {
+      if (length(cons) == 0L & length(self$constraints) == 0L) {
         return(invisible(self))
       }
       if (length(self$constraints) == 0L) {
-        self$constraints <- cons
-        return(invisible(self))
+        if (length(self$par) == 0L) return(cons)
+        C <- NO_constraint(length(names(self$par)))
+        C$names <- names(self$par)
+      } else {
+        C <- self$constraints
       }
-      C <- self$constraints
       A <- array(0L, dim(C$L) + dim(cons$L))
-      j <- seq.int(nrow(C$L))
-      k <- seq.int(ncol(C$L))
-      A[j, k] <- as.matrix(C$L)
-      A[-j, -k] <- as.matrix(cons$L)
+      j <- seq_len(nrow(C$L))
+      k <- seq_len(ncol(C$L))
+      A[ j,  k] <- as.matrix(C$L)
+      if (all(j==0)) A[  , -k] <- as.matrix(cons$L)
+      if (all(j!=0)) A[-j, -k] <- as.matrix(cons$L)
       C <- ROI::L_constraint(
         L = A,
         dir = c(C$dir, cons$dir),

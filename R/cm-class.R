@@ -715,15 +715,17 @@ Cm <- R6Class(
       }
 
       # check over-constrained problems     
-      if ((length(self$par) - length(C)) < 0) {
-          message("Maybe many constraints: ", length(self$par), " parameter and ", length(C), " constraints. View constraints and parameter using `M$constraints` and `M$par`.")
-      }      
+      if ((length(self$par) - length(C)) < 0) { warning("Maybe too many constraints: ", length(self$par), " parameter and ", length(C), " constraints. View the constraints and parameter by costraints(.) and npar(.), where . is the model name.")
+      }
+
       # store values and constraint
       self$constraints <- C
       # fixme: the second part is an ungly hack in case of unconstrained p
       self$ncon <- length(C)
       if (self$ncon > 0L) {
         self$ncon <- min(length(C), sum(!apply(as.matrix(C$L) == 0L, 2, all)))
+        x <<- C
+        b <<- unlist(self$par)
         parvalues <- .solve_constraints(C, b = unlist(self$par))
         self$set_par(parvalues, constrain = FALSE)
         self$set_par(self$par, constrain = TRUE) #fixme (this seems inefficient)
@@ -880,7 +882,7 @@ Cm <- R6Class(
       return(list(
         solution = best_par[, private$get_parnames("free"), drop = FALSE],
         objval = objvals[best_ids],
-        status = list(code == 0, msg == NULL))
+        status = list(code = 0, msg = NULL))
       )
     },
     make_stimnames = function() {

@@ -2,11 +2,12 @@
 
 **New features**
 
-* Added an option in `bayes()` to ignore the sum constraints of the prior parameter
+* Added an optional argument `priorsconstrained` to `bayes()` to set the sum constraints of the prior parameter, see `?bayes`
 
 **Bugfixes**
 
 * Fixed bugs in ROI optimization
+* Fixed bug in `add_constraints()` in `cognitivemodel` lego variant
 * Made dropping of choicerule error and warning easier to understand.
 * Declared `solvers()` as depreciated with a warning, from now on use `cm_solvers()` to show the optimization solvers.
 
