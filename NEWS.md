@@ -1,13 +1,13 @@
 # cognitivemodels 0.0.10
 
-## New features
+**New features**
 
 * Added an option in `bayes()` to ignore the sum constraints of the prior parameter
 
-## Bugfixes
+**Bugfixes**
 
 * Fixed bugs in ROI optimization
-
+* Made dropping of choicerule error and warning easier to understand.
 * Declared `solvers()` as depreciated with a warning, from now on use `cm_solvers()` to show the optimization solvers.
 
 # cognitivemodels 0.0.9

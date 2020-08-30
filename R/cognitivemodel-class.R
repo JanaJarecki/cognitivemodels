@@ -145,7 +145,7 @@ Csm <- R6Class("csm",
         stop("'fun' must be a function, but '", .abbrDeparse(fun), "'' is a ", class(fun), ".")
       }
       m <- self$nmod
-      if (!identical(self$functions[[m]], function(pred, data, par) { return(pred) }, ignore.environment = TRUE)) { stop("Can't add 2 functions after another, fun() %>% fun() is not possible -> Combine the functions into one.")
+      if (!identical(self$functions[[m]], function(pred, data, par) { return(pred) }, ignore.environment = TRUE)) { stop("Can't add 2 functions after another, 'fun() %>% fun()'' is impossible.\n  * Combine the functions into one.")
       }
       self$functions[[m]] <- fun
       # TODO: add checks for fun() arguments data, par
@@ -153,7 +153,7 @@ Csm <- R6Class("csm",
     },
     check_varnames = function(x) {
       if (any(x %in% colnames(self$data))) {
-          stop("A variable in 'data' has the same name as the prediction of the ", i, ". model. Duplicated names are not allowed.\n  * Do you want to rename the following variables in data: ", .brackify(x[which(x %in% colnames(self$data))]), "?")
+          stop("A variable in 'data' has the same name as the prediction of the ", i, ". model. Duplicated names are not allowed.\n  * Do you want to rename each of these variables in data? - ", .brackify(x[which(x %in% colnames(self$data))]), "?")
         }
     },
     call_to_list = function(x) {

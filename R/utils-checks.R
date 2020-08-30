@@ -21,15 +21,15 @@
 .check_and_match_choicerule <- function(x = NULL, mode) {
   mode <- match.arg(mode, c("continuous", "discrete"))
   if (mode == "continuous") {
-    if (length(x) > 0) {
+    if (length(x) > 0 && inherits(try(match.arg(x,"none"),silent=T),"try-error")) {
       warning("Info: dropped 'choicerule = \"", x, "\"', because model models continuous responses.", call. = FALSE)
     }
     return("none")
   }
   allowed <- cm_choicerules(msg = FALSE)
-  if (!length(x)) {
-    stop("Must supply 'choicerule'.\n  * Set choicerule = \"none\" to not apply a choicerule.\n  * Allowed values are", .brackify(allowed), call. = FALSE)
-    }
+  if (!length(x)||inherits(try(match.arg(x,"none"),silent=TRUE),"try-error")) {
+    stop("Argument 'choicerule' must take an allowed value, instead of \"", x, "\".\n  * Allowed values are ", .dotify(dQuote(allowed)), ".\n  * To use no choicerule, set choicerule = \"none\".", call. = FALSE)
+  }
   x <- match.arg(x, c("none", allowed))
   return(x)
 }
