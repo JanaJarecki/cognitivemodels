@@ -203,11 +203,14 @@ Csm <- R6Class("csm",
       }    
     },
     add_constraints = function(cons = NULL) {
+      if (self$nmod == 1) {
+        self$constraints <- cons
+        return(invisible(self))
+      }
       if (length(cons) == 0L & length(self$constraints) == 0L) {
         return(invisible(self))
       }
       if (length(self$constraints) == 0L) {
-        if (length(self$par) == 0L) return(cons)
         C <- NO_constraint(length(names(self$par)))
         C$names <- names(self$par)
       } else {

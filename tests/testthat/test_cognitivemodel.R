@@ -73,6 +73,19 @@ test_that("Bayesian + Utility - Predicted Values for 2 alternatives", {
   expect_equal(m1$predict("max"), c(NA,0,0,1/3))
 })
 
+test_that("Bayesian + Utility - Parameter constraints", {
+  expect_cons_equal <- function(fix) {
+    M <- cognitivemodel(data = D) +
+      utility_pow_c(y ~ x, fix = as.list(fix))
+    expect_equal(M$constraionts, M$model[[1]]$constraints, tol=0.09)
+  }
+
+  D <- data.frame(x = c(1,1,0,0), z = c(0,1,1,1), y = c(.7,.7,0,0))
+  expect_cons_equal(fix = NULL)
+  expect_cons_equal(fix = c(rn=NA))
+  expect_cons_equal(fix = c(rn=1))
+  expect_cons_equal(fix = c(rn=1,rp=NA))
+})
 
 
 test_that("Bayesian + Utility - Parameter estimation", {
