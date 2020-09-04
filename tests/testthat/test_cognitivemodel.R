@@ -25,7 +25,7 @@ test_that("Bayesian model - predictions", {
 test_that("Parameter estimation", {
   expect_par_equal <- function(fix, target) {
     M <- cognitivemodel(data = D) +
-      bayes_beta_d(y ~ x + z, fix = fix, choicerule = "none", priorsconstrained = TRUE)
+      bayes_beta_d(y ~ x + z, fix = fix, choicerule = "none", prior_sum = 2)
     fit(M)
     expect_equal(M$coef(), target, tol=0.09)
   }
@@ -59,7 +59,7 @@ test_that("Bayesian + Utility - Predicted Values for 2 alternatives", {
   DC <- as.data.frame(apply(D, 2, cumsum)) # cumulative data
   fp <- list(delta = 1, x=1, y=1, z=1, `I(1 - x)`=1, `I(1 - y)`=1)
   m1 <- cognitivemodel(data = D) +
-    bayes_beta_c(~ x + y,fix = list(delta=1,x=1,y=1,sigma=0), priorsconstrained=TRUE) +
+    bayes_beta_c(~ x + y,fix=list(delta=1,x=1,y=1,sigma=1e-06), prior_sum = 2) +
     utility_pow_c(y ~ x, fix = list(rp=NA,rn=NA)) + 
     function (pred, data, par) {
       y <- data$pr_x * pred
@@ -91,7 +91,7 @@ test_that("Bayesian + Utility - Parameter constraints", {
 test_that("Bayesian + Utility - Parameter estimation", {
   expect_par_equal <- function(fix, target) {
     M <- cognitivemodel(data = D) +
-      bayes_beta_d( ~ x + z, fix = fix, choicerule="none", priorsconstrained = TRUE) +
+      bayes_beta_d( ~ x + z, fix = fix, choicerule="none", prior_sum = 2) +
       utility_pow_c(y ~ pr_x, fix = list(rn=NA,sigma=0.0001))
     fit(M, options = list(solver = "solnp"))
     expect_equal(M$coef(), target, tol=0.09)

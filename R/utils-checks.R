@@ -26,11 +26,10 @@
     }
     return("none")
   }
-  allowed <- cm_choicerules(msg = FALSE)
-  if (!length(x)||inherits(try(match.arg(x,"none"),silent=TRUE),"try-error")) {
-    stop("Argument 'choicerule' must take an allowed value, instead of \"", x, "\".\n  * Allowed values are ", .dotify(dQuote(allowed)), ".\n  * To use no choicerule, set choicerule = \"none\".", call. = FALSE)
+  try(x <- match.arg(x, c("none", cm_choicerules(msg = FALSE))), silent=TRUE)
+  if (!length(x) || inherits(x,"try-error")) {
+    stop("Argument 'choicerule' must be allowed value, instead of \"", x, "\".\n  * Allowed values are ", .dotify(dQuote(allowed)), ".\n  * To set no choicerule: choicerule = \"none\".", call. = FALSE)
   }
-  x <- match.arg(x, c("none", allowed))
   return(x)
 }
 

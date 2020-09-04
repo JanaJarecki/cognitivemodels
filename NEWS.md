@@ -2,7 +2,7 @@
 
 **New features**
 
-* Added an optional argument `priorsconstrained` to `bayes()` to set the sum constraints of the prior parameter, see `?bayes`
+* Added an optional argument `prior_sum` to Bayesian learning models to set and control the sum constraints of the prior (hyper-)parameter, see `?bayes`
 
 **Bugfixes**
 

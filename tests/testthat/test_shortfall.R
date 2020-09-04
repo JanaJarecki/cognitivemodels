@@ -6,7 +6,7 @@ test_that("Prediction identitites", {
   expect_pred_equal <- function(fml, dt, target) {
     pars <- c(beta = 5, delta = 0.5) 
     M <- shortfall_d(fml, data = dt, asp = ~a, fix = pars, choicerule = "none")
-    M2 <- shortfall_c(fml, data = dt, asp = ~a, fix = c(pars, sigma = 0))
+    M2 <- shortfall_c(fml, data = dt, asp = ~a, fix = c(pars, sigma = 1e-07))
     expect_equal(M$predict("value"), target)
     expect_equal(predict(M, "value"), target)
     expect_equal(predict(M2, "value"), target)

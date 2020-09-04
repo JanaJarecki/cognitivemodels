@@ -655,24 +655,15 @@ Cm <- R6Class(
         if (options$fit_measure=="loglikelihood" & !"sigma" %in% rownames(p)) {
           rg <- 1
           if (length(self$res)) rg <- max(self$res) - min(self$res)
-          p <- rbind(p, make_parspace(sigma = c(.0000001, rg, rg/2, NA)))
+          p <- rbind(p, make_parspace(sigma = c(.0000001, max(rg, .0000001))))
         }
       }
       
-      if (length(options$lb)) {
-        p[names(options$lb), "lb"] <- options$lb
-      }
-      if (length(options$ub)) {
-        p[names(options$ub), "ub"] <- options$ub
-      }
-      if (length(c(options$ub, options$lb))) {
-        not_btw <- (!p[intersect(names(options$lb),names(options$ub)), "start"] %between% list(options$lb, options$ub))
-        p[not_btw, "start"] <- rowMeans(p[not_btw, c("lb", "ub"), drop=FALSE])
-      }
-      if (length(options$start)) {
-        p[names(options$start), "start"] <- options$start
-      }
-
+      p[names(options$lb), "lb"] <- options$lb
+      p[names(options$ub), "ub"] <- options$ub
+      p[, "start"] <- pmin(p[, "ub"], p[,"start"])
+      p[, "start"] <- pmax(p[, "lb"], p[,"start"])      
+      p[names(options$start), "start"] <- options$start
       self$parspace <- p
     },
     init_fix = function(fix) {
@@ -802,9 +793,10 @@ Cm <- R6Class(
       return(objval)
     },
     fit_roi = function(start = private$get_start("free"), cons) {
-      if (length(cons) == 0) { cons <- NULL }
-      # Hack because ROI can't deal with pre-pended constraints
-      class(cons) <- grep("csm_constraint",class(cons),invert=TRUE,value=TRUE)
+      if (length(cons) == 0) { cons <- NULL } else {
+        # Hack because ROI can't deal with pre-pended constraints
+        class(cons)<-grep("csm_constraint",class(cons),invert=TRUE,value=TRUE)
+      }
       n <- length(self$parnames[["free"]])
 
       objective <- try(ROI::F_objective(

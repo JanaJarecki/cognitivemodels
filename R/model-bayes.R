@@ -22,12 +22,12 @@
 #' 
 #' @eval .param_formula(2)
 #' @eval .param_fix("bayes_beta_d", dyn_args = "formula", which = 2)
-#' @param format (optional) A string,, the format the data to be modeled, can be abbreviated, default is `"raw"`; allowed values:
+#' @param format (optional) A string, the format the data to be modeled, can be abbreviated, default is `"raw"`; allowed values:
 #'  * `"raw"` means that the data are trial-by-trial binary occurrence indicators: 1, 0, 1, ... means the event happened in trial with a value of 1.
 #'  * `"cumulative"` means the data are trial-by-trial cumulative counts of events: 0, 1, 1, 2, ... counts how often the event happened up to the trial.
 #'  * `"count"` means the data are total events counts, ignoring the trial-by-trial order of events: 2, 10, ... means the event happened 2 times, then (starting from zero!) it happened 10 times.
 #' @param type (optional) A string, the type of inference, `"beta-binomial"` or `"dirichlet-multinomial"`. Can be abbreviated. Will be inferred, if missing.
-#' @param priorsconstrained (optional, default `FALSE`) Logical, `TRUE` constrains the prior parameter to sum to the number of options.
+#' @param prior_sum (optional) A number; the prior hyperparameter will be constrained to sum to this number; defaults to the number of prior parameters; if `prior_sum = NA` no sum constraint is placed.
 #' 
 #' @details
 #' The model models -- as response -- the belief about the occurrence of the first event in the `formula` as follows:
@@ -105,7 +105,7 @@ NULL
 
 #' @rdname bayes
 #' @export
-bayes_beta_c <- function(formula, data, fix = NULL, format = c("raw", "count", "cumulative"), priorsconstrained = FALSE, ...) {
+bayes_beta_c <- function(formula, data, fix = NULL, format = c("raw", "count", "cumulative"), prior_sum = NULL, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args[["mode"]] <- "continuous"
   .args[["options"]] <- list(fit_args = list(pdf = "truncnorm", a = 0, b = 1))
@@ -115,7 +115,7 @@ bayes_beta_c <- function(formula, data, fix = NULL, format = c("raw", "count", "
 
 #' @rdname bayes
 #' @export
-bayes_beta_d <- function(formula, data, fix = NULL, format = NULL, priorsconstrained = FALSE, ...) {
+bayes_beta_d <- function(formula, data, fix = NULL, format = NULL, prior_sum = NULL, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args[["mode"]] <- "discrete"
   return(do.call(what = Bayes$new, args = .args, envir = parent.frame()))
@@ -124,7 +124,7 @@ bayes_beta_d <- function(formula, data, fix = NULL, format = NULL, priorsconstra
 
 #' @rdname bayes
 #' @export
-bayes_dirichlet_d <- function(formula, data, fix = NULL, format = NULL, priorsconstrained = FALSE, ...) {
+bayes_dirichlet_d <- function(formula, data, fix = NULL, format = NULL, prior_sum = NULL, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args[["mode"]] <- "discrete"
   return(do.call(what = Bayes$new, args = .args, envir = parent.frame()))
@@ -133,7 +133,7 @@ bayes_dirichlet_d <- function(formula, data, fix = NULL, format = NULL, priorsco
 
 #' @rdname bayes
 #' @export
-bayes_dirichlet_c <- function(formula, data, fix = NULL, format = NULL, priorsconstrained = FALSE,  ...) {
+bayes_dirichlet_c <- function(formula, data, fix = NULL, format = NULL, prior_sum = NULL,  ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args[["mode"]] <- "continuous"
   return(do.call(what = Bayes$new, args = .args, envir = parent.frame()))
@@ -141,7 +141,7 @@ bayes_dirichlet_c <- function(formula, data, fix = NULL, format = NULL, priorsco
 
 #' @rdname bayes
 #' @export
-bayes <- function(formula, data = data.frame(), fix = list(), format = c("raw", "count", "cumulative"), type = NULL, discount = 0L, options = list(), priorsconstrained = FALSE, ...) {
+bayes <- function(formula, data = data.frame(), fix = list(), format = c("raw", "count", "cumulative"), type = NULL, discount = 0L, options = list(), prior_sum = NULL, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   return(do.call(what = Bayes$new, args = .args, envir = parent.frame()))
 }
@@ -155,13 +155,14 @@ Bayes <- R6Class("Bayes",
     format = NULL,
     priornames = NULL,
     npred = NULL,
-    priorsconstrained = FALSE,
-    initialize = function(formula, data = data.frame(), type = NULL, format = c("raw", "cumulative", "count"), fix = list(), choicerule = NULL, mode = NULL, discount = 0, options = list(),  priorsconstrained = FALSE, ...) {
-      self$format <- match.arg(format)
+    prior_sum = FALSE,
+    initialize = function(formula, data = data.frame(), type = NULL, format = c("raw", "cumulative", "count"), fix = list(), choicerule = NULL, mode = NULL, discount = 0, options = list(),  prior_sum = NULL, ...) {
+      format <- match.arg(format)
+      formula <- private$sanitize_formula(f = formula, format = format)
+      self$format <- format
       self$priordist <- self$infer_priordist(type = type, f=formula)
-      self$priorsconstrained <- priorsconstrained
+      self$prior_sum <- c(.rhs_length(formula)[1], prior_sum)[1L + !is.null(prior_sum)]
       self$init_npred(f=formula)
-      formula <- private$sanitize_formula(f = formula)
       fix <- self$reformulate_fix(fix = fix, f = formula)
       if (is.null(options$fit_measure)) options$fit_measure <- "loglikelihood"
       super$initialize(
@@ -279,19 +280,11 @@ Bayes <- R6Class("Bayes",
       }
       return(super$get_parnames(x))
     },
-    make_parspace = function(f) {
-      self$formula <- as.Formula(f)
-      f <- self$formula
-
-      # Learning rate parameter
-      d_par <- list(delta = c(0L, 10, 1, 1)) # NOT dynamic
-      
-      # Dynamic parameters: prior names are dynamically generated from
-      # RHS of formula. If formula is ... ~ xx + yy we name priors:
-      # "prior.xx" and "prior.yy"
-      UL <- if( self$priorsconstrained == FALSE) 10 else { self$natt[1] }
-      p_par <- setNames(lapply(1:sum(.rhs_length(f)), function(.) c(0.001, UL, 1L, 1L)), unlist(.rhs_varnames(f)))
-      #Note: don't change the order, the d_par needs to come first
+    make_parspace = function(f = self$formula) {
+      d_par <- list(delta = c(0L, 10, 1, 1))
+      p_ul <- c(.rhs_length(f), self$prior_sum)[2L - (is.na(self$prior_sum))]
+      p_par <- setNames(lapply(1:sum(.rhs_length(f)), function(.) c(0.00001, p_ul, 1L, 1L)), unlist(.rhs_varnames(f)))
+      # Note: don't change the order, the d_par needs to come first
       return(do.call(make_parspace, c(d_par, p_par)))
     }
   ),
@@ -305,12 +298,12 @@ Bayes <- R6Class("Bayes",
         return(super$get_input(f=f,d=d))
       }
     },
-    sanitize_formula = function(f) {
-      if (self$format == "raw") {
+    sanitize_formula = function(f, format = self$format) {
+      if (format == "raw") {
         return(.add_missing_prob(f, 1, 1))
       } else {
         if (any(.rhs_length(f) == 1)) {
-            stop("'formula' needs > 1 right-hand side variables (unless format = 'raw'), but has only 1 RHS (", .abbrDeparse(f), ").\n  * Did you accidentaly forget to write the second option into the 'formula'? (e.g., y ~ count_0 + count_1)\n  * Do you wan tto use 'format = raw'?")
+            stop("'formula' needs > 1 right-hand side variables (unless format = 'raw'), but has only 1 RHS (", .abbrDeparse(f), ").\n  * Did you forget to write the second option in 'formula'? (e.g., y ~ a + b)\n  * Do you wan tto use 'format = raw'?")
           }
         return(f)
       }
@@ -324,11 +317,8 @@ Bayes <- R6Class("Bayes",
       return(nn[tmp])
     },
     make_constraints = function() {
-      if (self$priorsconstrained == FALSE) return(NULL)
-      # make constraint for the priors
-      #   note: priors depend on the type of prior distribution
-      #   (beta distribution, dirichlet distribution, etc.)
-      #   therefore we make prior parameter dynamically
+      if (is.na(self$prior_sum)) return(NULL)
+      # Priors depend on the type of prior distribution
       parnames <- names(self$par)
       C <- NULL
       for (p in .rhs_varnames(self$formula)) {
@@ -336,7 +326,7 @@ Bayes <- R6Class("Bayes",
           L_constraint(
             L = as.integer(parnames %in% p),
             dir = "==",
-            rhs = length(p),
+            rhs = self$prior_sum,
             names = parnames)
         )
       }

@@ -94,8 +94,8 @@ Shortfall <- R6Class("shortfall",
 
       # Parameter space
       # Two free parameter
-      #    beta: from 0 - 10, initial value: 1, ignore value: 0
-      #    delta: from 0 - 1, initial value: 0.5, ignore with 1
+      #    beta: from 0 - 10, initial value: 1, ignore: 0
+      #    delta: from 0 - 1, initial value: 0.5, ignore: 1
       parspace <- make_parspace(
         beta  = c(0, 10, 1, 0),
         delta = c(0, 1, .5, 1)
