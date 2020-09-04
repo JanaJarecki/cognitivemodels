@@ -41,7 +41,7 @@ ebm(formula, criterion, data, mode, fix = NULL, options = NULL, ...)
 
 \item{choicerule}{A string, the choice rule. Allowed values, see  \code{cm_choicerules()}: \code{"none"} is no choice rule, \code{"softmax"} is \href{https://en.wikipedia.org/wiki/Softmax_function}{soft-maximum}, \code{"luce"} is \href{https://en.wikipedia.org/wiki/Luce\%27s_choice_axiom}{Luce's axiom}.}
 
-\item{fix}{(optional) A list or the string \code{"start"}, the fixed model parameters, if missing all parameters are estimated. Model parameter names depend on \code{formula}, \code{class} and can be \emph{\code{x1}, \code{x2}, \code{lambda}, \code{r}, \code{q}, \code{b0}, \code{b1}} (see details - model parameters).
+\item{fix}{(optional) A list with parameter-value pairs of fixed parameters. If missing all free parameters are estimated. If set to \code{"start"} all parameters are fixed to their start values. Model parameter names depend on \code{formula}, \code{class} and can be \emph{\code{x1}, \code{x2}, \code{lambda}, \code{r}, \code{q}, \code{b0}, \code{b1}} (see details - model parameters).
 \itemize{
 \item \code{list(r = 2.70)} sets parameter \emph{\code{r}} equal to 2.70.
 \item \code{list(r = "q")} sets parameter \emph{\code{r}} equal to parameter \emph{\code{q}} (estimates \emph{\code{q}}).
@@ -160,6 +160,7 @@ Other cognitive models:
 \code{\link{choicerules}},
 \code{\link{cpt}},
 \code{\link{hm1988}()},
+\code{\link{shift}()},
 \code{\link{shortfall}},
 \code{\link{utility}}
 }

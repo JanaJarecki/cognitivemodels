@@ -25,7 +25,7 @@ utility_pow_c(formula, data, fix = list(), discount = 0, options = list(), ...)
 
 \item{choicerule}{A string, the choice rule. Allowed values, see  \code{cm_choicerules()}: \code{"none"} is no choice rule, \code{"softmax"} is \href{https://en.wikipedia.org/wiki/Softmax_function}{soft-maximum}, \code{"luce"} is \href{https://en.wikipedia.org/wiki/Luce\%27s_choice_axiom}{Luce's axiom}.}
 
-\item{fix}{(optional) A list or the string \code{"start"}, the fixed model parameters, if missing all parameters are estimated. Model parameter names are \emph{\code{rp}, \code{rn}} (see details - model parameters).
+\item{fix}{(optional) A list with parameter-value pairs of fixed parameters. If missing all free parameters are estimated. If set to \code{"start"} all parameters are fixed to their start values. Model parameter names are \emph{\code{rp}, \code{rn}} (see details - model parameters).
 \itemize{
 \item \code{list(rp = 5.40)} sets parameter \emph{\code{rp}} equal to 5.40.
 \item \code{list(rp = "rn")} sets parameter \emph{\code{rp}} equal to parameter \emph{\code{rn}} (estimates \emph{\code{rn}}).
@@ -79,6 +79,7 @@ Other cognitive models:
 \code{\link{cpt}},
 \code{\link{ebm}()},
 \code{\link{hm1988}()},
+\code{\link{shift}()},
 \code{\link{shortfall}}
 }
 \author{

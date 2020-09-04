@@ -42,7 +42,7 @@ cpt_mem_c(formula, mem, data, editing = "hedonic", options = NULL)
 
 \item{ref}{(optional, default: 0) A number, string, or RHS \link[stats:formula]{formula}, the reference point or the variable in \code{data} that holds the reference point. For example \code{~ ref}.}
 
-\item{fix}{(optional) A list or the string \code{"start"}, the fixed model parameters, if missing all parameters are estimated. Model parameter names are \emph{\code{alpha}, \code{beta}, \code{gammap}, \code{gamman}, \code{lambda}} (see details - model parameters).
+\item{fix}{(optional) A list with parameter-value pairs of fixed parameters. If missing all free parameters are estimated. If set to \code{"start"} all parameters are fixed to their start values. Model parameter names are \emph{\code{alpha}, \code{beta}, \code{gammap}, \code{gamman}, \code{lambda}} (see details - model parameters).
 \itemize{
 \item \code{list(alpha = 1.08)} sets parameter \emph{\code{alpha}} equal to 1.08.
 \item \code{list(alpha = "beta")} sets parameter \emph{\code{alpha}} equal to parameter \emph{\code{beta}} (estimates \emph{\code{beta}}).
@@ -141,6 +141,7 @@ Other cognitive models:
 \code{\link{choicerules}},
 \code{\link{ebm}()},
 \code{\link{hm1988}()},
+\code{\link{shift}()},
 \code{\link{shortfall}},
 \code{\link{utility}}
 }
