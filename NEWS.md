@@ -4,6 +4,7 @@
 
 * Added an optional argument `prior_sum` to Bayesian learning models to set and control the sum constraints of the prior (hyper-)parameter, see `?bayes`
 * Added a new model `shift_c()` that models a change point in time for shifting between two values or two predictions. See `?shift`
+* In `predict.cm` changed the order or arguments such that the argument `newdata` is at the second position to comply with `predict.glm` methods
 
 **Bugfixes**
 

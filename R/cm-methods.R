@@ -255,7 +255,7 @@ SSE.cm <- function(x, ...) {
 #' @return A vector or matrix of predictions, if multiple models are supplied using \code{...}, returns a list containing the predictions for each model
 #' 
 #' @export
-predict.cm <- function(object, ..., type = "response", newdata = NULL) {
+predict.cm <- function(object, newdata = NULL, ..., type = "response") {
   dotargs <- list(...)
   if (missing(object) & length(dotargs)) {
     object <- dotargs
@@ -284,7 +284,6 @@ predict.cm <- function(object, ..., type = "response", newdata = NULL) {
   }
   return(object$predict(type = type, newdata = newdata))
 }
-
 
 
 #' Show the paramter space of a cognitive model
