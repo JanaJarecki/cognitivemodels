@@ -11,7 +11,7 @@ Imports:
     abind,
     AICcmodavg,
     arrangements,
-    cognitiveutils (>= 0.0.11),
+    cognitiveutils (>= 0.0.12),
     combinat,
     data.table,
     english,

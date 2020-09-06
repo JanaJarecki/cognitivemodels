@@ -120,8 +120,8 @@ coef.cm <- function(object, ...) {
 #' @name gof
 #' @family {fit measures for cognitive models}
 #' @export
-logLik.cm <- function(object, ...) {
-  object$logLik(...)
+logLik.cm <- function(object, newdata = NULL, ...) {
+  object$logLik(newdata = newdata, ...)
 }
 
 #' @name gof

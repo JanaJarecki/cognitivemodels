@@ -68,7 +68,6 @@ Rcpp::NumericVector ebm_cpp(
   int ismultiplicative) {
   
   int ntrials = criterion.length() - firstOutTrial + 1;
-  int nfeatures = features.ncol();
   int T = criterion.length();
   
   Rcpp::NumericVector sim(lastLearnTrial);

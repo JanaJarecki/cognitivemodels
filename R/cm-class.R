@@ -350,7 +350,7 @@ Cm <- R6Class(
         pred[self$discount, ] <- NA
       }
       .args <- c(list(...), self$options$fit_args)
-      .args <- .args[!duplicated(names(.args)) & !grepl("n", names(.args))]
+      .args <- .args[!duplicated(names(.args)) & !grepl("^n", names(.args))]
 
       .args <- c(
         list(
@@ -365,7 +365,9 @@ Cm <- R6Class(
           ),
           .args
         )
-
+      if(length(newdata)) {
+        print(.args)
+      }
       gof <- try(do.call(cognitiveutils::gof, args = .args, envir = parent.frame()), silent = TRUE)
       if (inherits(gof, "try-error")) {
         stop("Can't compute the goodness of fit ", type, ", because:\n  ", geterrmessage(), call.= FALSE)
