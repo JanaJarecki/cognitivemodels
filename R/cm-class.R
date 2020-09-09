@@ -365,9 +365,7 @@ Cm <- R6Class(
           ),
           .args
         )
-      if(length(newdata)) {
-        print(.args)
-      }
+
       gof <- try(do.call(cognitiveutils::gof, args = .args, envir = parent.frame()), silent = TRUE)
       if (inherits(gof, "try-error")) {
         stop("Can't compute the goodness of fit ", type, ", because:\n  ", geterrmessage(), call.= FALSE)
