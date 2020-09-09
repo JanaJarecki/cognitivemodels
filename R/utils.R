@@ -319,7 +319,8 @@ make_parspace <- function(...) {
   dotargs[start_nas, "start"] <- rowMeans(dotargs[start_nas, c("ub", "lb"), drop = FALSE])
 
   if ( any(dotargs[,"lb"] > dotargs[,"ub"]) ) {
-    stop('Lower value limit > upper limit for the parameter: ', .brackify(dQuote(rownames(dotargs)[which(dotargs[,"lb"] > dotargs[, "ub"])])), '. Ensure "lb" < "ub", e.g. make_parspace(a = c(0, 1, 0.5)).')
+    problematic <- rownames(dotargs)[which(dotargs[,"lb"] > dotargs[, "ub"])]
+    stop("Lower bound of parameter space cannot be greater than upper bound, but lb > ub for each of the parameters (lb > ub):", paste0("\n  * ", problematic, ": ", dotargs[problematic, "lb"], " > ", dotargs[problematic, "ub"]), "\n  -> Check parspace. Ensure the lb < ub, e.g. 'make_parspace(a = c(0, 1, 0.5))'.", call. = FALSE)
   }
   if ( any(dotargs[,"start"] < dotargs[,"lb"]) ) {
     stop("Initial value < lower limit for the parameter: ", .brackify(dQuote(rownames(dotargs)[which(dotargs[,"start"] < dotargs[,"lb"])])), '. Ensure "start" is > "lb"), e.g. make_parspace(a = c(0, 1, 0.5)).' )

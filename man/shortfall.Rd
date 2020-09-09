@@ -2,35 +2,101 @@
 % Please edit documentation in R/model-shortfall.R
 \name{shortfall}
 \alias{shortfall}
+\alias{shortfall_d}
+\alias{shortfall_c}
 \title{Shortfall Risky Choice Model}
 \usage{
-shortfall(formula, asp, data, fix = list(), choicerule, options)
+shortfall_d(formula, asp, data, choicerule, fix = list(), options = NULL)
+
+shortfall_c(formula, asp, data, fix = list(), options = NULL)
 }
 \arguments{
-\item{formula}{A \link{formula} defining the observations and stimuli in data. Stimuli are defined by outcomes and probabilities, separated by a pipe (\code{|}), like this: \code{mode ~ x1 + x2 + px + I(1-px) | y1 + y2 + py + I(1-py)}, where x1 and x2 are the first option's outcomes, px is the probability Pr(x1), y1 and y2 are the second option's outcomes, and py is the probability Pr(y1).}
+\item{formula}{A \link[stats:formula]{formula}, the variables in \code{data} to be modeled. For example, \code{y ~ x1 + p2 + x3 + p4 | x5 + p6 + x7 + p8} models response y as function of two stimuli with features x1, p2, x3, p4 and x5, p6, x7, p8, alternating outcomes \code{x} and probabilities \code{p} (respectively). Lines \code{|} separate stimuli.}
 
-\item{asp}{A \link{formula} defining the aspiration level in data, e.g., (\code{~aspirlev}), strings will be reformulated.}
+\item{asp}{A \link[stats:formula]{formula} or a string, the variable in \code{data} with the aspiration level. For example, \code{~ x9} or \code{"x9"}. Can be stimulus-specific: for example \code{~ x9 | x10} sets x9, x10 as aspiration levels for the 1. and 2. stimulus (respectively).}
+
+\item{data}{A data frame, the data to be modeled.}
+
+\item{fix}{(optional) A list or the string \code{"start"}, the fixed model parameters, if missing all parameters are estimated. Model parameter names are \emph{\code{beta}, \code{delta}} (see details - model parameters).
+\itemize{
+\item \code{list(beta = 3.09)} sets parameter \emph{\code{beta}} equal to 3.09.
+\item \code{list(beta = "delta")} sets parameter \emph{\code{beta}} equal to parameter \emph{\code{delta}} (estimates \emph{\code{delta}}).
+\item \code{list(delta = "beta", beta = 3.09)} sets parameter \emph{\code{delta}} equal to parameter \emph{\code{beta}} and sets \emph{\code{beta}} equal to 3.09 (estimates none of the two).
+\item \code{list(beta = NA)} omits the parameter \emph{\code{beta}}, if possible.
+\item \code{"start"} sets all parameters equal to their initial values (estimates none). Useful for building a first test model.
+}}
+
+\item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \code{\link[=cm_options]{cm_options()}}.}
+
+\item{discount}{A number, how many initial trials to not use during parameter fitting.}
+
+\item{...}{other arguments, ignored.}
 }
 \value{
-An object of class R6 holding the model, it has free parameters. A model object \code{M} can be viewed with \code{M}, predictions can be made with \code{M$predict()} for choice predictions, and \code{M$predict("ev")} for the expected value of the optimal choice and \code{M$predict("value", 1:2)} for the expected value of all choices.
+Returns a cognitive model object, which is an object of class \href{Cm}{cm}. A model, that has been assigned to \code{m}, can be summarized with \code{summary(m)} or \code{anova(m)}. The parameter space can be viewed using \verb{pa. rspace(m)}, constraints can be viewed using \code{constraints(m)}.
 }
 \description{
-Fits the shortfall model, a cognitive model for risky choices. It trades off a risky option's expected value with a \eqn{\beta}-weighted measure of risk; risk being the chance of falling short of a \eqn{\delta}-weighted aspiration level (based on Andraszewicz, von Helversen, and Rieskamp). Model inputs are the risky options and the aspiration level. The value \eqn{v} of option \eqn{o}, with free parameters \eqn{\delta, \beta}, is
-\deqn{v(o) = EV(o) - \beta R(o)}
-\deqn{R(o) = \sum_i ( p_i ( max [ \delta asp_{o} - out_{o,i} , 0 ] ),}
-where the parameter \eqn{\beta} represents risk aversion (\eqn{0 \le \beta \le 15}), the parameter \eqn{\delta} represents weight of the aspiration level (\eqn{0 \le \delta \le 1}).
+Fits the shortfall model for risky choices and judgments (Andraszewicz, 2014).
+\itemize{
+\item \code{shortfall_d()} fits the shortfall model for discrete responses (select option).
+\item \code{shortfall_c()} fits the shortfall model for continuous responses (judge options).
+}
 }
 \details{
-shortfall(formula, data)
-
-Risk-sensitive foraging means you have, for instance, four choices between the same two risky lotteries and after the four choices you need to have accumulated at least 12 points to get a reward. The optimal solution to this choice problem relies on dynamic programming. The function creates all possible future states given the possible remaining trials, and predicts the optimal choice polica or the expected value of chosing either option given a certain state and a certain time horizon.
+The model trades off the expected value of a risky option with a \eqn{\beta}-weighted measure of the risk of the option. Risk is defined as the chance of falling short of a \eqn{\delta}-weighted aspiration level (see Andraszewicz, 2014). Model inputs are the risky options and the aspiration level. The subjective value \eqn{v} of option \eqn{o} given parameters \eqn{\delta, \beta} is modeled by
+\deqn{v(o) = EV(o) - \beta R(o)}
+\deqn{R(o) = \sum_i ( p_i ( max [ \delta asp_{o} - x_{o,i} , 0 ] )}.
+\subsection{Model Parameters}{
+\itemize{
+\item \emph{\strong{\code{beta}}}: the weight of the risk, risk aversion (\eqn{0 \le \beta \le 10}).
+\item \emph{\strong{\code{delta}}}: the weight of the aspiration level (\eqn{0 \le \delta \le 1}).
+\item In \code{shortfall_d()}: If \code{choicerule = "softmax"}: \emph{\strong{\code{tau}}}  is the temperature or choice softness, higher values cause more equiprobable choices. If \code{choicerule = "epsilon"}: \emph{\strong{\code{eps}}} is the error proportion, higher values cause more errors from maximizing.
+}
+}
 }
 \examples{
-# None yet
+# Make some data -----------------------------------
+dt <- data.frame(
+   x1 = rep(1,3), x2 = rep(2,3), px = rep(.5,3), 
+   y1 = 0:2, y2 = rep(3,3), py = rep(.5,3),
+   aspiration = rep(1,3), choice = c(1,1,0))
+
+# Make model ----------------------------------------
+# 1. Continuous model - normal log likelihood
+m <- shortfall_c(
+   formula = choice ~ x1 + px + x2,
+   asp = "aspiration",
+   data = dt)
+
+m            # view model
+predict(m)   # predict values/ratings
+parspace(m)  # view parameter space
+
+# 2. Discrete model - binomial log likelihood
+m <- shortfall_d(
+   formula = choice ~ x1 + px + x2 | y1 + py + y2,
+   asp = "aspiration",
+   data = dt,
+   choicerule = "softmax")
+
+m            # View model
+predict(m)   # predict choice, Pr(select "x")
+parspace(m)  # View parameter space
 }
 \references{
-{ Andraszewicz, S. (2014). Quantitative analysis of risky decision making in economic environments \(Doctoral dissertation, University of Basel\). doi:10.5451/unibas-006268585 }
+{Andraszewicz, S. (2014). Quantitative analysis of risky decision making in economic environments \(Doctoral dissertation, University of Basel\). doi:10.5451/unibas-006268585 }
+}
+\seealso{
+Other cognitive models: 
+\code{\link{baseline_const_c}()},
+\code{\link{bayes}()},
+\code{\link{choicerules}},
+\code{\link{cpt}},
+\code{\link{ebm}()},
+\code{\link{hm1988}()},
+\code{\link{utility}}
 }
 \author{
 Jana B. Jarecki, \email{jj@janajarecki.com}
 }
+\concept{cognitive models}

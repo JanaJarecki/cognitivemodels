@@ -58,7 +58,7 @@ fun.csm = function(obj, ...) {
 #' Estimates free parameters of a cognitvemodel generated via `+`
 #' 
 #' @param obj a model object of class 'cognitivemodel'
-#' @param ... other arguments (ignored)
+#' @param ... other arguments passed to the cognitive model fitting
 #' @export
 fit <- function(obj, ...) { UseMethod("fit") }
 #' @export

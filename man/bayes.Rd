@@ -2,10 +2,48 @@
 % Please edit documentation in R/model-bayes.R
 \name{bayes}
 \alias{bayes}
-\alias{bayes_beta}
-\alias{bayes_dirichlet}
+\alias{bayes_beta_c}
+\alias{bayes_beta_d}
+\alias{bayes_dirichlet_d}
+\alias{bayes_dirichlet_c}
 \title{Bayesian Inference Cognitive Model}
 \usage{
+bayes_beta_c(
+  formula,
+  data,
+  fix = NULL,
+  format = c("raw", "count", "cumulative"),
+  priorsconstrained = FALSE,
+  ...
+)
+
+bayes_beta_d(
+  formula,
+  data,
+  fix = NULL,
+  format = NULL,
+  priorsconstrained = FALSE,
+  ...
+)
+
+bayes_dirichlet_d(
+  formula,
+  data,
+  fix = NULL,
+  format = NULL,
+  priorsconstrained = FALSE,
+  ...
+)
+
+bayes_dirichlet_c(
+  formula,
+  data,
+  fix = NULL,
+  format = NULL,
+  priorsconstrained = FALSE,
+  ...
+)
+
 bayes(
   formula,
   data = data.frame(),
@@ -14,80 +52,102 @@ bayes(
   type = NULL,
   discount = 0L,
   options = list(),
+  priorsconstrained = FALSE,
   ...
 )
-
-bayes_beta(formula, data = data.frame(), fix = NULL, format = NULL, ...)
-
-bayes_dirichlet(formula, data, fix = NULL, format = NULL, ...)
 }
 \arguments{
-\item{formula}{A formula, the reported beliefs ~ event + event ... (e.g., \code{y ~ coin_heads + coin_tails}).}
+\item{formula}{A \link[stats:formula]{formula}, the variables in \code{data} to be modeled. For example, \code{y ~ x1 + x2} models response y as function of one stimulus with features x1, x2.}
 
-\item{format}{A string (default \code{"raw"}) with the data format. Can be \code{"raw"}, \code{"cummulative"}, \code{"count"}, where \code{"raw"} means data are occurrence indicators (1=event, 0=no event); \code{"cumulative"} means data are cumulative event frequencies (1,2,2,...), and code{"count"} means data are non-ordered event frequencies (10,2,5,...).}
+\item{data}{A data frame, the data to be modeled.}
+
+\item{fix}{(optional) A list or the string \code{"start"}, the fixed model parameters, if missing all parameters are estimated. Model parameter names depend on \code{formula} and can be \emph{\code{delta}, \code{x1}, \code{x2}} (see details - model parameters).
+\itemize{
+\item \code{list(x1 = 3.09)} sets parameter \emph{\code{x1}} equal to 3.09.
+\item \code{list(x1 = "x2")} sets parameter \emph{\code{x1}} equal to parameter \emph{\code{x2}} (estimates \emph{\code{x2}}).
+\item \code{list(x2 = "x1", x1 = 3.09)} sets parameter \emph{\code{x2}} equal to parameter \emph{\code{x1}} and sets \emph{\code{x1}} equal to 3.09 (estimates none of the two).
+\item \code{list(x1 = NA)} omits the parameter \emph{\code{x1}}, if possible.
+\item \code{"start"} sets all parameters equal to their initial values (estimates none). Useful for building a first test model.
+}}
+
+\item{format}{(optional) A string,, the format the data to be modeled, can be abbreviated, default is \code{"raw"}; allowed values:
+\itemize{
+\item \code{"raw"} means that the data are trial-by-trial binary occurrence indicators: 1, 0, 1, ... means the event happened in trial with a value of 1.
+\item \code{"cumulative"} means the data are trial-by-trial cumulative counts of events: 0, 1, 1, 2, ... counts how often the event happened up to the trial.
+\item \code{"count"} means the data are total events counts, ignoring the trial-by-trial order of events: 2, 10, ... means the event happened 2 times, then (starting from zero!) it happened 10 times.
+}}
+
+\item{priorsconstrained}{(optional, default \code{FALSE}) Logical, \code{TRUE} constrains the prior parameter to sum to the number of options.}
+
+\item{...}{other arguments, ignored.}
 
 \item{type}{(optional) A string, the type of inference, \code{"beta-binomial"} or \code{"dirichlet-multinomial"}. Can be abbreviated. Will be inferred, if missing.}
 
-\item{...}{other arguments from other functions, currently ignored.}
+\item{discount}{A number, how many initial trials to not use during parameter fitting.}
+
+\item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \code{\link[=cm_options]{cm_options()}}.}
 }
 \value{
-An model object (similar to lm-objects) of class "bayes". It can be viewed with \code{summary(mod)}, where \code{mod} is the name of the model object.
+Returns a cognitive model object, which is an object of class \href{Cm}{cm}. A model, that has been assigned to \code{m}, can be summarized with \code{summary(m)} or \code{anova(m)}. The parameter space can be viewed using \verb{pa. rspace(m)}, constraints can be viewed using \code{constraints(m)}.
 }
 \description{
-\code{bayes()} fits a Bayesian cognitive model, updating beliefs about discrete-event probabilities from event frequencies, \code{bayes_beta()} is for binomial events, \code{bayes_dirichlet()} is for categorical/multinomial events.
+\code{bayes()} fits a Bayesian cognitive model, updating beliefs about the probability of discrete event outcomes based on the frequencies of outcomes.
+\itemize{
+\item \code{bayes_beta_c()} fits a model for 2 outcomes (beta-binomial) for continuous responses
+\item \code{bayes_beta_d()} fits a model for 2 outcomes (beta-binomial) for discrete responses
+\item \code{bayes_dirichlet_c()} fits a model for \emph{n > 2} outcomes (dirichlet-categorical/multinomial) for continuous responses
+\item \code{bayes_dirichlet_d()} fits a model for \emph{n > 2} outcomes (dirichlet-categorical/multinomial) for discrete responses
+}
 }
 \details{
-Given the formula \code{y ~ a} the model predicts beliefs about event "a" occurring, but given \code{y ~ a + b} it predicts beliefs about events "a" and "b" occurring. If "a" and "b" are complementary the predictions will be complements, the difference is that
+The model models -- as response -- the belief about the occurrence of the first event in the \code{formula} as follows:
 \itemize{
-\item{For \code{y~a} predictions have 1 column, \code{pred_a}}
-\item{For \code{y~a+b} predictions have 2 columns, \code{pred_a, pred_b} (with \code{pred_a} = 1 - \code{pred_b})}
-\item{For \code{y~a+b+c} predictions have 3 columns, \code{pred_a, pred_b, pred_c}}
-\item{etc.}
+\item \code{y ~ x1} models the beliefe about event \strong{x1 occurring} versus it not occurring.
+\item \code{y ~ x1 + x2} models beliefs about \strong{x1 versus x2} occurring.
+\item \code{y ~ x1 + x2 + x3} models beliefs about x1, x2, and x3 occurring.
 }
+\subsection{Model Parameters}{
 
-\emph{Note}, during parameter fitting the model treats the response variable \code{y} as beliefs about the \emph{first} event. In other words, \code{y} represents observed beliefs about \code{a} for the formula \code{y ~ a + b} (not \code{b}).
-
-\code{bayes_beta()} calls \link{bayes} with \code{type = "beta-binomial"}.
-
-\code{bayes_dirichlet()} calls \link{bayes} with \code{type = "dirichlet-multinomial"}.
+The model has \emph{n + 1} (\emph{n} = number of events) free parameters, which are:
+\itemize{
+\item \code{delta} is the learning rate, it weights the observation during learning, value < 1 causes conservatism, > 1 causes liberal learning, and 1 is optimal Bayesian.
+\item \verb{x1, x2} (dynamic names) are the prior parameter, their names correspond to the right side of \code{formula}. Also known as the hyperparameter of the prior belief distribution before trial 1. If they are constrainted to sum to \emph{n} and \emph{n} - 1 parameter are estimated.
+\item In \code{bayes_beta_d()} or \code{bayes_dirichlet_d()}: If \code{choicerule = "softmax"}: \emph{\strong{\code{tau}}}  is the temperature or choice softness, higher values cause more equiprobable choices. If \code{choicerule = "epsilon"}: \emph{\strong{\code{eps}}} is the error proportion, higher values cause more errors from maximizing.
 }
-\section{Parameter Space}{
-
-\tabular{lrcllr}{\verb{   }\strong{Name} \tab \verb{    }\strong{LB} \tab  \strong{-} \tab \strong{UB}\verb{    } \tab \strong{Description} \tab \strong{Start Value}\cr
-\verb{   }\code{delta} \tab  0 \tab  - \tab  10 \tab  Weight of observation during learning, < 1 yields conservatism, > 1 yields liberal learning, 1 is optimal Bayesian \tab  1\cr
-\verb{   }\code{priorpar} \tab  0.001 \tab  - \tab   n events \tab  Hyperparameter of the prior belief distribution before trial 1, sum to n events. Note: parameter names will be the RHS of the \code{formula} \tab  1}
 }
-
+}
 \examples{
 D <- data.frame(
   a = c(0,0,1,1,1),              # event A, e.g. coin toss "heads"
-  b = c(1,1,0,0,0),              # event B, complementary to A
-  y = c(0.5,0.6,0.6,0.6,0.5))    # participants' reported beliefs
+  b = c(1,1,0,0,0),              # event B, complement of A
+  y = c(0.5,0.3,0.2,0.3,0.5))    # participants' beliefs about A
 
-M <- bayes(y ~ a + b, D, fix="start")          # fixed par. to start values
-predict(M)                                     # predict posterior means
-anova(M)                                       # anova-like table
-MSE(M)                                         # mean-squared error   
-
-### Different predictions
-# ---------------------------------------
-predict(M, type = "mean")                      # predict posterior mean
-predict(M, type = "max")                       #  --"--  maximum posterior
-predict(M, type = "sd")                        #  --"--  posterior SD
-predict(M, type = "posteriorpar")              #  --"--  posterior hyper-par.
-predict(M, type = "draws", ndraws = 3)         #  --"--  3 draws from posterior      
-
-### Ways to formulate the model parameter
-# ---------------------------------------
-bayes(~a+b, D, list(delta=1, priorpar=c(1, 1)))  # delta=1, uniform prior
-bayes(~a,   D, list(delta=1, priorpar=c(1, 1)))  # -- (same) --
-bayes(~a+b, D, list(delta=1, a=1, b=1))          # -- (same) --
-bayes(~a+b, D, fix = "start")                    # fix par. to start values
-bayes(~a,   D, fix = "start")                    # -- (same) --
+M <- bayes_beta_c(
+     formula = y ~ a + b,
+     data = D)   # fit all parameters
+predict(M)                        # predict posterior means
+summary(M)                        # summarize model
+parspace(M)                       # view parameter space
+anova(M)                          # anova-like table
+logLik(M)                         # loglikelihood
+MSE(M)                            # mean-squared error   
 
 
-### Parameter fitting
-# ---------------------------------------
+# Predictions ----------------------------------------------
+predict(M, type = "mean")                  # posterior mean
+predict(M, type = "max")                   # maximum posterior
+predict(M, type = "sd")                    # posterior SD
+predict(M, type = "posteriorpar")          # posterior hyper-par.
+predict(M, type = "draws", ndraws = 3)     #  --"--  3 draws
+
+
+# Fix parameter ---------------------------------------------
+bayes_beta_c(~a+b, D, list(delta=1, priorpar=c(1, 1)))  # delta=1, uniform prior
+bayes_beta_c(~a+b, D, list(delta=1, a=1, b=1))          # -- (same) --
+bayes_beta_c(~a+b, D, fix = "start")                    # fix to start values
+
+
+# Parameter fitting ----------------------------------------
 # Use a response variable, y, to which we fit parameter
 bayes(y ~ a + b, D, fix = "start")              # "start" fixes all par., fit none 
 bayes(y ~ a + b, D, fix = list(delta=1))         # fix delta, fit priors 
@@ -98,23 +158,33 @@ bayes(y ~ a + b, D, list(delta=1, b=1))          # fix delta & prior on "b"
 
 ### Parameter meanings
 # ---------------------------------------
-# delta parameter
-bayes(y ~ a, D, c(delta = 0))                    # delta=0 -> no learning
-bayes(y ~ a, D, c(delta = 0.1))                  # 0.1 -> slow learning
-bayes(y ~ a, D, c(delta = 9))                    # 9   -> fast learning
-
-# prior parameter
-bayes(y ~ a + b, D, c(a=1.5, b=0.5))             # prior belief: "a" more likely
-bayes(y ~ a + b, D, list(priorpar=c(1.5, 0.5)))  # -- (same) --
-bayes(y ~ a + b, D, c(a = 0.1, b=1.9))           # prior belief: "b" more likely
+# delta parameter: the learning rate or evidence weight
+bayes(y ~ a + b, D, c(delta = 0))             # 0   -> no learning
+bayes(y ~ a + b, D, c(delta = 0.1))           # 0.1 -> slow learning
+bayes(y ~ a + b, D, c(delta = 9))             # 9   -> fast learning
+bayes(y ~ a + b, D, c(a=1.5, b=0.5))                # prior: a more likely
+bayes(y ~ a + b, D, list(priorpar=c(1.5, 0.5)))     # -- (same) --
+bayes(y ~ a + b, D, c(a = 0.1, b=1.9))              # prior: b more likely
 bayes(y ~ a + b, D, list(priorpar = c(0.1, 1.9)))   # -- (same) --
-
 }
 \references{
 {Griffiths, T. L., & Yuille, A. (2008). Technical Introduction: A primer on probabilistic inference. In N. Chater & M. Oaksford (Eds.), \emph{The Probabilistic Mind: Prospects for Bayesian Cognitive Science (pp. 1 - 2)}. Oxford University Press. \url{https://doi.org/10.1093/acprof:oso/9780199216093.003.0002}}
 
 {Tauber, S., Navarro, D. J., Perfors, A., & Steyvers, M. (2017). Bayesian models of cognition revisited: Setting optimality aside and letting data drive psychological theory. \emph{Psychological Review, 124(4)}, 410 - 441. \url{http://dx.doi.org/10.1037/rev0000052}}
 }
-\author{
-Jana B. Jarecki, Markus Steiner
+\seealso{
+Other cognitive models: 
+\code{\link{baseline_const_c}()},
+\code{\link{choicerules}},
+\code{\link{cpt}},
+\code{\link{ebm}()},
+\code{\link{hm1988}()},
+\code{\link{shortfall}},
+\code{\link{utility}}
 }
+\author{
+Markus Steiner
+
+Jana B. Jarecki, \email{jj@janajarecki.com}
+}
+\concept{cognitive models}

@@ -4,7 +4,9 @@
 \name{shortfalltest}
 \alias{shortfalltest}
 \title{Test data for fitting the Shortfall model}
-\format{An object of class \code{"data.table"}; see \code{\link[qtl]{fread}}.}
+\format{
+An object of class \code{"data.table"}; see \code{\link[qtl]{fread}}.
+}
 \source{
 Andraszewicz, S. (2014). Quantitative analysis
 of risky decision making in economic environments (Doctoral dissertation,

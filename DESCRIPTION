@@ -1,7 +1,7 @@
 Package: cognitivemodels
 Type: Package
 Title: Cognitive Models - Estimation, Prediction, and Development of Models for Cognitive Scientists
-Version: 0.0.7
+Version: 0.0.10
 Date: 2020-05-09
 Author: Jana B. Jarecki
 Maintainer: Jana B. Jarecki <jj@janajarecki.com>
@@ -11,9 +11,10 @@ Imports:
     abind,
     AICcmodavg,
     arrangements,
-    cognitiveutils (== 0.0.8),
+    cognitiveutils (>= 0.0.11),
     combinat,
     data.table,
+    english,
     Formula,
     gtools,
     matlib (>= 0.9.3),
@@ -36,5 +37,6 @@ LinkingTo:
   Rcpp (>= 1.0.1), RcppArmadillo (>= 0.9.8)
 Encoding: UTF-8
 VignetteBuilder: knitr
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.1
 Roxygen: list(markdown = TRUE)
+LazyData: true

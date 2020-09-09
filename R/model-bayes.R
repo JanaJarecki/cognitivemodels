@@ -9,70 +9,79 @@
 # ==========================================================================
 
 #' Bayesian Inference Cognitive Model
-#' 
-#' \code{bayes()} fits a Bayesian cognitive model, updating beliefs about discrete-event probabilities from event frequencies, \code{bayes_beta()} is for binomial events, \code{bayes_dirichlet()} is for categorical/multinomial events.
+#' @name bayes
+#' @description
+#' `bayes()` fits a Bayesian cognitive model, updating beliefs about the probability of discrete event outcomes based on the frequencies of outcomes.
+#'   * `bayes_beta_c()` fits a model for 2 outcomes (beta-binomial) for continuous responses
+#'   * `bayes_beta_d()` fits a model for 2 outcomes (beta-binomial) for discrete responses
+#'   * `bayes_dirichlet_c()` fits a model for _n > 2_ outcomes (dirichlet-categorical/multinomial) for continuous responses
+#'   * `bayes_dirichlet_d()` fits a model for _n > 2_ outcomes (dirichlet-categorical/multinomial) for discrete responses
 #' 
 #' @useDynLib cognitivemodels, .registration = TRUE
 #' @importFrom gtools rdirichlet
 #' 
-#' @inheritParams Cm
-#' @param formula A formula, the reported beliefs ~ event + event ... (e.g., \code{y ~ coin_heads + coin_tails}).
-#' @param format A string (default \code{"raw"}) with the data format. Can be \code{"raw"}, \code{"cummulative"}, \code{"count"}, where \code{"raw"} means data are occurrence indicators (1=event, 0=no event); \code{"cumulative"} means data are cumulative event frequencies (1,2,2,...), and code{"count"} means data are non-ordered event frequencies (10,2,5,...).
-#' @param type (optional) A string, the type of inference, \code{"beta-binomial"} or \code{"dirichlet-multinomial"}. Can be abbreviated. Will be inferred, if missing.
-#' @param ... other arguments from other functions, currently ignored.
+#' @eval .param_formula(2)
+#' @eval .param_fix("bayes_beta_d", dyn_args = "formula", which = 2)
+#' @param format (optional) A string, the format the data to be modeled, can be abbreviated, default is `"raw"`; allowed values:
+#'  * `"raw"` means that the data are trial-by-trial binary occurrence indicators: 1, 0, 1, ... means the event happened in trial with a value of 1.
+#'  * `"cumulative"` means the data are trial-by-trial cumulative counts of events: 0, 1, 1, 2, ... counts how often the event happened up to the trial.
+#'  * `"count"` means the data are total events counts, ignoring the trial-by-trial order of events: 2, 10, ... means the event happened 2 times, then (starting from zero!) it happened 10 times.
+#' @param type (optional) A string, the type of inference, `"beta-binomial"` or `"dirichlet-multinomial"`. Can be abbreviated. Will be inferred, if missing.
+#' @param prior_sum (optional) A number; the prior hyperparameter will be constrained to sum to this number; defaults to the number of prior parameters; if `prior_sum = NA` no sum constraint is placed.
 #' 
-#' @return An model object (similar to lm-objects) of class "bayes". It can be viewed with \code{summary(mod)}, where \code{mod} is the name of the model object.
+#' @details
+#' The model models -- as response -- the belief about the occurrence of the first event in the `formula` as follows:
+#' * `y ~ x1` models the beliefe about event **x1 occurring** versus it not occurring.
+#' * `y ~ x1 + x2` models beliefs about **x1 versus x2** occurring.
+#' * `y ~ x1 + x2 + x3` models beliefs about x1, x2, and x3 occurring.
 #' 
-#' @section Parameter Space:
-#' \tabular{lrcllr}{\verb{   }\strong{Name} \tab \verb{    }\strong{LB} \tab  \strong{-} \tab \strong{UB}\verb{    } \tab \strong{Description} \tab \strong{Start Value}\cr
-#' \verb{   }\code{delta} \tab  0 \tab  - \tab  10 \tab  Weight of observation during learning, < 1 yields conservatism, > 1 yields liberal learning, 1 is optimal Bayesian \tab  1\cr
-#' \verb{   }\code{priorpar} \tab  0.001 \tab  - \tab   n events \tab  Hyperparameter of the prior belief distribution before trial 1, sum to n events. Note: parameter names will be the RHS of the \code{formula} \tab  1}
+#' ## Model Parameters
+#' The model has _n + 1_ (_n_ = number of events) free parameters, which are:
+#' * `delta` is the learning rate, it weights the observation during learning, value < 1 causes conservatism, > 1 causes liberal learning, and 1 is optimal Bayesian.
+#' * `x1, x2` (dynamic names) are the prior parameter, their names correspond to the right side of `formula`. Also known as the hyperparameter of the prior belief distribution before trial 1. If they are constrainted to sum to _n_ and _n_ - 1 parameter are estimated.
+#' * In `bayes_beta_d()` or `bayes_dirichlet_d()`: `r .rd_choicerules()`
 #' 
-#' @author Jana B. Jarecki, Markus Steiner
-#' @references {Griffiths, T. L., & Yuille, A. (2008). Technical Introduction: A primer on probabilistic inference. In N. Chater & M. Oaksford (Eds.), \emph{The Probabilistic Mind: Prospects for Bayesian Cognitive Science (pp. 1 - 2)}. Oxford University Press. \url{https://doi.org/10.1093/acprof:oso/9780199216093.003.0002}}
-#' @references {Tauber, S., Navarro, D. J., Perfors, A., & Steyvers, M. (2017). Bayesian models of cognition revisited: Setting optimality aside and letting data drive psychological theory. \emph{Psychological Review, 124(4)}, 410 - 441. \url{http://dx.doi.org/10.1037/rev0000052}}
+#' @author Markus Steiner
+#' @template cm
 #' 
-#' @details Given the formula \code{y ~ a} the model predicts beliefs about event "a" occurring, but given \code{y ~ a + b} it predicts beliefs about events "a" and "b" occurring. If "a" and "b" are complementary the predictions will be complements, the difference is that
-#' \itemize{
-#'  \item{For \code{y~a} predictions have 1 column, \code{pred_a}}
-#'  \item{For \code{y~a+b} predictions have 2 columns, \code{pred_a, pred_b} (with \code{pred_a} = 1 - \code{pred_b})}
-#'  \item{For \code{y~a+b+c} predictions have 3 columns, \code{pred_a, pred_b, pred_c}}
-#'  \item{etc.}
-#' }
+#' @references 
+#' {Griffiths, T. L., & Yuille, A. (2008). Technical Introduction: A primer on probabilistic inference. In N. Chater & M. Oaksford (Eds.), \emph{The Probabilistic Mind: Prospects for Bayesian Cognitive Science (pp. 1 - 2)}. Oxford University Press. \url{https://doi.org/10.1093/acprof:oso/9780199216093.003.0002}}
 #' 
-#' \emph{Note}, during parameter fitting the model treats the response variable \code{y} as beliefs about the \emph{first} event. In other words, \code{y} represents observed beliefs about \code{a} for the formula \code{y ~ a + b} (not \code{b}).
+#' {Tauber, S., Navarro, D. J., Perfors, A., & Steyvers, M. (2017). Bayesian models of cognition revisited: Setting optimality aside and letting data drive psychological theory. \emph{Psychological Review, 124(4)}, 410 - 441. \url{http://dx.doi.org/10.1037/rev0000052}}
 #' 
 #' 
 #' @examples 
 #' D <- data.frame(
 #'   a = c(0,0,1,1,1),              # event A, e.g. coin toss "heads"
-#'   b = c(1,1,0,0,0),              # event B, complementary to A
-#'   y = c(0.5,0.6,0.6,0.6,0.5))    # participants' reported beliefs
+#'   b = c(1,1,0,0,0),              # event B, complement of A
+#'   y = c(0.5,0.3,0.2,0.3,0.5))    # participants' beliefs about A
 #' 
-#' M <- bayes(y ~ a + b, D, fix="start")          # fixed par. to start values
-#' predict(M)                                     # predict posterior means
-#' anova(M)                                       # anova-like table
-#' MSE(M)                                         # mean-squared error   
-#' 
-#' ### Different predictions
-#' # ---------------------------------------
-#' predict(M, type = "mean")                      # predict posterior mean
-#' predict(M, type = "max")                       #  --"--  maximum posterior
-#' predict(M, type = "sd")                        #  --"--  posterior SD
-#' predict(M, type = "posteriorpar")              #  --"--  posterior hyper-par.
-#' predict(M, type = "draws", ndraws = 3)         #  --"--  3 draws from posterior      
-#' 
-#' ### Ways to formulate the model parameter
-#' # ---------------------------------------
-#' bayes(~a+b, D, list(delta=1, priorpar=c(1, 1)))  # delta=1, uniform prior
-#' bayes(~a,   D, list(delta=1, priorpar=c(1, 1)))  # -- (same) --
-#' bayes(~a+b, D, list(delta=1, a=1, b=1))          # -- (same) --
-#' bayes(~a+b, D, fix = "start")                    # fix par. to start values
-#' bayes(~a,   D, fix = "start")                    # -- (same) --
+#' M <- bayes_beta_c(
+#'      formula = y ~ a + b,
+#'      data = D)   # fit all parameters
+#' predict(M)                        # predict posterior means
+#' summary(M)                        # summarize model
+#' parspace(M)                       # view parameter space
+#' anova(M)                          # anova-like table
+#' logLik(M)                         # loglikelihood
+#' MSE(M)                            # mean-squared error   
 #' 
 #' 
-#' ### Parameter fitting
-#' # ---------------------------------------
+#' # Predictions ----------------------------------------------
+#' predict(M, type = "mean")                  # posterior mean
+#' predict(M, type = "max")                   # maximum posterior
+#' predict(M, type = "sd")                    # posterior SD
+#' predict(M, type = "posteriorpar")          # posterior hyper-par.
+#' predict(M, type = "draws", ndraws = 3)     #  --"--  3 draws
+#' 
+#' 
+#' # Fix parameter ---------------------------------------------
+#' bayes_beta_c(~a+b, D, list(delta=1, priorpar=c(1, 1)))  # delta=1, uniform prior
+#' bayes_beta_c(~a+b, D, list(delta=1, a=1, b=1))          # -- (same) --
+#' bayes_beta_c(~a+b, D, fix = "start")                    # fix to start values
+#' 
+#' 
+#' # Parameter fitting ----------------------------------------
 #' # Use a response variable, y, to which we fit parameter
 #' bayes(y ~ a + b, D, fix = "start")              # "start" fixes all par., fit none 
 #' bayes(y ~ a + b, D, fix = list(delta=1))         # fix delta, fit priors 
@@ -83,43 +92,62 @@
 #' 
 #' ### Parameter meanings
 #' # ---------------------------------------
-#' # delta parameter
-#' bayes(y ~ a, D, c(delta = 0))                    # delta=0 -> no learning
-#' bayes(y ~ a, D, c(delta = 0.1))                  # 0.1 -> slow learning
-#' bayes(y ~ a, D, c(delta = 9))                    # 9   -> fast learning
-#' 
-#' # prior parameter
-#' bayes(y ~ a + b, D, c(a=1.5, b=0.5))             # prior belief: "a" more likely
-#' bayes(y ~ a + b, D, list(priorpar=c(1.5, 0.5)))  # -- (same) --
-#' bayes(y ~ a + b, D, c(a = 0.1, b=1.9))           # prior belief: "b" more likely
+#' # delta parameter: the learning rate or evidence weight
+#' bayes(y ~ a + b, D, c(delta = 0))             # 0   -> no learning
+#' bayes(y ~ a + b, D, c(delta = 0.1))           # 0.1 -> slow learning
+#' bayes(y ~ a + b, D, c(delta = 9))             # 9   -> fast learning
+#' bayes(y ~ a + b, D, c(a=1.5, b=0.5))                # prior: a more likely
+#' bayes(y ~ a + b, D, list(priorpar=c(1.5, 0.5)))     # -- (same) --
+#' bayes(y ~ a + b, D, c(a = 0.1, b=1.9))              # prior: b more likely
 #' bayes(y ~ a + b, D, list(priorpar = c(0.1, 1.9)))   # -- (same) --
-#' 
-#' @export
-bayes <- function(formula, data = data.frame(), fix = list(), format = c("raw", "count", "cumulative"), type = NULL, discount = 0L, options = list(), ...) {
-  .args <- as.list(rlang::call_standardise(match.call())[-1])
-  return(do.call(what = Bayes$new, args = .args, envir = parent.frame()))
-}
+NULL
 
-#' Bayesian Inference Cognitive Model
-#' @inheritParams bayes
+
 #' @rdname bayes
-#' @details \code{bayes_beta()} calls \link{bayes} with \code{type = "beta-binomial"}.
 #' @export
-bayes_beta <- function(formula, data = data.frame(), fix = NULL, format = NULL, ...) {
+bayes_beta_c <- function(formula, data, fix = NULL, format = c("raw", "count", "cumulative"), prior_sum = NULL, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
+  .args[["mode"]] <- "continuous"
+  .args[["options"]] <- list(fit_args = list(pdf = "truncnorm", a = 0, b = 1))
   return(do.call(what = Bayes$new, args = .args, envir = parent.frame()))
 }
 
-#' Bayesian Inference Cognitive Model
-#' @inheritParams bayes
+
 #' @rdname bayes
-#' @details \code{bayes_dirichlet()} calls \link{bayes} with \code{type = "dirichlet-multinomial"}.
 #' @export
-bayes_dirichlet <- function(formula, data, fix = NULL, format = NULL, ...) {
+bayes_beta_d <- function(formula, data, fix = NULL, format = NULL, prior_sum = NULL, ...) {
+  .args <- as.list(rlang::call_standardise(match.call())[-1])
+  .args[["mode"]] <- "discrete"
+  return(do.call(what = Bayes$new, args = .args, envir = parent.frame()))
+}
+
+
+#' @rdname bayes
+#' @export
+bayes_dirichlet_d <- function(formula, data, fix = NULL, format = NULL, prior_sum = NULL, ...) {
+  .args <- as.list(rlang::call_standardise(match.call())[-1])
+  .args[["mode"]] <- "discrete"
+  return(do.call(what = Bayes$new, args = .args, envir = parent.frame()))
+}
+
+
+#' @rdname bayes
+#' @export
+bayes_dirichlet_c <- function(formula, data, fix = NULL, format = NULL, prior_sum = NULL,  ...) {
+  .args <- as.list(rlang::call_standardise(match.call())[-1])
+  .args[["mode"]] <- "continuous"
+  return(do.call(what = Bayes$new, args = .args, envir = parent.frame()))
+}
+
+#' @rdname bayes
+#' @export
+bayes <- function(formula, data = data.frame(), fix = list(), format = c("raw", "count", "cumulative"), type = NULL, discount = 0L, options = list(), prior_sum = NULL, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   return(do.call(what = Bayes$new, args = .args, envir = parent.frame()))
 }
 
+
+#' @noRd
 Bayes <- R6Class("Bayes",
   inherit = Cm,
   public = list(
@@ -127,16 +155,16 @@ Bayes <- R6Class("Bayes",
     format = NULL,
     priornames = NULL,
     npred = NULL,
-    initialize = function(formula, data = data.frame(), type = NULL, format = c("raw", "cumulative", "count"), fix = list(), choicerule = NULL, mode = "continuous", discount = 0, options = list(), ...) {
-      self$format <- match.arg(format)
+    prior_sum = FALSE,
+    initialize = function(formula, data = data.frame(), type = NULL, format = c("raw", "cumulative", "count"), fix = list(), choicerule = NULL, mode = NULL, discount = 0, options = list(),  prior_sum = NULL, ...) {
+      format <- match.arg(format)
+      formula <- private$sanitize_formula(f = formula, format = format)
+      self$format <- format
       self$priordist <- self$infer_priordist(type = type, f=formula)
+      self$prior_sum <- c(.rhs_length(formula)[1], prior_sum)[1L + !is.null(prior_sum)]
       self$init_npred(f=formula)
-      formula <- private$sanitize_formula(f = formula)
       fix <- self$reformulate_fix(fix = fix, f = formula)
-      if (is.null(options$fit_measure)) options$fit_measure <- "mse"
-      if (grepl("^l", options$fit_measure) & options$fit == TRUE) {
-        stop("Sorry, for bayes(), log likelihood is not yet implemented as fit measure.")
-      }
+      if (is.null(options$fit_measure)) options$fit_measure <- "loglikelihood"
       super$initialize(
         title = "Bayesian model",
         formula = formula,
@@ -252,18 +280,11 @@ Bayes <- R6Class("Bayes",
       }
       return(super$get_parnames(x))
     },
-    make_parspace = function(f) {
-      self$formula <- as.Formula(f)
-      f <- self$formula
-
-      # Learning rate parameter
-      d_par <- list(delta = c(0L, 10, 1, 1)) # NOT dynamic
-      
-      # Dynamic parameters: prior names are dynamically generated from
-      # RHS of formula. If formula is ... ~ xx + yy we name priors:
-      # "prior.xx" and "prior.yy"
-      p_par <- setNames(lapply(1:sum(.rhs_length(f)), function(.) c(0.001, self$natt[1], 1L, 1L)), unlist(.rhs_varnames(f)))
-      #Note: don't change the order, the d_par needs to come first
+    make_parspace = function(f = self$formula) {
+      d_par <- list(delta = c(0L, 10, 1, 1))
+      p_ul <- c(.rhs_length(f), self$prior_sum)[2L - (is.na(self$prior_sum))]
+      p_par <- setNames(lapply(1:sum(.rhs_length(f)), function(.) c(0.00001, p_ul, 1L, 1L)), unlist(.rhs_varnames(f)))
+      # Note: don't change the order, the d_par needs to come first
       return(do.call(make_parspace, c(d_par, p_par)))
     }
   ),
@@ -277,12 +298,12 @@ Bayes <- R6Class("Bayes",
         return(super$get_input(f=f,d=d))
       }
     },
-    sanitize_formula = function(f) {
-      if (self$format == "raw") {
+    sanitize_formula = function(f, format = self$format) {
+      if (format == "raw") {
         return(.add_missing_prob(f, 1, 1))
       } else {
         if (any(.rhs_length(f) == 1)) {
-            stop("'formula' needs > 1 right-hand side variables (unless format = 'raw'), but has only 1 RHS (", .abbrDeparse(f), ").\n  * Did you accidentaly forget to write the second option into the 'formula'? (e.g., y ~ count_0 + count_1)\n  * Do you wan tto use 'format = raw'?")
+            stop("'formula' needs > 1 right-hand side variables (unless format = 'raw'), but has only 1 RHS (", .abbrDeparse(f), ").\n  * Did you forget to write the second option in 'formula'? (e.g., y ~ a + b)\n  * Do you wan tto use 'format = raw'?")
           }
         return(f)
       }
@@ -296,10 +317,8 @@ Bayes <- R6Class("Bayes",
       return(nn[tmp])
     },
     make_constraints = function() {
-      # make constraint for the priors
-      #   note: priors depend on the type of prior distribution
-      #   (beta distribution, dirichlet distribution, etc.)
-      #   therefore we make prior parameter dynamically
+      if (is.na(self$prior_sum)) return(NULL)
+      # Priors depend on the type of prior distribution
       parnames <- names(self$par)
       C <- NULL
       for (p in .rhs_varnames(self$formula)) {
@@ -307,7 +326,7 @@ Bayes <- R6Class("Bayes",
           L_constraint(
             L = as.integer(parnames %in% p),
             dir = "==",
-            rhs = length(p),
+            rhs = self$prior_sum,
             names = parnames)
         )
       }

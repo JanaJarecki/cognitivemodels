@@ -9,21 +9,31 @@
 # ==========================================================================
 
 
-#' Houston & McNamara's (1988) dynamic optimization model for risk-sensitive foraging problems in discrete time
+#' Dynamic optimization model for risk-sensitive foraging problems in discrete time
+#' @description
+#' `hm1988()` generates Houston & McNamara's (1988) optimal model for risk-sensitive foraging with discrete choices. 
 #' 
 #' @import data.table
-#' @inheritParams Cm
-#' @param formula A \link[stats]{formula}, e.g. \code{choice ~ x1 + px1 + x2 + px2 | y1 + py1 + y2 + py2}. Defines the risky option's variables in \code{data} by alternating outcome1 + probability1 + outcome2 + probability2 + ... Separate different options by a \code{"|"}. The Left-hand-side is optional.
-#' @param data A data frame holding the variables of the gambles in \code{formula}.
-#' @param trials (default \code{".ALL"}) Specifies the decision tiral, can be a number, numeric vector, string, formula, or \code{".ALL"}. Vectors must have length \code{nrow(data)}, formulas and strings must refer to a column in \code{data} (e.g., \code{~ time} or \code{"time"} refer to \code{data$time}). If \code{".ALL"} the model predicts for all possible trials and states.
-#' @param states (default \code{".ALL"}) Specifies the state, can be a number, numeric vector, string, formula, or \code{".ALL"}. Vectors must have length \code{nrow(data)}, formulas must refer to a column in \code{data} (e.g., \code{~ mystate}). If \code{".ALL"} the model predicts for all possible states and trials.
-#' @param budget A number; the goal/requirement/critical state, that matters in the terminal payout function. Can also be a numeric vector (of length \code{nrow(data)}), or a formula (e.g., \code{~b} in which case the model takes \code{data$b} as budget).
-#' @param ntrials A number; the total number of trials available, must be greater than \code{trial}. Can also be a numeric vector of length \code{nrow(data)}, or a formula (e.g., \code{~ total}) referring to a column in \code{data} (e.g., \code{data$total}).
-#' @param initstate (default 0) A number; the starting state in the first trial. Can also be a numeric vector (of length \code{nrow(data)}) or a formula (e.g., \code{~state0}) in which case the model takes \code{data$state0}).
-#' @references Houston, A. I., & McNamara, J. M. (1988). A framework for the functional analysis of behaviour. Behavioural and Brain Science, 11, 117–163.
-#' @return An object of class R6 holding the model, it has no free parameters. A model object \code{M} can be viewed with \code{M}, predictions can be made with \code{M$predict()} for choice predictions, and \code{M$predict("ev")} for the expected value of the optimal choice and \code{M$predict("value", 1:2)} for the expected value of all choices.
-#' @author Jana B. Jarecki, \email{jj@janajarecki.com}
+#' 
+#' @eval .param_formula(c(4,4), risky = TRUE)
+#' @eval .param_fix(onlycr = TRUE)
+#' @param trials The variable in `data` with the decision trial, can be a number, numeric vector, string, formula, or `".ALL"`. Vectors must have length `nrow(data)`. If `".ALL"` the model predicts for all possible trials and states.
+#' @param states The variable in `data` with the states/accumulated resources, can be a number, numeric vector, string, formula, or `".ALL"`. Vectors must have length `nrow(data)`. If `".ALL"` the model predicts for all possible trials and states.
+#' @param budget A number; the goal/requirement/critical state, that matters in the terminal payout function. Can also be a numeric vector of length `nrow(data)`, or a right-side formula that refers to a variable in `data`.
+#' @param ntrials A number; the total number of trials available. Can also be a numeric vector of length `nrow(data)`, or a right-side formula that refers to a variable in `data`.
+#' @param initstate (default 0) A number; the starting state in the first trial. Can also be a numeric vector of length `nrow(data)`, or a right-side formula that refers to a variable in `data`.
+#' @param fitnessfun (optional) A function, the terminal fitness function, needs two arguments, `budget` and `state`.
+#' @template param-choicerule
+#' 
+#' @references Houston, A. I., & McNamara, J. M. (1988). A framework for the functional analysis of behaviour. Behavioural and Brain Science, 11, 117-163. [doi:10.1017/S0140525X00053061](https://doi.org/10.1017/S0140525X00053061)
+#' 
 #' @details Risk-sensitive foraging means you have, for instance, four choices between the same two risky lotteries and after the four choices you need to have accumulated at least 12 points to get a reward. The optimal solution to this choice problem relies on dynamic programming. The function creates all possible future states given the possible remaining trials, and predicts the optimal choice polica or the expected value of chosing either option given a certain state and a certain time horizon.
+#' 
+#' ## Model Parameters
+#' The model has no free parameters. If `choicerule` is specified, it can estimate 1 free parameter: `r .rd_choicerules()`
+#' 
+#' @template cm
+#' 
 #' @examples
 #' ## Make fake data -----------------------------------------------------
 #' D <- data.frame(
@@ -42,7 +52,7 @@
 #' predict(M)                 # Predict choice probability of 1st option (arg-max)
 #' predict(M, type="values")  # Predict expected values
 #' @export
-hm1988 <- function(formula, trials, states, budget, ntrials, initstate = 0, data = NULL, choicerule = NULL, fix = list(), options = NULL, fitnessfun = NULL) {
+hm1988 <- function(formula, trials, states, budget, ntrials, initstate = 0, data = NULL, choicerule = "argmax", fix = list(), options = NULL, fitnessfun = NULL) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   return(do.call(what = Hm1988$new, args = .args, envir = parent.frame()))
 }
@@ -65,7 +75,7 @@ Hm1988 <- R6Class("hm1988",
 
       }
       self$fitnessfun <- fitnessfun
-      self$choicerule <- .check_and_match_choicerule(choicerule)
+      self$choicerule <- .check_and_match_choicerule(choicerule, mode="discrete")
       super$init_par(parspace = make_parspace(), fix = fix, options = options, mode = "discrete")
 
       self$s_t_b_s0_T_var <- list(states, trials, budget, initstate, ntrials)

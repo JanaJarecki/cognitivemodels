@@ -31,6 +31,7 @@ npar.default <- function(x, ...) {
 }
 #' @name npar
 #' @param type A string: \code{"all"} counts all parameters, \code{"free"} counts the free parameters, \code{"fix"} countes the fixed parameters, \code{"constrained"} counts constrained parameters.
+#' @param ... ignored
 #' @export
 #' @method npar cm
 #' @examples
@@ -40,7 +41,7 @@ npar.cm <- function(x, type = "all", ...) {
 }
 
 #' @title Number of Parameters, Attributes, and Stimuli
-#' 
+#' @param ... ignored
 #' @export
 nobs <- function(x, ...) {
   UseMethod("nobs")
@@ -48,6 +49,7 @@ nobs <- function(x, ...) {
 #' @name nobs
 #' @usage nobs(x)
 #' @param x a model object
+#' @param ... ignored
 #' @examples 
 #' nobs(M)
 #' @export
@@ -102,6 +104,8 @@ natt.cm <- function(x) {
 
 
 #' Print the (only free) model parameters
+#' @param object A cognitive model object of class cm.
+#' @param ... ignored.
 #' 
 #' @export
 #' @examples
@@ -123,21 +127,26 @@ logLik.cm <- function(object, ...) {
 #' @name gof
 #' @family {fit measures for cognitive models}
 #' @usage MSE(x)
+#' @param ... ignored
 #' @examples 
 #' MSE(M)     # 0.1805
 #' 
 #' @export
 MSE <- function(x, ...) { UseMethod("MSE") }
 #' @family {fit measures for cognitive models}
+#' @param ... ignored
 #' @export
 MSE.cm <- function(x, ...) {
   x$MSE(...)
 }
 #' @family {fit measures for cognitive models}
+#' @param ... ignored
+#' @param k A number, the multiplier
 #' @export
 AICc.cm <- function(object, ..., k) {
   object$AICc()
 }
+#' @name gof
 #' @family {fit measures for cognitive models}
 #' @export
 RMSE.cm <- function(x) {
@@ -146,20 +155,25 @@ RMSE.cm <- function(x) {
 
 
 
+#' @param ... ignored
 #' @export
 summary.cm <- function(object, ...) {
   return(object$summary())
 }
+#' @param ... ignored
 #' @export
 nstim.cm <- function(x, ...) {
   return(x$nstim)
 }
+#' @param ... ignored
 nres.cm <- function(x, ...) {
   return(x$nres)
 }
+#' @param ... ignored
 natt.cm <- function(x, ...) {
   return(x$natt)
 }
+#' @param ... ignored
 ncon.cm <- function(x, ...) {
   return(x$ncon)
 }
@@ -199,6 +213,7 @@ print.summary.cm = function(x, digits = max(3L, (getOption("digits") - 3L)), ...
 
 #' @title Computes Various Model Fit Measures
 #' @name gof
+#' @param ... ignored
 #' @export
 SSE <- function(x, ...) {
   UseMethod("SSE")
@@ -275,7 +290,7 @@ predict.cm <- function(object, ..., type = "response", newdata = NULL) {
 #' Show the paramter space of a cognitive model
 #' 
 #' @description
-#' \code{parspace(cm)} shows the parameter names and upper and lower bounds of parameters in a cognitice model \code{cm}
+#' `parspace(m)` shows the parameter names, the upper and lower bounds of parameters in a cognitive model stored as `m`.
 #' 
 #' @usage parspace(x)
 #' @param x a model object of class cm
@@ -295,17 +310,27 @@ parspace.default <- function(x, ...) {
 #' @export
 #' @method parspace cm
 parspace.cm <- function(x, ...) {
-  cat("\nParameter space of the cognitive model '", class(x)[1], "':\n", sep = "")
+  title <- ifelse(length(x$title), x$title, class(x)[1])
+  cat("\nParameter space of the cognitive model '", title, "':\n", sep = "")
   print(format(x$parspace, digits = 2L, scientific = 10, width = 6), quote = FALSE, right = TRUE)
   cat("---\nNote. lb = lower bound, ub = upper bound, start = start value.\n")
 }
-
+#' @name parspace
+#' @export
+#' @method parspace character
+parspace.character <- function(x, ...) {
+  x <- do.call(.cm_dummy_model, args = c(x, list(...)))
+  cat("\nParameter in model '", class(x)[1], "'", sep = "")
+  cat(", assuming formula '", paste(as.character(x$formula), sep = "", collapse = ""), "':\n", sep="")
+  print(format(x$parspace, digits = 2L, scientific = 10, width = 6), quote = FALSE, right = TRUE)
+  cat("---\nNote. lb/ub = lower/upper bound, start = start value.\n")
+}
 
 
 #' Show the constraints of a cognitive model
 #' 
 #' @description
-#' \code{constraints(x)} shows the parameter constraints  of a cognitive model named \code{x} nicely formatted
+#' `constraints(x)` prints the parameter constraints of a cognitive model named `x` nicely formatted
 #' 
 #' @usage constraints(x)
 #' @param x a model object of class cm

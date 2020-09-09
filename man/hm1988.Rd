@@ -2,7 +2,7 @@
 % Please edit documentation in R/model-hm1988.R
 \name{hm1988}
 \alias{hm1988}
-\title{Houston & McNamara's (1988) dynamic optimization model for risk-sensitive foraging problems in discrete time}
+\title{Dynamic optimization model for risk-sensitive foraging problems in discrete time}
 \usage{
 hm1988(
   formula,
@@ -12,35 +12,55 @@ hm1988(
   ntrials,
   initstate = 0,
   data = NULL,
-  choicerule = NULL,
+  choicerule = "argmax",
   fix = list(),
   options = NULL,
   fitnessfun = NULL
 )
 }
 \arguments{
-\item{formula}{A \link[stats]{formula}, e.g. \code{choice ~ x1 + px1 + x2 + px2 | y1 + py1 + y2 + py2}. Defines the risky option's variables in \code{data} by alternating outcome1 + probability1 + outcome2 + probability2 + ... Separate different options by a \code{"|"}. The Left-hand-side is optional.}
+\item{formula}{A \link[stats:formula]{formula}, the variables in \code{data} to be modeled. For example, \code{y ~ x1 + p2 + x3 + p4 | x5 + p6 + x7 + p8} models response y as function of two stimuli with features x1, p2, x3, p4 and x5, p6, x7, p8, alternating outcomes \code{x} and probabilities \code{p} (respectively). Lines \code{|} separate stimuli.}
 
-\item{trials}{(default \code{".ALL"}) Specifies the decision tiral, can be a number, numeric vector, string, formula, or \code{".ALL"}. Vectors must have length \code{nrow(data)}, formulas and strings must refer to a column in \code{data} (e.g., \code{~ time} or \code{"time"} refer to \code{data$time}). If \code{".ALL"} the model predicts for all possible trials and states.}
+\item{trials}{The variable in \code{data} with the decision trial, can be a number, numeric vector, string, formula, or \code{".ALL"}. Vectors must have length \code{nrow(data)}. If \code{".ALL"} the model predicts for all possible trials and states.}
 
-\item{states}{(default \code{".ALL"}) Specifies the state, can be a number, numeric vector, string, formula, or \code{".ALL"}. Vectors must have length \code{nrow(data)}, formulas must refer to a column in \code{data} (e.g., \code{~ mystate}). If \code{".ALL"} the model predicts for all possible states and trials.}
+\item{states}{The variable in \code{data} with the states/accumulated resources, can be a number, numeric vector, string, formula, or \code{".ALL"}. Vectors must have length \code{nrow(data)}. If \code{".ALL"} the model predicts for all possible trials and states.}
 
-\item{budget}{A number; the goal/requirement/critical state, that matters in the terminal payout function. Can also be a numeric vector (of length \code{nrow(data)}), or a formula (e.g., \code{~b} in which case the model takes \code{data$b} as budget).}
+\item{budget}{A number; the goal/requirement/critical state, that matters in the terminal payout function. Can also be a numeric vector of length \code{nrow(data)}, or a right-side formula that refers to a variable in \code{data}.}
 
-\item{ntrials}{A number; the total number of trials available, must be greater than \code{trial}. Can also be a numeric vector of length \code{nrow(data)}, or a formula (e.g., \code{~ total}) referring to a column in \code{data} (e.g., \code{data$total}).}
+\item{ntrials}{A number; the total number of trials available. Can also be a numeric vector of length \code{nrow(data)}, or a right-side formula that refers to a variable in \code{data}.}
 
-\item{initstate}{(default 0) A number; the starting state in the first trial. Can also be a numeric vector (of length \code{nrow(data)}) or a formula (e.g., \code{~state0}) in which case the model takes \code{data$state0}).}
+\item{initstate}{(default 0) A number; the starting state in the first trial. Can also be a numeric vector of length \code{nrow(data)}, or a right-side formula that refers to a variable in \code{data}.}
 
-\item{data}{A data frame holding the variables of the gambles in \code{formula}.}
+\item{data}{A data frame, the data to be modeled.}
+
+\item{choicerule}{A string, the choice rule. Allowed values, see  \code{cm_choicerules()}: \code{"none"} is no choice rule, \code{"softmax"} is \href{https://en.wikipedia.org/wiki/Softmax_function}{soft-maximum}, \code{"luce"} is \href{https://en.wikipedia.org/wiki/Luce\%27s_choice_axiom}{Luce's axiom}.}
+
+\item{fix}{(optional, only for \code{choicerule} softmax, epsilon) A list or the string \code{"start"}, the fixed model parameters, if missing all parameters are estimated. Model parameter names depend on \code{choicerule} and can be \emph{\code{tau}, \code{eps}} (see details - model parameters).
+\itemize{
+\item \code{list(tau = 6.16)} sets parameter \emph{\code{tau}} equal to 6.16.
+\item \code{"start"} sets all parameters equal to their initial values (estimates none). Useful for building a first test model.
+}}
+
+\item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \code{\link[=cm_options]{cm_options()}}.}
+
+\item{fitnessfun}{(optional) A function, the terminal fitness function, needs two arguments, \code{budget} and \code{state}.}
+
+\item{discount}{A number, how many initial trials to not use during parameter fitting.}
+
+\item{...}{other arguments, ignored.}
 }
 \value{
-An object of class R6 holding the model, it has no free parameters. A model object \code{M} can be viewed with \code{M}, predictions can be made with \code{M$predict()} for choice predictions, and \code{M$predict("ev")} for the expected value of the optimal choice and \code{M$predict("value", 1:2)} for the expected value of all choices.
+Returns a cognitive model object, which is an object of class \href{Cm}{cm}. A model, that has been assigned to \code{m}, can be summarized with \code{summary(m)} or \code{anova(m)}. The parameter space can be viewed using \verb{pa. rspace(m)}, constraints can be viewed using \code{constraints(m)}.
 }
 \description{
-Houston & McNamara's (1988) dynamic optimization model for risk-sensitive foraging problems in discrete time
+\code{hm1988()} generates Houston & McNamara's (1988) optimal model for risk-sensitive foraging with discrete choices.
 }
 \details{
 Risk-sensitive foraging means you have, for instance, four choices between the same two risky lotteries and after the four choices you need to have accumulated at least 12 points to get a reward. The optimal solution to this choice problem relies on dynamic programming. The function creates all possible future states given the possible remaining trials, and predicts the optimal choice polica or the expected value of chosing either option given a certain state and a certain time horizon.
+\subsection{Model Parameters}{
+
+The model has no free parameters. If \code{choicerule} is specified, it can estimate 1 free parameter: If \code{choicerule = "softmax"}: \emph{\strong{\code{tau}}}  is the temperature or choice softness, higher values cause more equiprobable choices. If \code{choicerule = "epsilon"}: \emph{\strong{\code{eps}}} is the error proportion, higher values cause more errors from maximizing.
+}
 }
 \examples{
 ## Make fake data -----------------------------------------------------
@@ -61,8 +81,19 @@ predict(M)                 # Predict choice probability of 1st option (arg-max)
 predict(M, type="values")  # Predict expected values
 }
 \references{
-Houston, A. I., & McNamara, J. M. (1988). A framework for the functional analysis of behaviour. Behavioural and Brain Science, 11, 117–163.
+Houston, A. I., & McNamara, J. M. (1988). A framework for the functional analysis of behaviour. Behavioural and Brain Science, 11, 117-163. \href{https://doi.org/10.1017/S0140525X00053061}{doi:10.1017/S0140525X00053061}
+}
+\seealso{
+Other cognitive models: 
+\code{\link{baseline_const_c}()},
+\code{\link{bayes}()},
+\code{\link{choicerules}},
+\code{\link{cpt}},
+\code{\link{ebm}()},
+\code{\link{shortfall}},
+\code{\link{utility}}
 }
 \author{
 Jana B. Jarecki, \email{jj@janajarecki.com}
 }
+\concept{cognitive models}

@@ -4,6 +4,7 @@
 \alias{gof}
 \alias{logLik.cm}
 \alias{MSE}
+\alias{RMSE.cm}
 \alias{SSE}
 \alias{SSE.cm}
 \title{Computes Various Model Fit Measures}
@@ -11,6 +12,8 @@
 \method{logLik}{cm}(object, ...)
 
 MSE(x)
+
+RMSE.cm(x)
 
 SSE(x, ...)
 
@@ -40,5 +43,22 @@ M <- bayes_beta(y ~ x + z, D, fix = "start")
 
 SSE(M)     # 0.361
 
+}
+\seealso{
+Other {fit measures for cognitive models}: 
+\code{\link{AICc.cm}()},
+\code{\link{MSE.cm}()}
+
+Other {fit measures for cognitive models}: 
+\code{\link{AICc.cm}()},
+\code{\link{MSE.cm}()}
+
+Other {fit measures for cognitive models}: 
+\code{\link{AICc.cm}()},
+\code{\link{MSE.cm}()}
+
+Other {fit measures for cognitive models}: 
+\code{\link{AICc.cm}()},
+\code{\link{MSE.cm}()}
 }
 \concept{{fit measures for cognitive models}}

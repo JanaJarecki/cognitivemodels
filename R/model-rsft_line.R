@@ -9,13 +9,12 @@
 # ==========================================================================
 
 
-#' Shortfall Risky Choice Model
+#' Line risk-sensitive foraging model
 #' 
 #' shortfall(formula, data)
 #' 
 #' @importFrom stringr str_extract
 #' @importFrom Rcpp sourceCpp
-#' @inheritParams Cm
 #' @description Fits the shortfall model, a cognitive model for risky choices. It trades off a risky option's expected value with a \eqn{\beta}-weighted measure of risk; risk being the chance of falling short of a \eqn{\delta}-weighted aspiration level (based on Andraszewicz, von Helversen, and Rieskamp). Model inputs are the risky options and the aspiration level. The value \eqn{v} of option \eqn{o}, with free parameters \eqn{\delta, \beta}, is
 #' \deqn{v(o) = EV(o) - \beta R(o)}
 #' \deqn{R(o) = \sum_i ( p_i ( max [ \delta asp_{o} - out_{o,i} , 0 ] ),}
@@ -28,13 +27,13 @@
 #' @author Jana B. Jarecki, \email{jj@janajarecki.com}
 #' @examples
 #' # None yet
-#' @export
+#' @noRd
 rsft_line <- function(formula, trials, states, budget, ntrials, data, fix = list(), choicerule, options) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   return(do.call(what = Rsft_line$new, args = .args, envir = parent.frame()))
 }
 
-
+#' @noRd
 Rsft_line <- R6Class("rsft_line",
   inherit = Cm,
   public = list(

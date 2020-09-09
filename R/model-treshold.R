@@ -18,7 +18,6 @@
 #' 
 #' @useDynLib cognitivemodels, .registration = TRUE
 #' 
-#' @inheritParams Cm
 #' @param formula A formula specifying choice ~ var
 #' @param ... other arguments from other functions, currently ignored.
 #' 

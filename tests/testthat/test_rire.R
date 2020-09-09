@@ -1,2 +1,0 @@
-context("rire")
-library(cogscimodels)

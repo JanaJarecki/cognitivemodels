@@ -7,36 +7,56 @@
 \alias{baseline_mean_d}
 \title{Baseline models}
 \usage{
-baseline_const_c(formula, consr, data = NULL, ...)
+baseline_const_c(formula, const, data, ...)
 
 baseline_const_d(formula, const, data, ...)
 
-baseline_mean_c(formula, data = NULL, ...)
+baseline_mean_c(formula, data, ...)
 
-baseline_mean_d(formula, data = NULL, ...)
+baseline_mean_d(formula, data, ...)
 }
 \arguments{
-\item{formula}{A formula, the observed variables, with only a left-hand-side (for example: \code{response ~ .}), note the "\code{~ .}" on the right.}
+\item{formula}{A formula, the variable in \code{data} to be modeled. For example, \code{y ~ .} models a response variable \code{y} (note the \code{~ .} after the variable name).}
 
-\item{const}{(optional, \bold{required} in \code{baseline_const_}) A number, the constant value that the model should predict.}
+\item{const}{A number, the value to predict.}
+
+\item{data}{A data frame, the data to be modeled.}
+
+\item{...}{other arguments, ignored.}
+
+\item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \code{\link[=cm_options]{cm_options()}}.}
+
+\item{discount}{A number, how many initial trials to not use during parameter fitting.}
+}
+\value{
+Returns a cognitive model object, which is an object of class \href{Cm}{cm}. A model, that has been assigned to \code{m}, can be summarized with \code{summary(m)} or \code{anova(m)}. The parameter space can be viewed using \verb{pa. rspace(m)}, constraints can be viewed using \code{constraints(m)}.
 }
 \description{
-Baseline models are simple stimulus-agnostic models, \code{baseline_const_c(), baseline_const_d()} predict a constant value for continuous and discrete data (resp.), \code{baseline_mean_c(), baseline_mean_d()} predict the mean of the observed values for continuous and discrete response data (resp.).
+Fits baseline models. Baseline models are stimulus-agostic models used as sanity checks in cognitive model comparisons. Other cognitive models should beat a baseline model -- if not, the other cognitive models don't describe patterns in the responses well.
+\itemize{
+\item \code{baseline_const_c()} predicts a constant value for continuous responses.
+\item \code{baseline_const_d()} predicts a constant value for discrete responses.
+\item \code{baseline_mean_c()} fits the mean of the observed responses for continuous responses.
+\item \code{baseline_mean_d()} fits the mean of the observed responses for discrete responses.
+}
 }
 \details{
-Baseline models are very simple models that ignore the stimuli. Baseline models are used as sanity checks in cognitive model comparisons. Other cognitive models are usually supposed to beat the baseline model -- if not, the other cognitive models do very likely not describe the observed data well.
-
-Use \bold{\code{baseline_..._d}} for discrete response variables; and use \bold{\code{baseline_..._c}} for continuous response variables.
-
-\bold{\code{baseline_const_}} predicts the numeric value \code{const} for all trials. A common baseline model in binary choice tasks is, for instance, a model predicting \emph{Pr=0.50} for each trial, for which you set \code{const = 0.50}. The model \bold{baseline_mean_} predicts the mean of the observed choices for each trial. This model has at least one free parameter (the mean).
+\code{baseline_const_c/d} predicts the value given in \code{const} for all trials. For example \code{const = 0.50} would predict \emph{Pr=0.50} for each trial, which is a commmon baseline model for tasks with two-outcome discrete choices.
 }
+\section{Parameter}{
+
+\itemize{
+\item \code{baseline_const_c/d} has no free parameter
+\item \code{baseline_mean_c/d} has 1 free parameter, \code{mu}, the mean
+\item \code{baseline_mean_c}, if estimated via log likelihood, has an additional free parameter, \code{sigma}, the standard deviation of the normal log likelihood.
+}
+}
+
 \examples{
-# Here is some data, let y be the observed data
+# Data D: let y hold the observed responses
+# Make a model that predicts Pr = 0.50
 D <- data.frame(y = c(1,1,0), x = c(1,2,3))
-
-# Baseline model that predicrs Pr = 0.50
-M <- baseline_const_c(y ~ ., const = 0.50, data = D)
-
+M <- baseline_const_d(y ~ ., const = 0.50, data = D)
 predict(M)                         # predicts 0.5, 0.5, 0.5
 npar(M)                            # 0 parameter
 logLik(M)                          # log likelihood (binomial)
@@ -47,4 +67,17 @@ coef(M)                            # mean counts as free parameter
 npar(M)                            # 1 free parameter, the mean
 
 }
-\concept{Cognitive models}
+\seealso{
+Other cognitive models: 
+\code{\link{bayes}()},
+\code{\link{choicerules}},
+\code{\link{cpt}},
+\code{\link{ebm}()},
+\code{\link{hm1988}()},
+\code{\link{shortfall}},
+\code{\link{utility}}
+}
+\author{
+Jana B. Jarecki, \email{jj@janajarecki.com}
+}
+\concept{cognitive models}

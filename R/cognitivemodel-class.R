@@ -145,19 +145,11 @@ Csm <- R6Class("csm",
         stop("'fun' must be a function, but '", .abbrDeparse(fun), "'' is a ", class(fun), ".")
       }
       m <- self$nmod
-      if (!identical(self$functions[[m]], function(pred, data, par) { return(pred) }, ignore.environment = TRUE)) { stop("Can't add 2 functions after another, fun() %>% fun() is not possible -> Combine the functions into one.")
+      if (!identical(self$functions[[m]], function(pred, data, par) { return(pred) }, ignore.environment = TRUE)) { stop("Can't add 2 functions after another, 'fun() %>% fun()'' is impossible.\n  * Combine the functions into one.")
       }
       self$functions[[m]] <- fun
       # TODO: add checks for fun() arguments data, par
       return(invisible(self))
-    },
-    check_varnames = function(x) {
-      if (any(x %in% colnames(self$data))) {
-          stop("A variable in 'data' has the same name as the prediction of the ", i, ". model. Duplicated names are not allowed.\n  * Do you want to rename the following variables in data: ", .brackify(x[which(x %in% colnames(self$data))]), "?")
-        }
-    },
-    call_to_list = function(x) {
-      return(as.list(rlang::call_standardise(as.call(x))))
     },
     add_title = function(x) {
       self$title <- paste0(c(self$title, x), collapse = " > ")
@@ -171,12 +163,18 @@ Csm <- R6Class("csm",
       parspace[!duplicated(rownames(parspace))]
       self$parspace <- parspace
     },
+    check_varnames = function(x) {
+      if (any(x %in% colnames(self$data))) { stop("A variable in 'data' has the same name as the prediction of the ", i, ". model. Duplicated names are not allowed.\n  * Do you want to rename each of these variables in data? - ", .brackify(x[which(x %in% colnames(self$data))]), "?") }
+    },
+    call_to_list = function(x) {
+      return(as.list(rlang::call_standardise(as.call(x))))
+    },
     init_call = function() {
       self$call[[1]] <- paste0(self$titel, collapse="+")
       self$call$fix <- self$fix
       self$call <- as.call(self$call)
     },
-    end = function(discount = 0L, options = NULL) {
+    end = function(discount = 0L, options = self$options) {
       # TODO: put some sanitize names code here for the model names
       # fixme: the constraints in fix are giving rise to duplicated constraints
       # idea: maybe using "fix" only from the global parameters?
@@ -205,19 +203,25 @@ Csm <- R6Class("csm",
       }    
     },
     add_constraints = function(cons = NULL) {
-      if (length(cons) == 0L) {
-        return(invisible(self))
-      }
-      if (length(self$constraints) == 0L) {
+      if (self$nmod == 1) {
         self$constraints <- cons
         return(invisible(self))
       }
-      C <- self$constraints
+      if (length(cons) == 0L & length(self$constraints) == 0L) {
+        return(invisible(self))
+      }
+      if (length(self$constraints) == 0L) {
+        C <- NO_constraint(length(names(self$par)))
+        C$names <- names(self$par)
+      } else {
+        C <- self$constraints
+      }
       A <- array(0L, dim(C$L) + dim(cons$L))
-      j <- seq.int(nrow(C$L))
-      k <- seq.int(ncol(C$L))
-      A[j, k] <- as.matrix(C$L)
-      A[-j, -k] <- as.matrix(cons$L)
+      j <- seq_len(nrow(C$L))
+      k <- seq_len(ncol(C$L))
+      A[ j,  k] <- as.matrix(C$L)
+      if (all(j==0)) A[  , -k] <- as.matrix(cons$L)
+      if (all(j!=0)) A[-j, -k] <- as.matrix(cons$L)
       C <- ROI::L_constraint(
         L = A,
         dir = c(C$dir, cons$dir),

@@ -1,2 +1,0 @@
-context("parameterrecovery")
-library(cogscimodels)

@@ -22,12 +22,13 @@
 #' @author Jana B. Jarecki, \email{jj@janajarecki.com}
 #' @examples 
 #' No examples yet
-#' @export
+#' @noRd
 recover_par <- function(model, nruns = 100, nsteps = list(), seed = 98634) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
    return(do.call(what = Recover_par$new, args = .args, envir = parent.frame()))
 }
 
+#' @noRd
 Recover_par <- R6Class(
   'recover_par',
   public = list(
