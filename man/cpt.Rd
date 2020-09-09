@@ -29,9 +29,28 @@ cpt_c(
   options = NULL
 )
 
-cpt_mem_d(formula, mem, data, choicerule, editing = "hedonic", options = NULL)
+cpt_mem_d(
+  formula,
+  mem,
+  data,
+  fix = list(),
+  choicerule,
+  editing = "hedonic",
+  weighting = c("TK1992"),
+  value = c("TK1992"),
+  options = NULL
+)
 
-cpt_mem_c(formula, mem, data, editing = "hedonic", options = NULL)
+cpt_mem_c(
+  formula,
+  mem,
+  data,
+  fix = list(),
+  editing = "hedonic",
+  weighting = c("TK1992"),
+  value = c("TK1992"),
+  options = NULL
+)
 }
 \arguments{
 \item{formula}{A \link[stats:formula]{formula}, the variables in \code{data} to be modeled. For example, \code{y ~ x1 + p2 + x3 + p4 | x5 + p6 + x7 + p8} models response y as function of two stimuli with features x1, p2, x3, p4 and x5, p6, x7, p8, alternating outcomes \code{x} and probabilities \code{p} (respectively). Lines \code{|} separate stimuli.}
@@ -51,9 +70,9 @@ cpt_mem_c(formula, mem, data, editing = "hedonic", options = NULL)
 \item \code{"start"} sets all parameters equal to their initial values (estimates none). Useful for building a first test model.
 }}
 
-\item{weighting}{(optional) A string, the weighting function. Currently only \code{"KT1992"}, the value function in Kahneman & Tversky (1992).}
+\item{weighting}{(optional) A string, name of the probability weighting function, allowed are \code{"KT1992"} for the weighting in Kahneman & Tversky (1992) and \code{NA} for no weighting.}
 
-\item{value}{(optional) A string, the value function. Currently, only \code{"KT1992"}, the value function in Kahneman & Tversky (1992).}
+\item{value}{(optional) A string, the name of the value function. Allowed is only \code{"KT1992"} for the value function in Kahneman & Tversky (1992) and \code{NA} for no value transformation.}
 
 \item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \code{\link[=cm_options]{cm_options()}}.}
 

@@ -27,8 +27,8 @@
 #' 
 #' @eval .param_formula(c(4,4), risky = TRUE)
 #' @param ref (optional, default: 0) A number, string, or RHS [formula][stats::formula], the reference point or the variable in `data` that holds the reference point. For example `~ ref`.
-#' @param weighting (optional) A string, the weighting function. Currently only `"KT1992"`, the value function in Kahneman & Tversky (1992).
-#' @param value (optional) A string, the value function. Currently, only `"KT1992"`, the value function in Kahneman & Tversky (1992).
+#' @param weighting (optional) A string, name of the probability weighting function, allowed are `"KT1992"` for the weighting in Kahneman & Tversky (1992) and `NA` for no weighting.
+#' @param value (optional) A string, the name of the value function. Allowed is only `"KT1992"` for the value function in Kahneman & Tversky (1992) and `NA` for no value transformation.
 #' @param mem (optional, default: 0) A number, string, or RHS [formula][stats::formula()], the prior gains or losses in memory. Formula and string refer to variables in `data`, for example `~ xoutc`.
 #' @param editing (optional) A string, the editing rule to use (see Thaler & Johnson, 1999, pp. 645), currently only `"hedonic"`.
 #' 
@@ -111,8 +111,8 @@ cpt_c <- function(formula, data, ref = 0L, fix = list(), weighting = c("TK1992")
 
 #' @name cpt
 #' @export
-cpt_mem_d <- function(formula, mem, data, choicerule, editing = "hedonic", options = NULL) {
-  warning("Model is under active development an not tested! Don't use.")
+cpt_mem_d <- function(formula, mem, data, fix = list(), choicerule, editing = "hedonic",  weighting = c("TK1992"), value = c("TK1992"), options = NULL) {
+  #warning("Model is under active development an not tested! Don't use.")
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args["mode"] <- "discrete"
   return(do.call(what = Cpt$new, args = .args, envir = parent.frame()))
@@ -120,8 +120,8 @@ cpt_mem_d <- function(formula, mem, data, choicerule, editing = "hedonic", optio
 
 #' @name cpt
 #' @export
-cpt_mem_c <- function(formula, mem, data, editing = "hedonic", options = NULL) {
-  warning("Model is under active development an not tested! Don't use.")
+cpt_mem_c <- function(formula, mem, data, fix = list(), editing = "hedonic",  weighting = c("TK1992"), value = c("TK1992"), options = NULL) {
+  #warning("Model is under active development an not tested! Don't use.")
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args["mode"] <- "continuous"
   return(do.call(what = Cpt$new, args = .args, envir = parent.frame()))
@@ -175,9 +175,9 @@ Cpt <- R6Class("cpt",
       ref <- more_input[,   1:(na/2),  drop = FALSE] # reference point
       mem <- more_input[, -(1:(na/2)), drop = FALSE] # prior outcomes/memory
       input <- self$efun(input = input, mem = mem)
-      X <- input[,  seq(1, na, 2), drop = FALSE] #1., 3., 5. input
-      P <- input[, -seq(1, na, 2), drop = FALSE] #2., 4., 6. input
-      X <- X - ref
+      X <- input[,  seq(1, ncol(input), 2), drop = FALSE] #1., 3., 5. input
+      P <- input[, -seq(1, ncol(input), 2), drop = FALSE] #2., 4., 6. input
+      X <- X - ref[, rep(1L, ncol(X)), drop = FALSE]
       # Cumulative prospect theory
       #    sum(w(.) * v(.))
       return(rowSums(
@@ -186,7 +186,9 @@ Cpt <- R6Class("cpt",
       )
     },
     set_weightingfun = function(type) {
-      if (type == "TK1992") {
+      if (is.na(type)) {
+        wfun <- function(x, p, ...) return(p)
+      } else if (type == "TK1992") {
         # One-parameter specification of cumulative prospect theory (?)
         wfun <- function(x, p, gammap, gamman, ...) {
         id <- apply(cbind(p, x), 1, paste, collapse = "")
@@ -231,7 +233,9 @@ Cpt <- R6Class("cpt",
       self$wfun <- wfun
     },
     set_valuefun = function(type) {
-      if (type == "TK1992") {
+      if (is.na(type)) {
+        vfun <- function(x, ...) { return(x) }
+      } else  if (type == "TK1992") {
         vfun <- function(x, alpha, beta, lambda, ...) {
           x <- replace(x^alpha, x < 0, (-lambda * (-x[x < 0])^beta))
           return(x)
@@ -242,19 +246,13 @@ Cpt <- R6Class("cpt",
   set_editingfun = function(type) {
     if (type == "hedonic") {
       efun <- function(input, mem = NULL) {
-        na <- self$natt[1]
-        X <- input[,  seq(1, na, 2), drop = FALSE] #1., 3., 5. input
-        P <- input[, -seq(1, na, 2), drop = FALSE] #2., 4., 6. input
-        X[P==0L] <- NA
+        X <- input[,  seq(1, ncol(input), 2), drop = FALSE] #1., 3., 5. input
+        P <- input[, -seq(1, ncol(input), 2), drop = FALSE] #2., 4., 6. input
         Xmin <- apply(X, 1, min, na.rm = TRUE)
-        P[X==Xmin & P>0L] <- 1L
-        X[] <- t(sapply(1:nrow(X), function(i) ifelse(
-          X[i,] == Xmin[i],
-          X[i,] + mem[i,],
-          X[i,] - Xmin[i])))
-        X[P==0L] <- 0L
-        input[,  seq(1, na, 2)] <- X
-        input[, -seq(1, na, 2)] <- P
+        X <- X - Xmin
+        X <- cbind(X, mem + Xmin)
+        P <- cbind(P, 1L)        
+        input <- cbind(X, P)[,  rep(1:ncol(X), each = 2) + rep(c(0, ncol(X)), ncol(X)), drop = F]
         return(input)
       }
     } else {
@@ -277,7 +275,7 @@ Cpt <- R6Class("cpt",
         mem <- array(fr, dim = c(nrow(d), self$natt[1]/2, self$nstim))
       } else {
         mem <- super$get_input(f = chr_as_rhs(fr), d = d)
-        mem <- array(ref, dim = c(nrow(d), self$natt[1]/2, self$nstim))
+        mem <- array(mem, dim = c(nrow(d), 1L, self$nstim))
       }
       return(abind::abind(ref, mem, along = 2L))
     },
