@@ -25,7 +25,7 @@
 #' @template param-choicerule
 #' @param class A [formula][stats::formula], the variable in `data` with the feedback about the true class/category. For example `~ cat`. `NA`s are interpreted as trials without feedback (partial feedback, see details).
 #' @param criterion A [formula][stats::formula], the variable in `data` with the feedback about the continous criterion. For example, `~ val` `NA`s are interpreted as trials without feedback (partial feedback, see details).
-#' @param similarity (optional) A string, similarity function, currently only `"minkowski"`.
+#' @param similarity (optional) A string, similarity function, currently `"minkowski"` (default) and `"mahalanobis"`.
 #' @param mode (optional) A string, the response mode, can be `"discrete"` or `"continuous"`, can be abbreviated. If missing, will be inferred from `criterion`.
 #' @eval .param_fix("gcm", dyn_args = c("formula", "class"), which = 4)
 #' 
@@ -158,7 +158,7 @@ Ebm <- R6Class('ebm',
     parnamesWeights = NULL,
     similarity = NULL,
     multiplicative = NULL,
-    initialize = function(formula, data = NULL, criterion, mode = NULL, fix = NULL, learntrials = NULL, discount = NULL, choicerule = NULL, similarity = "minkowski", multiplicative = TRUE, options = list(), title = "Exemplar model") {
+    initialize = function(formula, data = NULL, criterion, mode = NULL, fix = NULL, learntrials = NULL, discount = NULL, choicerule = NULL, similarity = c("minkowski", "mahalanobis"), multiplicative = TRUE, options = list(), title = "Exemplar model") {
       if (is.null(data)) data <- data.frame()
       data <- as.data.frame(data)
       self$similarity <- match.arg(similarity)

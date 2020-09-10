@@ -31,14 +31,36 @@ double minkowski(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::NumericVect
   return dist;
 }
 
+//' Weighted Mahalanobis Distance
+//' 
+//' @param x A numeric vector, feature values of first object
+//' @param y Like x, feature values of second object
+//' @param s Inverse of variance-covariance matrix
+//' @param w numeric vector of weights (model parameter)
+//' @param q exponent in distance metric (model parameter)
+//' @examples
+//' # none
+// [[Rcpp::export]]
+double mahalanobis(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::NumericMatrix s, Rcpp::NumericVector w, double q) {
+  double dist = 0.0;
+  for(i = 0; i < x.length(); i++) {
+    for(j = 0; j < x.length(); j++) {
+      z[i] += w[j] * (x[j] - y[j]) * s[j][i];    
+    }
+    dist += z[i] * w[i] * (x[i] - y[i]);
+  }
+  dist = pow(dist, q / 2);
+  return dist;
+}
+
 
 //' Computes Predictions for the Exemplar-based Models (GCM, EBM)
 //' 
 //' @param criterion numeric vector with experienced criterion
 //' @param features numeric matrix with feature criterion
 //' @param w numeric vector of weights (model parameter)
-//' @param r square root in distance metic (model parameter)
-//' @param q exponent in distance metric (model parameter)
+//' @param r order of Minkowski distance metic (model parameter)
+//' @param q relation between similarity and distance (model parameter)
 //' @param lambda sensitivity (model parameter)
 //' @param b bias parameter vector for classification (model parameter), must be NA for judgments
 //' @param wf weight vector with a weight for each feature combination
@@ -106,6 +128,10 @@ Rcpp::NumericVector ebm_cpp(
         sim[th] = -1 * lambda * minkowski(features(t, _), features(th, _), w, r, q);
       }
 
+      if (similarity == "mahalanobis") {
+        sim[th] = -1 * lambda * mahalanobis(features(t, _), features(th, _), w, s, q);
+      }
+      
       // Similarity x criterion value
       if (ismultiplicative == 1) {
         val[t] += exp(sim[th]) * criterion[th] * (NumericVector::is_na(b[0]) ? 1 : b[criterion[th]]);
