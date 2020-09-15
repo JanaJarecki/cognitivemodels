@@ -35,7 +35,7 @@ double minkowski(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::NumericVect
 //' 
 //' @param x A numeric vector, feature values of first object
 //' @param y Like x, feature values of second object
-//' @param s Inverse of variance-covariance matrix
+//' @param s A matrix, feature values of prior objects with same category as y
 //' @param w numeric vector of weights (model parameter)
 //' @param q exponent in distance metric (model parameter)
 //' @examples
@@ -111,7 +111,7 @@ Rcpp::NumericVector ebm_cpp(
     // compute the similarity between trial t and the thrials t - 1
     // up to maximally t or the lastLearnTrial
     int th_max = std::min(lastLearnTrial, t);
-
+    
     // loop through history trials th 
     for (int th = 0; th < th_max; th++) {
 
@@ -129,7 +129,21 @@ Rcpp::NumericVector ebm_cpp(
       }
 
       if (similarity == "mahalanobis") {
-        sim[th] = -1 * lambda * mahalanobis(features(t, _), features(th, _), w, s, q);
+        // calculates the number n of exemplars with the same criterion as th
+        int n;
+        for (int th2 = 0; th2 < th_max; th++) {
+          n += (criterion[th2] == criterion[th]) ? 1 : 0;
+        }
+        // creates matrix containing only prior exemplars with the same criterion as y
+        Rcpp::NumericMatrix s (n, features.ncol());
+        int j = 0;
+        for (int th2 = 0; th2 < th_max; th++) {
+          if (criterion[th2] == criterion[th]) {
+            s(j, _) = features(th2, _);
+            j += 1;
+          }
+        }
+        sim[th] = -1 * lambda * mahalanobis(features(t, _), features(th, _), s(_, _), w, q);
       }
       
       // Similarity x criterion value
