@@ -108,7 +108,7 @@ NULL
 
 #' @name ebm
 #' @export
-gcm <- function(formula, class, data, choicerule, fix = NULL, options = NULL, similarity = "minkowski", ...) {
+gcm <- function(formula, class, data, choicerule, fix = NULL, options = NULL, similarity = c("minkowski", "mahalanobis"), ...) {
    .args <- as.list(rlang::call_standardise(match.call())[-1])
    names(.args)[which(names(.args) == "class")] <- "criterion"
    .args[["mode"]] <- "discrete"
