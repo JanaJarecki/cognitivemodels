@@ -52,7 +52,7 @@ double mahalanobis(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::NumericMa
   }
   
   // calculates inverse of cov
-  cov = inverse(cov, Rcpp::NumericMatrix(cov.nrow(), cov.ncol()))
+  cov = inverse(cov, Rcpp::NumericMatrix(cov.nrow(), cov.ncol()));
   
   // calculates distance
   double dist = 0.0;
