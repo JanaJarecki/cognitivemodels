@@ -42,6 +42,15 @@ double minkowski(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::NumericVect
 //' # none
 // [[Rcpp::export]]
 double mahalanobis(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::NumericMatrix s, Rcpp::NumericVector w, double q) {
+  // calculates variance covariance matrix of s
+  Rcpp:NumericMatrix cov (s.ncol(), s.ncol());
+  for (f1 = 0; f1 < cov.nrow(); f1++) {
+    for (f2 = 0; f2 <= f1; f2++) {
+      cov(f1, f2) = covariance(s(_, f1), s(_, f2), s.nrow());
+      cov(f2, f1) = cov(f1, f2);
+    }
+  }
+  
   double dist = 0.0;
   for(i = 0; i < x.length(); i++) {
     for(j = 0; j < x.length(); j++) {
