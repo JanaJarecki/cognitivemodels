@@ -43,9 +43,9 @@ double minkowski(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::NumericVect
 // [[Rcpp::export]]
 double mahalanobis(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::NumericMatrix s, Rcpp::NumericVector w, double q) {
   // calculates variance covariance matrix of s
-  Rcpp:NumericMatrix cov (s.ncol(), s.ncol());
-  for (f1 = 0; f1 < cov.nrow(); f1++) {
-    for (f2 = 0; f2 <= f1; f2++) {
+  Rcpp::NumericMatrix cov (s.ncol(), s.ncol());
+  for (int f1 = 0; f1 < cov.nrow(); f1++) {
+    for (int f2 = 0; f2 <= f1; f2++) {
       cov(f1, f2) = covariance(s(_, f1), s(_, f2), s.nrow());
       cov(f2, f1) = cov(f1, f2);
     }
@@ -56,9 +56,10 @@ double mahalanobis(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::NumericMa
   
   // calculates distance
   double dist = 0.0;
-  for(i = 0; i < x.length(); i++) {
-    for(j = 0; j < x.length(); j++) {
-      z[i] += w[j] * (x[j] - y[j]) * cov[j][i];    
+  Rcpp::NumericVector z(x.length());
+  for(int i = 0; i < x.length(); i++) {
+    for(int j = 0; j < x.length(); j++) {
+      z[i] += w[j] * (x[j] - y[j]) * cov(j, i);    
     }
     dist += z[i] * w[i] * (x[i] - y[i]);
   }
@@ -141,23 +142,23 @@ Rcpp::NumericVector ebm_cpp(
         sim[th] = -1 * lambda * minkowski(features(t, _), features(th, _), w, r, q);
       }
 
-      if (similarity == "mahalanobis") {
-        // calculates the number n of exemplars with the same criterion as th
-        int n;
-        for (int th2 = 0; th2 < th_max; th++) {
-          n += (criterion[th2] == criterion[th]) ? 1 : 0;
-        }
-        // creates matrix containing only prior exemplars with the same criterion as y
-        Rcpp::NumericMatrix s (n, features.ncol());
-        int j = 0;
-        for (int th2 = 0; th2 < th_max; th++) {
-          if (criterion[th2] == criterion[th]) {
-            s(j, _) = features(th2, _);
-            j += 1;
-          }
-        }
-        sim[th] = -1 * lambda * mahalanobis(features(t, _), features(th, _), s(_, _), w, q);
-      }
+      // if (similarity == "mahalanobis") {
+      //   // calculates the number n of exemplars with the same criterion as th
+      //   int n;
+      //   for (int th2 = 0; th2 < th_max; th++) {
+      //     n += (criterion[th2] == criterion[th]) ? 1 : 0;
+      //   }
+      //   // creates matrix containing only prior exemplars with the same criterion as y
+      //   Rcpp::NumericMatrix s (n, features.ncol());
+      //   int j = 0;
+      //   for (int th2 = 0; th2 < th_max; th++) {
+      //     if (criterion[th2] == criterion[th]) {
+      //       s(j, _) = features(th2, _);
+      //       j += 1;
+      //     }
+      //   }
+      //   sim[th] = -1 * lambda * mahalanobis(features(t, _), features(th, _), s(_, _), w, q);
+      // }
       
       // Similarity x criterion value
       if (ismultiplicative == 1) {
