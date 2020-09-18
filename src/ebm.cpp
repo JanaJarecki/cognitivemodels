@@ -1,6 +1,7 @@
 // ebm.cpp
 #include <Rcpp.h>
 using namespace Rcpp;
+#include "cov.h"
 // This supposedly fixes compiler bugs on mac os
 #ifdef _OPENMP
   #include <omp.h>
@@ -41,10 +42,8 @@ double minkowski(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::NumericVect
 //' @examples
 //' # none
 // [[Rcpp::export]]
-double mod(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::NumericMatrix s, Rcpp::NumericVector w, double q) {
+double mahalanobis(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::NumericMatrix s, Rcpp::NumericVector w, double q) {
   // calculates variance covariance matrix of s
-  // Eigen::MatrixXd centered = s.rowwise() - s.colwise().mean();
-  // Eigen::MatrixXd cov = (centered.transpose() * centered) / double(s.rows() - 1);
   Rcpp::NumericMatrix cov (s.ncol(), s.ncol());
   for (int f1 = 0; f1 < cov.nrow(); f1++) {
     for (int f2 = 0; f2 <= f1; f2++) {
@@ -158,7 +157,7 @@ Rcpp::NumericVector ebm_cpp(
             j += 1;
           }
         }
-        sim[th] = -1 * lambda * mod(features(t, _), features(th, _), s(_, _), w, q);
+        sim[th] = -1 * lambda * mahalanobis(features(t, _), features(th, _), s, w, q);
       }
       
       // Similarity x criterion value
