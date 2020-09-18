@@ -156,12 +156,19 @@ Cpt <- R6Class("cpt",
         gamman  = c(0.001,  2, 1,   1L),
         lambda  = c(0.001, 10, 1, 1L)
         )
+      if (is.na(weighting) == TRUE) {
+        parspace <- parspace[!grepl("gamma",rownames(parspace)),]
+      }
+      if (is.na(value) == TRUE) {
+        parspace <- parspace[!grepl("alpha|beta|lambda",rownames(parspace)), ]
+      }
+      print(parspace)
       formula <- .add_missing_prob(formula)
       super$initialize(
         title = paste0("CPT (", unique(c(weighting, value)), ")"),
         formula = formula,
         data = data,
-        fix = fix,
+        fix = fix[intersect(names(fix), rownames(parspace))],
         choicerule = choicerule,
         discount = 0L,
         mode = mode,
@@ -181,8 +188,8 @@ Cpt <- R6Class("cpt",
       # Cumulative prospect theory
       #    sum(w(.) * v(.))
       return(rowSums(
-        self$wfun(x=X, p=P, gammap=par["gammap"], gamman=par["gamman"]) * 
-        self$vfun(x=X, alpha = par["alpha"], beta = par["beta"], lambda = par["lambda"]))
+        self$wfun(x=X, p=P) * 
+        self$vfun(x=X))
       )
     },
     set_weightingfun = function(type) {
@@ -190,7 +197,7 @@ Cpt <- R6Class("cpt",
         wfun <- function(x, p, ...) return(p)
       } else if (type == "TK1992") {
         # One-parameter specification of cumulative prospect theory (?)
-        wfun <- function(x, p, gammap, gamman, ...) {
+        wfun <- function(x, p, gammap=self$get_par()["gammap"], gamman=self$get_par()["gamman"]) {
         id <- apply(cbind(p, x), 1, paste, collapse = "")
         id <- match(id, unique(id))
         px <- cbind(p, x, id)
@@ -236,7 +243,7 @@ Cpt <- R6Class("cpt",
       if (is.na(type)) {
         vfun <- function(x, ...) { return(x) }
       } else  if (type == "TK1992") {
-        vfun <- function(x, alpha, beta, lambda, ...) {
+        vfun <- function(x, alpha = self$get_par()["alpha"], beta = self$get_par()["beta"], lambda = self$get_par()["lambda"]) {
           x <- replace(x^alpha, x < 0, (-lambda * (-x[x < 0])^beta))
           return(x)
         }

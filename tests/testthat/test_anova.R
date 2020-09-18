@@ -12,7 +12,7 @@ test_that("Anova Table", {
   n <- fitdata$N
   # no constraints
   m1 <- gcm(fml, data = d, criterion = ~true_cat, fix = list(q = 2, r = 2),
-    options = list(fit_args = list(n = n), fit_data=fitdata),
+    options = list(fit=F, fit_args = list(n = n), fit_data=fitdata),
     discount = 0, choicerule = "none")
   # weights constrained
   m2 <- ebm(fml, data = d, criterion = ~true_cat,
