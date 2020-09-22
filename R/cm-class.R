@@ -389,14 +389,14 @@ Cm <- R6Class(
     #' Bayesian Information Criterion of the model predictions given the observed responses
     #' @param ... other arguments (ignored)
     BIC = function(...) {
-      stats::BIC(self)
+      stats::BIC(self$logLik(...))
     },
     #' @description
     #' Akaike Information Criterion of the model predictions given the observed response
     #' @param ... other arguments (ignored)
     AIC = function(...) {
       k <- ifelse(length(list(...)$newdata), 0, self$npar("free"))
-      stats::AIC(self, k = k)
+      stats::AIC(self$logLik(...), k = k)
     },
     #' @description
     #' Small-sample corrected Akaike Information Criterion of the model predictions given the responses
@@ -702,8 +702,6 @@ Cm <- R6Class(
       # constraints from child model objects and the supplied 'fix' argument
       C <- .make_constraints(parspace = self$parspace, fix = fix)
       C2 <- private$make_constraints()
-      print(C)
-      print(C2)
       if (length(fix) < length(self$par) & .consistent_constraints(C, C2)) {
         C <- .combine_constraints(C, C2)
       }
