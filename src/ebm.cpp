@@ -144,14 +144,14 @@ Rcpp::NumericVector ebm_cpp(
 
       if (similarity == "mahalanobis") {
         // calculates the number n of exemplars with the same criterion as th
-        int n;
-        for (int th2 = 0; th2 < th_max; th++) {
+        int n = 0;
+        for (int th2 = 0; th2 < th_max; th2++) {
           n += (criterion[th2] == criterion[th]) ? 1 : 0;
         }
         // creates matrix containing only prior exemplars with the same criterion as y
         Rcpp::NumericMatrix s (n, features.ncol());
         int j = 0;
-        for (int th2 = 0; th2 < th_max; th++) {
+        for (int th2 = 0; th2 < th_max; th2++) {
           if (criterion[th2] == criterion[th]) {
             s(j, _) = features(th2, _);
             j += 1;

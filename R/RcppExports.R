@@ -6,8 +6,8 @@
 #' @param x A numeric vector, feature values of first object
 #' @param y  Like x, feature values of second object
 #' @param w numeric vector of weights (model parameter)
-#' @param r square root in distance metic (model parameter)
-#' @param q exponent in distance metric (model parameter)
+#' @param r exponent in distance metic (model parameter)
+#' @param q exponent in similarity function (model parameter)
 #' @examples
 #' # none
 minkowski <- function(x, y, w, r, q) {
@@ -20,7 +20,7 @@ minkowski <- function(x, y, w, r, q) {
 #' @param y Like x, feature values of second object
 #' @param s A matrix, feature values of prior objects with same category as y
 #' @param w numeric vector of weights (model parameter)
-#' @param q exponent in distance metric (model parameter)
+#' @param q exponent in similarity function (model parameter)
 #' @examples
 #' # none
 mahalanobis <- function(x, y, s, w, q) {
