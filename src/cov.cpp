@@ -130,3 +130,34 @@ Rcpp::NumericMatrix inverse(Rcpp::NumericMatrix A) {
   
   return inv; 
 }
+
+// Function to list each category's inverted variance covariance matrix
+Rcpp::List invert_cov(Rcpp::NumericMatrix features, Rcpp::NumericVector criterion, int nfeatures) {
+  Rcpp::List cov_list; 
+  Rcpp::NumericVector criterion_unique = Rcpp::unique(criterion);
+  Rcpp::NumericVector n(criterion_unique.length());
+  for (int c = 0; c < criterion_unique.length(); c++) {
+    int value = criterion_unique[c];
+    n[c] = std::count(criterion.begin(), criterion.end(), value);
+    Rcpp::NumericMatrix ex (n[c], nfeatures);
+    int j = 0;
+    for (int row = 0; row < features.nrow(); row++) {
+      if (criterion[row] == value) {
+        ex(j++, _) = features(row, _);
+      }
+    }
+    // calculates variance covariance matrix of s
+    Rcpp::NumericMatrix cov (nfeatures, nfeatures);
+    for (int f1 = 0; f1 < cov.nrow(); f1++) {
+      for (int f2 = 0; f2 <= f1; f2++) {
+        cov(f1, f2) = covariance(ex(_, f1), ex(_, f2), ex.nrow());
+        cov(f2, f1) = cov(f1, f2);
+      }
+    }
+    
+    // calculates inverse of cov
+    cov = inverse(cov);
+    cov_list.push_back(cov);
+  }
+  return cov_list;
+}

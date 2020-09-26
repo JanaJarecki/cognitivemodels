@@ -7,5 +7,6 @@ void getCofactor(Rcpp::NumericMatrix A, Rcpp::NumericMatrix temp, int p, int q, 
 float determinant(Rcpp::NumericMatrix A, int n);
 void adjoint(Rcpp::NumericMatrix A, Rcpp::NumericMatrix adj);
 Rcpp::NumericMatrix inverse(Rcpp::NumericMatrix A);
-
+Rcpp::List invert_cov(Rcpp::NumericMatrix features, Rcpp::NumericVector criterion, int nfeatures);
+  
 #endif // __COV__

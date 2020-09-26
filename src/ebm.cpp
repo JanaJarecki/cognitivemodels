@@ -36,31 +36,18 @@ double minkowski(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::NumericVect
 //' 
 //' @param x A numeric vector, feature values of first object
 //' @param y Like x, feature values of second object
-//' @param s A matrix, feature values of prior objects with same category as y
+//' @param s Inverted variance-covariance matrix
 //' @param w numeric vector of weights (model parameter)
 //' @param q exponent in similarity function (model parameter)
 //' @examples
 //' # none
 // [[Rcpp::export]]
 double mahalanobis(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::NumericMatrix s, Rcpp::NumericVector w, double q) {
-  // calculates variance covariance matrix of s
-  Rcpp::NumericMatrix cov (s.ncol(), s.ncol());
-  for (int f1 = 0; f1 < cov.nrow(); f1++) {
-    for (int f2 = 0; f2 <= f1; f2++) {
-      cov(f1, f2) = covariance(s(_, f1), s(_, f2), s.nrow());
-      cov(f2, f1) = cov(f1, f2);
-    }
-  }
-  
-  // calculates inverse of cov
-  cov = inverse(cov);
-  
-  // calculates distance
   double dist = 0.0;
   Rcpp::NumericVector z(x.length());
   for(int i = 0; i < x.length(); i++) {
     for(int j = 0; j < x.length(); j++) {
-      z[i] += w[j] * (x[j] - y[j]) * cov(j, i);    
+      z[i] += w[j] * (x[j] - y[j]) * s(j, i);    
     }
     dist += z[i] * w[i] * (x[i] - y[i]);
   }
@@ -111,7 +98,9 @@ Rcpp::NumericVector ebm_cpp(
   Rcpp::NumericVector val(T);
   Rcpp::NumericVector sim_all(T);
   Rcpp::NumericVector res(ntrials);
-
+  Rcpp::NumericVector criterion_unique = Rcpp::unique(criterion);
+  Rcpp::List cov_list; 
+  
   int i = 0; // a counter
 
   // initialize prediction in trial 1 in which no exemplar has been seen
@@ -125,6 +114,11 @@ Rcpp::NumericVector ebm_cpp(
     // compute the similarity between trial t and the thrials t - 1
     // up to maximally t or the lastLearnTrial
     int th_max = std::min(lastLearnTrial, t);
+    
+    // creates list with each category's inverted variance covariance matrix
+    if (similarity == "mahalanobis") {
+      cov_list = invert_cov(features, criterion, nfeatures);
+    }
     
     // loop through history trials th 
     for (int th = 0; th < th_max; th++) {
@@ -143,21 +137,18 @@ Rcpp::NumericVector ebm_cpp(
       }
 
       if (similarity == "mahalanobis") {
-        // calculates the number n of exemplars with the same criterion as th
-        int n = 0;
-        for (int th2 = 0; th2 < th_max; th2++) {
-          n += (criterion[th2] == criterion[th]) ? 1 : 0;
-        }
-        // creates matrix containing only prior exemplars with the same criterion as y
-        Rcpp::NumericMatrix s (n, features.ncol());
-        int j = 0;
-        for (int th2 = 0; th2 < th_max; th2++) {
-          if (criterion[th2] == criterion[th]) {
-            s(j, _) = features(th2, _);
-            j += 1;
+        int curr_c;
+        for (int c = 0; c < criterion_unique.length(); c++) {
+          if (criterion_unique[c] == criterion[th]) {
+            curr_c = c;
           }
         }
-        sim[th] = -1 * lambda * mahalanobis(features(t, _), features(th, _), s, w, q);
+        Rcpp::NumericMatrix s = cov_list[curr_c];
+        if (s.nrow() > 2) { // calculates Mahalanobis distance if covariance matrix can be estimated
+          sim[th] = -1 * lambda * mahalanobis(features(t, _), features(th, _), s, w, q);
+        } else { // if covariance matrix can not be estimated, calculate Euclidean distance
+          sim[th] = -1 * lambda * minkowski(features(t, _), features(th, _), w, 2, q);
+        }
       }
       
       // Similarity x criterion value

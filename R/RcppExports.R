@@ -18,7 +18,7 @@ minkowski <- function(x, y, w, r, q) {
 #' 
 #' @param x A numeric vector, feature values of first object
 #' @param y Like x, feature values of second object
-#' @param s A matrix, feature values of prior objects with same category as y
+#' @param s Inverted variance-covariance matrix
 #' @param w numeric vector of weights (model parameter)
 #' @param q exponent in similarity function (model parameter)
 #' @examples
