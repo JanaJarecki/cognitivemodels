@@ -132,21 +132,31 @@ Rcpp::NumericMatrix inverse(Rcpp::NumericMatrix A) {
 }
 
 // Function to list each category's inverted variance covariance matrix
-Rcpp::List invert_cov(Rcpp::NumericMatrix features, Rcpp::NumericVector criterion, int nfeatures) {
+Rcpp::List invert_cov(Rcpp::NumericMatrix features, Rcpp::NumericVector criterion, int nfeatures, int th_max) {
+  // extracts all rows that are contained in the learning set
+  Rcpp::NumericMatrix f(th_max, nfeatures);
+  Rcpp::NumericVector crit(th_max);
+  for (int th = 0; th < th_max; th++) {
+    f(th, _) = features(th, _);
+    crit[th] = criterion[th];
+  }
+  
   Rcpp::List cov_list; 
-  Rcpp::NumericVector criterion_unique = Rcpp::unique(criterion);
+  Rcpp::NumericVector criterion_unique = Rcpp::unique(crit);
   Rcpp::NumericVector n(criterion_unique.length());
   for (int c = 0; c < criterion_unique.length(); c++) {
+    // splits rows of learning set according to unique categories
     int value = criterion_unique[c];
-    n[c] = std::count(criterion.begin(), criterion.end(), value);
+    n[c] = std::count(crit.begin(), crit.end(), value);
     Rcpp::NumericMatrix ex (n[c], nfeatures);
     int j = 0;
-    for (int row = 0; row < features.nrow(); row++) {
-      if (criterion[row] == value) {
-        ex(j++, _) = features(row, _);
+    for (int row = 0; row < f.nrow(); row++) {
+      if (crit[row] == value) {
+        ex(j++, _) = f(row, _);
       }
     }
-    // calculates variance covariance matrix of s
+    
+    // calculates variance covariance matrix of the current category
     Rcpp::NumericMatrix cov (nfeatures, nfeatures);
     for (int f1 = 0; f1 < cov.nrow(); f1++) {
       for (int f2 = 0; f2 <= f1; f2++) {
@@ -155,7 +165,7 @@ Rcpp::List invert_cov(Rcpp::NumericMatrix features, Rcpp::NumericVector criterio
       }
     }
     
-    // calculates inverse of cov
+    // calculates inverse of cov and saves it in list object
     cov = inverse(cov);
     cov_list.push_back(cov);
   }
