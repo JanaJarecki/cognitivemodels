@@ -162,6 +162,7 @@ Ebm <- R6Class('ebm',
       if (is.null(data)) data <- data.frame()
       data <- as.data.frame(data)
       self$similarity <- match.arg(similarity)
+      if(self$similarity == "mahalanobis" & "r" %in% names(fix) == FALSE) fix <- c(fix, "r" = 2) # no exponent in Mahalanobis distance
       self$multiplicative = as.numeric(multiplicative)
       self$formulaCriterion <- .as_rhs(criterion)
       self$learntrials <- if ( is.null(learntrials) ) { seq_len(nrow(data)) } else { learntrials }
