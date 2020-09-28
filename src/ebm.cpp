@@ -118,7 +118,9 @@ Rcpp::NumericVector ebm_cpp(
     if (similarity == "mahalanobis") {
       cov_list = invert_cov(features, criterion, features.ncol());
     }
-    
+    // Rcout << "Features " << std::endl << features << std::endl;
+    // Rcout << "Criterion " << std::endl << criterion << std::endl;
+
     // loop through history trials th 
     for (int th = 0; th < th_max; th++) {
 
@@ -136,17 +138,18 @@ Rcpp::NumericVector ebm_cpp(
       }
 
       if (similarity == "mahalanobis") {
-        int curr_c;
-        for (int c = 0; c < criterion_unique.length(); c++) {
-          if (criterion_unique[c] == criterion[th]) {
-            curr_c = c;
+        int n = std::count(criterion.begin(), criterion.end(), criterion[th]); // count number of exemplars
+        if (n > 2) { // calculates Mahalanobis distance if covariance matrix is estimable (i.e., n > 2)
+          int curr_c;
+          for (int c = 0; c < criterion_unique.length(); c++) {
+            if (criterion_unique[c] == criterion[th]) {
+              curr_c = c;
+            }
           }
-        }
-        Rcpp::NumericMatrix s = cov_list[curr_c];
-        if (s.nrow() > 2) { // calculates Mahalanobis distance if covariance matrix can be estimated
+          Rcpp::NumericMatrix s = cov_list[curr_c];
           sim[th] = -1 * lambda * mahalanobis(features(t, _), features(th, _), s, w, q);
-        } else { // if covariance matrix can not be estimated, calculate Euclidean distance
-          sim[th] = -1 * lambda * minkowski(features(t, _), features(th, _), w, 2, q);
+        } else { // if covariance matrix cannot be estimated, calculate Euclidean distance
+          sim[th] = -1 * lambda * minkowski(features(t, _), features(th, _), w, r, q);
         }
       }
       
