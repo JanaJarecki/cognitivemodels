@@ -9,7 +9,7 @@
 \alias{SSE.cm}
 \title{Computes Various Model Fit Measures}
 \usage{
-\method{logLik}{cm}(object, ...)
+\method{logLik}{cm}(object, newdata = NULL, ...)
 
 MSE(x)
 

@@ -11,25 +11,20 @@
 
 #' Threshold Model
 #' 
-#' \code{treshold()} fits a threshold model.
-#' 
-#' * \code{treshold_c()}, which is the continuous model, fits the numeric distance to a threshold
-#' * \code{treshold_d()}, which is the discrete model, fits choices given the distance to a threshold
-#' 
+#' `treshold()` fits a threshold model with the threshold as free parameter.
+#' * `treshold_c()` models continuous responses in form of the distance to a threshold
+#' * `treshold_d()` models discrete choices given the distance to a threshold
 #' @useDynLib cognitivemodels, .registration = TRUE
+#' @eval .param_formula(1)
+#' @eval .param_fix("threshold_d")
+#' @return A model of class "treshold".
 #' 
-#' @param formula A formula specifying choice ~ var
-#' @param ... other arguments from other functions, currently ignored.
+#' ## Model Parameters
+#' * _**`nu`**_: the threshold.
+#' * In `treshold_d()`: `r .rd_choicerules()`
 #' 
-#' @return A model of class "treshold". It can be viewed with \code{summary(mod)}, where \code{mod} is the name of the model object.
-#' 
-#' @section Parameter Space:
-#' \tabular{lrcllr}{\verb{   }\strong{Name} \tab \verb{    }\strong{LB} \tab  \strong{-} \tab \strong{UB}\verb{    } \tab \strong{Description} \tab \strong{Start Value}\cr
-#' \verb{   }\code{nu} \tab  -Inf \tab  - \tab  Inf \tab  Treshold \tab  0
-#' }
-#' 
+#' @template cm
 #' @author Jana B. Jarecki
-#' 
 #' @details Given the formula \code{y ~ a} the model predicts y = 1 for a >= \code{nu} and y = 0 for a < \code{nu}
 #' 
 #' 
@@ -67,7 +62,6 @@
 #' threshold(y ~ a, D, list(tau=0.5), "softmax")     # fix soft-max tau to 1   
 #' threshold(y ~ a, D, choicerule = "softmax")       # nu and tau free param   
 #' 
-#' 
 #' @export
 threshold <- function(formula, data, fix = list(), choicerule = NULL, mode, discount = 0L, options = list(), ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
@@ -101,7 +95,7 @@ threshold_d <- function(formula, data, fix = list(), choicerule = "softmax", dis
 Threshold <- R6Class("Threshold",
   inherit = Cm,
   public = list(
-    initialize = function(formula, data, fix = list(), choicerule = NULL, mode, discount = 0, options = list(), ...) {
+    initialize = function(formula, data = data.frame(), fix = list(), choicerule = NULL, mode, discount = 0, options = list(), ...) {
 
       super$initialize(
         title = "Threshold",

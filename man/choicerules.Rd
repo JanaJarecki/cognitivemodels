@@ -30,7 +30,7 @@ argmax(formula, data, ...)
 \item \code{"start"} sets all parameters equal to their initial values (estimates none). Useful for building a first test model.
 }}
 
-\item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \code{\link[=cm_options]{cm_options()}}.}
+\item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \link{cm_options}.}
 
 \item{...}{other arguments, ignored.}
 
@@ -124,6 +124,7 @@ Other cognitive models:
 \code{\link{hm1988}()},
 \code{\link{shift}()},
 \code{\link{shortfall}},
+\code{\link{threshold}()},
 \code{\link{utility}}
 }
 \author{

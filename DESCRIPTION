@@ -1,12 +1,13 @@
 Package: cognitivemodels
 Type: Package
 Title: Cognitive Models - Estimation, Prediction, and Development of Models for Cognitive Scientists
-Version: 0.0.10
+Version: 0.0.11
 Date: 2020-05-09
 Author: Jana B. Jarecki
 Maintainer: Jana B. Jarecki <jj@janajarecki.com>
 Description: Implementation of cognitive models, includes a general class cognitive models that has methods to fit free parameters to data and, can apply choicerules, and various goodness-of-fit measures (loglikelihood, MSE, etc.). The interface is similar to the lm() interface.
 License: GPL (>= 2)
+Depeds: R (>= 3.0.2)
 Imports: 
     abind,
     AICcmodavg,
