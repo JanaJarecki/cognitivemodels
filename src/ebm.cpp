@@ -118,8 +118,6 @@ Rcpp::NumericVector ebm_cpp(
     if (similarity == "mahalanobis") {
       cov_list = invert_cov(features, criterion, features.ncol());
     }
-    // Rcout << "Features " << std::endl << features << std::endl;
-    // Rcout << "Criterion " << std::endl << criterion << std::endl;
 
     // loop through history trials th 
     for (int th = 0; th < th_max; th++) {
