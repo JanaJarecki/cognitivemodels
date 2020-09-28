@@ -116,7 +116,7 @@ Rcpp::NumericVector ebm_cpp(
     
     // creates list with each category's inverted variance covariance matrix
     if (similarity == "mahalanobis") {
-      cov_list = invert_cov(features, criterion, nfeatures);
+      cov_list = invert_cov(features, criterion, features.ncol());
     }
     
     // loop through history trials th 
