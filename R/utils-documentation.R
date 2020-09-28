@@ -15,7 +15,7 @@
 #' @importFrom english english
 #' @noRd
 #' @export
-.param_formula <- function(n, risky = FALSE) {
+.param_formula <- function(n, risky = FALSE, new = NULL) {
   txt <- "@param formula A [formula][stats::formula], the variables in `data` to be modeled. For example, `y ~ x1 + x2` models response y as function of one stimulus with features x1, x2."
   nm <- cumsum(n)
   n <- c(1, n+1)
@@ -36,6 +36,9 @@
     txt <- sub("\\.$", " (respectively).", txt)
     txt <- paste(txt, "Lines `|` separate stimuli.")
   }
+  if (!is.null(new)) {
+    txt <- gsub("function of .*", paste("function of", new), txt)
+  }
   return(txt)
 }
 
@@ -48,7 +51,7 @@
 #' @noRd
 #' @export
 .param_fix <- function(x, dyn_args = NULL, which = 1, onlycr = FALSE) {
-  txt <- "@param fix (optional) A list or the string `\"start\"`, the fixed model parameters, if missing all parameters are estimated."
+  txt <- "@param fix (optional) A list with parameter-value pairs of fixed parameters. If missing all free parameters are estimated. If set to `\"start\"` all parameters are fixed to their start values."
 
   if (onlycr == FALSE) {
     m <- .cm_dummy_model(x)
@@ -106,10 +109,12 @@
 .cm_dummy_model <- function(x, formula = ~ x1, ...) {
   args <- c(list(...), list(formula = formula, options = list(fit = FALSE), choicerule = "none"))
 
-  if (grepl("^ebm|^mem|^gcm", x)) {
+  if (grepl("^ebm|^mem|^gcm|^shift", x)) {
     args$formula <- ~ x1 + x2
     args$data <- data.frame(x1=1, x2=1, c=0:1)
-    if (x == "gcm") { args <- c(args, criterion = ~c) } else { args <- c(args, class = ~c) }
+    if (x == "gcm") { args <- c(args, criterion = ~c) } 
+    if (x == "ebm" | x == "mem") { args <- c(args, class = ~c) }
+    if (x == "shift") { args <- c(time = ~c) }
   }
   if (grepl("^bayes", x)) {
     args$formula <- ~x1 + x2

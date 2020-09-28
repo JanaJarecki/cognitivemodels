@@ -35,7 +35,7 @@ hm1988(
 
 \item{choicerule}{A string, the choice rule. Allowed values, see  \code{cm_choicerules()}: \code{"none"} is no choice rule, \code{"softmax"} is \href{https://en.wikipedia.org/wiki/Softmax_function}{soft-maximum}, \code{"luce"} is \href{https://en.wikipedia.org/wiki/Luce\%27s_choice_axiom}{Luce's axiom}.}
 
-\item{fix}{(optional, only for \code{choicerule} softmax, epsilon) A list or the string \code{"start"}, the fixed model parameters, if missing all parameters are estimated. Model parameter names depend on \code{choicerule} and can be \emph{\code{tau}, \code{eps}} (see details - model parameters).
+\item{fix}{(optional, only for \code{choicerule} softmax, epsilon) A list with parameter-value pairs of fixed parameters. If missing all free parameters are estimated. If set to \code{"start"} all parameters are fixed to their start values. Model parameter names depend on \code{choicerule} and can be \emph{\code{tau}, \code{eps}} (see details - model parameters).
 \itemize{
 \item \code{list(tau = 6.16)} sets parameter \emph{\code{tau}} equal to 6.16.
 \item \code{"start"} sets all parameters equal to their initial values (estimates none). Useful for building a first test model.
@@ -90,6 +90,7 @@ Other cognitive models:
 \code{\link{choicerules}},
 \code{\link{cpt}},
 \code{\link{ebm}()},
+\code{\link{shift}()},
 \code{\link{shortfall}},
 \code{\link{utility}}
 }

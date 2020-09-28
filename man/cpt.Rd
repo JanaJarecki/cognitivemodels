@@ -29,9 +29,28 @@ cpt_c(
   options = NULL
 )
 
-cpt_mem_d(formula, mem, data, choicerule, editing = "hedonic", options = NULL)
+cpt_mem_d(
+  formula,
+  mem,
+  data,
+  fix = list(),
+  choicerule,
+  editing = "hedonic",
+  weighting = c("TK1992"),
+  value = c("TK1992"),
+  options = NULL
+)
 
-cpt_mem_c(formula, mem, data, editing = "hedonic", options = NULL)
+cpt_mem_c(
+  formula,
+  mem,
+  data,
+  fix = list(),
+  editing = "hedonic",
+  weighting = c("TK1992"),
+  value = c("TK1992"),
+  options = NULL
+)
 }
 \arguments{
 \item{formula}{A \link[stats:formula]{formula}, the variables in \code{data} to be modeled. For example, \code{y ~ x1 + p2 + x3 + p4 | x5 + p6 + x7 + p8} models response y as function of two stimuli with features x1, p2, x3, p4 and x5, p6, x7, p8, alternating outcomes \code{x} and probabilities \code{p} (respectively). Lines \code{|} separate stimuli.}
@@ -42,7 +61,7 @@ cpt_mem_c(formula, mem, data, editing = "hedonic", options = NULL)
 
 \item{ref}{(optional, default: 0) A number, string, or RHS \link[stats:formula]{formula}, the reference point or the variable in \code{data} that holds the reference point. For example \code{~ ref}.}
 
-\item{fix}{(optional) A list or the string \code{"start"}, the fixed model parameters, if missing all parameters are estimated. Model parameter names are \emph{\code{alpha}, \code{beta}, \code{gammap}, \code{gamman}, \code{lambda}} (see details - model parameters).
+\item{fix}{(optional) A list with parameter-value pairs of fixed parameters. If missing all free parameters are estimated. If set to \code{"start"} all parameters are fixed to their start values. Model parameter names are \emph{\code{alpha}, \code{beta}, \code{gammap}, \code{gamman}, \code{lambda}} (see details - model parameters).
 \itemize{
 \item \code{list(alpha = 1.08)} sets parameter \emph{\code{alpha}} equal to 1.08.
 \item \code{list(alpha = "beta")} sets parameter \emph{\code{alpha}} equal to parameter \emph{\code{beta}} (estimates \emph{\code{beta}}).
@@ -51,9 +70,9 @@ cpt_mem_c(formula, mem, data, editing = "hedonic", options = NULL)
 \item \code{"start"} sets all parameters equal to their initial values (estimates none). Useful for building a first test model.
 }}
 
-\item{weighting}{(optional) A string, the weighting function. Currently only \code{"KT1992"}, the value function in Kahneman & Tversky (1992).}
+\item{weighting}{(optional) A string, name of the probability weighting function, allowed are \code{"KT1992"} for the weighting in Kahneman & Tversky (1992) and \code{NA} for no weighting.}
 
-\item{value}{(optional) A string, the value function. Currently, only \code{"KT1992"}, the value function in Kahneman & Tversky (1992).}
+\item{value}{(optional) A string, the name of the value function. Allowed is only \code{"KT1992"} for the value function in Kahneman & Tversky (1992) and \code{NA} for no value transformation.}
 
 \item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \code{\link[=cm_options]{cm_options()}}.}
 
@@ -141,6 +160,7 @@ Other cognitive models:
 \code{\link{choicerules}},
 \code{\link{ebm}()},
 \code{\link{hm1988}()},
+\code{\link{shift}()},
 \code{\link{shortfall}},
 \code{\link{utility}}
 }

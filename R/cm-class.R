@@ -331,11 +331,14 @@ Cm <- R6Class(
     #' @param n (optional) When fitting to aggregate data, supply how many raw data points underly each aggregated data point
     #' @param newdata (optional) A data frame with new data - experimental!
     #' @param ... other arguments (ignored)
-    gof = function(type = self$options$fit_measure, n = self$options$fit_args$n, newdata = self$options$fit_data, discount = FALSE, ...) {
+    gof = function(type = self$options$fit_measure, n = self$options$fit_args$n, newdata = NULL, discount = FALSE, ...) {
       if (length(self$res) == 0) { stop("Can't compute goodness of fit, because the model has no observed resonses.", self$res, ".",
         "\n  * Did you forget a left side in 'formula'? (such as 'y' in y ~ x1 + x2)", call. = FALSE)}
 
-      if (length(newdata) == 0L) {
+      if (length(self$options$fit_data) > 0L) {
+        obs <- private$get_res(f = self$formula, d = self$options$fit_data)
+        pred <- as.matrix(self$predict(newdata = self$options$fit_data))
+      } else if (length(newdata) == 0L) {
         obs <- as.matrix(self$res)
         pred <- as.matrix(self$predict())
       } else {
@@ -350,8 +353,7 @@ Cm <- R6Class(
         pred[self$discount, ] <- NA
       }
       .args <- c(list(...), self$options$fit_args)
-      .args <- .args[!duplicated(names(.args)) & !grepl("n", names(.args))]
-
+      .args <- .args[!duplicated(names(.args)) & !grepl("^n", names(.args))]
       .args <- c(
         list(
           obs = obs,
@@ -365,7 +367,6 @@ Cm <- R6Class(
           ),
           .args
         )
-
       gof <- try(do.call(cognitiveutils::gof, args = .args, envir = parent.frame()), silent = TRUE)
       if (inherits(gof, "try-error")) {
         stop("Can't compute the goodness of fit ", type, ", because:\n  ", geterrmessage(), call.= FALSE)
@@ -377,8 +378,9 @@ Cm <- R6Class(
     #' Log likelihood of the observed responses under the model predictions
     #' @param ... other arguments (ignored)
     logLik = function(...) {
+      .args <- list(...)
       ll <- self$gof(type = "loglikelihood", ...)
-      k <- ifelse("newdata" %in% names(list(...)), 0L, self$npar("free"))
+      k <- ifelse(!is.null(.args$newdata), 0L, self$npar("free"))
       attributes(ll) <- list(df = k, nobs = self$nobs)
       class(ll) <- "logLik"
       return(ll)
@@ -393,14 +395,14 @@ Cm <- R6Class(
     #' Akaike Information Criterion of the model predictions given the observed response
     #' @param ... other arguments (ignored)
     AIC = function(...) {
-      k <- ifelse('newdata' %in% names(list(...)), 0, self$npar("free"))
+      k <- ifelse(length(list(...)$newdata), 0, self$npar("free"))
       stats::AIC(self, k = k)
     },
     #' @description
     #' Small-sample corrected Akaike Information Criterion of the model predictions given the responses
     #' @param ... other arguments (ignored)
     AICc = function(...) {
-      k <- ifelse('newdata' %in% names(list(...)), 0, self$npar('free'))
+      k <- ifelse(length(list(...)$newdata), 0, self$npar('free'))
       if (k == 0L) {
         return(self$AIC())
       } else {
@@ -658,7 +660,6 @@ Cm <- R6Class(
           p <- rbind(p, make_parspace(sigma = c(.0000001, max(rg, .0000001))))
         }
       }
-      
       p[names(options$lb), "lb"] <- options$lb
       p[names(options$ub), "ub"] <- options$ub
       p[, "start"] <- pmin(p[, "ub"], p[,"start"])
@@ -701,6 +702,8 @@ Cm <- R6Class(
       # constraints from child model objects and the supplied 'fix' argument
       C <- .make_constraints(parspace = self$parspace, fix = fix)
       C2 <- private$make_constraints()
+      print(C)
+      print(C2)
       if (length(fix) < length(self$par) & .consistent_constraints(C, C2)) {
         C <- .combine_constraints(C, C2)
       }

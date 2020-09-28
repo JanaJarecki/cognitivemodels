@@ -17,7 +17,7 @@ shortfall_c(formula, asp, data, fix = list(), options = NULL)
 
 \item{data}{A data frame, the data to be modeled.}
 
-\item{fix}{(optional) A list or the string \code{"start"}, the fixed model parameters, if missing all parameters are estimated. Model parameter names are \emph{\code{beta}, \code{delta}} (see details - model parameters).
+\item{fix}{(optional) A list with parameter-value pairs of fixed parameters. If missing all free parameters are estimated. If set to \code{"start"} all parameters are fixed to their start values. Model parameter names are \emph{\code{beta}, \code{delta}} (see details - model parameters).
 \itemize{
 \item \code{list(beta = 3.09)} sets parameter \emph{\code{beta}} equal to 3.09.
 \item \code{list(beta = "delta")} sets parameter \emph{\code{beta}} equal to parameter \emph{\code{delta}} (estimates \emph{\code{delta}}).
@@ -94,6 +94,7 @@ Other cognitive models:
 \code{\link{cpt}},
 \code{\link{ebm}()},
 \code{\link{hm1988}()},
+\code{\link{shift}()},
 \code{\link{utility}}
 }
 \author{
