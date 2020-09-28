@@ -36,7 +36,7 @@ utility_pow_c(formula, data, fix = list(), discount = 0, options = list(), ...)
 
 \item{discount}{A number, how many initial trials to not use during parameter fitting.}
 
-\item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \code{\link[=cm_options]{cm_options()}}.}
+\item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \link{cm_options}.}
 
 \item{...}{other arguments, ignored.}
 }
@@ -80,7 +80,8 @@ Other cognitive models:
 \code{\link{ebm}()},
 \code{\link{hm1988}()},
 \code{\link{shift}()},
-\code{\link{shortfall}}
+\code{\link{shortfall}},
+\code{\link{threshold}()}
 }
 \author{
 Jana B. Jarecki, \email{jj@janajarecki.com}

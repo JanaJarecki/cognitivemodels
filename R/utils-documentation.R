@@ -116,6 +116,9 @@
     if (x == "ebm" | x == "mem") { args <- c(args, class = ~c) }
     if (x == "shift") { args <- c(time = ~c) }
   }
+  if (grepl("^threshold", x)) {
+    args$data <- data.frame(x1=c(0,1))
+  }
   if (grepl("^bayes", x)) {
     args$formula <- ~x1 + x2
   }

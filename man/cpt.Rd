@@ -74,7 +74,7 @@ cpt_mem_c(
 
 \item{value}{(optional) A string, the name of the value function. Allowed is only \code{"KT1992"} for the value function in Kahneman & Tversky (1992) and \code{NA} for no value transformation.}
 
-\item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \code{\link[=cm_options]{cm_options()}}.}
+\item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \link{cm_options}.}
 
 \item{mem}{(optional, default: 0) A number, string, or RHS \link[stats:formula]{formula}, the prior gains or losses in memory. Formula and string refer to variables in \code{data}, for example \code{~ xoutc}.}
 
@@ -162,6 +162,7 @@ Other cognitive models:
 \code{\link{hm1988}()},
 \code{\link{shift}()},
 \code{\link{shortfall}},
+\code{\link{threshold}()},
 \code{\link{utility}}
 }
 \author{

@@ -61,7 +61,7 @@ nobs.cm <- function(x, ...) {
 
 #' @title Number of Parameters, Attributes, and Stimuli
 #' 
-#'  @name nstim
+#' @name nstim
 #' @usage nstim(x)
 #' @param x a model object
 #' @examples 
