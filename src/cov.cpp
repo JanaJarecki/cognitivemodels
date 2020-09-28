@@ -142,7 +142,7 @@ Rcpp::List invert_cov(Rcpp::NumericMatrix features, Rcpp::NumericVector criterio
   }
   
   Rcpp::List cov_list; 
-  Rcpp::NumericVector criterion_unique = Rcpp::unique(crit);
+  Rcpp::NumericVector criterion_unique = Rcpp::unique(criterion);
   Rcpp::NumericVector n(criterion_unique.length());
   for (int c = 0; c < criterion_unique.length(); c++) {
     // splits rows of learning set according to unique categories
