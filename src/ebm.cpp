@@ -116,12 +116,12 @@ Rcpp::NumericVector ebm_cpp(
     
     // creates list with each category's inverted variance covariance matrix
     if (similarity == "mahalanobis") {
-      cov_list = invert_cov(features, criterion, features.ncol());
+      cov_list = invert_cov(features, criterion, features.ncol(), th_max);
     }
 
     // loop through history trials th 
     for (int th = 0; th < th_max; th++) {
-
+      
       // substitute initial NAs (= no feedback shown yet)
       if (NumericVector::is_na(criterion[th])) {
         sim[t] = 1.0;
@@ -129,14 +129,14 @@ Rcpp::NumericVector ebm_cpp(
         criterion[th] = 0;
         continue;
       }
-
+      
       // Similarity to stimulus at th
       if (similarity == "minkowski") {
         sim[th] = -1 * lambda * minkowski(features(t, _), features(th, _), w, r, q);
       }
-
+      
       if (similarity == "mahalanobis") {
-        int n = std::count(criterion.begin(), criterion.end(), criterion[th]); // count number of exemplars
+        int n = std::count(criterion.begin(), criterion.begin() + th_max, criterion[th]); // count number of exemplars
         if (n > 2) { // calculates Mahalanobis distance if covariance matrix is estimable (i.e., n > 2)
           int curr_c;
           for (int c = 0; c < criterion_unique.length(); c++) {
