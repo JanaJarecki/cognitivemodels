@@ -10,7 +10,8 @@ To use this package, ensure you have a working installation of R and the **Rcpp*
 
 ```R
     if (!require(pacman)) install.packages(pacman)
-    update.package("matlib") # needed
+    install.packages("matlib")
+    install.packages("Rcpp")
     pacman::p_load(devtools)
     pacman::p_load_gh("janajarecki/cognitivemodels")
 ```
