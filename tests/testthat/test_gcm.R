@@ -48,6 +48,8 @@ test_that("Parameter estimates compared to Nosofsky (1989)", {
     target = c(angle=.10,size=.90,lambda=1.60,b0=.50,b1=.50))
   expect_est_equal(fix = c(angle = .5, size = .5),
     target = c(lambda=2.40, b0=.49, b1=.51))
+  expect_est_equal(fix = c(angle = .5),
+    target = c(lambda=2.40, b0=.49, b1=.51))
   expect_est_equal(fix = list(angle = .5, size = "angle"),
     target = c(lambda=2.40, b0=.49, b1=.51))
   expect_est_equal(fix = list(angle = "size", size = 0.5),

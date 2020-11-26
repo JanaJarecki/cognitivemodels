@@ -716,8 +716,6 @@ Cm <- R6Class(
       self$ncon <- length(C)
       if (self$ncon > 0L) {
         self$ncon <- min(length(C), sum(!apply(as.matrix(C$L) == 0L, 2, all)))
-        x <<- C
-        b <<- unlist(self$par)
         parvalues <- .solve_constraints(C, b = unlist(self$par))
         self$set_par(parvalues, constrain = FALSE)
         self$set_par(self$par, constrain = TRUE) #fixme (this seems inefficient)

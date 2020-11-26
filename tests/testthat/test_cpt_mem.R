@@ -9,7 +9,7 @@
 
 # 1. Model predictions -----------------------------------------------------
 test_that("predictions are correct", {
-  skip()
+  skip("Work in Progress")
 
   par <- c(alpha=0.88, beta=0.88, lambda=2.7, gammap=0.61, gamman=0.69)
   rowSums(cpt_d( ~ x1 + p + y1 | x2 + p2 + y2, data = data.frame(x1 = 21, p = 1, y1 = 0, x2 = 18, p2= 0.5, y2 = c(0,0)), fix = par, weighting = NA, choicerule = "none")$predict(type = "value"))
