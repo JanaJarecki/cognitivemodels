@@ -162,5 +162,6 @@ test_that("parameter constraints from 'sum_prior' are correct.", {
   D <- data.frame(x=rep(0,10), z=1, y=1)
   expect(1L, 1L)
   expect(2L, 2L)
+  expect(4L, 4L)
   expect(x = NULL, 2L)
 })
