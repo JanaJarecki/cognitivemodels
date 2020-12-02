@@ -236,6 +236,7 @@ Bayes <- R6Class("Bayes",
     posterior_max = function(par, ...) {
       t <- self$priordist
       if (t == 'beta-binomial' | t == 'dirichlet-multinomial') {
+        par[] <- round(par, 10)
         (par - 1) / rowSums(par - 1)
       }
     },

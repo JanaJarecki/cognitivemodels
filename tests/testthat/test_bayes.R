@@ -8,6 +8,9 @@ test_that('Predicted Values for 1 row, 2 alternatives', {
   m2 <- bayes(~ x + y, D[1,], fix=list(delta=1, priorpar=c(1,1), sigma=1e-06), mode = "c")
   m3 <- bayes_beta_c(~ x + y, D[1,], fix = fp[c(1:3,7)])
   mc2 <- bayes_beta_c(~ x + y, data = DC[1,], fix = fp[c(1:3,7)], format = "cumulative")
+  m1$predict("max")
+  m2$predict("max")
+
   expect_equivalent(m1$predict("mean"), cbind(pr_x=c(.5)))
   expect_equal(m1$predict("mean"), m2$predict("mean"))
   expect_equal(m1$predict("mean"), m3$predict("mean"))
@@ -159,5 +162,6 @@ test_that("parameter constraints from 'sum_prior' are correct.", {
   D <- data.frame(x=rep(0,10), z=1, y=1)
   expect(1L, 1L)
   expect(2L, 2L)
+  expect(4L, 4L)
   expect(x = NULL, 2L)
 })
