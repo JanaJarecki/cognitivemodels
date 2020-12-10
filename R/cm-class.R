@@ -861,17 +861,23 @@ Cm <- R6Class(
       sol$status <- list(code = sol$convergence, msg = NULL)
       return(sol)
     },
-    fit_grid = function(par = self$get_par("free"), ...) {
+    fit_grid = function(par = self$parnames[["free2"]], ...) {
       G <- private$make_pargrid(which_par = par, ...)
       objvals <- sapply(1:nrow(G$ids), function(i) {
-          private$objective(par = get_id_in_grid(i, G), self = self)
+        #print(.solve_grid_constraint(get_id_in_grid(i, G), self$constraint))
+        private$objective(par = .solve_grid_constraint(get_id_in_grid(i, G), self$constraint), self = self)
         })
       n   <- self$options$solver_args$nbest
       best_ids <- which(rank(objvals, ties.method = "random") <= n)
       best_ids <- best_ids[order(objvals[best_ids])]
-      best_par <- t(sapply(best_ids, get_id_in_grid, grid = G))
+      best_par <- t(sapply(best_ids,
+        function(x, grid, con) {
+          .solve_grid_constraint(get_id_in_grid(x, grid), con)
+        },
+        grid = G,
+        con = self$constraint))
       return(list(
-        solution = best_par[, private$get_parnames("free"), drop = FALSE],
+        solution = best_par[, self$parnames[["free"]], drop = FALSE],
         objval = objvals[best_ids],
         status = list(code = 0, msg = NULL))
       )
@@ -892,17 +898,16 @@ Cm <- R6Class(
     make_pargrid = function(offset = NULL, nsteps = NULL,  par = NULL, ...) {
       if (is.null(offset)) offset <- self$options$solver_args$offset
       if (is.null(nsteps)) nsteps <- self$options$solver_args$nsteps
-      x <- if (is.null(par)) { "free" } else { "all" }
-      par <- if (is.null(par)) { 1:length(private$get_parnames(x)) }
-      if (length(.simplify_constraints(self$constraints)) > 0L) { warning('Note: solver="grid" does not respect linear or quadratic constraints, maybe change the solver. To this end use: options = list(solver = ...), e.g, "solnp" or "optimx".') }
+      par <- if (length(par) == 0L) { self$parnames[["free2"]] }
+      if (length(.simplify_constraints(self$constraints)) > 0L) { warning('Note: solver="grid" does respect parameter constraints but this feature is experimental.\n  * Change the parameter optimization solver using `options = list(solver = "solnp")`, or other solvers like "optimx".') }
       return(make_grid_id_list(
-        names = private$get_parnames(x)[par],
-        lb = private$get_lb(x)[par],
-        ub = private$get_ub(x)[par],
+        names = par,
+        lb = private$get_lb("all")[par],
+        ub = private$get_ub("all")[par],
         offset = offset,
         nsteps = nsteps,
         ...))
-    },
+      },
     make_random_par = function(parspace) {
       if (!is.null(self$constraints)) { message('Note: solver="grid" does NOT respect linear or quadratic constraints -> consider a differnt solver. To this end use: options = list(solver = " "), e.g, "solnp" or "optimx".') }
 

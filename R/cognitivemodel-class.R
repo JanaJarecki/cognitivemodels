@@ -207,8 +207,9 @@ Csm <- R6Class("csm",
         self$constraints <- cons
         return(invisible(self))
       }
-      if (length(cons) == 0L & length(self$constraints) == 0L) {
+      if (length(cons) == 0L) {
         return(invisible(self))
+        # if (length(self$constraints) == 0L)
       }
       if (length(self$constraints) == 0L) {
         C <- NO_constraint(length(names(self$par)))
