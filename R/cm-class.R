@@ -331,7 +331,7 @@ Cm <- R6Class(
     #' @param n (optional) When fitting to aggregate data, supply how many raw data points underly each aggregated data point
     #' @param newdata (optional) A data frame with new data - experimental!
     #' @param ... other arguments (ignored)
-    gof = function(type = self$options$fit_measure, n = self$options$fit_args$n, newdata = NULL, discount = FALSE, ...) {
+    gof = function(type = self$options$fit_measure, n = self$options$fit_args$n, newdata = NULL, discount = (length(self$discount) > 0), ...) {
       if (length(self$res) == 0) { stop("Can't compute goodness of fit, because the model has no observed resonses.", self$res, ".",
         "\n  * Did you forget a left side in 'formula'? (such as 'y' in y ~ x1 + x2)", call. = FALSE)}
 
@@ -351,6 +351,7 @@ Cm <- R6Class(
       pred <- pred[, 1:ncol(obs), drop = FALSE]
       if (discount == TRUE) {
         pred[self$discount, ] <- NA
+        obs[self$discount, ] <- NA
       }
       .args <- c(list(...), self$options$fit_args)
       .args <- .args[!duplicated(names(.args)) & !grepl("^n", names(.args))]
