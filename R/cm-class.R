@@ -865,8 +865,7 @@ Cm <- R6Class(
     fit_grid = function(par = self$parnames[["free2"]], ...) {
       G <- private$make_pargrid(which_par = par, ...)
       objvals <- sapply(1:nrow(G$ids), function(i) {
-        #print(.solve_grid_constraint(get_id_in_grid(i, G), self$constraint))
-        private$objective(par = .solve_grid_constraint(get_id_in_grid(i, G), self$constraint), self = self)
+        private$objective(par = .solve_grid_constraint(get_id_in_grid(i, G), self$constraints), self = self)
         })
       n   <- self$options$solver_args$nbest
       best_ids <- which(rank(objvals, ties.method = "random") <= n)
@@ -876,7 +875,7 @@ Cm <- R6Class(
           .solve_grid_constraint(get_id_in_grid(x, grid), con)
         },
         grid = G,
-        con = self$constraint))
+        con = self$constraints))
       return(list(
         solution = best_par[, self$parnames[["free"]], drop = FALSE],
         objval = objvals[best_ids],
