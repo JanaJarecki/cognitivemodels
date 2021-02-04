@@ -2,14 +2,14 @@
 #' 
 #' @import Formula
 #' @import Rsolnp
-#' @import cogsciutils
+#' @import cognitiveutils
 #' @import R6
 #' @usage Cogscimodel$new(formula, data, allowedparm)
 #' @param formula Formula, like \code{y ~ x1 + x2}, depends on the model.
 #' @param data Data.frame or matrix, must contain all variables in \code{formula}.
 #' @param allowedparm Matrix with 4 columns like \code{rbind(alpha=c('ul'=0,'ll'=1,'init'=0.5,'na'=1))}. Defines each parameter's lower limit, upper limit, starting value (for fitting), and value that make the parameter have zero effect. Row names define parameter names. Columns names must be \code{'ll', 'ul', 'init', 'na'} (lower limit, upper limit, inital value, no-effect value; resp.).
 #' @param fixed (optional) Named vector with model parameter(s) that are predefined (will not be fitted). If a fixed parameter is \code{NULL} model parameter will be ignored. See details.
-#' @param choicerule (optional, default \code{NULL}) String specifying the choice rule, e.g. \code{'softmax', 'argmax'}, see \link[cogsciutils]{choicerule} for possible choicerules; \code{NLL} means predictions as is.
+#' @param choicerule (optional, default \code{NULL}) String specifying the choice rule, e.g. \code{'softmax', 'argmax'}, see \link[cognitiveutils]{choicerule} for possible choicerules; \code{NLL} means predictions as is.
 #' @param model (optional) String, the name of the model
 #' @param discount (optional) Integer or integer vector, which or how many many trials to discount?
 #' @details Ignore a model parameter by setting it to \code{NULL}, in this case your matrix \code{allowedparm} needs to contain
@@ -153,13 +153,13 @@ Cogscimodel <- R6Class(
       self$pred <- NULL
     },
     #' Transforms predictions with choicerule
-    #' @param x string, choice rules, e.g. 'softmax', allowed choicerules see \link[cogsciutils]{choicerule}
+    #' @param x string, choice rules, e.g. 'softmax', allowed choicerules see \link[cognitiveutils]{choicerule}
     applychoicerule = function(x) {
       if ( is.null(self$choicerule) ) {
         return(x)
       } else {
         args <- c(list(x = x, type = self$choicerule), as.list(self$parm[self$which.choiceruleparm()]))
-        x[] <- do.call(cogsciutils::choicerule, args)
+        x[] <- do.call(cognitiveutils::choicerule, args)
         return(x)
       }
     },
@@ -167,7 +167,7 @@ Cogscimodel <- R6Class(
       return(unlist(self$parm[setdiff(self$freenames, self$constrainednames)]))
     },
     #' Compute goodness of fit
-    #' @param type string, fit measure to use, e.g. 'loglikelihood', allowed types see \link[cogsciutils]{gof}
+    #' @param type string, fit measure to use, e.g. 'loglikelihood', allowed types see \link[cognitiveutils]{gof}
     gof = function(type, n = 1, newdata = NULL, discount = FALSE, ...) {
       if (is.null(self$obs)) {
         stop('Model has no observed variables, check your formula or data', call.=FALSE)
@@ -183,7 +183,7 @@ Cogscimodel <- R6Class(
         pred[self$discount, ] <- NA
       }
       .args <- c(list(obs = obs, pred = pred, na.rm = TRUE, n = n), list(options = c(list(...), response = self$response)))
-      do.call(cogsciutils::gof, .args)
+      do.call(cognitiveutils::gof, .args)
     },
     logLik = function(...) {
       self$gof(type = 'loglikelihood', ...)
