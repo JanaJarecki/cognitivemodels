@@ -1,3 +1,13 @@
+# cognitivemodels 0.0.12
+
+**Bugfixes**
+
+* Fixed bug in fitting parameter with the cognitivemodels `+``functionality
+
+# cognitivemodels 0.0.10
+
+* Minor bugfixes
+
 # cognitivemodels 0.0.10
 
 **New features**
@@ -7,6 +17,7 @@
 * `cpt()` now allows `weighting = NA` and `value = NA` as arguments, which leads to no probability weighting (treating probabilities as is) or no subjective value transformation (treating outcomes as is) in the model, respectively, see `?cpt`
 
 **Potentially breaking**
+
 * In `predict.cm` changed the order or arguments such that the argument `newdata` is at the second position to comply with `predict.glm` methods
 
 **Bugfixes**
