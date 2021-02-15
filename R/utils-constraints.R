@@ -196,7 +196,7 @@
     }
   } else {
     s <- qr.solve(A, b)
-    if(!isTRUE(all.equal(c(A %*% s), b))) {
+    if(!isTRUE(all.equal(c(A %*% s), b, check.attributes = FALSE))) {
       stop("Parameter constraints are inconsistent:\n ", x, call. = FALSE)
     }
   }   

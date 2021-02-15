@@ -706,7 +706,6 @@ Cm <- R6Class(
       if (length(fix) < length(self$par) & .consistent_constraints(C, C2)) {
         C <- .combine_constraints(C, C2)
       }
-
       # check over-constrained problems     
       if ((length(self$par) - length(C)) < 0) { warning("Maybe too many constraints: ", length(self$par), " parameter and ", length(C), " constraints. View the constraints and parameter by costraints(.) and npar(.), where . is the model name.")
       }
@@ -875,7 +874,7 @@ Cm <- R6Class(
           .solve_grid_constraint(get_id_in_grid(x, grid), con)
         },
         grid = G,
-        con = self$constraints))
+        con = self$constraints))      
       return(list(
         solution = best_par[, self$parnames[["free"]], drop = FALSE],
         objval = objvals[best_ids],

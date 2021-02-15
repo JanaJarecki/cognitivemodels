@@ -208,7 +208,9 @@ Csm <- R6Class("csm",
         return(invisible(self))
       }
       if (length(cons) == 0L) {
-        return(invisible(self))
+        cons <- NO_constraint(nrow(self$models[[self$nmod]]$parspace))
+        cons$names <- names(self$models[[self$nmod]]$par)
+        # return(invisible(self))
         # if (length(self$constraints) == 0L)
       }
       if (length(self$constraints) == 0L) {

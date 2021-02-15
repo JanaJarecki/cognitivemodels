@@ -8,7 +8,9 @@ test_that("Grid search in Bayesian model", {
     M <- bayes_beta_d(y ~ x + z, data = D, fix=as.list(fix), choicerule="none", options = list(solver = "grid"))
     expect_equivalent(coef(M), target, tol=0.09)
   }
+
   expect_coef_equivalent(fix=c(x=1,z=1),  target=1.1,      y=0)
+  
   expect_coef_equivalent(fix=c(delta=1),  target=c(1,1),   y=0)
   expect_coef_equivalent(fix=NULL,        target=c(1,1,1), y=0)
 
