@@ -161,13 +161,13 @@ Rcpp::NumericVector ebm_cpp(
       }
     }
 
-    if (sim_all[t] < DBL_EPSILON) {
-      res[i] = R_NaN;
-    } else{
-      res[i] = val[t] / sim_all[t];
-    }
-    // sim_all[t] = std::max(sim_all[t], DBL_EPSILON); // ensure sim[t] > 0
-    // res[i] = val[t] / sim_all[t];
+    // if (sim_all[t] < DBL_EPSILON) {
+    //   res[i] = R_NaN;
+    // } else{
+    //   res[i] = val[t] / sim_all[t];
+    // }
+    sim_all[t] = std::max(sim_all[t], DBL_EPSILON); // ensure sim[t] > 0
+    res[i] = val[t] / sim_all[t];
     i += 1;
   }
 
