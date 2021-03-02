@@ -102,6 +102,24 @@ test_that("Bayesian + Utility - Parameter estimation", {
 
 
 
+
+test_that("Exemplar-based model - Parameter estimation", {
+  expect_par_equal <- function(fix, target) {
+    M <- cognitivemodel(data = D) +
+      ebm_j( ~ x + z, criterion = ~ c, fix = fix) +
+      softmax(y ~ pr_c | I(1-pr_c))
+    fit(M, options = list(solver = "solnp"))
+    M2 <- gcm(y ~ x + z, class = ~ c, choicerule = "softmax", data=D, fix = c(fix, list(b1=0.50)))
+    expect_equal(M$coef(), M2$coef(), tol=0.09)
+  }
+
+  D <- data.frame(x = c(1,1,0,0), z = c(0,1,1,1), y = c(1,1,0,0), c= c(1,0,1,0))
+  expect_par_equal(fix = list())
+  expect_par_equal(fix = list(lambda = 1))
+})
+
+
+
 # test_that("csm - prediced value identities", {
 #   D <- data.frame(x1 = 1, x2 = 2, obsx = c(0,0,0), y1=1, y2=0, obsy = c(1,0,1), y=1)
 #   cpar <- c(alpha=0.88, beta=0.88, lambda=2.25, gammap=0.61, gamman=0.69)

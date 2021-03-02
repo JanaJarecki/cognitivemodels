@@ -196,44 +196,29 @@
     }
   } else {
     s <- qr.solve(A, b)
-    if(!isTRUE(all.equal(c(A %*% s), b))) {
+    if(!isTRUE(all.equal(c(A %*% s), b, check.attributes = FALSE))) {
       stop("Parameter constraints are inconsistent:\n ", x, call. = FALSE)
     }
   }   
 }
 
-#' 
-# #' 
-# .solve_constraints <- function(x, b) {
-#   if (length(x) == 0) { return(x) }
-#   A <- as.matrix(x$L)
-#   colnames(A) <- x$names
-#   if (nrow(A) != ncol(A)) {
-#     b <- c(x$rhs, rep(0, ncol(A)-nrow(A)))
-#     A <- rbind(A, matrix(0L, nrow=ncol(A)-nrow(A), ncol=ncol(A)))
-#   } else if (identical(unname(A), diag(1, ncol(A)))) {
-#     return(solve(A, x$rhs))
-#   } else {
-#     b <- x$rhs
-#   }
-  
 
-#   # fixme this is a hack
-#   if (nrow(A) == 1 & sum(A != 0) == 1) {
-#     return(setNames(solve(A[A != 0], b), x$names[A != 0]))
-#   }
-#   # Get parameter that are under-determined by constraints x
-#   solvable <- svd(A)$d != 0
-#   qrsol <- try(qr.solve(A[,solvable,drop=FALSE],b), silent = TRUE)
-#   if (inherits(qrsol, "try-error")) {
-#     stop("'fix' over-constrains the parameters.\n", if(nrow(A) == ncol(A)) {"  * Are your constraints circular (a=b, b=a)?"}, "\n  * The original error is:\n    ", qrsol, call.=FALSE)
-#   } else {
-#     s <- qrsol
-#     return(round(s, 32))
-#   }
-# }
-# A <- rbind(c(0,0,0), c(1,0,0), c(0,0,0))
-# svd(A)
+#' Adds the parameter that are constrained to the free parameters in the construction of a grid
+#' 
+#' @param fix a named vector with the values of the parameters in the grid
+#' @param con an obect of type L_constraint or csm_constraint, the constraint that is stored in the model
+#' @export
+.solve_grid_constraint <- function(fix, con) {
+  if (is.null(con) || length(con) == 0L) { return(fix) }
+  dMat <- diag(length(con$names))
+  select <- con$names %in% names(fix)
+  eqcon <- ROI::L_constraint(
+    dMat[select, , drop = FALSE],
+    rhs = fix,
+    dir = ROI::eq(length(fix)),
+    names = con$names)
+  return(.solve_constraints(.combine_constraints(con, eqcon)))
+}
 
 #' Prints the constraints of a cogscimodel object nicely
 #' 

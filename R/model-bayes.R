@@ -105,7 +105,7 @@ NULL
 
 #' @rdname bayes
 #' @export
-bayes_beta_c <- function(formula, data, fix = NULL, format = c("raw", "count", "cumulative"), prior_sum = NULL, ...) {
+bayes_beta_c <- function(formula, data, fix = NULL, format = c("raw", "count", "cumulative"), prior_sum = NULL, discount = 0, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args[["mode"]] <- "continuous"
   .args[["options"]] <- list(fit_args = list(pdf = "truncnorm", a = 0, b = 1))
@@ -115,7 +115,7 @@ bayes_beta_c <- function(formula, data, fix = NULL, format = c("raw", "count", "
 
 #' @rdname bayes
 #' @export
-bayes_beta_d <- function(formula, data, fix = NULL, format = NULL, prior_sum = NULL, ...) {
+bayes_beta_d <- function(formula, data, fix = NULL, format = NULL, prior_sum = NULL, discount = 0, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args[["mode"]] <- "discrete"
   return(do.call(what = Bayes$new, args = .args, envir = parent.frame()))
@@ -124,7 +124,7 @@ bayes_beta_d <- function(formula, data, fix = NULL, format = NULL, prior_sum = N
 
 #' @rdname bayes
 #' @export
-bayes_dirichlet_d <- function(formula, data, fix = NULL, format = NULL, prior_sum = NULL, ...) {
+bayes_dirichlet_d <- function(formula, data, fix = NULL, format = NULL, prior_sum = NULL, discount = 0, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args[["mode"]] <- "discrete"
   return(do.call(what = Bayes$new, args = .args, envir = parent.frame()))
@@ -133,7 +133,7 @@ bayes_dirichlet_d <- function(formula, data, fix = NULL, format = NULL, prior_su
 
 #' @rdname bayes
 #' @export
-bayes_dirichlet_c <- function(formula, data, fix = NULL, format = NULL, prior_sum = NULL,  ...) {
+bayes_dirichlet_c <- function(formula, data, fix = NULL, format = NULL, prior_sum = NULL, discount = 0,  ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args[["mode"]] <- "continuous"
   return(do.call(what = Bayes$new, args = .args, envir = parent.frame()))
