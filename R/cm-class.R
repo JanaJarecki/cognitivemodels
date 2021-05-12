@@ -331,7 +331,7 @@ Cm <- R6Class(
     #' @param n (optional) When fitting to aggregate data, supply how many raw data points underly each aggregated data point
     #' @param newdata (optional) A data frame with new data - experimental!
     #' @param ... other arguments (ignored)
-    gof = function(type = self$options$fit_measure, n = self$options$fit_args$n, newdata = NULL, discount = FALSE, ...) {
+    gof = function(type = self$options$fit_measure, n = self$options$fit_args$n, newdata = NULL, discount = (length(self$discount) > 0), ...) {
       if (length(self$res) == 0) { stop("Can't compute goodness of fit, because the model has no observed resonses.", self$res, ".",
         "\n  * Did you forget a left side in 'formula'? (such as 'y' in y ~ x1 + x2)", call. = FALSE)}
 
@@ -351,6 +351,7 @@ Cm <- R6Class(
       pred <- pred[, 1:ncol(obs), drop = FALSE]
       if (discount == TRUE) {
         pred[self$discount, ] <- NA
+        obs[self$discount, ] <- NA
       }
       .args <- c(list(...), self$options$fit_args)
       .args <- .args[!duplicated(names(.args)) & !grepl("^n", names(.args))]
@@ -705,7 +706,6 @@ Cm <- R6Class(
       if (length(fix) < length(self$par) & .consistent_constraints(C, C2)) {
         C <- .combine_constraints(C, C2)
       }
-
       # check over-constrained problems     
       if ((length(self$par) - length(C)) < 0) { warning("Maybe too many constraints: ", length(self$par), " parameter and ", length(C), " constraints. View the constraints and parameter by costraints(.) and npar(.), where . is the model name.")
       }
@@ -716,8 +716,6 @@ Cm <- R6Class(
       self$ncon <- length(C)
       if (self$ncon > 0L) {
         self$ncon <- min(length(C), sum(!apply(as.matrix(C$L) == 0L, 2, all)))
-        x <<- C
-        b <<- unlist(self$par)
         parvalues <- .solve_constraints(C, b = unlist(self$par))
         self$set_par(parvalues, constrain = FALSE)
         self$set_par(self$par, constrain = TRUE) #fixme (this seems inefficient)
@@ -863,17 +861,22 @@ Cm <- R6Class(
       sol$status <- list(code = sol$convergence, msg = NULL)
       return(sol)
     },
-    fit_grid = function(par = self$get_par("free"), ...) {
+    fit_grid = function(par = self$parnames[["free2"]], ...) {
       G <- private$make_pargrid(which_par = par, ...)
       objvals <- sapply(1:nrow(G$ids), function(i) {
-          private$objective(par = get_id_in_grid(i, G), self = self)
+        private$objective(par = .solve_grid_constraint(get_id_in_grid(i, G), self$constraints), self = self)
         })
       n   <- self$options$solver_args$nbest
       best_ids <- which(rank(objvals, ties.method = "random") <= n)
       best_ids <- best_ids[order(objvals[best_ids])]
-      best_par <- t(sapply(best_ids, get_id_in_grid, grid = G))
+      best_par <- t(sapply(best_ids,
+        function(x, grid, con) {
+          .solve_grid_constraint(get_id_in_grid(x, grid), con)
+        },
+        grid = G,
+        con = self$constraints))      
       return(list(
-        solution = best_par[, private$get_parnames("free"), drop = FALSE],
+        solution = best_par[, self$parnames[["free"]], drop = FALSE],
         objval = objvals[best_ids],
         status = list(code = 0, msg = NULL))
       )
@@ -894,17 +897,16 @@ Cm <- R6Class(
     make_pargrid = function(offset = NULL, nsteps = NULL,  par = NULL, ...) {
       if (is.null(offset)) offset <- self$options$solver_args$offset
       if (is.null(nsteps)) nsteps <- self$options$solver_args$nsteps
-      x <- if (is.null(par)) { "free" } else { "all" }
-      par <- if (is.null(par)) { 1:length(private$get_parnames(x)) }
-      if (length(.simplify_constraints(self$constraints)) > 0L) { warning('Note: solver="grid" does not respect linear or quadratic constraints, maybe change the solver. To this end use: options = list(solver = ...), e.g, "solnp" or "optimx".') }
+      par <- if (length(par) == 0L) { self$parnames[["free2"]] }
+      if (length(.simplify_constraints(self$constraints)) > 0L) { warning('Note: solver="grid" does respect parameter constraints but this feature is experimental.\n  * Change the parameter optimization solver using `options = list(solver = "solnp")`, or other solvers like "optimx".') }
       return(make_grid_id_list(
-        names = private$get_parnames(x)[par],
-        lb = private$get_lb(x)[par],
-        ub = private$get_ub(x)[par],
+        names = par,
+        lb = private$get_lb("all")[par],
+        ub = private$get_ub("all")[par],
         offset = offset,
         nsteps = nsteps,
         ...))
-    },
+      },
     make_random_par = function(parspace) {
       if (!is.null(self$constraints)) { message('Note: solver="grid" does NOT respect linear or quadratic constraints -> consider a differnt solver. To this end use: options = list(solver = " "), e.g, "solnp" or "optimx".') }
 
