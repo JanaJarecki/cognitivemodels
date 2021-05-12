@@ -27,32 +27,44 @@
 #' M$make_prediction(D, bound)
 #' 
 #' @export
-rule <- function(formula, data, fix = list(), choicerule = NULL, mode, discount = 0L, options = list(), ...) {
+rule_seitz2021 <- function(formula, data, fix = list(), choicerule = NULL, mode, discount = 0L, options = list(), ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
+  .args$bound <- c(0.5, 0.5, 1.5)
   return(do.call(what = Rule$new, args = .args, envir = parent.frame()))
 }
 
 Rule <- R6Class("Rule",
                 inherit = Cm,
                 public = list(
-                  initialize = function(formula, data = data.frame(), fix = list(), choicerule = NULL, mode = "discrete", discount = 0, options = list(), ...) {
+                  bound = NULL,
+                  initialize = function(formula, data = data.frame(), bound, fix = list(), choicerule = NULL, mode = "discrete", discount = 0, options = list(), ...) {
                     
+                    self$bound <- bound
                     super$initialize(
                       title = "Rule",
                       formula = formula,
                       data = data,
-                      # parspace = self$make_parspace(f=formula, d=data),
+                      parspace = make_parspace(),
                       choicerule = choicerule,
                       mode = mode,
                       fix = fix,
                       discount = discount,
-                      # options = c(options, list(solver = c("solnp"))),
+                      options = c(options, list(solver = c("solnp"))),
                       ...)
+                    if(ncol(self$input) != length(self$bound)) {
+                      stop("\nThe input does not have the same amount of features (", ncol(self$input), ") as the bound (", length(self$bound), ").")
+                    }
                   },
-                  make_prediction = function(input = self$input, bound, ...) {
-                    input <- matrix(input, nrow = nrow(input), dimnames = list(NULL, paste0("f", 1:ncol(input))))
-                    comps <- t(sign(t(input) > bound))
-                    return(1 - (comps[, "f2"] * comps[, "f1"] + (1 - comps[, "f2"]) * comps[, "f3"]))
+                  make_prediction = function(type = "response", input, ...) {
+                    comps <- t(sign(t(input) > self$bound))
+                    cat_choice <- 
+                      # if feature 2 > bound, look at feature 1
+                      (comps[, 2] * comps[, 1] + 
+                         # if feature 2 < bound, look at feature 3
+                         (1 - comps[, 2]) * comps[, 3])
+                    # in this specific case low values are category 1 (direction of category)
+                    cat_choice <- 1 - cat_choice
+                    return(cat_choice)
                   },
                   check_input = function() {
                     # This function is called automatically at the end of initialize()
