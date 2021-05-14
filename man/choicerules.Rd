@@ -24,13 +24,13 @@ argmax(formula, data, ...)
 
 \item{data}{A data frame, the data to be modeled.}
 
-\item{fix}{(optional) A list or the string \code{"start"}, the fixed model parameters, if missing all parameters are estimated. Model parameter names are \emph{\code{tau}} (see details - model parameters).
+\item{fix}{(optional) A list with parameter-value pairs of fixed parameters. If missing all free parameters are estimated. If set to \code{"start"} all parameters are fixed to their start values. Model parameter names are \emph{\code{tau}} (see details - model parameters).
 \itemize{
 \item \code{list(tau = 3.85)} sets parameter \emph{\code{tau}} equal to 3.85.
 \item \code{"start"} sets all parameters equal to their initial values (estimates none). Useful for building a first test model.
 }}
 
-\item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \code{\link[=cm_options]{cm_options()}}.}
+\item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \link{cm_options}.}
 
 \item{...}{other arguments, ignored.}
 
@@ -122,7 +122,9 @@ Other cognitive models:
 \code{\link{cpt}},
 \code{\link{ebm}()},
 \code{\link{hm1988}()},
+\code{\link{shift}()},
 \code{\link{shortfall}},
+\code{\link{threshold}()},
 \code{\link{utility}}
 }
 \author{

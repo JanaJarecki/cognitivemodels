@@ -13,25 +13,18 @@ bayes_beta_c(
   data,
   fix = NULL,
   format = c("raw", "count", "cumulative"),
-  priorsconstrained = FALSE,
+  prior_sum = NULL,
   ...
 )
 
-bayes_beta_d(
-  formula,
-  data,
-  fix = NULL,
-  format = NULL,
-  priorsconstrained = FALSE,
-  ...
-)
+bayes_beta_d(formula, data, fix = NULL, format = NULL, prior_sum = NULL, ...)
 
 bayes_dirichlet_d(
   formula,
   data,
   fix = NULL,
   format = NULL,
-  priorsconstrained = FALSE,
+  prior_sum = NULL,
   ...
 )
 
@@ -40,7 +33,7 @@ bayes_dirichlet_c(
   data,
   fix = NULL,
   format = NULL,
-  priorsconstrained = FALSE,
+  prior_sum = NULL,
   ...
 )
 
@@ -52,7 +45,7 @@ bayes(
   type = NULL,
   discount = 0L,
   options = list(),
-  priorsconstrained = FALSE,
+  prior_sum = NULL,
   ...
 )
 }
@@ -61,7 +54,7 @@ bayes(
 
 \item{data}{A data frame, the data to be modeled.}
 
-\item{fix}{(optional) A list or the string \code{"start"}, the fixed model parameters, if missing all parameters are estimated. Model parameter names depend on \code{formula} and can be \emph{\code{delta}, \code{x1}, \code{x2}} (see details - model parameters).
+\item{fix}{(optional) A list with parameter-value pairs of fixed parameters. If missing all free parameters are estimated. If set to \code{"start"} all parameters are fixed to their start values. Model parameter names depend on \code{formula} and can be \emph{\code{delta}, \code{x1}, \code{x2}} (see details - model parameters).
 \itemize{
 \item \code{list(x1 = 3.09)} sets parameter \emph{\code{x1}} equal to 3.09.
 \item \code{list(x1 = "x2")} sets parameter \emph{\code{x1}} equal to parameter \emph{\code{x2}} (estimates \emph{\code{x2}}).
@@ -70,14 +63,14 @@ bayes(
 \item \code{"start"} sets all parameters equal to their initial values (estimates none). Useful for building a first test model.
 }}
 
-\item{format}{(optional) A string,, the format the data to be modeled, can be abbreviated, default is \code{"raw"}; allowed values:
+\item{format}{(optional) A string, the format the data to be modeled, can be abbreviated, default is \code{"raw"}; allowed values:
 \itemize{
 \item \code{"raw"} means that the data are trial-by-trial binary occurrence indicators: 1, 0, 1, ... means the event happened in trial with a value of 1.
 \item \code{"cumulative"} means the data are trial-by-trial cumulative counts of events: 0, 1, 1, 2, ... counts how often the event happened up to the trial.
 \item \code{"count"} means the data are total events counts, ignoring the trial-by-trial order of events: 2, 10, ... means the event happened 2 times, then (starting from zero!) it happened 10 times.
 }}
 
-\item{priorsconstrained}{(optional, default \code{FALSE}) Logical, \code{TRUE} constrains the prior parameter to sum to the number of options.}
+\item{prior_sum}{(optional) A number; the prior hyperparameter will be constrained to sum to this number; defaults to the number of prior parameters; if \code{prior_sum = NA} no sum constraint is placed.}
 
 \item{...}{other arguments, ignored.}
 
@@ -85,7 +78,7 @@ bayes(
 
 \item{discount}{A number, how many initial trials to not use during parameter fitting.}
 
-\item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \code{\link[=cm_options]{cm_options()}}.}
+\item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \link{cm_options}.}
 }
 \value{
 Returns a cognitive model object, which is an object of class \href{Cm}{cm}. A model, that has been assigned to \code{m}, can be summarized with \code{summary(m)} or \code{anova(m)}. The parameter space can be viewed using \verb{pa. rspace(m)}, constraints can be viewed using \code{constraints(m)}.
@@ -179,7 +172,9 @@ Other cognitive models:
 \code{\link{cpt}},
 \code{\link{ebm}()},
 \code{\link{hm1988}()},
+\code{\link{shift}()},
 \code{\link{shortfall}},
+\code{\link{threshold}()},
 \code{\link{utility}}
 }
 \author{

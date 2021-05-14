@@ -28,7 +28,7 @@
   }
   try(x <- match.arg(x, c("none", cm_choicerules(msg = FALSE))), silent=TRUE)
   if (!length(x) || inherits(x,"try-error")) {
-    stop("Argument 'choicerule' must be allowed value, instead of \"", x, "\".\n  * Allowed values are ", .dotify(dQuote(allowed)), ".\n  * To set no choicerule: choicerule = \"none\".", call. = FALSE)
+    stop("Argument 'choicerule' must be allowed value, instead of \"", x, "\".\n  * Allowed values are ", .dotify(dQuote(x)), ".\n  * To set no choicerule: choicerule = \"none\".", call. = FALSE)
   }
   return(x)
 }

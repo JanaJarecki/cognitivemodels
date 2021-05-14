@@ -35,13 +35,13 @@ hm1988(
 
 \item{choicerule}{A string, the choice rule. Allowed values, see  \code{cm_choicerules()}: \code{"none"} is no choice rule, \code{"softmax"} is \href{https://en.wikipedia.org/wiki/Softmax_function}{soft-maximum}, \code{"luce"} is \href{https://en.wikipedia.org/wiki/Luce\%27s_choice_axiom}{Luce's axiom}.}
 
-\item{fix}{(optional, only for \code{choicerule} softmax, epsilon) A list or the string \code{"start"}, the fixed model parameters, if missing all parameters are estimated. Model parameter names depend on \code{choicerule} and can be \emph{\code{tau}, \code{eps}} (see details - model parameters).
+\item{fix}{(optional, only for \code{choicerule} softmax, epsilon) A list with parameter-value pairs of fixed parameters. If missing all free parameters are estimated. If set to \code{"start"} all parameters are fixed to their start values. Model parameter names depend on \code{choicerule} and can be \emph{\code{tau}, \code{eps}} (see details - model parameters).
 \itemize{
 \item \code{list(tau = 6.16)} sets parameter \emph{\code{tau}} equal to 6.16.
 \item \code{"start"} sets all parameters equal to their initial values (estimates none). Useful for building a first test model.
 }}
 
-\item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \code{\link[=cm_options]{cm_options()}}.}
+\item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \link{cm_options}.}
 
 \item{fitnessfun}{(optional) A function, the terminal fitness function, needs two arguments, \code{budget} and \code{state}.}
 
@@ -90,7 +90,9 @@ Other cognitive models:
 \code{\link{choicerules}},
 \code{\link{cpt}},
 \code{\link{ebm}()},
+\code{\link{shift}()},
 \code{\link{shortfall}},
+\code{\link{threshold}()},
 \code{\link{utility}}
 }
 \author{

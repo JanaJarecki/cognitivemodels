@@ -217,7 +217,7 @@ test_that("Formula formats", {
       x1 = c(100, -100), px = 1,           x2 = 0,
       y1 = c(200, -200), py = c(.71, .64), y2 = 0)
 
-  expect_fml_equal(rp ~ x1 + px + x2           | y1 + py + y2, dt)
+  expect_fml_equal(f = rp ~ x1 + px + x2           | y1 + py + y2, dt)
   expect_fml_equal(rp ~ x1 + px + x2 + I(1-px) | y1 + py + y2, dt)
   expect_fml_equal(rp ~ x1 + px + x2           | y1 + py + y2 + I(1-py), dt)
 

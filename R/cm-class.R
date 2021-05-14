@@ -331,11 +331,14 @@ Cm <- R6Class(
     #' @param n (optional) When fitting to aggregate data, supply how many raw data points underly each aggregated data point
     #' @param newdata (optional) A data frame with new data - experimental!
     #' @param ... other arguments (ignored)
-    gof = function(type = self$options$fit_measure, n = self$options$fit_args$n, newdata = self$options$fit_data, discount = FALSE, ...) {
+    gof = function(type = self$options$fit_measure, n = self$options$fit_args$n, newdata = NULL, discount = (length(self$discount) > 0), ...) {
       if (length(self$res) == 0) { stop("Can't compute goodness of fit, because the model has no observed resonses.", self$res, ".",
         "\n  * Did you forget a left side in 'formula'? (such as 'y' in y ~ x1 + x2)", call. = FALSE)}
 
-      if (length(newdata) == 0L) {
+      if (length(self$options$fit_data) > 0L) {
+        obs <- private$get_res(f = self$formula, d = self$options$fit_data)
+        pred <- as.matrix(self$predict(newdata = self$options$fit_data))
+      } else if (length(newdata) == 0L) {
         obs <- as.matrix(self$res)
         pred <- as.matrix(self$predict())
       } else {
@@ -348,10 +351,10 @@ Cm <- R6Class(
       pred <- pred[, 1:ncol(obs), drop = FALSE]
       if (discount == TRUE) {
         pred[self$discount, ] <- NA
+        obs[self$discount, ] <- NA
       }
       .args <- c(list(...), self$options$fit_args)
-      .args <- .args[!duplicated(names(.args)) & !grepl("n", names(.args))]
-
+      .args <- .args[!duplicated(names(.args)) & !grepl("^n", names(.args))]
       .args <- c(
         list(
           obs = obs,
@@ -365,7 +368,6 @@ Cm <- R6Class(
           ),
           .args
         )
-
       gof <- try(do.call(cognitiveutils::gof, args = .args, envir = parent.frame()), silent = TRUE)
       if (inherits(gof, "try-error")) {
         stop("Can't compute the goodness of fit ", type, ", because:\n  ", geterrmessage(), call.= FALSE)
@@ -377,8 +379,9 @@ Cm <- R6Class(
     #' Log likelihood of the observed responses under the model predictions
     #' @param ... other arguments (ignored)
     logLik = function(...) {
+      .args <- list(...)
       ll <- self$gof(type = "loglikelihood", ...)
-      k <- ifelse("newdata" %in% names(list(...)), 0L, self$npar("free"))
+      k <- ifelse(!is.null(.args$newdata), 0L, self$npar("free"))
       attributes(ll) <- list(df = k, nobs = self$nobs)
       class(ll) <- "logLik"
       return(ll)
@@ -387,20 +390,20 @@ Cm <- R6Class(
     #' Bayesian Information Criterion of the model predictions given the observed responses
     #' @param ... other arguments (ignored)
     BIC = function(...) {
-      stats::BIC(self)
+      stats::BIC(self$logLik(...))
     },
     #' @description
     #' Akaike Information Criterion of the model predictions given the observed response
     #' @param ... other arguments (ignored)
     AIC = function(...) {
-      k <- ifelse('newdata' %in% names(list(...)), 0, self$npar("free"))
-      stats::AIC(self, k = k)
+      k <- ifelse(length(list(...)$newdata), 0, self$npar("free"))
+      stats::AIC(self$logLik(...), k = k)
     },
     #' @description
     #' Small-sample corrected Akaike Information Criterion of the model predictions given the responses
     #' @param ... other arguments (ignored)
     AICc = function(...) {
-      k <- ifelse('newdata' %in% names(list(...)), 0, self$npar('free'))
+      k <- ifelse(length(list(...)$newdata), 0, self$npar('free'))
       if (k == 0L) {
         return(self$AIC())
       } else {
@@ -658,7 +661,6 @@ Cm <- R6Class(
           p <- rbind(p, make_parspace(sigma = c(.0000001, max(rg, .0000001))))
         }
       }
-      
       p[names(options$lb), "lb"] <- options$lb
       p[names(options$ub), "ub"] <- options$ub
       p[, "start"] <- pmin(p[, "ub"], p[,"start"])
@@ -704,7 +706,6 @@ Cm <- R6Class(
       if (length(fix) < length(self$par) & .consistent_constraints(C, C2)) {
         C <- .combine_constraints(C, C2)
       }
-
       # check over-constrained problems     
       if ((length(self$par) - length(C)) < 0) { warning("Maybe too many constraints: ", length(self$par), " parameter and ", length(C), " constraints. View the constraints and parameter by costraints(.) and npar(.), where . is the model name.")
       }
@@ -715,8 +716,6 @@ Cm <- R6Class(
       self$ncon <- length(C)
       if (self$ncon > 0L) {
         self$ncon <- min(length(C), sum(!apply(as.matrix(C$L) == 0L, 2, all)))
-        x <<- C
-        b <<- unlist(self$par)
         parvalues <- .solve_constraints(C, b = unlist(self$par))
         self$set_par(parvalues, constrain = FALSE)
         self$set_par(self$par, constrain = TRUE) #fixme (this seems inefficient)
@@ -862,17 +861,22 @@ Cm <- R6Class(
       sol$status <- list(code = sol$convergence, msg = NULL)
       return(sol)
     },
-    fit_grid = function(par = self$get_par("free"), ...) {
+    fit_grid = function(par = self$parnames[["free2"]], ...) {
       G <- private$make_pargrid(which_par = par, ...)
       objvals <- sapply(1:nrow(G$ids), function(i) {
-          private$objective(par = get_id_in_grid(i, G), self = self)
+        private$objective(par = .solve_grid_constraint(get_id_in_grid(i, G), self$constraints), self = self)
         })
       n   <- self$options$solver_args$nbest
       best_ids <- which(rank(objvals, ties.method = "random") <= n)
       best_ids <- best_ids[order(objvals[best_ids])]
-      best_par <- t(sapply(best_ids, get_id_in_grid, grid = G))
+      best_par <- t(sapply(best_ids,
+        function(x, grid, con) {
+          .solve_grid_constraint(get_id_in_grid(x, grid), con)
+        },
+        grid = G,
+        con = self$constraints))      
       return(list(
-        solution = best_par[, private$get_parnames("free"), drop = FALSE],
+        solution = best_par[, self$parnames[["free"]], drop = FALSE],
         objval = objvals[best_ids],
         status = list(code = 0, msg = NULL))
       )
@@ -893,17 +897,16 @@ Cm <- R6Class(
     make_pargrid = function(offset = NULL, nsteps = NULL,  par = NULL, ...) {
       if (is.null(offset)) offset <- self$options$solver_args$offset
       if (is.null(nsteps)) nsteps <- self$options$solver_args$nsteps
-      x <- if (is.null(par)) { "free" } else { "all" }
-      par <- if (is.null(par)) { 1:length(private$get_parnames(x)) }
-      if (length(.simplify_constraints(self$constraints)) > 0L) { warning('Note: solver="grid" does not respect linear or quadratic constraints, maybe change the solver. To this end use: options = list(solver = ...), e.g, "solnp" or "optimx".') }
+      par <- if (length(par) == 0L) { self$parnames[["free2"]] }
+      if (length(.simplify_constraints(self$constraints)) > 0L) { warning('Note: solver="grid" does respect parameter constraints but this feature is experimental.\n  * Change the parameter optimization solver using `options = list(solver = "solnp")`, or other solvers like "optimx".') }
       return(make_grid_id_list(
-        names = private$get_parnames(x)[par],
-        lb = private$get_lb(x)[par],
-        ub = private$get_ub(x)[par],
+        names = par,
+        lb = private$get_lb("all")[par],
+        ub = private$get_ub("all")[par],
         offset = offset,
         nsteps = nsteps,
         ...))
-    },
+      },
     make_random_par = function(parspace) {
       if (!is.null(self$constraints)) { message('Note: solver="grid" does NOT respect linear or quadratic constraints -> consider a differnt solver. To this end use: options = list(solver = " "), e.g, "solnp" or "optimx".') }
 

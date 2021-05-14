@@ -46,7 +46,7 @@
 #' npar(M)                            # 1 free parameter, the mean
 #' 
 #' @export
-baseline_const_c <- function(formula, const, data, ...) {
+baseline_const_c <- function(formula, const, data, options, discount, ...) {
   .args <- as.list(rlang::call_standardise(match.call())[-1])
   .args$type <- "constant"
   .args$mode <- "continuous"

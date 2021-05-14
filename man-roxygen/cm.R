@@ -1,5 +1,5 @@
 #' @param data A data frame, the data to be modeled.
-#' @param options (optional) A list, list entries change the modeling procedure. For example, `list(lb = c(k=0))` changes the lower bound of parameter _k_ to 0, or `list(fit_measure = "mse")` changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see [cm_options()].
+#' @param options (optional) A list, list entries change the modeling procedure. For example, `list(lb = c(k=0))` changes the lower bound of parameter _k_ to 0, or `list(fit_measure = "mse")` changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see [cm_options].
 #' @param discount A number, how many initial trials to not use during parameter fitting.
 #' @param ... other arguments, ignored.
 #' @return

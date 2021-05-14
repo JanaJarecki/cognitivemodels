@@ -7,7 +7,7 @@
 \alias{baseline_mean_d}
 \title{Baseline models}
 \usage{
-baseline_const_c(formula, const, data, ...)
+baseline_const_c(formula, const, data, options, discount, ...)
 
 baseline_const_d(formula, const, data, ...)
 
@@ -22,11 +22,11 @@ baseline_mean_d(formula, data, ...)
 
 \item{data}{A data frame, the data to be modeled.}
 
-\item{...}{other arguments, ignored.}
-
-\item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \code{\link[=cm_options]{cm_options()}}.}
+\item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \link{cm_options}.}
 
 \item{discount}{A number, how many initial trials to not use during parameter fitting.}
+
+\item{...}{other arguments, ignored.}
 }
 \value{
 Returns a cognitive model object, which is an object of class \href{Cm}{cm}. A model, that has been assigned to \code{m}, can be summarized with \code{summary(m)} or \code{anova(m)}. The parameter space can be viewed using \verb{pa. rspace(m)}, constraints can be viewed using \code{constraints(m)}.
@@ -74,7 +74,9 @@ Other cognitive models:
 \code{\link{cpt}},
 \code{\link{ebm}()},
 \code{\link{hm1988}()},
+\code{\link{shift}()},
 \code{\link{shortfall}},
+\code{\link{threshold}()},
 \code{\link{utility}}
 }
 \author{

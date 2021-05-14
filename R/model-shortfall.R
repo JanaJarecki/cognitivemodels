@@ -67,7 +67,6 @@
 #' m            # View model
 #' predict(m)   # predict choice, Pr(select "x")
 #' parspace(m)  # View parameter space
-
 #' @rdname shortfall
 #' @export
 shortfall_d <- function(formula, asp, data, choicerule, fix = list(), options = NULL) {
@@ -89,7 +88,7 @@ Shortfall <- R6Class("shortfall",
   public = list(
     asplevel = NULL,
     formulaAsp = NULL,
-    initialize = function(formula, asp, fix = NULL, data = NULL, choicerule = NULL, mode, options = NULL) {
+    initialize = function(formula, asp, fix = NULL, data = NULL, choicerule = NULL, discount, mode, options = NULL) {
       self$formulaAsp <- chr_as_rhs(asp) # store the formula for aspir. level
 
       # Parameter space

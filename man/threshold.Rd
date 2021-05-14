@@ -38,31 +38,42 @@ threshold_d(
 )
 }
 \arguments{
-\item{formula}{A formula specifying choice ~ var}
+\item{formula}{A \link[stats:formula]{formula}, the variables in \code{data} to be modeled. For example, \code{y ~ x1} models response y as function of one stimulus value x1.}
 
-\item{...}{other arguments from other functions, currently ignored.}
+\item{data}{A data frame, the data to be modeled.}
+
+\item{fix}{(optional) A list with parameter-value pairs of fixed parameters. If missing all free parameters are estimated. If set to \code{"start"} all parameters are fixed to their start values. Model parameter names are \emph{\code{nu}} (see details - model parameters).
+\itemize{
+\item \code{list(nu = 0.62)} sets parameter \emph{\code{nu}} equal to 0.62.
+\item \code{"start"} sets all parameters equal to their initial values (estimates none). Useful for building a first test model.
+}}
+
+\item{discount}{A number, how many initial trials to not use during parameter fitting.}
+
+\item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \link{cm_options}.}
+
+\item{...}{other arguments, ignored.}
 }
 \value{
-A model of class "treshold". It can be viewed with \code{summary(mod)}, where \code{mod} is the name of the model object.
+A model of class "treshold".
+\subsection{Model Parameters}{
+\itemize{
+\item \emph{\strong{\code{nu}}}: the threshold.
+}
+}
+
+Returns a cognitive model object, which is an object of class \href{Cm}{cm}. A model, that has been assigned to \code{m}, can be summarized with \code{summary(m)} or \code{anova(m)}. The parameter space can be viewed using \verb{pa. rspace(m)}, constraints can be viewed using \code{constraints(m)}.
 }
 \description{
-\code{treshold()} fits a threshold model.
+\code{treshold()} fits a threshold model with the threshold as free parameter.
+\itemize{
+\item \code{treshold_c()} models continuous responses in form of the distance to a threshold
+\item \code{treshold_d()} models discrete choices given the distance to a threshold
+}
 }
 \details{
-\itemize{
-\item \code{treshold_c()}, which is the continuous model, fits the numeric distance to a threshold
-\item \code{treshold_d()}, which is the discrete model, fits choices given the distance to a threshold
-}
-
 Given the formula \code{y ~ a} the model predicts y = 1 for a >= \code{nu} and y = 0 for a < \code{nu}
 }
-\section{Parameter Space}{
-
-\tabular{lrcllr}{\verb{   }\strong{Name} \tab \verb{    }\strong{LB} \tab  \strong{-} \tab \strong{UB}\verb{    } \tab \strong{Description} \tab \strong{Start Value}\cr
-\verb{   }\code{nu} \tab  -Inf \tab  - \tab  Inf \tab  Treshold \tab  0
-}
-}
-
 \examples{
 D <- data.frame(
        y = rep(0:1, each=5),
@@ -97,8 +108,22 @@ threshold(y ~ a , D, list(nu=2), "softmax")       # fix threshold nu to 2
 threshold(y ~ a, D, list(tau=0.5), "softmax")     # fix soft-max tau to 1   
 threshold(y ~ a, D, choicerule = "softmax")       # nu and tau free param   
 
-
+}
+\seealso{
+Other cognitive models: 
+\code{\link{baseline_const_c}()},
+\code{\link{bayes}()},
+\code{\link{choicerules}},
+\code{\link{cpt}},
+\code{\link{ebm}()},
+\code{\link{hm1988}()},
+\code{\link{shift}()},
+\code{\link{shortfall}},
+\code{\link{utility}}
 }
 \author{
+Jana B. Jarecki, \email{jj@janajarecki.com}
+
 Jana B. Jarecki
 }
+\concept{cognitive models}

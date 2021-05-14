@@ -141,7 +141,7 @@ Choicerule <- R6Class("choicerule",
   inherit = Cm,
   public = list(
     type = NULL,
-    initialize = function(formula, data = NULL, type, fix = NULL, options=list()) {
+    initialize = function(formula, data = NULL, type, fix = NULL, discount, options=list()) {
       type <- match.arg(type, c("softmax", "argmax", "luce", "epsilon", "epsilongreedy"))
       self$type <- type
       parspace <- switch(type,

@@ -10,6 +10,7 @@
 
 #' Advanced Options for Cognitive Models
 #' 
+#' @rdname cm_options
 #' @param lb Named numeric vector, minimum values that a parameter may take: `c(k = -10)` lets a parameter _k_ start at -10.
 #' @param ub Named numeric vector, maximum value that parameters may take: `c(k = 10)` lets a parameter _k_ go until 10.
 #' @param start Named numeric vector, start value for parameters: `c(k = 5)` lets a parameter _k_  start at 5 in the optimiuation.
@@ -68,7 +69,7 @@ cm_options = function(
  
 #' Show the Choicerules for Discrete Cognitive Models
 #' 
-#' @usage cm_choicerules()
+#' @usage cm_choicerules(msg)
 #' @param msg Logical, if to print a header message, `FALSE` prints no message.
 #' @examples
 #' cm_choicerules()
@@ -80,7 +81,7 @@ cm_choicerules <- function(msg = TRUE) {
 
 #' Show the Optimization Solvers for Cognitive Models
 #' 
-#' @usage cm_solvers()
+#' @usage cm_solvers(msg)
 #' @param msg Logical, if to print a header message, `FALSE` prints no message.
 #' @examples
 #' cm_solvers()

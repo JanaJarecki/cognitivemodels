@@ -25,7 +25,7 @@ utility_pow_c(formula, data, fix = list(), discount = 0, options = list(), ...)
 
 \item{choicerule}{A string, the choice rule. Allowed values, see  \code{cm_choicerules()}: \code{"none"} is no choice rule, \code{"softmax"} is \href{https://en.wikipedia.org/wiki/Softmax_function}{soft-maximum}, \code{"luce"} is \href{https://en.wikipedia.org/wiki/Luce\%27s_choice_axiom}{Luce's axiom}.}
 
-\item{fix}{(optional) A list or the string \code{"start"}, the fixed model parameters, if missing all parameters are estimated. Model parameter names are \emph{\code{rp}, \code{rn}} (see details - model parameters).
+\item{fix}{(optional) A list with parameter-value pairs of fixed parameters. If missing all free parameters are estimated. If set to \code{"start"} all parameters are fixed to their start values. Model parameter names are \emph{\code{rp}, \code{rn}} (see details - model parameters).
 \itemize{
 \item \code{list(rp = 5.40)} sets parameter \emph{\code{rp}} equal to 5.40.
 \item \code{list(rp = "rn")} sets parameter \emph{\code{rp}} equal to parameter \emph{\code{rn}} (estimates \emph{\code{rn}}).
@@ -36,7 +36,7 @@ utility_pow_c(formula, data, fix = list(), discount = 0, options = list(), ...)
 
 \item{discount}{A number, how many initial trials to not use during parameter fitting.}
 
-\item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \code{\link[=cm_options]{cm_options()}}.}
+\item{options}{(optional) A list, list entries change the modeling procedure. For example, \code{list(lb = c(k=0))} changes the lower bound of parameter \emph{k} to 0, or \code{list(fit_measure = "mse")} changes the goodness of fit measure in parameter estimation to mean-squared error,  for all options, see \link{cm_options}.}
 
 \item{...}{other arguments, ignored.}
 }
@@ -79,7 +79,9 @@ Other cognitive models:
 \code{\link{cpt}},
 \code{\link{ebm}()},
 \code{\link{hm1988}()},
-\code{\link{shortfall}}
+\code{\link{shift}()},
+\code{\link{shortfall}},
+\code{\link{threshold}()}
 }
 \author{
 Jana B. Jarecki, \email{jj@janajarecki.com}
