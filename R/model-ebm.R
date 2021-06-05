@@ -108,13 +108,13 @@ NULL
 
 #' @name ebm
 #' @export
-gcm <- function(formula, class, data, choicerule, fix = NULL, options = NULL, similarity = "minkowski", ...) {
-   .args <- as.list(rlang::call_standardise(match.call())[-1])
-   names(.args)[which(names(.args) == "class")] <- "criterion"
-   .args[["mode"]] <- "discrete"
-   .args[["title"]] <- "GCM"
-   return(do.call(what = Ebm$new, args = .args, envir = parent.frame()))
-} 
+# gcm <- function(formula, class, data, choicerule, fix = NULL, options = NULL, similarity = "minkowski", ...) {
+#    .args <- as.list(rlang::call_standardise(match.call())[-1])
+#    names(.args)[which(names(.args) == "class")] <- "criterion"
+#    .args[["mode"]] <- "discrete"
+#    .args[["title"]] <- "GCM"
+#    return(do.call(what = Ebm$new, args = .args, envir = parent.frame()))
+# }
 
 
 #' @name ebm

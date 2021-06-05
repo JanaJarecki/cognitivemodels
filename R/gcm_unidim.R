@@ -18,18 +18,25 @@ Gcm_unidim <- R6Class("gcm_unidim",
                      parms <- matrix(nrow = self$ndim - 1, ncol = length(self$parm), dimnames = list(NULL, names(self$parm))) # delete
                      for(i in 1:nrow(unidimweights)) {
                        self$setparm(unidimweights[i, ])
-                       print(unidimweights[i, ])
                        if(length(self$freenames) > 0) {
                          super$super_$fit(type = type, ...)
                          gofs[i] <- self$gofvalue
                          parms[i, ] <- self$parm
                        } else {
-                         gofs[i] <- -cogsciutils::gof(obs = self$obs, pred = self$predict(), response = "d", type = "log", discount = self$discount)
+                         preds <- self$predict(newdata = cbind(response = self$obs, self$input))
+                         # gofs[i] <- -cognitiveutils::gof(obs = self$obs, pred = preds, response = "d", type = "log", discount = self$discount)
+                         
+                         gofs[i] <- -log(max(prod(abs(preds - (1 - self$obs))[-c(self$discount)]), 1e-300))
                          parms <- unidimweights
                        } 
                      }
-                     self$setparm(parms[which.min(gofs), ])
-                     self$gofvalue <- min(gofs)
+                     if(abs(diff(gofs)) < .01) { # if(which.max(gofs) == which.max(rev(gofs))) {
+                       self$setparm(list(w1 = 0, w2 = 1, w3 = 0))
+                       self$gofvalue <- NA
+                     } else {
+                       self$setparm(parms[which.min(gofs), ])
+                       self$gofvalue <- min(gofs)
+                     }
                      
                      self$fixednames <- setdiff(self$fixednames, weightnames)
                      self$freenames <- c(weightnames, self$freenames)

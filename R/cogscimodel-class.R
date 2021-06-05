@@ -182,7 +182,7 @@ Cogscimodel <- R6Class(
       if (discount) {
         pred[self$discount, ] <- NA
       }
-      .args <- c(list(obs = obs, pred = pred, na.rm = TRUE, n = n), list(options = c(list(...), response = self$response)))
+      .args <- c(list(obs = obs, pred = pred, na.rm = TRUE, n = n), response = self$response, list(options = c(list(...), response = self$response)))
       do.call(cognitiveutils::gof, .args)
     },
     logLik = function(...) {
@@ -206,7 +206,7 @@ Cogscimodel <- R6Class(
     fit = function(type = c('grid', 'solnp'), measure = self$fit.options$measure, ...) {
       type <- match.arg(type, several.ok = TRUE)
       pars <- self$allowedparm[self$freenames,,drop=FALSE]
-
+      
       if ( type[1] == 'solnp' ) {
         fit <- self$fitSolnp(par0 = pars[, 'init'], pars)
       }
