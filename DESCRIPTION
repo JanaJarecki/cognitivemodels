@@ -23,6 +23,7 @@ Imports:
     Rcpp (>= 1.0.1),
     reshape2,
     rlang,
+    rmarkdown,
     R6,
     Rsolnp,
     ROI,
