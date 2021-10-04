@@ -220,7 +220,7 @@ Cogscimodel <- R6Class(
         fits <- apply(gridFit$parm, 1, self$fitSolnp, parspace = pars)
         fit <- fits[[which.min(lapply(fits, function(x) tail(x$val, 1)))]]
       }
-      
+
       self$setparm(fit$parm)
       self$gofvalue <- fit$val
     },
@@ -252,6 +252,15 @@ Cogscimodel <- R6Class(
       return(par)
     },
     fitSolnp = function(par0, parspace, control = list(trace = 1)) {
+      # fit <- optim(par = par0, 
+      #              fn = self$fitObjective, 
+      #              lower = parspace[, 'll', drop = FALSE],
+      #              upper = parspace[, 'ul', drop = FALSE], 
+      #              control = control,
+      #              method = "Brent",
+      #              self = self)
+      # return(list(parm = c(tau = fit$par), val = tail(fit$value, 1)))
+
       fit <- solnp(pars = par0,
         fun = self$fitObjective,
         LB = parspace[, 'll', drop = FALSE],
