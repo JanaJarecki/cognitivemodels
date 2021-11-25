@@ -52,7 +52,7 @@ double minkowski(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::NumericVect
 //' # none
 // [[Rcpp::export]]
 Rcpp::NumericVector ebm_cpp(
-  Rcpp::NumericVector criterion,
+  Rcpp::NumericMatrix criterion,
   Rcpp::NumericMatrix features,
   Rcpp::NumericVector w,
   double r,
@@ -69,9 +69,10 @@ Rcpp::NumericVector ebm_cpp(
   
   int ntrials = criterion.length() - firstOutTrial + 1;
   int T = criterion.length();
+  int ncategories = criterion. // find out how to get dim 2 of matrix
   
   Rcpp::NumericVector sim(lastLearnTrial);
-  Rcpp::NumericVector val(T);
+  Rcpp::NumericMatrix val(T, ncategories);
   Rcpp::NumericVector sim_all(T);
   Rcpp::NumericVector res(ntrials);
 
@@ -95,7 +96,7 @@ Rcpp::NumericVector ebm_cpp(
       // substitute initial NAs (= no feedback shown yet)
       if (NumericVector::is_na(criterion[th])) {
         sim[t] = 1.0;
-        val[t] = init;
+        val(t, _) = init;
         criterion[th] = 0;
         continue;
       }
@@ -107,7 +108,10 @@ Rcpp::NumericVector ebm_cpp(
 
       // Similarity x criterion value
       if (ismultiplicative == 1) {
-        val[t] += exp(sim[th]) * criterion[th] * (NumericVector::is_na(b[0]) ? 1 : b[criterion[th]]);
+        for (int n = 0; n < ncategories - 1; n++) {
+          // this is new, test me please
+          val(t, n) += exp(sim[th]) * criterion(th, n) * (NumericVector::is_na(b[0]) ? 1 : b[criterion(th, n)]);
+        }
         sim_all[t] += exp(sim[th]) * (NumericVector::is_na(b[0]) ? 1 : b[criterion[th]]) * wf[th] * has_criterion[th];
       } else {
         val[t] *= sim[th] * criterion[th] * (NumericVector::is_na(b[0]) ? 1 : b[criterion[th]]);
