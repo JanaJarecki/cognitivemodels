@@ -119,7 +119,7 @@ Rcpp::NumericVector ebm_cpp(
     
     // creates list with each category's inverted variance covariance matrix
     if (similarity == "mahalanobis") {
-      cov_list = invert_cov(features, criterion, features.ncol(), th_max);
+      cov_list = invert_cov(features, criterion, features.ncol(), ncategories, th_max);
     }
 
     // loop through history trials th 
@@ -164,7 +164,7 @@ Rcpp::NumericVector ebm_cpp(
         sim_all[t] += exp(sim[th]) * (NumericVector::is_na(b[0]) ? 1 : b[criterion[th]]) * wf[th] * has_criterion[th];
       } else {
         for (int n = 0; n < ncategories - 1; n++) {
-          val(t, n) *= sim[th] * criterion(th, n) * (NumericVector::is_na(b[0]) ? 1 : b[criterion[th]]);
+          val(t, n) *= sim[th] * criterion(th, n) * (NumericVector::is_na(b[0]) ? 1 : b[criterion(th, n)]);
         }
         sim_all[t] *= sim[th] * (NumericVector::is_na(b[0]) ? 1 : b[criterion[th]]) * wf[th] * has_criterion[th];
       }
