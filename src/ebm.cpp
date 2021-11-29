@@ -141,18 +141,13 @@ Rcpp::NumericVector ebm_cpp(
       }
       
       if (similarity == "mahalanobis") {
-        int n = std::count(criterion.begin(), criterion.begin() + th_max, criterion[th]); // count number of exemplars
-        if (n > 2) { // calculates Mahalanobis distance if covariance matrix is estimable (i.e., n > 2)
-          int curr_c;
-          for (int c = 0; c < criterion_unique.length(); c++) {
-            if (criterion_unique[c] == criterion[th]) {
-              curr_c = c;
-            }
-          }
-          Rcpp::NumericMatrix s = cov_list[curr_c];
-          sim[th] = -1 * lambda * mahalanobis(features(t, _), features(th, _), s, w, q);
-        } else { // if covariance matrix cannot be estimated, calculate Euclidean distance
+        int curr_c = which_max(criterion(th, _));
+        Rcpp::NumericVector curr_criterion = criterion(_, curr_c);
+        int n = std::count(curr_criterion.begin(), curr_criterion.begin() + th_max, 1); // count number of exemplars
+        if (n < 3) { // if covariance matrix cannot be estimated (n < 3) calculate Euclidean distance
           sim[th] = -1 * lambda * minkowski(features(t, _), features(th, _), w, r, q);
+        } else { // if covariance matrix cannot be estimated (n >= 3) calculate Mahalanobis distance
+          sim[th] = -1 * lambda * mahalanobis(features(t, _), features(th, _), cov_list[curr_c], w, q);
         }
       }
       
@@ -171,12 +166,12 @@ Rcpp::NumericVector ebm_cpp(
     }
 	
     // sim_all[t] = std::max(sim_all[t], DBL_EPSILON); // ensure sim[t] > 0
-	for (int n = 0; n < ncategories - 1; n++) {
-		if (sim_all[t] < DBL_EPSILON) {
-			res(i, n) = R_NaN;
-		} else{
-			res(i, n) = val(t, n) / sim_all[t];
-		}
+    for (int n = 0; n < ncategories - 1; n++) {
+      if (sim_all[t] < DBL_EPSILON) {
+        res(i, n) = R_NaN;
+      } else{
+        res(i, n) = val(t, n) / sim_all[t];
+      }
     }
     i += 1;
   }
