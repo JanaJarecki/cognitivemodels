@@ -162,7 +162,6 @@ Cpt <- R6Class("cpt",
       if (is.na(value) == TRUE) {
         parspace <- parspace[!grepl("alpha|beta|lambda",rownames(parspace)), ]
       }
-      print(parspace)
       formula <- .add_missing_prob(formula)
       super$initialize(
         title = paste0("CPT (", unique(c(weighting, value)), ")"),

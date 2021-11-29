@@ -9,11 +9,15 @@ For new features in the latest package version, see [NEWS](NEWS.md).
 To use this package, ensure you have a working installation of R and the **Rcpp** package, `install.packages("Rcpp")`, for problems see [Installation Troubleshooting](#Installation-Troubleshooting)
 
 ```R
-    if (!require(pacman)) install.packages(pacman)
+    library(devtools)
     install.packages("matlib")
     install.packages("Rcpp")
-    pacman::p_load(devtools)
-    pacman::p_load_gh("janajarecki/cognitivemodels")
+
+    # ---------------------------------------------
+    # Restart the R session after installing matlib
+    # ----------------------------------------------
+    
+    devtools::install_github("janajarecki/cognitivemodels")
 ```
 
 You will see a prompt, please type `Yes` into the console.
@@ -25,7 +29,7 @@ You will see a prompt, please type `Yes` into the console.
 (Optional) This installs the latest development version of the package:
 
 ```R
-    pacman::p_load_gh("janajarecki/cognitivemodels@development")
+    devtools::install_github("janajarecki/cognitivemodels" ref = "development")
 ```
 
 
