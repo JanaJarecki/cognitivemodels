@@ -219,8 +219,11 @@ Ebm <- R6Class('ebm',
         discrete = 1/length(unique(criterion[!is.na(criterion)])))
       has_criterion <- !is.na(criterion)
       criterion[is.na(criterion) & cumsum(!is.na(criterion)) > 0] <- 0
+      if(ncol(as.matrix(criterion)) == 1) {
+        criterion <- cbind(criterion, 1 - criterion, deparse.level = 0)
+      }
       return(ebm_cpp(
-            criterion = as.double(criterion),
+            criterion = as.matrix(criterion),
             features = matrix(input, ncol = na),
             w = as.double(par[seq.int(na)]),
             wf = as.double(exemplar_w),
@@ -280,7 +283,7 @@ Ebm <- R6Class('ebm',
       w_par <- setNames(lapply(1:nw, function(.) c(0.001,1,1/nw,1)), w_names)
       # dynamic bias parameter names
       b_par <- NULL
-      if (mode == "discrete") {
+      if (mode == "discrete" & ncol(criterion) == 1) {
         b_names <- paste0("b", sort(unique(criterion)))
         nb <- length(b_names)
         b_par <- setNames(lapply(1:nb, function(.) c(0,1,1/nb,1)), b_names)
