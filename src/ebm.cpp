@@ -67,19 +67,21 @@ Rcpp::NumericVector ebm_cpp(
   std::string similarity,
   int ismultiplicative) {
   
-  int ntrials = criterion.length() - firstOutTrial + 1;
-  int T = criterion.length();
-  int ncategories = criterion. // find out how to get dim 2 of matrix
+  int ntrials = criterion.nrow() - firstOutTrial + 1;
+  int T = criterion.nrow();
+  int ncategories = criterion.ncol();
   
   Rcpp::NumericVector sim(lastLearnTrial);
-  Rcpp::NumericMatrix val(T, ncategories);
+  Rcpp::NumericMatrix val(T, ncategories - 1);
   Rcpp::NumericVector sim_all(T);
-  Rcpp::NumericVector res(ntrials);
+  Rcpp::NumericMatrix res(ntrials, ncategories - 1);
 
   int i = 0; // a counter
 
   // initialize prediction in trial 1 in which no exemplar has been seen
-  res[i] = init;
+  for (int n = 0; n < ncategories - 1; n++) {
+    res(i, n) = init;
+  }
 
   firstOutTrial = (firstOutTrial == 1) ? firstOutTrial : firstOutTrial - 1;
   i = (firstOutTrial == 1) ? 1 : 0; // start at 1 if we predict all trials
@@ -94,10 +96,12 @@ Rcpp::NumericVector ebm_cpp(
     for (int th = 0; th < th_max; th++) {
 
       // substitute initial NAs (= no feedback shown yet)
-      if (NumericVector::is_na(criterion[th])) {
+      if (is_true(all(is_na(criterion(th, _))))) {
         sim[t] = 1.0;
-        val(t, _) = init;
-        criterion[th] = 0;
+        for (int n = 0; n < ncategories - 1; n++) {
+          val(t, n) = init;
+          criterion(th, n) = 0;
+        }
         continue;
       }
 
@@ -109,18 +113,21 @@ Rcpp::NumericVector ebm_cpp(
       // Similarity x criterion value
       if (ismultiplicative == 1) {
         for (int n = 0; n < ncategories - 1; n++) {
-          // this is new, test me please
           val(t, n) += exp(sim[th]) * criterion(th, n) * (NumericVector::is_na(b[0]) ? 1 : b[criterion(th, n)]);
         }
         sim_all[t] += exp(sim[th]) * (NumericVector::is_na(b[0]) ? 1 : b[criterion[th]]) * wf[th] * has_criterion[th];
       } else {
-        val[t] *= sim[th] * criterion[th] * (NumericVector::is_na(b[0]) ? 1 : b[criterion[th]]);
+        for (int n = 0; n < ncategories - 1; n++) {
+          val(t, n) *= sim[th] * criterion(th, n) * (NumericVector::is_na(b[0]) ? 1 : b[criterion[th]]);
+        }
         sim_all[t] *= sim[th] * (NumericVector::is_na(b[0]) ? 1 : b[criterion[th]]) * wf[th] * has_criterion[th];
       }
     }
-
+    
     sim_all[t] = std::max(sim_all[t], DBL_EPSILON); // ensure sim[t] > 0    
-    res[i] = val[t] / sim_all[t];
+    for (int n = 0; n < ncategories - 1; n++) {
+      res(i, n) = val(t, n) / sim_all[t];
+    }
     i += 1;
   }
 

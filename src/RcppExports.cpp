@@ -22,12 +22,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // ebm_cpp
-Rcpp::NumericVector ebm_cpp(Rcpp::NumericVector criterion, Rcpp::NumericMatrix features, Rcpp::NumericVector w, double r, double q, double lambda, Rcpp::NumericVector b, Rcpp::NumericVector wf, int lastLearnTrial, int firstOutTrial, double init, Rcpp::NumericVector has_criterion, std::string similarity, int ismultiplicative);
+Rcpp::NumericVector ebm_cpp(Rcpp::NumericMatrix criterion, Rcpp::NumericMatrix features, Rcpp::NumericVector w, double r, double q, double lambda, Rcpp::NumericVector b, Rcpp::NumericVector wf, int lastLearnTrial, int firstOutTrial, double init, Rcpp::NumericVector has_criterion, std::string similarity, int ismultiplicative);
 RcppExport SEXP _cognitivemodels_ebm_cpp(SEXP criterionSEXP, SEXP featuresSEXP, SEXP wSEXP, SEXP rSEXP, SEXP qSEXP, SEXP lambdaSEXP, SEXP bSEXP, SEXP wfSEXP, SEXP lastLearnTrialSEXP, SEXP firstOutTrialSEXP, SEXP initSEXP, SEXP has_criterionSEXP, SEXP similaritySEXP, SEXP ismultiplicativeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type criterion(criterionSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type criterion(criterionSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type features(featuresSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type w(wSEXP);
     Rcpp::traits::input_parameter< double >::type r(rSEXP);
