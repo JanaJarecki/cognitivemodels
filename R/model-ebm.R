@@ -197,7 +197,7 @@ Ebm <- R6Class('ebm',
         parspace = parspace,
         choicerule = choicerule,
         discount = discount,
-        title = paste(title, ifelse(multiplicative, "multiplicative", "additive"), similarity, sep = " - "),
+        title = paste(title, ifelse(multiplicative, "multiplicative", "additive"), self$similarity, sep = " - "),
         mode = mode,
         options = c(options, list(solver = "solnp"))
       )
