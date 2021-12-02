@@ -170,6 +170,15 @@ Ebm <- R6Class('ebm',
       if (is.null(mode)) {
         mode <- super$infer_mode(criterion)
       }
+      if (grepl("\\:|\\/|\\*|\\|", self$formulaCriterion[2])) {
+        stop("Can't create gcm because classes are not combined with + signs. Please combine classes with + signs.")
+      }
+      if ((ncol(criterion) > 1) & any(rowSums(criterion != 0) > 1)) {
+        stop("Can't create gcm because row(s) ", paste0(which(rowSums(criterion) > 1), collapse = ", "), " belong(s) to several classes. Please assign each exemplar to only one class.")
+      }
+      if (mode == "discrete" & any(apply(criterion, 2, function(.) length(unique(.))) > 2)) {
+        stop("Can't create gcm because class(es) ", paste0(names(which(apply(criterion, 2, function(.) length(unique(.))) > 2))), " take(s) more than two possible values. Please provide each class with two values only.")
+      }
       parspace <- private$make_parspace(
         formula = formula,
         criterion = criterion,
@@ -213,15 +222,15 @@ Ebm <- R6Class('ebm',
             as.double(tail(par, -(na + 3))[1:na])
           }
       exemplar_w <- as.numeric(!is.na(criterion)) # exemplar weights
-      # Initial prediction until the first feedback is shown
-      init <- switch(self$mode,
-        continuous = sum(range(criterion, na.rm=TRUE)) / 2,
-        discrete = 1/length(unique(criterion[!is.na(criterion)])))
       has_criterion <- !is.na(criterion)
       criterion[is.na(criterion) & cumsum(!is.na(criterion)) > 0] <- 0
       if(ncol(as.matrix(criterion)) == 1) {
         criterion <- cbind(criterion, 1 - criterion, deparse.level = 0)
       }
+      # Initial prediction until the first feedback is shown
+      init <- switch(self$mode,
+                     continuous = sum(range(criterion, na.rm=TRUE)) / 2,
+                     discrete = 1/ncol(criterion))
       return(ebm_cpp(
             criterion = as.matrix(criterion),
             features = matrix(input, ncol = na),
