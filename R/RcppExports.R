@@ -6,12 +6,25 @@
 #' @param x A numeric vector, feature values of first object
 #' @param y  Like x, feature values of second object
 #' @param w numeric vector of weights (model parameter)
-#' @param r square root in distance metic (model parameter)
-#' @param q exponent in distance metric (model parameter)
+#' @param r exponent in distance metic (model parameter)
+#' @param q exponent in similarity function (model parameter)
 #' @examples
 #' # none
 minkowski <- function(x, y, w, r, q) {
     .Call(`_cognitivemodels_minkowski`, x, y, w, r, q)
+}
+
+#' Weighted Mahalanobis Distance
+#' 
+#' @param x A numeric vector, feature values of first object
+#' @param y Like x, feature values of second object
+#' @param s Inverted variance-covariance matrix
+#' @param w numeric vector of weights (model parameter)
+#' @param q exponent in similarity function (model parameter)
+#' @examples
+#' # none
+mahalanobis <- function(x, y, s, w, q) {
+    .Call(`_cognitivemodels_mahalanobis`, x, y, s, w, q)
 }
 
 #' Computes Predictions for the Exemplar-based Models (GCM, EBM)
@@ -19,8 +32,8 @@ minkowski <- function(x, y, w, r, q) {
 #' @param criterion numeric vector with experienced criterion
 #' @param features numeric matrix with feature criterion
 #' @param w numeric vector of weights (model parameter)
-#' @param r square root in distance metic (model parameter)
-#' @param q exponent in distance metric (model parameter)
+#' @param r order of Minkowski distance metic (model parameter)
+#' @param q relation between similarity and distance (model parameter)
 #' @param lambda sensitivity (model parameter)
 #' @param b bias parameter vector for classification (model parameter), must be NA for judgments
 #' @param wf weight vector with a weight for each feature combination

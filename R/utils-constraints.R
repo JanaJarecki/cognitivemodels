@@ -172,34 +172,53 @@
 .solve_constraints <- function(x, b) {
   if (length(x) == 0) { return(x) }
   A <- as.matrix(x$L)
-  # todo make the loop in .solve_constraints more efficient
-  I <- diag(ncol(A))
-  for (i in 1:nrow(A)) {
-    # fixme: this is a hack and will break if all coef are < 0
-    ii <- which.max(A[i,])
-    for (j in which(A[i,] != 0L)) {
-      I[ii,j] <- A[i,j]
-      b[ii]   <- x$rhs[i]
-    }
-  }
-  A <- I
   colnames(A) <- x$names
-  # fixme this is a hack
-  if (nrow(A) == 1 & sum(A != 0) == 1) {
-    return(setNames(solve(A[A != 0], b), x$names[A != 0]))
-  }
-  # Get parameter that are under-determined by constraints x
-  qrcoef <- qr.coef(qr(A), b)
-  qrcoef[qrcoef[!is.na(qrcoef)] == 0L & b != 0] <- NA
-  qrsol <- try(qr.solve(A,b), silent = TRUE)
-  if (inherits(qrsol, "try-error")) {
-    stop("'fix' over-constrains the parameters.\n", if(nrow(A) == ncol(A)) {"  * Are your constraints circular (a=b, b=a)?"}, "\n  * The original error is:\n    ", qrsol, call.=FALSE)
+  b <- x$rhs
+  decomp <- qr(A)
+  R <- qr.R(decomp)
+  if (nrow(A) <= ncol(A)) {
+    # Identify the rows with solutions:
+    unsolved <- seq_len(ncol(A))
+    repeat {
+      solved <- unsolved[apply(R[, unsolved, drop = FALSE] != 0, 1,
+                               function(row) if (sum(row) == 1) which(row) else NA)]
+      if (all(is.na(solved))) break
+      unsolved <- setdiff(unsolved, solved)
+    }
+    solved <- setdiff(seq_len(ncol(A)), unsolved)
+    if (length(solved) == 0) {
+      return(NULL)
+    } else {
+      # Find the solutions:
+      Q <- qr.Q(decomp)
+      Qtb <- t(Q) %*% b
+      return(solve(R[solved, solved, drop = FALSE], Qtb[solved]))
+    }
   } else {
-    s <- setNames(qr.solve(A, b)[!is.na(qrcoef)], x$names[!is.na(qrcoef)])
-    return(s)
-  }
+    s <- qr.solve(A, b)
+    if(!isTRUE(all.equal(c(A %*% s), b, check.attributes = FALSE))) {
+      stop("Parameter constraints are inconsistent:\n ", x, call. = FALSE)
+    }
+  }   
 }
 
+
+#' Adds the parameter that are constrained to the free parameters in the construction of a grid
+#' 
+#' @param fix a named vector with the values of the parameters in the grid
+#' @param con an obect of type L_constraint or csm_constraint, the constraint that is stored in the model
+#' @export
+.solve_grid_constraint <- function(fix, con) {
+  if (is.null(con) || length(con) == 0L) { return(fix) }
+  dMat <- diag(length(con$names))
+  select <- con$names %in% names(fix)
+  eqcon <- ROI::L_constraint(
+    dMat[select, , drop = FALSE],
+    rhs = fix,
+    dir = ROI::eq(length(fix)),
+    names = con$names)
+  return(.solve_constraints(.combine_constraints(con, eqcon)))
+}
 
 #' Prints the constraints of a cogscimodel object nicely
 #' 

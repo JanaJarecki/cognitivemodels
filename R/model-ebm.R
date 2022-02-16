@@ -25,7 +25,7 @@
 #' @template param-choicerule
 #' @param class A [formula][stats::formula], the variable in `data` with the feedback about the true class/category. For example `~ cat`. `NA`s are interpreted as trials without feedback (partial feedback, see details).
 #' @param criterion A [formula][stats::formula], the variable in `data` with the feedback about the continous criterion. For example, `~ val` `NA`s are interpreted as trials without feedback (partial feedback, see details).
-#' @param similarity (optional) A string, similarity function, currently only `"minkowski"`.
+#' @param similarity (optional) A string, similarity function, currently `"minkowski"` (default) and `"mahalanobis"`.
 #' @param mode (optional) A string, the response mode, can be `"discrete"` or `"continuous"`, can be abbreviated. If missing, will be inferred from `criterion`.
 #' @eval .param_fix("gcm", dyn_args = c("formula", "class"), which = 4)
 #' 
@@ -108,7 +108,7 @@ NULL
 
 #' @name ebm
 #' @export
-gcm <- function(formula, class, data, choicerule, fix = NULL, options = NULL, similarity = "minkowski", ...) {
+gcm <- function(formula, class, data, choicerule, fix = NULL, options = NULL, similarity = c("minkowski", "mahalanobis"), ...) {
    .args <- as.list(rlang::call_standardise(match.call())[-1])
    names(.args)[which(names(.args) == "class")] <- "criterion"
    .args[["mode"]] <- "discrete"
@@ -158,16 +158,26 @@ Ebm <- R6Class('ebm',
     parnamesWeights = NULL,
     similarity = NULL,
     multiplicative = NULL,
-    initialize = function(formula, data = NULL, criterion, mode = NULL, fix = NULL, learntrials = NULL, discount = NULL, choicerule = NULL, similarity = "minkowski", multiplicative = TRUE, options = list(), title = "Exemplar model") {
+    initialize = function(formula, data = NULL, criterion, mode = NULL, fix = NULL, learntrials = NULL, discount = NULL, choicerule = NULL, similarity = c("minkowski", "mahalanobis"), multiplicative = TRUE, options = list(), title = "Exemplar model") {
       if (is.null(data)) data <- data.frame()
       data <- as.data.frame(data)
       self$similarity <- match.arg(similarity)
+      if(self$similarity == "mahalanobis" & "r" %in% names(fix) == FALSE) fix <- c(fix, "r" = 2) # no exponent in Mahalanobis distance
       self$multiplicative = as.numeric(multiplicative)
       self$formulaCriterion <- .as_rhs(criterion)
       self$learntrials <- if ( is.null(learntrials) ) { seq_len(nrow(data)) } else { learntrials }
       criterion <- private$get_more_input(d=data)
       if (is.null(mode)) {
         mode <- super$infer_mode(criterion)
+      }
+      if (grepl("\\:|\\/|\\*|\\|", self$formulaCriterion[2])) {
+        stop("Can't create gcm because classes are not combined with + signs. Please combine classes with + signs.")
+      }
+      if ((ncol(criterion) > 1) & any(rowSums(criterion != 0) > 1)) {
+        stop("Can't create gcm because row(s) ", paste0(which(rowSums(criterion) > 1), collapse = ", "), " belong(s) to several classes. Please assign each exemplar to only one class.")
+      }
+      if (mode == "discrete" & any(apply(criterion, 2, function(.) length(unique(.))) > 2)) {
+        stop("Can't create gcm because class(es) ", paste0(names(which(apply(criterion, 2, function(.) length(unique(.))) > 2))), " take(s) more than two possible values. Please provide each class with two values only.")
       }
       parspace <- private$make_parspace(
         formula = formula,
@@ -187,7 +197,7 @@ Ebm <- R6Class('ebm',
         parspace = parspace,
         choicerule = choicerule,
         discount = discount,
-        title = paste(title, ifelse(multiplicative, "multiplicative", "additive"), similarity, sep = " - "),
+        title = paste(title, ifelse(multiplicative, "multiplicative", "additive"), self$similarity, sep = " - "),
         mode = mode,
         options = c(options, list(solver = "solnp"))
       )
@@ -212,14 +222,17 @@ Ebm <- R6Class('ebm',
             as.double(tail(par, -(na + 3))[1:na])
           }
       exemplar_w <- as.numeric(!is.na(criterion)) # exemplar weights
-      # Initial prediction until the first feedback is shown
-      init <- switch(self$mode,
-        continuous = sum(range(criterion, na.rm=TRUE)) / 2,
-        discrete = 1/length(unique(criterion[!is.na(criterion)])))
       has_criterion <- !is.na(criterion)
       criterion[is.na(criterion) & cumsum(!is.na(criterion)) > 0] <- 0
+      if(ncol(as.matrix(criterion)) == 1) {
+        criterion <- cbind(criterion, 1 - criterion, deparse.level = 0)
+      }
+      # Initial prediction until the first feedback is shown
+      init <- switch(self$mode,
+                     continuous = sum(range(criterion, na.rm=TRUE)) / 2,
+                     discrete = 1/ncol(criterion))
       return(ebm_cpp(
-            criterion = as.double(criterion),
+            criterion = as.matrix(criterion),
             features = matrix(input, ncol = na),
             w = as.double(par[seq.int(na)]),
             wf = as.double(exemplar_w),
@@ -279,7 +292,7 @@ Ebm <- R6Class('ebm',
       w_par <- setNames(lapply(1:nw, function(.) c(0.001,1,1/nw,1)), w_names)
       # dynamic bias parameter names
       b_par <- NULL
-      if (mode == "discrete") {
+      if (mode == "discrete" & ncol(criterion) == 1) {
         b_names <- paste0("b", sort(unique(criterion)))
         nb <- length(b_names)
         b_par <- setNames(lapply(1:nb, function(.) c(0,1,1/nb,1)), b_names)
