@@ -1,0 +1,261 @@
+---
+title: "Cognitivemodels"
+author: "Jana B. Jarecki"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+bibliography: ["bibliography.bib"]
+nocite: |
+ @Wakker2008, @Juslin2003, @Griffiths2008a, @Andraszewicz2014,@Houston1988
+vignette: >
+  %\VignetteIndexEntry{Cognitivemodels}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+<!---
+Update this vignette on the (1) github page AND (2) your blog whenever it changes.
+-->
+
+
+```{r, setup, echo=FALSE, include=FALSE, results="none"}
+pacman::p_load(
+  magrittr,
+  kableExtra)
+knitr::opts_chunk$set(
+  warning=FALSE,
+  error=FALSE,
+  message=FALSE,
+  collapse = TRUE,
+  tidy.opts=list(width.cutoff=29),
+  tidy=TRUE,
+  results="hide",
+  echo=TRUE,
+  eval=TRUE,
+  include=TRUE)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+<!--Vignettes are long form documentation commonly included in packages. Because they are part of the distribution of the package, they need to be as compact as possible. The `html_vignette` output type provides a custom style sheet (and tweaks some options) to ensure that the resulting html is as small as possible. The `html_vignette` format:
+
+- Never uses retina figures
+- Has a smaller default figure size
+- Uses a custom CSS stylesheet instead of the default Twitter Bootstrap style
+-->
+
+# Introduction to cognitivemodels
+
+This vignette introduces how to use the `cognitivemodels` R package to train and test models of cognition, learning, and behavior.
+
+## Introduction
+In this following, we will
+
+* Start with an example - how to build a model?
+
+* Then we continue with how to make predictions
+
+* Followed by how to compare models
+
+## What is a cognitive model?
+ Cognitive models are predictive mathematical models of human or animal behavior and learning. They are based on theoretical considerations from various scientific disciplines such as cognitive science, artificial intelligence, psychology, and behavioral economics or evolutionary ecology.
+
+
+# Start with a Model: The Generalized Context Model in the Package cognitivemodels
+
+We will introduce the syntax of `cognitivemodels` by modeling categorization data with the generalized context model [GCM, @Nosofsky1986; @Nosofsky2011]. The generalized context model is a formal model of classification which assumes that people infer the category membership of a new stimulus based on how similar the stimulus is to previously-experienced category members. The stimulus is predicted to belong most probably to the category to whose members it is most similar. Formally, the model computes the psychological similarity between two stimuli $i$ and and $j$ based on the distance between the features of the stimuli. The similarity is given by: $s_{ij} = \exp{(-{\color{red}{\lambda}} \cdot [ \sum_f {\color{red}{w_f}} (x_{fi} - x_{fj})^{\color{red}{r}} ]^{ \color{red}{q} / {\color{red}{r} }})}$, where $x_{fi}$ and $x_{fj}$ are the values of feature $f$ of stimuli $i$ and $j$, respectively. The similarity function has four free parameters highlighted in red: $w_f$ is interpreted as the relative attention to feature $f$ and constrained by $\sum_f w_f = 1$ and $0 \leq w_f \leq 1$, $\lambda$ governs the sensitivity towards small differences between stimuli, $q$ governs the relation between distance and psychological similarity, and $r$ is the norm of the distance metric with $r \geq 1$; $r = 1$ produces a city-block metric and $r = 2$ produces the Euclidean metric. The model finally computes the evidence that stimulus $i$ belongs to a category "1" as the sum of the similarities to previously encountered members of category "1" relative to the similarity to all previously encountered stimuli: $\Pr(C=1, i) = \frac{{\color{red}{b_1}}\sum_{n=1}^{N_1} s_{in,C=1}}{ \sum_C {\color{red}{b_c}} \sum_{n=1}^{N_c} s_{in,C=c}}$, where $s_{in,C=1}$ is the similarity between stimulus $i$ and the $n^{\text{th}}$ member of category "1". The last free parameter $b_1$ is interpreted as a bias towards category "1", with $\sum_C b_c=1$ and $0 \leq b_c \leq 1$.
+
+
+The package is loaded by running:
+
+```{r, loading}
+  library(cognitivemodels)
+```
+
+## Setting up a Generalized Context Model
+
+We fit the model to data from a supervised categorization experiment in which participants learned to categorize lines into two categories by receiving feedback about the true category [@Nosofsky1989]. The lines were characterized by two features namely their size and their tilting angle. Because the paper reports aggregated data, we reconstructed the raw data which is available by `data(nosofsky1989long)`. We one condition from this data called "size". The syntax below loads the data and sets up the model, it is explained below the code.
+
+```{r, build-gcm, eval=FALSE, tidy=FALSE}
+# Use the 'size' condition in the data
+data(nosofsky1989long)
+DT <- nosofsky1989long
+DT <- DT[DT$condition=="size", ]
+D  <- DT[!is.na(DT$true_cat), ]
+
+# Fit the model to the data D
+model <- gcm(
+  formula = response ~ angle + size,
+  class = ~ true_cat,
+  data = D,
+  choicerule = "none")
+``` 
+
+
+```{r, build-gcm-evaluated-code, echo=FALSE}
+data(nosofsky1989long)
+DT <- nosofsky1989long
+DT <- DT[DT$condition=="size", ]
+D  <- DT[!is.na(DT$true_cat), ]
+model <- gcm(
+  formula = response ~ angle + size,
+  class = ~ true_cat,
+  data = D,
+  choicerule = "none",
+  options = list(fit = FALSE))
+``` 
+
+The function `gcm()` fits the generalized context model and needs four arguments (see also the help file: `?gcm`). The arguments `formula` and `class` indicate the columns in the data to be modeled (in our data: "response", "angle", "size", and "true_cat"). The left side of the argument `formula` specifies the column that contains participants' trial-by-trial categorizations, in our example this column is called "response". The right side of `formula` specifies the column names of the stimulus features---here "angle" and "size"---separated by a plus sign. [^1] The argument `class` specifies the column name in the data that holds the category feedback, in our example this column is called "true_cat". The `gcm()` model automatically names each attention weight parameters ($w_f$) after the column name of the corresponding stimulus feature. In our model the attention weight parameters are therefore called "angle" and "size", referring to the attention allocated to the angle and size feature, respectively. If the feature columns in the data were called "x1" and "x2" the corresponding formula would be `response ~ x1 + x2` and the attention weight parameters would be called "x1" and "x2". The argument `data` specifies the data which must be a data frame with the variables that are modeled in the columns and with one choice trial in each row. The argument `choicerule` specifies which choice rule or action selection rule, if any, the model uses to map continuous model predictions to discrete responses. The currently available choice rules are "argmax", "epsilon", "luce", and "softmax" (see `cm_choicerules()` for the allowed values). We set `choicerule = "none"` to not use a choice rule. The fitted generalized context model can be viewed by calling the object in R that holds the model, in our example this is `model`.
+
+[^1]: While in categorization tasks the input in a given trial is generally one single stimulus, different tasks exist where multiple stimuli are presented simultaneously (e.g., when deciding between two monetary gambles called gamble `x`, consisting of outcomes `x1` with probability `px` and outcome `x2` else, and gamble `y`, consisting of outcomes `y1` with probability `py` and outcome `y2` else). In this case, the stimuli are separated from each other by a pipe `|` (e.g., the formula for predicting a participant's gamble choice `r` between the aforementioned gambles `x` and `y` is `r ~ x1 + px + x2 | y1 + py + y2`, see also Table 1).
+
+## Estimation of Model Parameters
+
+If a model has free parameters, the `cognitivemodels` package estimates any free parameters of the model by default. The parameter estimation uses a numeric optimization method that searches the parameter space to optimize the goodness of fit between the predictions of the model and the observations in the data given possible parameter constraints. Our example code above estimates all the parameters of the generalized context model using maximum likelihood with a binomial probability density function. The resulting estimates for the free parameters can be viewed by `coef(model)`.
+
+Different models in the  `cognitivemodels` package (Table 1) have different parameter spaces, that is the names and ranges of the free parameters are model-specific. The parameters of any model are documented in the corresponding help file in the section Model Parameters (e.g., `?gcm` for the generalized context model). The lower and upper limits of the parameters in the different models are set internally and are based on parameter ranges and estimates in the literature; and in our example they are based on @Nosofsky1989. Modelers can change the parameter bounds as outlined below in the section Advanced Options. The parameter space of a model in `cognitivemodels` can be printed using the method `parspace()`. For example, `parspace("gcm")` prints the parameter space of the generalized context model. Given a model has been stored as `model`, `parspace(model)` prints the parameter space of this very model. Furthermore, the method `constraints(model)` shows the parameter constraints of the stored model.
+
+```{r, view-gcm-parameterspace}
+    parspace(model)
+    constraints(model)
+``` 
+
+The parameter space of the generalized context model is as follows: each attention weight parameter ranges from 0.001 to 1, $\lambda$ ranges from 0.001 to 10, $r$, and $q$ each range from 1 to 2 and the bias parameter $b_0$ and $b_1$ each range from 0 to 1. The constraints show that both the attention weights and the bias parameters need to sum up to 1.
+
+### Parameter constraints.
+
+The following examples show how to fix model parameters, rather than estimating them, and how to implement parameter constraints. To fix or constrain parameters an argument called `fix` is needed when setting up a model. The value of the argument `fix` must be a named list containing the names of the parameters to fix and their respective values. The parameters that are not listed in `fix` will be estimated. For instance, to set the parameters $r$ and $q$ equal to 1 and estimate the remaining parameters we add the argument `fix = list(r = 1, q = 1)` to the call to `gcm()` as shown below. If the model is stored as `model`, `coef(model)` prints the free parameter estimates and `summary(model)` prints all parameter estimates.
+
+```{r, fit-some-gcm-par, eval=FALSE, tidy=FALSE}
+model <- gcm(
+  formula = response ~ angle + size,
+  class = ~true_cat,
+  data = D,
+  fix = list(r = 1, q = 1),
+  choicerule = "none")
+```
+
+As a further illustration of this logic consider a generalized context model that divides attention equally between the features "angle" and "size". This requires setting the attention weight parameters to 0.50, and is implemented by adding `fix = list(angle = 0.50, size = 0.50)` to the call to `gcm()`. To force the model to attend 99\% to the feature "angle", the syntax is `fix = list(angle = 0.99, size = 0.01)`. Note, that in the generalized context model, the names of the attention weight parameters match the right side of the argument `formula`. If the argument `fix` fixes all model parameters no parameters are estimated, such as in `fix = list(r = 2, q = 2, angle = 0.5, size = 0.5, lambda = 1.60, b0 = 0.5, b1 = 0.5)`.
+
+ `cognitivemodels` also allows the specification of equality constraints. To constrain, for instance, the value of the parameter $r$ to be equal to the value of the parameter $q$ we use `fix = list(r = "q")`. Then the parameter $q$ is estimated and $r$ is set equal to $q$. This equality constraint is implemented in the code below:
+
+```{r, fit-some-gcm-par-equality, eval=FALSE, tidy=FALSE}
+model <- gcm(
+  formula = response ~ angle + size,
+  class = ~true_cat,
+  data = D,
+  fix = list(r = "q"),
+  choicerule = "none")
+```
+ 
+Equality constraints and fixed parameters can also be combined. For instance, the argument `fix = list(angle = 0.5, r = "q")` sets the attention weight for the feature "angle" to 0.50 and constrains $r = q$.
+
+<!--
+  In his modeling analysis Nosofsky (1989) fixed the parameters $q=2$ and $r=2$ and estimated the remaining parameters. The resulting parameter estimates were $angle=.10$, $size=.90$, $\lambda=1.60$, $b_0=.50$, and $b_1=.50$. The corresponding results from the parameter estimates by the `gcm()` function below recover these parameter estimates. Nosofsky estimated the parameters based on the aggregate
+-->
+
+<!--
+  ```{r, reproduce-nosofsky, cache=TRUE, eval=FALSE, results="show"}
+    data(nosofsky1989)
+    D <- nosofsky1989
+    D <- D[D$condition == "size", ]
+    model <- gcm(
+      formula = pobs ~ angle + size,
+      class = ~ true_cat,
+      data = D[!is.na(D$true_cat), ],
+      fix = list(r = 2, q = 2),
+      options = list(
+        fit_data = D,
+        fit_args = list(n = D$N)),
+      choicerule = "none")
+    round(coef(model), 2)
+  ```
+-->
+
+
+### Models without parameter estimation.
+
+The package offers two possibilities to use cognitive models that contain free parameters without the estimation of the free parameters. The first method consists in fixing all model parameters to a numeric value using the `fix` argument, as outlined above. This is useful for simulating model behavior in an experimental design from a model with parameter values of interest.  In this case the argument `formula` needs only a left-hand side. The second method to estimate no parameters consists in an argument `options = list(fit = FALSE)`. This is useful for testing toy models. In this case, a model is constructed with model-specific default parameter values. The default parameter values are listed in a column called "start" of the parameter space  of a model (e.g., see `parspace("gcm")`). Because for the general context model, there are no universal default parameter values, the parameter values in this case correspond to the mean of the parameter ranges. The code below fixes all parameter values of the generalized context model to the estimated parameter values from @Nosofsky1989 (Table 5, row 1), and estimates no parameters.
+
+
+```{r, make-gcm-fixe-par, results="hide"}
+  model <- gcm(
+    formula = response ~ angle + size,
+    class = ~true_cat,
+    data = D,
+    fix = list(angle = .10, size = .90,
+               lambda = 1.6, r = 2, q = 2,
+               b0 = .50, b1 = .50),
+    choicerule = "none")
+```
+
+## Generating Predictions
+
+Given a cognitive model stored as `model`, the method `predict(model)` returns predictions from the model given its parameters. It makes predictions for the data used to set up the model. In our example `predict(model)` makes predictions for the data `D` that we used to fit the model. An optional argument `newdata` can be supplied to `predict()` to make predictions for new stimuli using the parameters of the model without newly estimating parameters. The new data needs to have the same format and column names as the data that was used to set up the model. Using the model from the last code block with parameters fixed to the parameter estimates in @Nosofsky1989, the below code predicts the categorization for all 16 stimuli in the "size" condition using the `newdata` argument.
+
+
+```{r, make-gcm-predictions-nosofsky, results="hide", tidy=F}
+  newD <- DT[!duplicated(DT$stim_id), ]
+  newD <- newD[order(newD$stim_id), ]
+  predict(model, newdata = newD)
+``` 
+The predictions match the predictions in @Nosofsky1989 (Figure 5, "size" condition).
+
+
+<!-- For example, the code below predicts the categorization probabilities for 16 stimuli in the transfer phase of Nosofsky (1989) and the predictions correspond to those of Nosofsky (1989, p. 285, Fig. 5).
+-->
+<!--
+```{r, make-gcm-predictions, results="show", eval=FALSE, include=FALSE}
+data(nosofsky1989)
+D <- nosofsky1989[nosofsky1989$condition == "size", ]
+round(predict(model, newdata = DD), 2)
+``` 
+-->
+
+## Goodness of Fit and Model Comparisons
+
+The `cognitivemodels` package offers the following goodness of model fit measures for each model: log likelihood, the Bayesian information criterion [BIC, @Schwarz1978], Akaike's information criterion [AIC, @Kass1995; @Wagenmakers2004] including the finite-sample corrected AICc [see @Wagenmakers2004], and the mean-squared error (MSE). The following code returns the respective goodness of fit measures.
+
+```{r, gcm-gof, results = "hide"}
+  logLik(model)
+  BIC(model)
+  AIC(model)
+  MSE(model)
+```
+
+
+<!-- 
+Table 2 lists the available goodness of fit measures that can be used.
+-->
+
+```{r, table2, echo=FALSE, eval=FALSE,  results = "asis"}
+  #kableExtra::kable_styling(
+    knitr::kable(read.csv2("table2.csv"),
+      format = "latex",
+      caption = "Goodness of fit functions.",
+      booktabs = TRUE,
+      table.env = "table")
+ # )
+```
+
+To compare models, the `anova()` method can be used to render ANOVA-style tables. If one model is supplied as argument to `anova()`, the function returns an error summary. If multiple models are supplied to `anova()`, the function returns a model comparison table. The model comparison table includes the relative evidence strength measured by Akaike weights [@Wagenmakers2004] as well as a $\chi^2$-test of the log likelihoods of the two models given these belong to the same class (e.g., two generalized context models will be compared by $\chi^2$, but not a Bayesian model and a generalized context model). The example code below compares a generalized context model 1 that has the parameter constraints $r = 1, q = 1$ to a model 2 that has the parameter constraints $r = 2, q = 2$.
+
+```{r gcm-anova-two, results = "hide", tidy = FALSE, eval=FALSE}
+model1 <- gcm(
+  formula = response ~ angle + size,
+  class = ~true_cat, 
+  data = D,
+  fix = list(r = 1, q = 1),
+  choicerule = "none")
+
+model2 <- gcm(
+  formula = response ~ angle + size,
+  class = ~true_cat, 
+  data = D,
+  fix = list(r = 2, q = 2),
+  choicerule = "none")
+
+anova(model1, model2)
+```
+
+## The `cognitivemodels` package version `r packageVersion("cognitivemodels")` implements computational models of cognition, it does not implement cognitive architectures such as ACT-R. It estimates free model parameters with numeric optimization or constrained numeric optimization such as maximum likelihood. Bayesian parameter estimation may be added in the future.

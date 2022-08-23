@@ -1,0 +1,11 @@
+---
+title: "Used in"
+date: "07/2020"
+---
+
+## Scientific work in which cognitivemodels is in use
+  * [Predicting human preferences](https://link.springer.com/article/10.1007/s40622-021-00302-9)
+  * [Modeling risky decision making with goals](https://cognitivesciencesociety.org/cogsci20/papers/0015/0015.pdf)
+  * [Modelingn risky decision making and gain-loss framing effects](https://escholarship.org/content/qt2rw590z4/qt2rw590z4.pdf)
+  * [Testing Models of human categorization](https://psyarxiv.com/m75u4/)
+  * [Investigation of Learning about Risks](https://journals.sagepub.com/doi/abs/10.1177/17470218211044013)

@@ -2,11 +2,18 @@ Package: cognitivemodels
 Type: Package
 Title: Cognitive Models - Estimation, Prediction, and Development of Models for Cognitive Scientists
 Version: 0.0.12
-Date: 2020-05-09
-Author: Jana B. Jarecki
+Date: 2022-05-09
+Authors@R: c(
+    person("Jana", "Jarecki", , "jarecki.jana@gmail.com", role = c("aut", "cre"),
+      comment = c(ORCID = "0000-0002-7634-2862")
+    ),
+    person("Florian", "Seitz", role = "aut",
+      comment = c(ORCID = "0000-0003-3217-4083")
+    )
+  )
 Maintainer: Jana B. Jarecki <jj@janajarecki.com>
 Description: Implementation of cognitive models, includes a general class cognitive models that has methods to fit free parameters to data and, can apply choicerules, and various goodness-of-fit measures (loglikelihood, MSE, etc.). The interface is similar to the lm() interface.
-License: GPL (>= 2)
+License: MIT
 Depeds: R (>= 3.0.2)
 Imports: 
     abind,
