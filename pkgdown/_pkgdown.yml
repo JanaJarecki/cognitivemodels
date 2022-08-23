@@ -1,0 +1,47 @@
+lang: en
+
+template:
+  bootstrap: 5
+  bootswatch: lux
+  theme: monokai
+  bslib:
+    base_font: { google: "Source Serif Pro" }
+    heading_font: { google: "Fira Sans Condensed" }
+    code_font: { google: "Inconsolata" }
+    pkgdown-nav-height: 30px
+
+home:
+  title: An R package for cognitive modeling
+  description: >
+    A collection of machine-learning models of cognition, learning,
+    and behavior, with a user-friendly syntax.
+  sidebar:
+    structure: [custom, toc, authors, dev, license]
+    components:
+      custom:
+        title: Links
+        text: <a href="https://github.com/JanaJarecki/cognitivemodels">Source Code on Github</a>
+        
+navbar:
+  structure:
+    left:  [home, articles, news, presentations, reference]
+  components:
+    home:
+      icon: fas fa-home fa-lg
+      href: index.html
+    news:
+      text: News
+      href: news/index.html
+    reference:
+      text: Functions
+      href: reference/index.html
+
+footer:
+  structure: 
+    left: developed_by
+    right: [legal, built_with]
+  components:
+    legal: Provided without any warranty.
+
+development:
+  mode: auto

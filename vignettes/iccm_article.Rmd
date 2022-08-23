@@ -1,0 +1,8 @@
+---
+title: "Introduction"
+author: "Jana B. Jarecki, Florian I. Seitz"
+date: "07/2020"
+---
+
+Quick Start: Read the Introduction Article:
+[Introduction to the cognitivemodels package (ICCM)](https://psyarxiv.com/6kb4w/)
