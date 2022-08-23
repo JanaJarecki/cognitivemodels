@@ -5,10 +5,13 @@ template:
   bootswatch: lux
   theme: monokai
   bslib:
-    base_font: { google: "Source Serif Pro" }
-    heading_font: { google: "Fira Sans Condensed" }
-    code_font: { google: "Inconsolata" }
-    pkgdown-nav-height: 30px
+    base_font:
+      google: "Source Serif Pro"
+    heading_font: 
+      google: "Fira Sans Condensed"
+    code_font: 
+      google: "Inconsolata"
+    pkgdown-nav-height: 25px
 
 home:
   title: An R package for cognitive modeling

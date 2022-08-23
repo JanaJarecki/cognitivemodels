@@ -1,6 +1,6 @@
 # <img style="margin-bottom:10px;" src="man/figures/logo_inverted.png" align="right" />
 
-`cognitivemodels` offers a user-friendly collection of machine-learning  algorithms to train and test models of human learning, behavior, and cognition.
+The `cognitivemodels` package offers a user-friendly collection of machine-learning  algorithms to train and test models of human learning, behavior, and cognition.
 
 * Its syntax uses a formula interface resembling the `aov(y ~ x)`- or `lm(y ~ x)`-syntax.
 * The models can be fit to data by maximum likelihood, minimum MSE, and other fit measures
