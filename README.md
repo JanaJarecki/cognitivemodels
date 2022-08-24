@@ -1,4 +1,4 @@
-# <img style="margin-bottom:10px;" src="man/figures/logo_inverted.png" align="right" />
+# <img src="man/figures/logo_inverted.png" align="right" />
 
 The `cognitivemodels` package offers a user-friendly collection of machine-learning  algorithms to train and test models of human learning, behavior, and cognition.
 
