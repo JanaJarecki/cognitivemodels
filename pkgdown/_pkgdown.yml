@@ -11,7 +11,6 @@ template:
       google: "Fira Sans Condensed"
     code_font: 
       google: "Inconsolata"
-    pkgdown-nav-height: 25px
 
 home:
   title: An R package for cognitive modeling

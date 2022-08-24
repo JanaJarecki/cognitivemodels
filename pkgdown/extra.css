@@ -4,6 +4,7 @@ body {
 
 h2, h3, h4 {
   margin-top: 2em;
+  letter-spacing: 1px;
 }
 
 .page-header img.logo {
@@ -11,14 +12,14 @@ h2, h3, h4 {
 }
 
 .navbar {
-  font-family:  "Fira Sans Condensed", sans-serif;
+  font-family:  "Fira Sans Condensed", "Helvetica", sans-serif;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
   font-weight: 300;
 }
 
 .col-md-3 {
-  font-family:  "Fira Sans Condensed", sans-serif;
+  font-family:  "Fira Sans Condensed", "Helvetica", sans-serif;
   font-weight: 200;
   font-size: 0.8em;
 }
