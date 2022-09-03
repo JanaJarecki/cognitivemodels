@@ -22,7 +22,7 @@ Gcm_sim_unidim <- R6Class("gcm_sim_unidim",
                                 parms[i, ] <- unlist(self$parm)
                                 print(parms)
                               } else {
-                                gofs[i] <- -cogsciutils::gof(obs = self$obs, pred = self$predict(), response = "d", type = "log", discount = self$discount)
+                                gofs[i] <- -cognitiveutils::gof(obs = self$obs, pred = self$predict(), response = "d", type = "log", discount = self$discount)
                                 parms <- unidimweights
                               } 
                             }
