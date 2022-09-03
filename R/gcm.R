@@ -292,7 +292,8 @@ Gcm <- R6Class("gcm",
                  eqfun = function() {
                    return(list(
                      eqfun = function(pars, self) {
-                       sum(pars[1:self$ndim])
+                       # sum(pars[1:self$ndim])
+                       sum(pars[1:sum(paste0("w", 1:self$ndim) %in% self$freenames)])
                      },
                      eqB = 1
                    )

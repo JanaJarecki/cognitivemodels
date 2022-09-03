@@ -260,7 +260,7 @@ Cogscimodel <- R6Class(
       #              method = "Brent",
       #              self = self)
       # return(list(parm = c(tau = fit$par), val = tail(fit$value, 1)))
-
+      
       fit <- solnp(pars = par0,
         fun = self$fitObjective,
         LB = parspace[, 'll', drop = FALSE],
