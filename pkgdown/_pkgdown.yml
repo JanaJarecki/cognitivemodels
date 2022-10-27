@@ -8,7 +8,7 @@ template:
     base_font:
       google: "Source Serif Pro"
     heading_font: 
-      google: "Fira Sans Condensed"
+      google: "Orbitron"
     code_font: 
       google: "Inconsolata"
 
@@ -25,12 +25,16 @@ home:
         text: <a href="https://github.com/JanaJarecki/cognitivemodels">Source Code on Github</a>
         
 navbar:
+  bg: dark
   structure:
-    left:  [home, articles, news, presentations, reference]
+    left:  [home, articles, news, models, presentations, reference]
   components:
     home:
       icon: fas fa-home fa-lg
       href: index.html
+    models:
+      text: Models
+      href: MODELS.html
     news:
       text: News
       href: news/index.html

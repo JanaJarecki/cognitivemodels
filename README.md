@@ -12,21 +12,7 @@ The `cognitivemodels` package offers a user-friendly collection of machine-learn
 You can see the latest package version's new features in [NEWS](NEWS.md).
 
 ## Models in this Package
-The following models are implemented:
-
-Model | Reference | Documentation of the Function
------------- | ------------- | -------------
-Shortfall model | Andraszewicz (2014) | `?shortfall`
-Memory-based preference model | Jarecki & Rieskamp (2022) | `?mem`
-Generalized context model | Medin & Schaffer (1976); Nosofsky (1986) | `?ebm`
-Optimal risk-sensitive foraging model | Houston & McNamara (1988) | `?hm1988`
-Cumulative prospect theory | Kahneman & Tversky (1979); Tversky & Kahneman (1992) | `?cpt`
-Bayesian cognitive model | Hoffart, Jarecki, Duthil, & Rieskamp (under review) | `?bayes`
-Power utility | Tversky (1967); Wakker (2008)| `?utility`
-Soft-max choice rule | Sutton & Barto (1998) | `?softmax`
-Arg-max choice rule | | `?argmax`
-Epsilon-greedy choice rule |  | `?epsilon`
-A baseline model | | `?baseline`
+You can see the available cognitive machine-learning models in [Models](MODELS.md). They include many prominent tools for forecasting individual-based decisions about risks and about probabilities, modeling and predicting customer and consumer preferences, analyzing human learning based on prior information, and person-specific utilities.
 
 
 ## Installing the Package

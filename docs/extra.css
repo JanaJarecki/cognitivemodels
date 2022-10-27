@@ -14,18 +14,18 @@ h2, h3, h4 {
 .page-header img.logo {
     width: 80px !important;
 }
-
+.navbar, .col-md-3 {
+    font-family:  "Orbitron", monospace;
+}
 .navbar {
-  font-family:  "Fira Sans Condensed", "Arial Narrov", "Helvetica", sans-serif;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
-  font-weight: 300;
+  letter-spacing: 1px;
 }
 
 .col-md-3 {
-  font-family:  "Fira Sans Condensed", "Arial Narrov", "Helvetica", sans-serif;
-  font-weight: 200;
   font-size: 0.8em;
+  border-left: 1.5px solid #343a40;
 }
 
 .table th, .table td {
