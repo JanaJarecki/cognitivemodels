@@ -276,7 +276,7 @@ cpt_mem_c() fits CPT with an editing step based on memory for continuous respons
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Free parameters: estimates (NOT CONVERGED! see m$fitobj$status) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> sigma  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> -0.05  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1e-07  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Constrained and fixed parameters:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  alpha    beta  gammap  gamman  lambda  </span>
@@ -291,9 +291,6 @@ cpt_mem_c() fits CPT with an editing step based on memory for continuous respons
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">M</span>, <span class="st">"mode"</span><span class="op">)</span> <span class="co"># predict choice probability after softmax</span></span></span>
 <span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in private$get_input(f = self$formula, d = newdata, ...):</span> Can't find variables from 'formula' in 'data': [x1, px, x2, I(1 - px), y1, py, y2, I(1 - py)].</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">M</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NaNs produced</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NaNs produced</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NaNs produced</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Model:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   with no choice rule</span>
@@ -307,10 +304,10 @@ cpt_mem_c() fits CPT with an editing step based on memory for continuous respons
 <span class="r-out co"><span class="r-pr">#&gt;</span> (gammap) 0.61    </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> (gamman) 0.69    </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> (lambda) 2.25    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> sigma    -0.05   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> sigma    1e-07   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Fit Measures:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> MSE: 10110, LL: NaN, AIC: NaN, BIC: NaN</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> MSE: 10110, LL: -1e+18, AIC: 2e+18, BIC: 2e+18</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova</a></span><span class="op">(</span><span class="va">M</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Sum Sq. Table</span>
