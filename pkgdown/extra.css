@@ -2,7 +2,7 @@ body {
   letter-spacing: 0.1px
 }
 
-code, .sourceCode, .r {
+code, .sourceCode, .r, pre, pre code {
   font-family: "Inconsolata", monospace !important;
 }
 
