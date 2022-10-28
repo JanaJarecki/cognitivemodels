@@ -20,6 +20,8 @@ home:
   sidebar:
     structure: [custom, toc, authors, dev, license]
     components:
+      toc:
+        text: Contents
       custom:
         title: Links
         text: <a href="https://github.com/JanaJarecki/cognitivemodels">Source Code on Github</a>
