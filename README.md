@@ -11,13 +11,14 @@ The `cognitivemodels` package offers a user-friendly collection of machine-learn
 ## News
 You can see the latest package version's new features in [NEWS](NEWS.md).
 
-## Models in this Package
-You can see the available cognitive machine-learning models in [Models](MODELS.md). They include many prominent tools for forecasting individual-based decisions about risks and about probabilities, modeling and predicting customer and consumer preferences, analyzing human learning based on prior information, and person-specific utilities.
+## Algorithms
+Find a list of the cognitive machine-learning algorithms in this package under [MODELS](MODELS.md). You can use them for forecasting individual-based decisions about risks and about probabilities, modeling and predicting customer and consumer preferences, analyzing human learning based on prior information, and person-specific utilities.
 
 
-## Installing the Package
+## Installing this Package
 To use this package, ensure that you have a working installation of R and the **Rcpp** package, `install.packages("Rcpp")`, for help with problems see [Installation Troubleshooting](#Installation-Troubleshooting)
 
+### Installation
 ```R
     library(devtools)
     install.packages("matlib")
@@ -26,19 +27,16 @@ To use this package, ensure that you have a working installation of R and the **
     devtools::install_github("janajarecki/cognitivemodels")
 ```
 
-You will see a prompt, please type `Yes` into the console.
+You will see a prompt `Do you want to install from sources the packages which need compilation?`, please type `Yes` into the console.
 
-```
-    Do you want to install from sources the packages which need compilation? (Yes/no/cancel) 
-```
-
-
+### Using the package
 To use the package, run:
 
 ```R
     library(cognitivemodels)
 ```
 
+### Installation of the latest version
 (Optional) This installs the newest version (development version) of this package:
 
 ```R
@@ -46,12 +44,12 @@ To use the package, run:
 ```
 
 
-## Getting Started
-You can read a quick introduction to the package in the [ICCM](https://psyarxiv.com/6kb4w/) article; and you can view an example modeling code below.
+## Getting Started with Behavior Modeling
+You can read a quick introduction to how the algorithms in this package work in the [ICCM](https://psyarxiv.com/6kb4w/) article; and you can go through an example code below.
 
-_Example._ Let's fit data from a supervised categorization task. 
+_Example._ Let's fit data from a supervised categorization task and use the trained model to predict categorizations. 
 
-_Background._ The task had people learn to categorize many lines that differed in two features (size and tilting angle) into two categories, providing feedback about the true category (Nosofsky, 1989). The collected data can be loaded ba running `data(nosofsky1989long)`. Let's model data in one condition from this data set called "size".
+_Background._ The categorization task had people learn to categorize many lines that differed in two features (size and tilting angle) into two categories, providing feedback about the true category (Nosofsky, 1989). The collected data can be loaded ba running `data(nosofsky1989long)`. Let's model data in one condition from this data set called "size".
 
 _Code._ The syntax below loads the data and sets up the model, it is explained below the code.
 
@@ -68,11 +66,13 @@ _Code._ The syntax below loads the data and sets up the model, it is explained b
     class = ~ true_cat,
     data = D,
     choicerule = "none")
-``` 
 
+    # Make a prediction
+    predict(model)
+```
 
 #### Installation Troubleshooting
-Here are some error messages during the installation and how to troubleshoot them:
+Below find some messages during the installation and how to troubleshoot them:
 
 * Error: `Failed to install 'cognitivemodels' from GitHub:   Could not find tools necessary to compile a package Call `pkgbuild::check_build_tools(debug = TRUE)` to diagnose the problem.` **Solution**: In R, you must run `options(buildtools.check = function(action) TRUE )` to solve the problem, [more details see here](https://stackoverflow.com/questions/37776377/error-when-installing-an-r-package-from-github-could-not-find-build-tools-neces)
 * Error: `xcrun: error: invalid active developer path (/Library/Developer/CommandLineTools), missing xcrun at:` **Solution** You need to install xcode which you do on Mac by opening the terminal and running `xcode-select --install

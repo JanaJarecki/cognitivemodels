@@ -18,10 +18,8 @@ home:
     A collection of machine-learning models of cognition, learning,
     and behavior, with a user-friendly syntax.
   sidebar:
-    structure: [custom, toc, authors, dev, license]
+    structure: [custom, authors, dev, license]
     components:
-      toc:
-        text: Contents
       custom:
         title: Links
         text: <a href="https://github.com/JanaJarecki/cognitivemodels">Source Code on Github</a>

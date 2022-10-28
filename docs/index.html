@@ -99,36 +99,47 @@
 <p>You can see the latest package version’s new features in <a href="NEWS.html">NEWS</a>.</p>
 </div>
 <div class="section level2">
-<h2 id="models-in-this-package">Models in this Package<a class="anchor" aria-label="anchor" href="#models-in-this-package"></a>
+<h2 id="algorithms">Algorithms<a class="anchor" aria-label="anchor" href="#algorithms"></a>
 </h2>
-<p>You can see the available cognitive machine-learning models in <a href="MODELS.html">Models</a>. They include many prominent tools for forecasting individual-based decisions about risks and about probabilities, modeling and predicting customer and consumer preferences, analyzing human learning based on prior information, and person-specific utilities.</p>
+<p>Find a list of the cognitive machine-learning algorithms in this package under <a href="MODELS.html">MODELS</a>. You can use them for forecasting individual-based decisions about risks and about probabilities, modeling and predicting customer and consumer preferences, analyzing human learning based on prior information, and person-specific utilities.</p>
 </div>
 <div class="section level2">
-<h2 id="installing-the-package">Installing the Package<a class="anchor" aria-label="anchor" href="#installing-the-package"></a>
+<h2 id="installing-this-package">Installing this Package<a class="anchor" aria-label="anchor" href="#installing-this-package"></a>
 </h2>
 <p>To use this package, ensure that you have a working installation of R and the <strong>Rcpp</strong> package, <code>install.packages("Rcpp")</code>, for help with problems see <a href="#Installation-Troubleshooting">Installation Troubleshooting</a></p>
+<div class="section level3">
+<h3 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+</h3>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>    <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://devtools.r-lib.org/" class="external-link">devtools</a></span><span class="op">)</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"matlib"</span><span class="op">)</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"Rcpp"</span><span class="op">)</span></span>
 <span>    <span class="co"># Restart the R session after installing matlib! </span></span>
 <span>    <span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"janajarecki/cognitivemodels"</span><span class="op">)</span></span></code></pre></div>
-<p>You will see a prompt, please type <code>Yes</code> into the console.</p>
-<pre><code>    Do you want to install from sources the packages which need compilation? (Yes/no/cancel) </code></pre>
+<p>You will see a prompt <code>Do you want to install from sources the packages which need compilation?</code>, please type <code>Yes</code> into the console.</p>
+</div>
+<div class="section level3">
+<h3 id="using-the-package">Using the package<a class="anchor" aria-label="anchor" href="#using-the-package"></a>
+</h3>
 <p>To use the package, run:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>    <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">cognitivemodels</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="installation-of-the-latest-version">Installation of the latest version<a class="anchor" aria-label="anchor" href="#installation-of-the-latest-version"></a>
+</h3>
 <p>(Optional) This installs the newest version (development version) of this package:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>    devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"janajarecki/cognitivemodels"</span> <span class="at">ref =</span> <span class="st">"development"</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>    devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"janajarecki/cognitivemodels"</span> <span class="at">ref =</span> <span class="st">"development"</span>)</span></code></pre></div>
+</div>
 </div>
 <div class="section level2">
-<h2 id="getting-started">Getting Started<a class="anchor" aria-label="anchor" href="#getting-started"></a>
+<h2 id="getting-started-with-behavior-modeling">Getting Started with Behavior Modeling<a class="anchor" aria-label="anchor" href="#getting-started-with-behavior-modeling"></a>
 </h2>
-<p>You can read a quick introduction to the package in the <a href="https://psyarxiv.com/6kb4w/" class="external-link">ICCM</a> article; and you can view an example modeling code below.</p>
-<p><em>Example.</em> Let’s fit data from a supervised categorization task.</p>
-<p><em>Background.</em> The task had people learn to categorize many lines that differed in two features (size and tilting angle) into two categories, providing feedback about the true category (Nosofsky, 1989). The collected data can be loaded ba running <code>data(nosofsky1989long)</code>. Let’s model data in one condition from this data set called “size”.</p>
+<p>You can read a quick introduction to how the algorithms in this package work in the <a href="https://psyarxiv.com/6kb4w/" class="external-link">ICCM</a> article; and you can go through an example code below.</p>
+<p><em>Example.</em> Let’s fit data from a supervised categorization task and use the trained model to predict categorizations.</p>
+<p><em>Background.</em> The categorization task had people learn to categorize many lines that differed in two features (size and tilting angle) into two categories, providing feedback about the true category (Nosofsky, 1989). The collected data can be loaded ba running <code>data(nosofsky1989long)</code>. Let’s model data in one condition from this data set called “size”.</p>
 <p><em>Code.</em> The syntax below loads the data and sets up the model, it is explained below the code.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="co"># Use the 'size' condition in the data</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">nosofsky1989long</span><span class="op">)</span></span>
 <span>  <span class="va">DT</span> <span class="op">&lt;-</span> <span class="va">nosofsky1989long</span></span>
@@ -140,11 +151,14 @@
 <span>    formula <span class="op">=</span> <span class="va">response</span> <span class="op">~</span> <span class="va">angle</span> <span class="op">+</span> <span class="va">size</span>,</span>
 <span>    class <span class="op">=</span> <span class="op">~</span> <span class="va">true_cat</span>,</span>
 <span>    data <span class="op">=</span> <span class="va">D</span>,</span>
-<span>    choicerule <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></code></pre></div>
+<span>    choicerule <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
+<span></span>
+<span>    <span class="co"># Make a prediction</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
 <div class="section level4">
 <h4 id="installation-troubleshooting">Installation Troubleshooting<a class="anchor" aria-label="anchor" href="#installation-troubleshooting"></a>
 </h4>
-<p>Here are some error messages during the installation and how to troubleshoot them:</p>
+<p>Below find some messages during the installation and how to troubleshoot them:</p>
 <ul>
 <li>Error: <code>Failed to install 'cognitivemodels' from GitHub:   Could not find tools necessary to compile a package Call</code>pkgbuild::check_build_tools(debug = TRUE)<code>to diagnose the problem.</code> <strong>Solution</strong>: In R, you must run <code>options(buildtools.check = function(action) TRUE )</code> to solve the problem, <a href="https://stackoverflow.com/questions/37776377/error-when-installing-an-r-package-from-github-could-not-find-build-tools-neces" class="external-link">more details see here</a>
 </li>
@@ -170,13 +184,6 @@ Florian I. Seitz</p>
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
 <li><p><a href="https://github.com/JanaJarecki/cognitivemodels" class="external-link">Source Code on Github</a></p></li>
-</ul>
-</div>
-
-<div class="table-of-contents">
-<h2 data-toc-skip>Table of contents</h2>
-<ul class="list-unstyled">
-<li><nav id="toc"></nav></li>
 </ul>
 </div>
 
