@@ -2,12 +2,6 @@ body {
   letter-spacing: 0.1px
 }
 
-h1, h2, h3, h4,
-.navbar,
-.col-md-3 {
-  font-family:  "Orbitron", monospace;
-}
-
 code, .sourceCode, .r, pre, pre code {
   font-family: "Inconsolata", monospace !important;
 }
@@ -20,7 +14,9 @@ h2, h3, h4 {
 .page-header img.logo {
     width: 80px !important;
 }
-
+.navbar, .col-md-3 {
+    font-family:  "Orbitron", monospace;
+}
 .navbar {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
