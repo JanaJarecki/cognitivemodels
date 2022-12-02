@@ -79,7 +79,6 @@ Gcm_sim <- R6Class("gcm_sim",
                    if(identical) sim_mat[lower.tri(sim_mat)] <- t(sim_mat)[lower.tri(sim_mat)]
                    
                    # gc() # garbage collector
-                   
                    return(sim_mat)
                  },
                  predict = function(newdata = NULL){

@@ -23,7 +23,7 @@ Gcm_unidim <- R6Class("gcm_unidim",
                          gofs[i] <- self$gofvalue
                          parms[i, ] <- self$parm
                        } else {
-                         preds <- self$predict(newdata = cbind(response = self$obs, self$input))
+                         preds <- self$predict(newdata = cbind(resp = self$obs, self$input))
                          # gofs[i] <- -cognitiveutils::gof(obs = self$obs, pred = preds, response = "d", type = "log", discount = self$discount)
                          
                          gofs[i] <- -log(max(prod(abs(preds - (1 - self$obs))[-c(self$discount)]), 1e-300))
